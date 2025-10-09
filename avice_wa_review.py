@@ -234,6 +234,753 @@ class DesignInfo:
     all_ipos: List[str]
 
 
+@dataclass
+class SectionSummary:
+    """Summary information for a single analysis section"""
+    section_name: str           # e.g., "Timing Analysis (PT)"
+    section_id: str             # e.g., "timing"
+    stage: FlowStage            # FlowStage enum
+    status: str                 # PASS, WARN, FAIL, NOT_RUN, SKIP
+    key_metrics: Dict[str, str] # e.g., {"Setup WNS": "-0.052", "Hold WNS": "+0.150"}
+    html_file: str              # Path to detailed section HTML (absolute path)
+    priority: int               # 1=Critical, 2=High, 3=Medium, 4=Low
+    issues: List[str]           # List of notable issues/warnings
+    timestamp: str              # When this section was analyzed
+    icon: str                   # ASCII emoji/icon for display
+    
+    def get_status_color(self) -> str:
+        """Get HTML color for status badge"""
+        colors = {
+            'PASS': '#27ae60',
+            'WARN': '#f39c12',
+            'FAIL': '#e74c3c',
+            'NOT_RUN': '#95a5a6',
+            'SKIP': '#bdc3c7'
+        }
+        return colors.get(self.status, '#95a5a6')
+    
+    def get_status_icon(self) -> str:
+        """Get ASCII icon for status"""
+        icons = {
+            'PASS': '[OK]',
+            'WARN': '[WARN]',
+            'FAIL': '[ERROR]',
+            'NOT_RUN': '[SKIP]',
+            'SKIP': '[SKIP]'
+        }
+        return icons.get(self.status, '[?]')
+
+
+class MasterDashboard:
+    """Generate master HTML dashboard integrating all section HTMLs"""
+    
+    def __init__(self, design_info: DesignInfo):
+        self.design_info = design_info
+        self.sections: List[SectionSummary] = []
+        self.output_dir = os.path.dirname(design_info.workarea)
+        self.timestamp = datetime.now().strftime("%m.%d.%y_%H:%M")
+        self.date_str = datetime.now().strftime("%Y%m%d")
+        
+    def add_section(self, summary: SectionSummary):
+        """Add a section summary to the dashboard"""
+        self.sections.append(summary)
+    
+    def get_overall_status(self) -> str:
+        """Determine overall health status"""
+        if not self.sections:
+            return 'NOT_RUN'
+        
+        statuses = [s.status for s in self.sections if s.status != 'SKIP']
+        if not statuses:
+            return 'NOT_RUN'
+        
+        if 'FAIL' in statuses:
+            return 'FAIL'
+        elif 'WARN' in statuses:
+            return 'WARN'
+        else:
+            return 'PASS'
+    
+    def count_by_status(self, status: str) -> int:
+        """Count sections with given status"""
+        return sum(1 for s in self.sections if s.status == status)
+    
+    def get_sections_needing_attention(self) -> List[SectionSummary]:
+        """Get sections with FAIL or WARN status"""
+        return [s for s in self.sections if s.status in ['FAIL', 'WARN']]
+    
+    def generate_html(self, output_path: str = None) -> str:
+        """Generate master dashboard HTML file"""
+        if output_path is None:
+            # Create default output path
+            design_name = os.path.basename(self.design_info.workarea)
+            output_path = os.path.join(
+                os.getcwd(),
+                f"avice_MASTER_dashboard_{design_name}_{self.date_str}.html"
+            )
+        
+        # Ensure output path is absolute
+        output_path = os.path.abspath(output_path)
+        
+        # Create sections directory if it doesn't exist
+        sections_dir = os.path.join(os.path.dirname(output_path), "sections")
+        os.makedirs(sections_dir, exist_ok=True)
+        
+        html_content = self._generate_html_content(output_path)
+        
+        with open(output_path, 'w') as f:
+            f.write(html_content)
+        
+        return output_path
+    
+    def _generate_html_content(self, output_path: str) -> str:
+        """Generate the HTML content for master dashboard"""
+        
+        # Read and encode logo as base64
+        logo_data = ""
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        logo_path = os.path.join(script_dir, "images/avice_logo.png")
+        if os.path.exists(logo_path):
+            with open(logo_path, "rb") as logo_file:
+                logo_data = base64.b64encode(logo_file.read()).decode('utf-8')
+        
+        # Calculate statistics
+        total_sections = len(self.sections)
+        pass_count = self.count_by_status('PASS')
+        warn_count = self.count_by_status('WARN')
+        fail_count = self.count_by_status('FAIL')
+        not_run_count = self.count_by_status('NOT_RUN')
+        overall_status = self.get_overall_status()
+        attention_sections = self.get_sections_needing_attention()
+        
+        # Sort sections by index number
+        sorted_sections = sorted(self.sections, key=lambda s: STAGE_INDEX.get(s.stage, 99))
+        
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVICE Workarea Review - Master Dashboard</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #2c3e50;
+            padding: 20px;
+            line-height: 1.6;
+        }}
+        
+        .container {{
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }}
+        
+        /* Header Styles */
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+        }}
+        
+        .header h1 {{
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }}
+        
+        .logo-container {{
+            margin: 20px 0;
+        }}
+        
+        .logo-container img {{
+            max-width: 200px;
+            height: auto;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }}
+        
+        .logo-container img:hover {{
+            transform: scale(1.05);
+        }}
+        
+        .header-info {{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }}
+        
+        .header-info-item {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1em;
+        }}
+        
+        /* Status Banner */
+        .status-banner {{
+            padding: 30px;
+            text-align: center;
+            border-bottom: 3px solid #ecf0f1;
+        }}
+        
+        .status-banner.PASS {{
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }}
+        
+        .status-banner.WARN {{
+            background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
+            color: white;
+        }}
+        
+        .status-banner.FAIL {{
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+        }}
+        
+        .status-banner h2 {{
+            font-size: 2em;
+            margin-bottom: 15px;
+        }}
+        
+        .status-stats {{
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }}
+        
+        .status-stat {{
+            font-size: 1.2em;
+        }}
+        
+        .status-stat strong {{
+            font-size: 1.5em;
+            display: block;
+        }}
+        
+        /* Quick Actions */
+        .quick-actions {{
+            padding: 20px 40px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }}
+        
+        .action-btn {{
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }}
+        
+        .action-btn:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }}
+        
+        .action-btn.secondary {{
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }}
+        
+        /* Attention Required Section */
+        .attention-section {{
+            padding: 30px 40px;
+            background: #fff3cd;
+            border-left: 5px solid #f39c12;
+            margin: 20px;
+            border-radius: 8px;
+        }}
+        
+        .attention-section h3 {{
+            color: #856404;
+            margin-bottom: 15px;
+        }}
+        
+        .attention-list {{
+            list-style: none;
+            padding-left: 0;
+        }}
+        
+        .attention-list li {{
+            padding: 8px 0;
+            border-bottom: 1px solid #f39c12;
+        }}
+        
+        .attention-list li:last-child {{
+            border-bottom: none;
+        }}
+        
+        .attention-list a {{
+            color: #856404;
+            text-decoration: none;
+            font-weight: bold;
+        }}
+        
+        .attention-list a:hover {{
+            text-decoration: underline;
+        }}
+        
+        /* Section Cards Grid */
+        .sections-container {{
+            padding: 40px;
+        }}
+        
+        .sections-container h2 {{
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+            color: #2c3e50;
+        }}
+        
+        .sections-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }}
+        
+        /* Section Card */
+        .section-card {{
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 25px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-left: 5px solid #667eea;
+            position: relative;
+        }}
+        
+        .section-card:hover {{
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }}
+        
+        .section-card.PASS {{
+            border-left-color: #27ae60;
+        }}
+        
+        .section-card.WARN {{
+            border-left-color: #f39c12;
+        }}
+        
+        .section-card.FAIL {{
+            border-left-color: #e74c3c;
+        }}
+        
+        .section-card.NOT_RUN {{
+            border-left-color: #95a5a6;
+        }}
+        
+        .section-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }}
+        
+        .section-title {{
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }}
+        
+        .section-index {{
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }}
+        
+        .status-badge {{
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            color: white;
+        }}
+        
+        .status-badge.PASS {{
+            background: #27ae60;
+        }}
+        
+        .status-badge.WARN {{
+            background: #f39c12;
+        }}
+        
+        .status-badge.FAIL {{
+            background: #e74c3c;
+        }}
+        
+        .status-badge.NOT_RUN {{
+            background: #95a5a6;
+        }}
+        
+        .section-metrics {{
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }}
+        
+        .metric-row {{
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #dee2e6;
+        }}
+        
+        .metric-row:last-child {{
+            border-bottom: none;
+        }}
+        
+        .metric-label {{
+            color: #7f8c8d;
+            font-weight: 600;
+        }}
+        
+        .metric-value {{
+            color: #2c3e50;
+            font-weight: bold;
+        }}
+        
+        .section-issues {{
+            margin: 15px 0;
+        }}
+        
+        .issue-item {{
+            padding: 8px;
+            background: #fff3cd;
+            border-left: 3px solid #f39c12;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }}
+        
+        .section-footer {{
+            margin-top: 20px;
+            text-align: center;
+        }}
+        
+        .view-details-btn {{
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 20px;
+            font-weight: bold;
+            transition: transform 0.2s ease;
+        }}
+        
+        .view-details-btn:hover {{
+            transform: scale(1.05);
+        }}
+        
+        .section-timestamp {{
+            font-size: 0.85em;
+            color: #95a5a6;
+            margin-top: 10px;
+            text-align: center;
+        }}
+        
+        /* Footer */
+        .footer {{
+            text-align: center;
+            padding: 30px;
+            background: #2c3e50;
+            color: white;
+        }}
+        
+        .footer p {{
+            margin: 5px 0;
+        }}
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {{
+            .sections-grid {{
+                grid-template-columns: 1fr;
+            }}
+            
+            .header h1 {{
+                font-size: 1.8em;
+            }}
+            
+            .header-info {{
+                flex-direction: column;
+                gap: 10px;
+            }}
+        }}
+        
+        /* Image Expansion */
+        .expanded-image {{
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }}
+        
+        .expanded-image img {{
+            max-width: 90%;
+            max-height: 90%;
+            box-shadow: 0 0 50px rgba(255,255,255,0.3);
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>AVICE Workarea Review</h1>
+            <h2>Master Dashboard</h2>
+            <div class="logo-container">
+                <img src="data:image/png;base64,{logo_data}" alt="AVICE Logo" onclick="expandImage(this)">
+            </div>
+            <div class="header-info">
+                <div class="header-info-item">
+                    <strong>Workarea:</strong> {self.design_info.workarea}
+                </div>
+                <div class="header-info-item">
+                    <strong>Design:</strong> {self.design_info.top_hier}
+                </div>
+                <div class="header-info-item">
+                    <strong>Tag:</strong> {self.design_info.tag}
+                </div>
+                <div class="header-info-item">
+                    <strong>IPO:</strong> {self.design_info.ipo}
+                </div>
+                <div class="header-info-item">
+                    <strong>Generated:</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Overall Status Banner -->
+        <div class="status-banner {overall_status}">
+            <h2>Overall Health: {overall_status} {self._get_status_icon(overall_status)}</h2>
+            <div class="status-stats">
+                <div class="status-stat">
+                    <strong>{pass_count}</strong>
+                    <span>Passed</span>
+                </div>
+                <div class="status-stat">
+                    <strong>{warn_count}</strong>
+                    <span>Warnings</span>
+                </div>
+                <div class="status-stat">
+                    <strong>{fail_count}</strong>
+                    <span>Failed</span>
+                </div>
+                <div class="status-stat">
+                    <strong>{not_run_count}</strong>
+                    <span>Not Run</span>
+                </div>
+                <div class="status-stat">
+                    <strong>{total_sections}</strong>
+                    <span>Total Sections</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="action-btn" onclick="openAllSections()">Open All Failed/Warning Sections</button>
+            <button class="action-btn secondary" onclick="openAllSectionsComplete()">Open All Sections</button>
+            <button class="action-btn secondary" onclick="window.print()">Print Dashboard</button>
+        </div>
+"""
+        
+        # Attention Required Section
+        if attention_sections:
+            html += f"""
+        <!-- Attention Required -->
+        <div class="attention-section">
+            <h3>Attention Required - {len(attention_sections)} Section(s) Need Review:</h3>
+            <ul class="attention-list">
+"""
+            for section in attention_sections:
+                html += f"""
+                <li>
+                    <a href="{section.html_file}" target="_blank">
+                        [{section.status}] {section.section_name}
+                    </a>
+                    {f' - {section.issues[0]}' if section.issues else ''}
+                </li>
+"""
+            html += """
+            </ul>
+        </div>
+"""
+        
+        # Section Cards
+        html += """
+        <!-- Section Cards -->
+        <div class="sections-container">
+            <h2>Analysis Sections</h2>
+            <div class="sections-grid">
+"""
+        
+        for section in sorted_sections:
+            section_index = STAGE_INDEX.get(section.stage, "?")
+            html += self._generate_section_card(section, section_index)
+        
+        html += """
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>AVICE Workarea Review Tool</strong></p>
+            <p>Copyright (c) 2025 Alon Vice (avice)</p>
+            <p>Contact: avice@nvidia.com</p>
+        </div>
+    </div>
+    
+    <!-- Expanded Image Overlay -->
+    <div class="expanded-image" id="expandedImage" onclick="closeImage()">
+        <img id="expandedImageContent" src="" alt="Expanded">
+    </div>
+    
+    <script>
+        function expandImage(img) {
+            var overlay = document.getElementById('expandedImage');
+            var expandedImg = document.getElementById('expandedImageContent');
+            expandedImg.src = img.src;
+            overlay.style.display = 'flex';
+        }
+        
+        function closeImage() {
+            document.getElementById('expandedImage').style.display = 'none';
+        }
+        
+        function openAllSections() {
+            var sections = document.querySelectorAll('.section-card.FAIL a, .section-card.WARN a');
+            sections.forEach(function(link) {
+                window.open(link.href, '_blank');
+            });
+        }
+        
+        function openAllSectionsComplete() {
+            var sections = document.querySelectorAll('.section-card a');
+            sections.forEach(function(link) {
+                window.open(link.href, '_blank');
+            });
+        }
+    </script>
+</body>
+</html>
+"""
+        
+        return html
+    
+    def _generate_section_card(self, section: SectionSummary, index: int) -> str:
+        """Generate HTML for a single section card"""
+        
+        # Generate metrics HTML
+        metrics_html = ""
+        if section.key_metrics:
+            for label, value in section.key_metrics.items():
+                metrics_html += f"""
+                <div class="metric-row">
+                    <span class="metric-label">{label}:</span>
+                    <span class="metric-value">{value}</span>
+                </div>
+"""
+        
+        # Generate issues HTML
+        issues_html = ""
+        if section.issues:
+            for issue in section.issues[:3]:  # Show max 3 issues
+                issues_html += f"""
+                <div class="issue-item">{issue}</div>
+"""
+            if len(section.issues) > 3:
+                issues_html += f"""
+                <div class="issue-item">... and {len(section.issues) - 3} more</div>
+"""
+        
+        card_html = f"""
+                <div class="section-card {section.status}">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span class="section-index">{index}</span>
+                            <span>{section.icon} {section.section_name}</span>
+                        </div>
+                        <div class="status-badge {section.status}">{section.get_status_icon()}</div>
+                    </div>
+                    
+                    {f'<div class="section-metrics">{metrics_html}</div>' if metrics_html else ''}
+                    
+                    {f'<div class="section-issues">{issues_html}</div>' if issues_html else ''}
+                    
+                    <div class="section-footer">
+                        <a href="{section.html_file}" target="_blank" class="view-details-btn">View Detailed Report</a>
+                    </div>
+                    
+                    <div class="section-timestamp">Analyzed: {section.timestamp}</div>
+                </div>
+"""
+        
+        return card_html
+    
+    def _get_status_icon(self, status: str) -> str:
+        """Get ASCII icon for status"""
+        icons = {
+            'PASS': '[OK]',
+            'WARN': '[WARN]',
+            'FAIL': '[ERROR]',
+            'NOT_RUN': '[SKIP]'
+        }
+        return icons.get(status, '[?]')
+
+
 class LogoDisplay:
     """Handle logo display functionality"""
     
@@ -339,6 +1086,36 @@ class WorkareaReviewer:
             print(f"{Color.YELLOW}[WARN] Skipping workarea validation (--skip-validation used){Color.RESET}")
             
         self.design_info = self._extract_design_info()
+        
+        # Initialize Master Dashboard
+        self.master_dashboard = MasterDashboard(self.design_info)
+        self.section_summaries = []  # Collect section summaries for master dashboard
+    
+    def _add_section_summary(self, section_name: str, section_id: str, stage: FlowStage, 
+                            status: str = "NOT_RUN", key_metrics: Dict[str, str] = None,
+                            html_file: str = "", priority: int = 3, issues: List[str] = None,
+                            icon: str = ""):
+        """Helper method to add a section summary to the master dashboard"""
+        if key_metrics is None:
+            key_metrics = {}
+        if issues is None:
+            issues = []
+        
+        summary = SectionSummary(
+            section_name=section_name,
+            section_id=section_id,
+            stage=stage,
+            status=status,
+            key_metrics=key_metrics,
+            html_file=html_file if html_file else "",
+            priority=priority,
+            issues=issues,
+            timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            icon=icon
+        )
+        
+        self.master_dashboard.add_section(summary)
+        self.section_summaries.append(summary)
     
     def _validate_workarea(self) -> bool:
         """Validate that the workarea is a proper ASIC/SoC workarea (PnR, Syn, or both)"""
@@ -1969,6 +2746,22 @@ class WorkareaReviewer:
                 
         except (OSError, UnicodeDecodeError) as e:
             print(f"    {Color.RED}Error reading BeFlow config: {e}{Color.RESET}")
+        
+        # Add section summary for master dashboard
+        self._add_section_summary(
+            section_name="Synthesis (DC)",
+            section_id="synthesis",
+            stage=FlowStage.SYNTHESIS,
+            status="PASS",
+            key_metrics={
+                "Design": self.design_info.top_hier,
+                "IPO": self.design_info.ipo
+            },
+            html_file="",
+            priority=3,
+            issues=[],
+            icon="[DC]"
+        )
     
     def run_setup_analysis(self):
         """Run setup analysis including environment and runtime information"""
@@ -1996,6 +2789,22 @@ class WorkareaReviewer:
         if self.file_utils.file_exists(pnr_config_file):
             self.print_file_info(pnr_config_file, "PnR Configuration")
         
+        # Add section summary for master dashboard
+        self._add_section_summary(
+            section_name="Setup",
+            section_id="setup",
+            stage=FlowStage.SETUP,
+            status="PASS",
+            key_metrics={
+                "Design": self.design_info.top_hier,
+                "Tag": self.design_info.tag,
+                "IPO": self.design_info.ipo
+            },
+            html_file="",
+            priority=4,
+            issues=[],
+            icon="[Setup]"
+        )
     
     def _extract_environment_info(self):
         """Extract BeFlow, Tech Data, and Tool Override environment information"""
@@ -3336,7 +4145,86 @@ class WorkareaReviewer:
                 print(f"  {Color.YELLOW}Error reading PT log: {e}{Color.RESET}")
         
         # Generate timing summary HTML report
-        self._generate_timing_summary_report()
+        pt_html_path, timing_data = self._generate_timing_summary_report()
+        
+        # Add section summary for master dashboard
+        status = "NOT_RUN"
+        key_metrics = {}
+        issues = []
+        priority = 1  # Critical section
+        
+        if timing_data and len(timing_data) > 0:
+            # Get latest work area data
+            latest = timing_data[0]
+            
+            # Calculate status based on setup timing (most critical)
+            if 'setup' in latest['scenarios']:
+                setup_data = latest['scenarios']['setup']
+                external_groups = {'FEEDTHROUGH', 'REGIN', 'REGOUT'}
+                
+                # Calculate internal WNS (worst of all internal groups)
+                internal_wns = None
+                internal_tns = 0
+                internal_nvp = 0
+                
+                for group_name, group_data in setup_data['groups'].items():
+                    if group_name.upper() not in external_groups:
+                        internal_tns += group_data['TNS']
+                        internal_nvp += group_data['NVP']
+                        if internal_wns is None or group_data['WNS'] < internal_wns:
+                            internal_wns = group_data['WNS']
+                
+                # Determine status based on WNS
+                if internal_wns is not None:
+                    if internal_wns < 0:
+                        status = "FAIL"
+                        issues.append(f"Setup timing violation: WNS = {internal_wns:.3f} ns")
+                    elif internal_wns < 0.1:
+                        status = "WARN"
+                        issues.append(f"Setup timing marginal: WNS = {internal_wns:.3f} ns")
+                    else:
+                        status = "PASS"
+                    
+                    key_metrics["Setup WNS"] = f"{internal_wns:.3f} ns"
+                    key_metrics["Setup TNS"] = f"{internal_tns:.2f} ns"
+                    key_metrics["Setup NVP"] = str(internal_nvp)
+            
+            # Check hold timing too
+            if 'hold' in latest['scenarios']:
+                hold_data = latest['scenarios']['hold']
+                external_groups = {'FEEDTHROUGH', 'REGIN', 'REGOUT'}
+                
+                hold_wns = None
+                hold_tns = 0
+                hold_nvp = 0
+                
+                for group_name, group_data in hold_data['groups'].items():
+                    if group_name.upper() not in external_groups:
+                        hold_tns += group_data['TNS']
+                        hold_nvp += group_data['NVP']
+                        if hold_wns is None or group_data['WNS'] < hold_wns:
+                            hold_wns = group_data['WNS']
+                
+                if hold_wns is not None:
+                    if hold_wns < 0:
+                        status = "FAIL"  # Hold violation is critical
+                        issues.append(f"Hold timing violation: WNS = {hold_wns:.3f} ns")
+                    
+                    key_metrics["Hold WNS"] = f"{hold_wns:.3f} ns"
+            
+            key_metrics["Work Areas"] = str(len(timing_data))
+        
+        self._add_section_summary(
+            section_name="Signoff Timing (PT)",
+            section_id="timing",
+            stage=FlowStage.SIGNOFF_TIMING,
+            status=status,
+            key_metrics=key_metrics,
+            html_file=pt_html_path if pt_html_path else "",
+            priority=priority,
+            issues=issues,
+            icon="[PT]"
+        )
     
     def _extract_timing_data_from_work_areas(self):
         """Extract timing data from all auto_pt work areas with dual-scenario support"""
@@ -4063,10 +4951,11 @@ class WorkareaReviewer:
         
         # Write HTML file in current working directory to avoid permission issues
         # Use absolute paths in HTML content to ensure links work from any location
-        with open(html_filename, 'w') as f:
+        html_path = os.path.join(os.getcwd(), html_filename)
+        with open(html_path, 'w') as f:
             f.write(html_content)
         
-        return html_filename
+        return os.path.abspath(html_path)
     
     def _generate_timing_summary_report(self):
         """Generate timing summary report with dual-scenario and DSR skew tracking"""
@@ -4230,6 +5119,11 @@ class WorkareaReviewer:
                         dsr_val_hold = latest['dsr_skew_hold']
                         dsr_color = Color.GREEN if dsr_val_hold <= 10 else Color.YELLOW if dsr_val_hold <= 20 else Color.RED
                         print(f"    Hold:  {dsr_color}{dsr_val_hold:6.2f}{Color.RESET} ps")
+                
+                # Return HTML path and timing data for dashboard summary
+                return html_filename, timing_data
+        
+        return None, None
     
     def run_physical_verification(self):
         """Run physical verification analysis"""
@@ -6369,6 +7263,15 @@ class WorkareaReviewer:
         self.run_nv_gate_eco()
         self.run_block_release()
         
+        # Generate Master Dashboard
+        print(f"\n{Color.CYAN}Generating Master Dashboard...{Color.RESET}")
+        try:
+            dashboard_path = self.master_dashboard.generate_html()
+            print(f"{Color.GREEN}[OK] Master Dashboard generated: file://{dashboard_path}{Color.RESET}")
+            print(f"{Color.CYAN}     Open this file in your browser to view the integrated review dashboard{Color.RESET}")
+        except Exception as e:
+            print(f"{Color.RED}[ERROR] Failed to generate Master Dashboard: {e}{Color.RESET}")
+        
         print(f"\n{Color.GREEN}Review completed successfully!{Color.RESET}")
 
     def run_runtime_analysis(self):
@@ -6818,7 +7721,31 @@ class WorkareaReviewer:
         self._print_runtime_summary_table(runtime_data, pnr_runtimes, runtime_timestamps)
         
         # Generate HTML runtime report
-        self._generate_runtime_html_report(runtime_data, pnr_runtimes, prc_status, runtime_timestamps)
+        runtime_html_path = self._generate_runtime_html_report(runtime_data, pnr_runtimes, prc_status, runtime_timestamps)
+        
+        # Calculate total runtime for summary
+        total_runtime_str = "N/A"
+        if runtime_data or pnr_runtimes:
+            # Get PnR runtime as main metric (typically longest)
+            if pnr_runtimes:
+                total_runtime_str = list(pnr_runtimes.values())[0] if pnr_runtimes else "N/A"
+        
+        # Add section summary for master dashboard
+        self._add_section_summary(
+            section_name="Runtime Analysis",
+            section_id="runtime",
+            stage=FlowStage.RUNTIME,
+            status="PASS",
+            key_metrics={
+                "PnR Runtime": total_runtime_str,
+                "Stages": str(len(runtime_data)),
+                "IPOs": str(len(pnr_runtimes))
+            },
+            html_file=runtime_html_path,
+            priority=3,
+            issues=[],
+            icon="[Runtime]"
+        )
 
     def _extract_star_runtime(self):
         """Extract Star extraction runtime"""
@@ -7422,8 +8349,11 @@ class WorkareaReviewer:
             print(f"\n  {Color.CYAN}Runtime HTML Report:{Color.RESET}")
             print(f"  Open with: firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
             
+            return os.path.abspath(html_path)
+            
         except Exception as e:
             print(f"  Error generating runtime HTML report: {e}")
+            return ""
     
     def _check_rtl_formal_exists(self):
         """Check if RTL formal verification directories exist"""
