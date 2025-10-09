@@ -607,6 +607,12 @@ class MasterDashboard:
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            cursor: pointer;
+            user-select: none;
+        }}
+        
+        .section-header:hover {{
+            opacity: 0.8;
         }}
         
         .section-title {{
@@ -616,6 +622,26 @@ class MasterDashboard:
             display: flex;
             align-items: center;
             gap: 10px;
+        }}
+        
+        .card-toggle-icon {{
+            font-size: 1.5em;
+            transition: transform 0.3s ease;
+            color: #667eea;
+        }}
+        
+        .card-toggle-icon.expanded {{
+            transform: rotate(180deg);
+        }}
+        
+        .card-content {{
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }}
+        
+        .card-content.expanded {{
+            max-height: 1000px;
         }}
         
         .section-index {{
@@ -899,6 +925,19 @@ class MasterDashboard:
             document.getElementById('expandedImage').style.display = 'none';
         }
         
+        function toggleCard(cardId) {
+            var content = document.getElementById(cardId);
+            var icon = document.getElementById('icon-' + cardId);
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                icon.classList.remove('expanded');
+            } else {
+                content.classList.add('expanded');
+                icon.classList.add('expanded');
+            }
+        }
+        
         function openAllSections() {
             var sections = document.querySelectorAll('.section-card.FAIL a, .section-card.WARN a');
             sections.forEach(function(link) {
@@ -945,25 +984,34 @@ class MasterDashboard:
                 <div class="issue-item">... and {len(section.issues) - 3} more</div>
 """
         
+        # Default to expanded for FAIL/WARN status, collapsed for others
+        default_expanded = section.status in ['FAIL', 'WARN']
+        expanded_class = 'expanded' if default_expanded else ''
+        
         card_html = f"""
                 <div class="section-card {section.status}">
-                    <div class="section-header">
+                    <div class="section-header" onclick="toggleCard('card-{section.section_id}-{index}')">
                         <div class="section-title">
                             <span class="section-index">{index}</span>
                             <span>{section.icon} {section.section_name}</span>
                         </div>
-                        <div class="status-badge {section.status}">{section.get_status_icon()}</div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="status-badge {section.status}">{section.get_status_icon()}</div>
+                            <span class="card-toggle-icon {expanded_class}" id="icon-card-{section.section_id}-{index}">▼</span>
+                        </div>
                     </div>
                     
-                    {f'<div class="section-metrics">{metrics_html}</div>' if metrics_html else ''}
-                    
-                    {f'<div class="section-issues">{issues_html}</div>' if issues_html else ''}
-                    
-                    <div class="section-footer">
-                        <a href="{section.html_file}" target="_blank" class="view-details-btn">View Detailed Report</a>
+                    <div class="card-content {expanded_class}" id="card-{section.section_id}-{index}">
+                        {f'<div class="section-metrics">{metrics_html}</div>' if metrics_html else ''}
+                        
+                        {f'<div class="section-issues">{issues_html}</div>' if issues_html else ''}
+                        
+                        <div class="section-footer">
+                            <a href="{section.html_file}" target="_blank" class="view-details-btn" onclick="event.stopPropagation()">View Detailed Report</a>
+                        </div>
+                        
+                        <div class="section-timestamp">Analyzed: {section.timestamp}</div>
                     </div>
-                    
-                    <div class="section-timestamp">Analyzed: {section.timestamp}</div>
                 </div>
 """
         
@@ -6561,10 +6609,13 @@ class WorkareaReviewer:
             
             print(f"\n  Open with: firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
             
+            return os.path.abspath(html_path)
+            
         except Exception as e:
             print(f"  Error generating GL Check HTML report: {e}")
             import traceback
             traceback.print_exc()
+            return ""
     
     def run_gl_check(self):
         """Run GL check analysis"""
@@ -6603,10 +6654,11 @@ class WorkareaReviewer:
         waived_file = os.path.abspath(os.path.join(gl_check_dir, "gl-check.all.waived"))
         non_waived_file = os.path.abspath(os.path.join(gl_check_dir, "gl-check.all.err"))
         
+        gl_check_html_path = ""
         if os.path.exists(waived_file) or os.path.exists(non_waived_file):
             self._analyze_gl_check_errors(waived_file, non_waived_file)
             # Generate HTML report
-            self._generate_gl_check_html_report(gl_check_dir, waived_file, non_waived_file, timestamped_dirs if 'timestamped_dirs' in locals() else [])
+            gl_check_html_path = self._generate_gl_check_html_report(gl_check_dir, waived_file, non_waived_file, timestamped_dirs if 'timestamped_dirs' in locals() else [])
         else:
             # Fallback to old err.long.rep format
             gl_check_pattern = "signoff_flow/gl-check*/reports/err.long.rep"
@@ -6662,7 +6714,7 @@ class WorkareaReviewer:
             key_metrics={
                 "Design": self.design_info.top_hier
             },
-            html_file="",
+            html_file=gl_check_html_path if gl_check_html_path else "",
             priority=3,
             issues=[],
             icon="[GL]"
