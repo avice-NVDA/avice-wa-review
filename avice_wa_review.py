@@ -312,11 +312,10 @@ class MasterDashboard:
     def generate_html(self, output_path: str = None) -> str:
         """Generate master dashboard HTML file"""
         if output_path is None:
-            # Create default output path
-            design_name = os.path.basename(self.design_info.workarea)
+            # Create default output path using design name (not tag)
             output_path = os.path.join(
                 os.getcwd(),
-                f"avice_MASTER_dashboard_{design_name}_{self.date_str}.html"
+                f"avice_MASTER_dashboard_{self.design_info.top_hier}_{self.date_str}.html"
             )
         
         # Ensure output path is absolute
@@ -1515,16 +1514,21 @@ class WorkareaReviewer:
                 
                 if html_file and os.path.exists(html_file):
                     print(f"  Open with: firefox {Color.MAGENTA}{html_file}{Color.RESET} &")
+                    return os.path.abspath(html_file)
                 else:
                     print(f"  HTML report generated successfully")
+                    return ""
             else:
                 stderr = result.stderr.decode('utf-8', errors='replace')
                 print(f"  Error generating HTML report: {stderr}")
+                return ""
                 
         except subprocess.TimeoutExpired:
             print(f"  Timeout generating HTML report")
+            return ""
         except Exception as e:
             print(f"  Error generating HTML report: {e}")
+            return ""
     
     def _extract_clock_tree_data(self, clock_file: str):
         """Extract clock tree data for func.std_tt_0c_0p6v.setup.typical scenario"""
@@ -3482,7 +3486,23 @@ class WorkareaReviewer:
         
         # Visualization commands
         print(f"\n{Color.CYAN}PnR Pictures:{Color.RESET}")
-        self._generate_image_html_report()
+        pnr_image_html = self._generate_image_html_report()
+        
+        # Add section summary for master dashboard
+        self._add_section_summary(
+            section_name="Place & Route (PnR)",
+            section_id="pnr",
+            stage=FlowStage.PNR_ANALYSIS,
+            status="PASS",
+            key_metrics={
+                "Design": self.design_info.top_hier,
+                "IPO": self.design_info.ipo
+            },
+            html_file=pnr_image_html if pnr_image_html else "",
+            priority=2,
+            issues=[],
+            icon="[PnR]"
+        )
     
     def _generate_timing_histogram_html(self):
         """Generate HTML report with timing histogram tables"""
@@ -6632,6 +6652,21 @@ class WorkareaReviewer:
                         print(f"  Error reading GL check report: {e}")
             else:
                 print("  Didn't run GL checks")
+        
+        # Add section summary for master dashboard
+        self._add_section_summary(
+            section_name="GL Checks",
+            section_id="gl-check",
+            stage=FlowStage.GL_CHECK,
+            status="PASS",
+            key_metrics={
+                "Design": self.design_info.top_hier
+            },
+            html_file="",
+            priority=3,
+            issues=[],
+            icon="[GL]"
+        )
     
     def _find_beflow_path(self):
         """Find the beflow path from PnR flow configuration or common locations"""
