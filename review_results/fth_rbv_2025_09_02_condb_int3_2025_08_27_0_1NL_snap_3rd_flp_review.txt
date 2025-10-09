@@ -1,0 +1,340 @@
+# Review for: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp
+# Generated: 2025-09-18 17:50:29
+# Command: /bin/python3 avice_wa_review.py /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp
+# Return code: 0
+
+STDOUT:
+
+[36m    +===============================================================+
+    |                                                               |
+    |                    [1mAVICE WORKAREA REVIEW[0m[36m                      |
+    |                                                               |
+    |              [32mAdvanced Verification & Integration[0m[36m              |
+    |                    [32mCircuit Engineering[0m[36m                        |
+    |                                                               |
+    +===============================================================+[0m
+
+UNIT: fth
+TAG: fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap
+IPO: ipo1000 (Available IPOs: ipo1000, ipo1001, ipo1002)
+
+---------------------------------------- [32mSetup[0m ----------------------------------------
+  [36mEnvironment Information:[0m
+    LIB_SNAP_REV: 20250819
+    BE_OVERRIDE_TOOLVERS: /home/agur_backend_blockData//project_scripts/pilot_cfg/toolvers_beta_20250908_BLOCKRELTEST.cfg
+DC Log: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/syn_flow/dc/log/dc.log
+PnR Status: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/pnr_flow/nv_flow/fth.prc.status
+
+IPO: ipo1000
+
+IPO: ipo1001
+
+IPO: ipo1002
+DC runtime: 0
+Design Definition: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/unit_scripts/des_def.tcl
+PnR Configuration: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/pnr_flow/nv_flow/fth.prc
+  USEFUL
+  USEFUL
+  USEFUL
+  USEFUL
+No .tcl files found
+
+---------------------------------------- [32mSynthesis (DC)[0m ----------------------------------------
+Report: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/syn_flow/dc/reports/be4rtl/internal_high_width_logical_cones.rpt
+Report: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/syn_flow/dc/reports/debug/fth.rtl2gate.removed_cgates.rep
+Report: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/syn_flow/dc/reports/fth_rtl2gate.qor.rpt
+Report: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/syn_flow/dc/reports/debug/fth.rtl2gate.removed_registers.rep
+Clock gates removed: 0
+Removed registers: 39973
+
+---------------------------------------- [32mPost-Route Analysis[0m ----------------------------------------
+Post-Route Data: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/pnr_flow/nv_flow/fth/ipo1000/reports/fth_fth_ipo1000_report_fth_ipo1000_postroute.func.std_tt_0c_0p6v.setup.typical.data
+
+[33mPost-Route Data Parameters:[0m
+  [36mTiming Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    FEEDTHROUGH_WNS           0.032          
+    FEEDTHROUGH_TNS           0.000          
+    FEEDTHROUGH_ViolPaths     0              
+    REGIN_WNS                 -0.070         
+    REGIN_TNS                 -0.935         
+    REGIN_ViolPaths           38             
+    REGOUT_WNS                -0.094         
+    REGOUT_TNS                -84.756        
+    REGOUT_ViolPaths          2300           
+    i1_clk_WNS                -0.057         
+    i1_clk_TNS                -6.161         
+    i1_clk_ViolPaths          375            
+    i1_clk_reg2cgate_WNS      -0.139         
+    i1_clk_reg2cgate_TNS      -3.360         
+    i1_clk_reg2cgate_ViolPaths 127            
+    i2_clk_WNS                -0.001         
+    i2_clk_TNS                -0.002         
+    i2_clk_ViolPaths          2              
+    i2_clk_reg2cgate_WNS      0.010          
+    i2_clk_reg2cgate_TNS      0.000          
+    i2_clk_reg2cgate_ViolPaths 0              
+    m1_clk_WNS                0.284          
+    m1_clk_TNS                0.000          
+    m1_clk_ViolPaths          0              
+    m1_clk_reg2cgate_WNS      5.036          
+    m1_clk_reg2cgate_TNS      0.000          
+    m1_clk_reg2cgate_ViolPaths 0              
+    m1_clk_Skew               0.070]         
+    m1_clk_Latency_Max        0.223          
+    m1_clk_Latency_Avg        0.196          
+    i2_clk_Skew               0.108]         
+    i2_clk_Latency_Max        0.552          
+    i2_clk_Latency_Avg        0.496          
+    i1_clk_Skew               NA]            
+    i1_clk_Latency_Max        NA             
+    i1_clk_Latency_Avg        NA             
+    m1_clk_Cycle_Time         6.400          
+    i2_clk_Cycle_Time         0.622          
+    i1_clk_Cycle_Time         1.244          
+
+  [36mArea Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    CellArea                  0.14416996608  
+    CombinationalArea         0.10806905151  
+    SequentialArea            0.03610091457  
+    ArraysArea                0.1951376994   
+    Utilization               31.6201024959% 
+    EffictiveUtilization      59.2288223859% 
+    CoreArea                  0.45917319294  
+    DieArea                   0.4602455424   
+
+  [36mCell Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    CellCount                 753159         
+    CombinationalCount        809586         
+    SequentialCount           79426          
+    FFCount                   153920         
+    m1_clk_FFCount            2320           
+    i2_clk_FFCount            8106           
+    i1_clk_FFCount            143494         
+    BufInvCellCount           239683         
+    BufInvPerc                31.8236919429% 
+    GatedFFPerc               97.1703277423% 
+    UngatedFFPerc             1.11616424116% 
+    UngatedFF                 1718           
+
+  [36mPower Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    StdCellsLeakage           0              
+    ArraysLeakage             0              
+    POWER_AWARE               yes            
+
+  [36mClock Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    ClkGatesCount             7586           
+    NoneRBVClkGatesCount      464            
+    ClkCellsBiggerThan8       8300           
+
+  [36mOther Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    Unit                      fth            
+    Date                      25-09-10 20:04:34
+    Project                   agur           
+    Stage                     fth_ipo1000_report_fth_ipo1000_postroute
+    Technology                tsmc5          
+    Directory                 /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp
+    WW                        37             
+    Tool                      innovus        
+    User                      miancu         
+    RTL_TAG                   fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap
+    Scenario                  func.std_tt_0c_0p6v.setup.typical
+    ArraysSize                528.516KB      
+    ArraysCount               110            
+    MBperc                    73.5797817048% 
+    FFsOverLogicCg            21             
+    PercFFWithOneCg           5.65878378378  
+    PercFFWithMoreThan2Cg     93.2692307692  
+    TotalLogiCg               7132           
+    DelBuffer                 98513          
+    TotalLeakeage             0              
+    LongestScanChain          444            
+    NumScanChains             589            
+    MaxCapViolations          8              
+    MaxTransViolations        411            
+    MaxFanoutViolations       1              
+    HVT_percentage            38.5817064337% 
+    SVT_percentage            61.4182935663% 
+    LVT_percentage            0.0%           
+    ULVT_percentage           0.0%           
+    CongestionBothDir         0.0%           
+    CongestionHDir            0.00%          
+    CongestionVDir            0.00%          
+    ShortsAmount              1              
+    TotalWireLength           1.0440755005e+07 um
+    TAPCount                   0             
+    TAPFanoutSmallerThan10    0              
+    DataCellsBiggerThan4      14364          
+    FFsBiggerThan4            0              
+    CGWithMaxFanout           fto/fto_logic/fto_2x/fto_2x_nvl_logic_wrapper/fto_nvl_desc_handler_wrapper/g_crspace/g_clkgate_17/g_clkgate_test/g_wrap_gate_level_clkgate/clkgate_cell
+    MaxCGFanoutNum            30             
+    NoneScanFlopCount         3435           
+    Parrallel_Driver          NVT_CKNM21LD96T6 NVT_CKNM21LD96T6
+    MaxClonedCg               7              
+    ServerName                tlv02-03-sim-a13-013.nvidia.com
+    StepRuntime               92775 s        
+    Memoryusage               235625         
+    CpuNum                    4              
+    ToolVersion               23.34-y076_1   
+    SiteVersion               /home/nbu_be_tools/beflow/1.0/2025_ww13_01_rev13
+    TracksNum                 T6_DIP         
+    GenDefMode                NA             
+    UseMultibit               1              
+    UseHighYieldFlops         N/A            
+    NoDft                     NA             
+    UseSPG                    0              
+    cpu_used                  N/A            
+    cpu_requested             N/A            
+    memory_per_cpu            N/A            
+    max_memory_used           N/A            
+    memory_requested          N/A            
+
+Power Summary: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/pnr_flow/nv_flow/fth/ipo1000/REPs/SUMMARY/fth.ipo1000.postroute.power.rpt.gz
+
+[36mPower Summary Table:[0m
+        group     |    area    |  count  |   power   : density : cell_avg | internal  : switching :   total   |  leakage  
+   ===============|============|=========|===========:=========:==========|===========:===========:===========|===========
+    combinational |  39544.876 |  673731 | 32716.411 :   0.827 :    0.049 |  4961.928 : 16985.040 : 21946.969 | 10769.442 
+    sequential    | 232417.999 |   79544 | 24653.052 :   0.106 :    0.310 | 15530.598 :  4737.558 : 20268.156 |  4384.896 
+    physical      | 187938.298 | 1403552 |    11.790 :   0.000 :    0.000 |     0.000 :     0.000 :     0.000 |    11.790 
+   ===============|============|=========|===========:=========:==========|===========:===========:===========|===========
+    total         | 459901.173 | 2156827 | 57381.253 :   0.125 :    0.027 | 20492.527 : 21722.598 : 42215.125 | 15166.128 
+   =======================================================================================================================
+
+[36mPost-Route Pictures:[0m
+  Generating HTML image report...
+  HTML Report: /home/avice/scripts/avice_debug_report_fth_20250918_175022.html
+  Open with: firefox avice_debug_report_fth_20250918_175022.html &
+
+---------------------------------------- [32mClock Analysis[0m ----------------------------------------
+Innvou Clock Analysis: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/pnr_flow/nv_flow/fth/ipo1000/REPs/SUMMARY/fth.ipo1000.postroute.clock_tree.skew_and_latency.from_clock_root_source.rpt.gz
+
+[33mClock Tree Analysis for func.std_tt_0c_0p6v.setup.typical:[0m
+  Clock      Period   Skew     Min      Max      Median   Mean     StdDev  
+  ---------- -------- -------- -------- -------- -------- -------- --------
+  i1_clk     1.244    0.444    0.108    0.552    0.513    0.507    0.031   
+  i2_clk     0.622    0.572    0.002    0.574    0.543    0.532    0.060   
+  m1_clk     6.400    0.217    0.011    0.228    0.205    0.202    0.016   
+
+  All values in nanoseconds (ns)
+PT Clock Analysis: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_18.09.25_14:13/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/fth_func.std_tt_0c_0p6v.setup.typical.clock_latency
+
+[33mPT Clock Latency Analysis:[0m
+  Clock      Min (ns)   Max (ns)  
+  ---------- ---------- ----------
+  i1_clk     0.256      0.547     
+  i2_clk     0.035      0.574     
+  m1_clk     0.136      0.228     
+
+  All values in nanoseconds (ns)
+
+---------------------------------------- [32mFormal Verification[0m ----------------------------------------
+Formal Log: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/formal_flow/rtl_vs_syn_fm/log/rtl_vs_syn_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 1.02 hours
+Formal Log: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/formal_flow/rtl_vs_pnr_bbox_fm/log/rtl_vs_pnr_bbox_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 2.32 hours
+Formal Log: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/formal_flow/rtl_vs_syn_bbox_fm/log/rtl_vs_syn_bbox_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 1.47 hours
+Formal Log: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/formal_flow/rtl_vs_pnr_fm/log/rtl_vs_pnr_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 1.67 hours
+
+---------------------------------------- [32mParasitic Extraction (Star)[0m ----------------------------------------
+SPEF File: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/export/nv_star/fth/ipo1000/IOs/netlists/fth.ipo1000.smc1.spef.typical_T0.gz
+SPEF Info: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/export/nv_star/fth/ipo1000/IOs/netlists/fth.ipo1000.typical_T0.spef_info
+  opens
+  shorts
+Star Shorts Report: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/export/nv_star/fth/ipo1000/REPs/fth.ipo1000.fth_ipo1000.star_extraction_shorts.rpt
+Short between net FE_OFN119141_n16210 and net fth_channel/g_dft_wrapper_if/g_dft_wrapper_fth_channel/adw_nvism_dcap_ctrl2/x1dcap_test_out_low_no_buf Layer = M5T BBox=(222.0300,399.0660),(222.0500,399.0860)
+Short between net FE_OFN119141_n16210 and net fth_channel/g_dft_wrapper_if/g_dft_wrapper_fth_channel/adw_nvism_dcap_ctrl2/x1dcap_test_out_low_no_buf Layer = M5T BBox=(222.0320,399.0270),(222.0480,399.0430)
+Short between net FE_OFN119141_n16210 and net fth_channel/g_dft_wrapper_if/g_dft_wrapper_fth_channel/adw_nvism_dcap_ctrl2/x1dcap_test_out_low_no_buf Layer = M5T BBox=(222.0300,398.9835),(222.0500,399.1915)
+Short between net FE_OFN119141_n16210 and net fth_channel/g_dft_wrapper_if/g_dft_wrapper_fth_channel/adw_nvism_dcap_ctrl2/x1dcap_test_out_low_no_buf Layer = M5T BBox=(222.0320,399.1320),(222.0480,399.1480)
+Short between net FE_OFN119141_n16210 and unselectable net Layer = TM1 BBox=(222.0300,399.0660),(222.0500,399.0860)
+Short between net FE_OFN119141_n16210 and unselectable net Layer = TM1 BBox=(221.9100,399.0660),(221.9300,399.0860)
+Short between net FE_OFN119141_n16210 and unselectable net Layer = TM1 BBox=(221.7900,399.0660),(221.8100,399.0860)
+Short between net FE_OFN119141_n16210 and unselectable net Layer = TM1 BBox=(221.7400,399.0570),(222.1350,399.0950)
+Short between net FE_OFN119141_n16210 and unselectable net Layer = TM1 BBox=(221.9010,399.0570),(221.9390,399.0950)
+
+
+---------------------------------------- [32mSignoff Timing (PT)[0m ----------------------------------------
+HTML Report: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_18.09.25_14:13.html
+HTML Report: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_18.09.25_03:16.html
+HTML Report: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_17.09.25_16:53.html
+HTML Report: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_15.09.25_18:49.html
+HTML Report: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_15.09.25_16:56.html
+HTML Report: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_14.09.25_13:00.html
+HTML Report: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_13.09.25_04:51.html
+HTML Report: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_12.09.25_16:23.html
+HTML Report: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_12.09.25_14:39.html
+HTML Report: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_12.09.25_00:42.html
+HTML Report: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_11.09.25_15:42.html
+HTML Report: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_10.09.25_22:24.html
+All Violators: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_18.09.25_14:13/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/fth_func.std_tt_0c_0p6v.setup.typical.all_violators.gz
+PT Log: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_18.09.25_14:13/func.std_tt_0c_0p6v.setup.typical/log/fth_func.std_tt_0c_0p6v.setup.typical.log.gz
+[31mErrors found:[0m
+  -E- [2025/09/18 14:55:23] Design contains not annotated nets, check reports/quality_and_sanity_reports/fth_func.std_tt_0c_0p6v.setup.typical.annot
+
+---------------------------------------- [32mPhysical Verification (PV)[0m ----------------------------------------
+LVS Errors: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/pv_flow/drc_dir/fth/lvs_icv_ipo1000/fth_ipo1000_fill.LVS_ERRORS
+  Final comparison result:PASS
+  Successful equivalence points
+  Failed equivalence points
+DRC Errors: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/pv_flow/drc_dir/fth/drc_icv_ipo1000/fth_ipo1000_fill.LAYOUT_ERRORS
+Total DRC violations: 17
+Antenna Errors: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/pv_flow/drc_dir/fth/drc_icv_antenna_ipo1000/fth_ipo1000_fill.LAYOUT_ERRORS
+  LAYOUT ERRORS RESULTS: CLEAN
+
+---------------------------------------- [32mECO Analysis[0m ----------------------------------------
+[31m3 ECO loops were done[0m
+ECO File: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_10.09.25_22:24/pt_eco_out_10.09.25_23:24_final.tcl
+  Total ECO commands: 3926
+  Command breakdown:
+    set_cell_location: 1842
+    size_cell: 1585
+    insert_buffer: 251
+    add_buffer_on_route: 248
+ECO File: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_11.09.25_15:42/pt_eco_out_11.09.25_16:46_final.tcl
+  Total ECO commands: 775
+  Command breakdown:
+    set_cell_location: 382
+    size_cell: 373
+    insert_buffer: 11
+    add_buffer_on_route: 9
+ECO File: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/auto_pt/work_12.09.25_16:23/pt_eco_out_12.09.25_17:21_final.tcl
+  Total ECO commands: 1445
+  Command breakdown:
+    set_cell_location: 720
+    size_cell: 702
+    add_buffer_on_route: 16
+    insert_buffer: 7
+NV Gate ECO Summary: /home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp/signoff_flow/nv_gate_eco/fth/ipo1000/sum.eco_change
+  [36mECO Changes Summary:[0m
+    Object     Change          Count   
+    ---------- --------------- --------
+    INST       ADDITION        18      
+    NET        DISCONNECTION   136     
+    NET        CONNECTION      208     
+    NET        ADDITION        18      
+    TOTAL                      380     
+
+---------------------------------------- [32mBlock Release[0m ----------------------------------------
+No release was done
+
+[32mReview completed successfully![0m
+
+
+STDERR:

@@ -1,0 +1,281 @@
+# Review for: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc
+# Generated: 2025-09-18 17:51:05
+# Command: /bin/python3 avice_wa_review.py /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc
+# Return code: 0
+
+STDOUT:
+
+[36m    +===============================================================+
+    |                                                               |
+    |                    [1mAVICE WORKAREA REVIEW[0m[36m                      |
+    |                                                               |
+    |              [32mAdvanced Verification & Integration[0m[36m              |
+    |                    [32mCircuit Engineering[0m[36m                        |
+    |                                                               |
+    +===============================================================+[0m
+
+UNIT: prtm
+TAG: agur_prtm_rbv_2025_07_31_with_xor_new_calc
+IPO: ipo1000 (Available IPOs: ipo1000)
+
+---------------------------------------- [32mSetup[0m ----------------------------------------
+  [36mEnvironment Information:[0m
+    LIB_SNAP_REV: 20250611
+    BE_OVERRIDE_TOOLVERS: /home/agur_backend_blockData/project_scripts/pilot_cfg/toolvers_beta_20250728_v2.cfg
+DC Log: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/syn_flow/dc/log/dc.log
+PnR Status: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pnr_flow/nv_flow/prtm.prc.status
+
+IPO: ipo1000
+DC runtime: 0
+Design Definition: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/unit_scripts/des_def.tcl
+PnR Configuration: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pnr_flow/nv_flow/prtm.prc
+Common TCL: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pnr_flow/nv_flow/COMMON/prtm_add_extra_M5T_PG.tcl
+Common TCL: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pnr_flow/nv_flow/COMMON/myscripts.tcl
+Common TCL: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pnr_flow/nv_flow/COMMON/io_buf_add.tcl
+
+---------------------------------------- [32mSynthesis (DC)[0m ----------------------------------------
+Report: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/syn_flow/dc/reports/be4rtl/internal_high_width_logical_cones.rpt
+Report: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/syn_flow/dc/reports/debug/prtm.rtl2gate.removed_cgates.rep
+Report: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/syn_flow/dc/reports/prtm_rtl2gate.qor.rpt
+Report: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/syn_flow/dc/reports/debug/prtm.rtl2gate.removed_registers.rep
+Clock gates removed: 25
+Removed registers: 4883
+
+---------------------------------------- [32mPost-Route Analysis[0m ----------------------------------------
+Post-Route Data: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pnr_flow/nv_flow/prtm/ipo1000/reports/prtm_prtm_ipo1000_report_prtm_ipo1000_postroute.func.std_tt_0c_0p6v.setup.typical.data
+
+[33mPost-Route Data Parameters:[0m
+  [36mTiming Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    FEEDTHROUGH_WNS           11.923         
+    FEEDTHROUGH_TNS           0.000          
+    FEEDTHROUGH_ViolPaths     0              
+    REGIN_WNS                 -0.140         
+    REGIN_TNS                 -5.779         
+    REGIN_ViolPaths           146            
+    REGOUT_WNS                -0.070         
+    REGOUT_TNS                -0.142         
+    REGOUT_ViolPaths          11             
+    i1_clk_WNS                0.001          
+    i1_clk_TNS                0.000          
+    i1_clk_ViolPaths          0              
+    i1_clk_reg2cgate_WNS      0.002          
+    i1_clk_reg2cgate_TNS      0.000          
+    i1_clk_reg2cgate_ViolPaths 0              
+    i2_clk_WNS                0.010          
+    i2_clk_TNS                0.000          
+    i2_clk_ViolPaths          0              
+    i2_clk_reg2cgate_WNS      0.021          
+    i2_clk_reg2cgate_TNS      0.000          
+    i2_clk_reg2cgate_ViolPaths 0              
+    m1_clk_WNS                0.517          
+    m1_clk_TNS                0.000          
+    m1_clk_ViolPaths          0              
+    m1_clk_reg2cgate_WNS      4.887          
+    m1_clk_reg2cgate_TNS      0.000          
+    m1_clk_reg2cgate_ViolPaths 0              
+    m1_clk_Skew               0.059]         
+    m1_clk_Latency_Max        0.180          
+    m1_clk_Latency_Avg        0.168          
+    i2_clk_Skew               0.085]         
+    i2_clk_Latency_Max        0.447          
+    i2_clk_Latency_Avg        0.417          
+    i1_clk_Skew               NA]            
+    i1_clk_Latency_Max        NA             
+    i1_clk_Latency_Avg        NA             
+    m1_clk_Cycle_Time         6.400          
+    i2_clk_Cycle_Time         0.622          
+    i1_clk_Cycle_Time         1.244          
+
+  [36mArea Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    CellArea                  0.095938038    
+    CombinationalArea         0.07265668284  
+    SequentialArea            0.02328135516  
+    ArraysArea                0.0499334472   
+    Utilization               28.9534485775% 
+    EffictiveUtilization      36.9689015805% 
+    CoreArea                  0.38508573978  
+    DieArea                   0.3860123904   
+
+  [36mCell Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    CellCount                 1096530        
+    CombinationalCount        1086944        
+    SequentialCount           45214          
+    FFCount                   103914         
+    m1_clk_FFCount            2061           
+    i2_clk_FFCount            157            
+    i1_clk_FFCount            101696         
+    BufInvCellCount           231645         
+    BufInvPerc                21.1252770102% 
+    GatedFFPerc               88.7521171784% 
+    UngatedFFPerc             6.18877148411% 
+    UngatedFF                 6431           
+
+  [36mPower Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    StdCellsLeakage           0              
+    ArraysLeakage             0              
+    POWER_AWARE               no             
+
+  [36mClock Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    ClkGatesCount             3208           
+    NoneRBVClkGatesCount      553            
+    ClkCellsBiggerThan8       6844           
+
+  [36mOther Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    Unit                      prtm           
+    Date                      25-08-16 19:24:16
+    Project                   agur           
+    Stage                     prtm_ipo1000_report_prtm_ipo1000_postroute
+    Technology                tsmc5          
+    Directory                 /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc
+    WW                        33             
+    Tool                      innovus        
+    User                      avice          
+    RTL_TAG                   agur_prtm_rbv_2025_07_31_with_xor_new_calc
+    Scenario                  func.std_tt_0c_0p6v.setup.typical
+    ArraysSize                121.068KB      
+    ArraysCount               44             
+    MBperc                    81.7079508055% 
+    FFsOverLogicCg            38             
+    PercFFWithOneCg           73.7917893643  
+    PercFFWithMoreThan2Cg     20.0194391516  
+    TotalLogiCg               2707           
+    DelBuffer                 63189          
+    TotalLeakeage             0              
+    LongestScanChain          310            
+    NumScanChains             342            
+    MaxCapViolations          0              
+    MaxTransViolations        169            
+    MaxFanoutViolations       0              
+    HVT_percentage            51.9410718292% 
+    SVT_percentage            48.0589281708% 
+    LVT_percentage            0.0%           
+    ULVT_percentage           0.0%           
+    CongestionBothDir         0.0%           
+    CongestionHDir            0.00%          
+    CongestionVDir            0.00%          
+    ShortsAmount              1              
+    TotalWireLength           0.9997528597e+07 um
+    TAPCount                   0             
+    TAPFanoutSmallerThan10    0              
+    DataCellsBiggerThan4      12166          
+    FFsBiggerThan4            0              
+    CGWithMaxFanout           plrxm/plrx_logic/plrx_common/plu_pcs_rx_top_p0/plu_pcs_rx/plu_pcs_rx_port_64_66/plu_rx_64_66_port_rs/plu_rx_64_66_port_rs_transcoder_top/g_ff_tdm_last_block/g_ff1/g_clkgate/g_clkgate_test/g_wrap_gate_level_clkgate/clkgate_cell
+    MaxCGFanoutNum            30             
+    NoneScanFlopCount         2849           
+    Parrallel_Driver          NVT_CKNM21LD96T6 NVT_CKNM21LD96T6 NVT_CKNM21LD96T6
+    MaxClonedCg               7              
+    ServerName                tlv02-03-sim-a13-035.nvidia.com
+    StepRuntime               94791 s        
+    Memoryusage               238120         
+    CpuNum                    4              
+    ToolVersion               23.34-y076_1   
+    SiteVersion               /home/nbu_be_tools/beflow/1.0/2025_ww13_01_rev13
+    TracksNum                 T6_DIP         
+    GenDefMode                NA             
+    UseMultibit               1              
+    UseHighYieldFlops         N/A            
+    NoDft                     NA             
+    UseSPG                    0              
+    cpu_used                  N/A            
+    cpu_requested             N/A            
+    memory_per_cpu            N/A            
+    max_memory_used           N/A            
+    memory_requested          N/A            
+
+Power Summary: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pnr_flow/nv_flow/prtm/ipo1000/REPs/SUMMARY/prtm.ipo1000.postroute.power.rpt.gz
+
+[36mPower Summary Table:[0m
+        group     |    area    |  count  |   power   : density : cell_avg | internal : switching : total |  leakage  
+   ===============|============|=========|===========:=========:==========|==========:===========:=======|===========
+    combinational |  68829.850 | 1051313 | 12217.027 :   0.177 :    0.012 |    0.000 :     0.000 : 0.000 | 12217.027 
+    sequential    |  73532.118 |   45262 |  2214.453 :   0.030 :    0.049 |    0.000 :     0.000 : 0.000 |  2214.453 
+    physical      | 243509.264 | 1883958 |    14.439 :   0.000 :    0.000 |    0.000 :     0.000 : 0.000 |    14.439 
+   ===============|============|=========|===========:=========:==========|==========:===========:=======|===========
+    total         | 385871.233 | 2980533 | 14445.918 :   0.037 :    0.005 |    0.000 :     0.000 : 0.000 | 14445.918 
+   ==================================================================================================================
+
+[36mPost-Route Pictures:[0m
+  Generating HTML image report...
+  HTML Report: /home/avice/scripts/avice_debug_report_prtm_20250918_175100.html
+  Open with: firefox avice_debug_report_prtm_20250918_175100.html &
+
+---------------------------------------- [32mClock Analysis[0m ----------------------------------------
+Innvou Clock Analysis: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pnr_flow/nv_flow/prtm/ipo1000/REPs/SUMMARY/prtm.ipo1000.postroute.clock_tree.skew_and_latency.from_clock_root_source.rpt.gz
+
+[33mClock Tree Analysis for func.std_tt_0c_0p6v.setup.typical:[0m
+  Clock      Period   Skew     Min      Max      Median   Mean     StdDev  
+  ---------- -------- -------- -------- -------- -------- -------- --------
+  i1_clk     1.244    0.370    0.095    0.465    0.434    0.427    0.029   
+  i2_clk     0.622    0.465    0.002    0.467    0.162    0.288    0.153   
+  m1_clk     6.400    0.185    0.001    0.186    0.175    0.173    0.013   
+
+  All values in nanoseconds (ns)
+PT Clock Analysis: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/signoff_flow/auto_pt/work_16.08.25_18:02/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/prtm_func.std_tt_0c_0p6v.setup.typical.clock_latency
+
+[33mPT Clock Latency Analysis:[0m
+  Clock      Min (ns)   Max (ns)  
+  ---------- ---------- ----------
+  i1_clk     0.202      0.472     
+  i2_clk     0.025      0.472     
+  m1_clk     0.108      0.189     
+
+  All values in nanoseconds (ns)
+
+---------------------------------------- [32mFormal Verification[0m ----------------------------------------
+Formal Log: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/formal_flow/rtl_vs_pnr_bbox_fm/log/rtl_vs_pnr_bbox_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 6.91 hours
+Formal Log: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/formal_flow/rtl_vs_pnr_fm/log/rtl_vs_pnr_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 40.80 hours
+
+---------------------------------------- [32mParasitic Extraction (Star)[0m ----------------------------------------
+SPEF File: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/export/nv_star/prtm/ipo1000/IOs/netlists/prtm.ipo1000.smc1.spef.typical_T0.gz
+SPEF Info: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/export/nv_star/prtm/ipo1000/IOs/netlists/prtm.ipo1000.typical_T0.spef_info
+  opens
+  shorts
+Star Shorts Report: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/export/nv_star/prtm/ipo1000/REPs/prtm.ipo1000.prtm_ipo1000.star_extraction_shorts.rpt
+Short between net FE_OFN1729840375_n and net plrxm/plrx_logic/plrx_common/plu_pcs_rx_top_p0/plu_pcs_rx/plu_rx_lanes/plu_rx_dual_lane1/plu_rx_lane1/plu_rx_lane_slip_and_deskew_fifo/plu_rx_lane_64_66_slip_fifo/plu_shift/n1229 Layer = M1_mask2 BBox=(255.2280,521.5080),(255.2480,521.5080)
+Short between net FE_OFN1729840375_n and net plrxm/plrx_logic/plrx_common/plu_pcs_rx_top_p0/plu_pcs_rx/plu_rx_lanes/plu_rx_dual_lane1/plu_rx_lane1/plu_rx_lane_slip_and_deskew_fifo/plu_rx_lane_64_66_slip_fifo/plu_shift/n1229 Layer = M1_mask2 BBox=(255.2280,521.5050),(255.2480,521.5080)
+
+
+---------------------------------------- [32mSignoff Timing (PT)[0m ----------------------------------------
+HTML Report: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/signoff_flow/auto_pt/work_16.08.25_18:02.html
+All Violators: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/signoff_flow/auto_pt/work_16.08.25_18:02/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/prtm_func.std_tt_0c_0p6v.setup.typical.all_violators.gz
+PT Log: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/signoff_flow/auto_pt/work_16.08.25_18:02/func.std_tt_0c_0p6v.setup.typical/log/prtm_func.std_tt_0c_0p6v.setup.typical.log.gz
+
+---------------------------------------- [32mPhysical Verification (PV)[0m ----------------------------------------
+LVS Errors: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pv_flow/drc_dir/prtm/lvs_icv_ipo1000/prtm_ipo1000_fill.LVS_ERRORS
+  Final comparison result:FAIL
+  Successful equivalence points
+  Failed equivalence points
+  Failed equivalence points:
+DRC Errors: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pv_flow/drc_dir/prtm/drc_icv_ipo1000/prtm_ipo1000_fill.LAYOUT_ERRORS
+Total DRC violations: 6
+Antenna Errors: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pv_flow/drc_dir/prtm/drc_icv_antenna_ipo1000/prtm_ipo1000_fill.LAYOUT_ERRORS
+  LAYOUT ERRORS RESULTS: CLEAN
+
+---------------------------------------- [32mECO Analysis[0m ----------------------------------------
+[31m0 ECO loops were done[0m
+Didn't run PT ECO
+Didn't run NV Gate ECO
+
+---------------------------------------- [32mBlock Release[0m ----------------------------------------
+No release was done
+
+[32mReview completed successfully![0m
+
+
+STDERR:

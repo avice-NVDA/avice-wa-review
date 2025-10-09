@@ -1,0 +1,9 @@
+Running selected sections: setup
+
+---------------------------------------- [32mSetup[0m ----------------------------------------
+UNIT: lnd
+TAG: lnd_rbv_2025_07_27_condb_int2_23_5r1_SFNL_snap
+IPO: ipo1000 (Available IPOs: ipo1000)
+  [36mEnvironment Information:[0m
+    LIB_SNAP_REV: 20250611
+    BE_OVERRIDE_TOOLVERS: /home/agur_backend_blockData/project_scripts/pilot_cfg/toolvers_beta_20250728_v2.cfg

@@ -1,0 +1,368 @@
+# Review for: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2
+# Generated: 2025-09-18 17:50:20
+# Command: /bin/python3 avice_wa_review.py /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2
+# Return code: 0
+
+STDOUT:
+
+[36m    +===============================================================+
+    |                                                               |
+    |                    [1mAVICE WORKAREA REVIEW[0m[36m                      |
+    |                                                               |
+    |              [32mAdvanced Verification & Integration[0m[36m              |
+    |                    [32mCircuit Engineering[0m[36m                        |
+    |                                                               |
+    +===============================================================+[0m
+
+UNIT: fdb
+TAG: fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap
+IPO: ipo1000 (Available IPOs: ipo1000)
+
+---------------------------------------- [32mSetup[0m ----------------------------------------
+  [36mEnvironment Information:[0m
+    LIB_SNAP_REV: 20250819
+DC Log: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/syn_flow/dc/log/dc.log
+PnR Status: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pnr_flow/nv_flow/fdb.prc.status
+
+IPO: ipo1000
+DC runtime: 0
+Design Definition: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/unit_scripts/des_def.tcl
+PnR Configuration: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pnr_flow/nv_flow/fdb.prc
+Common TCL: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pnr_flow/nv_flow/COMMON/extreme.tcl
+Common TCL: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pnr_flow/nv_flow/COMMON/fdb_interface_clock_cts.tcl
+Common TCL: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pnr_flow/nv_flow/COMMON/fdb_interface_clock_place.tcl
+Common TCL: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pnr_flow/nv_flow/COMMON/fdb_timing_path.tcl
+Common TCL: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pnr_flow/nv_flow/COMMON/pdfeed_blkg_increase.tcl
+Common TCL: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pnr_flow/nv_flow/COMMON/pdfeed_pblkg.tcl
+Common TCL: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pnr_flow/nv_flow/COMMON/pdfeed_pblkg_remove.tcl
+Common TCL: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pnr_flow/nv_flow/COMMON/remove_spr_blockage.tcl
+Common TCL: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pnr_flow/nv_flow/COMMON/sensor_workaround.tcl
+Common TCL: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pnr_flow/nv_flow/COMMON/spr_macro_blockage.tcl
+
+---------------------------------------- [32mSynthesis (DC)[0m ----------------------------------------
+Report: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/syn_flow/dc/reports/be4rtl/internal_high_width_logical_cones.rpt
+Report: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/syn_flow/dc/reports/debug/fdb.rtl2gate.removed_cgates.rep
+Report: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/syn_flow/dc/reports/fdb_rtl2gate.qor.rpt
+Report: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/syn_flow/dc/reports/debug/fdb.rtl2gate.removed_registers.rep
+Clock gates removed: 3
+Removed registers: 16819
+
+---------------------------------------- [32mPost-Route Analysis[0m ----------------------------------------
+Post-Route Data: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pnr_flow/nv_flow/fdb/ipo1000/reports/fdb_fdb_ipo1000_report_fdb_ipo1000_postroute.func.std_tt_0c_0p6v.setup.typical.data
+
+[33mPost-Route Data Parameters:[0m
+  [36mTiming Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    FEEDTHROUGH_WNS           -0.003         
+    FEEDTHROUGH_TNS           -0.003         
+    FEEDTHROUGH_ViolPaths     1              
+    REGIN_WNS                 -0.186         
+    REGIN_TNS                 -14.424        
+    REGIN_ViolPaths           353            
+    REGOUT_WNS                -0.296         
+    REGOUT_TNS                -126.851       
+    REGOUT_ViolPaths          3330           
+    i1_clk_WNS                0.002          
+    i1_clk_TNS                0.000          
+    i1_clk_ViolPaths          0              
+    i1_clk_reg2cgate_WNS      0.003          
+    i1_clk_reg2cgate_TNS      0.000          
+    i1_clk_reg2cgate_ViolPaths 0              
+    i2_clk_WNS                -0.001         
+    i2_clk_TNS                -0.004         
+    i2_clk_ViolPaths          6              
+    i2_clk_reg2cgate_WNS      -0.001         
+    i2_clk_reg2cgate_TNS      -0.001         
+    i2_clk_reg2cgate_ViolPaths 1              
+    m1_clk_WNS                0.049          
+    m1_clk_TNS                0.000          
+    m1_clk_ViolPaths          0              
+    m1_clk_reg2cgate_WNS      2.801          
+    m1_clk_reg2cgate_TNS      0.000          
+    m1_clk_reg2cgate_ViolPaths 0              
+    m1_clk_Skew               0.087]         
+    m1_clk_Latency_Max        0.435          
+    m1_clk_Latency_Avg        0.397          
+    i2_clk_Skew               0.108]         
+    i2_clk_Latency_Max        0.553          
+    i2_clk_Latency_Avg        0.494          
+    i1_clk_Skew               NA]            
+    i1_clk_Latency_Max        NA             
+    i1_clk_Latency_Avg        NA             
+    m1_clk_Cycle_Time         6.400          
+    i2_clk_Cycle_Time         0.622          
+    i1_clk_Cycle_Time         1.244          
+
+  [36mArea Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    CellArea                  0.48559405608  
+    CombinationalArea         0.4488990471   
+    SequentialArea            0.03669500898  
+    ArraysArea                0.13636858788  
+    Utilization               12.0904718657% 
+    EffictiveUtilization      27.15151988%   
+    CoreArea                  0.82336738554  
+    DieArea                   0.8246065968   
+
+  [36mCell Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    CellCount                 602384         
+    CombinationalCount        1208914        
+    SequentialCount           61393          
+    FFCount                   150251         
+    m1_clk_FFCount            3410           
+    i2_clk_FFCount            13261          
+    i1_clk_FFCount            133580         
+    BufInvCellCount           223460         
+    BufInvPerc                37.0959388032% 
+    GatedFFPerc               89.0797101449% 
+    UngatedFFPerc             6.71343285569% 
+    UngatedFF                 10087          
+
+  [36mPower Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    StdCellsLeakage           0              
+    ArraysLeakage             0              
+    POWER_AWARE               yes            
+
+  [36mClock Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    ClkGatesCount             5099           
+    NoneRBVClkGatesCount      350            
+    ClkCellsBiggerThan8       12282          
+
+  [36mOther Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    Unit                      fdb            
+    Date                      25-09-12 19:40:56
+    Project                   agur           
+    Stage                     fdb_ipo1000_report_fdb_ipo1000_postroute
+    Technology                tsmc5          
+    Directory                 /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2
+    WW                        37             
+    Tool                      innovus        
+    User                      dkolesnikov    
+    RTL_TAG                   fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap
+    Scenario                  func.std_tt_0c_0p6v.setup.typical
+    ArraysSize                433.576KB      
+    ArraysCount               49             
+    MBperc                    86.1092438653% 
+    FFsOverLogicCg            31             
+    PercFFWithOneCg           32.263346001   
+    PercFFWithMoreThan2Cg     61.0352010968  
+    TotalLogiCg               4761           
+    DelBuffer                 64976          
+    TotalLeakeage             0              
+    LongestScanChain          293            
+    NumScanChains             892            
+    MaxCapViolations          18             
+    MaxTransViolations        551            
+    MaxFanoutViolations       8              
+    HVT_percentage            70.5291712948% 
+    SVT_percentage            29.4708287052% 
+    LVT_percentage            0.0%           
+    ULVT_percentage           0.0%           
+    CongestionBothDir         0.0%           
+    CongestionHDir            0.00%          
+    CongestionVDir            0.00%          
+    ShortsAmount              21             
+    TotalWireLength           1.15110012795e+07 um
+    TAPCount                   0             
+    TAPFanoutSmallerThan10    0              
+    DataCellsBiggerThan4      18448          
+    FFsBiggerThan4            0              
+    CGWithMaxFanout           fdbo/fdbo_logic/g_clamp_fdbo_core/fdbo_core/fdb_counters/counters_top/counters/counters_gw/cr_array_expose_wrapper/g_ff_write_data_mask/g_clkgate/g_clkgate_test/g_wrap_gate_level_clkgate/clkgate_cell_clone_1
+    MaxCGFanoutNum            30             
+    NoneScanFlopCount         4722           
+    Parrallel_Driver          NVT_CKNM21LD96T6 NVT_CKNM21LD96T6 NVT_CKNM21LD96T6 NVT_CKNM21LD96T6 NVT_CKNM21LD96T6 NVT_CKNM21LD96T6 NVT_CKNM21LD96T6 NVT_CKNM21LD96T6
+    MaxClonedCg               5              
+    ServerName                tlv02-02-sim-d03-009.nvidia.com
+    StepRuntime               90365 s        
+    Memoryusage               172493         
+    CpuNum                    4              
+    ToolVersion               23.34-y076_1   
+    SiteVersion               /home/nbu_be_tools/beflow/1.0/2025_ww13_01_rev13
+    TracksNum                 T6_DIP         
+    GenDefMode                NA             
+    UseMultibit               1              
+    UseHighYieldFlops         N/A            
+    NoDft                     NA             
+    UseSPG                    0              
+    cpu_used                  N/A            
+    cpu_requested             N/A            
+    memory_per_cpu            N/A            
+    max_memory_used           N/A            
+    memory_requested          N/A            
+
+Power Summary: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pnr_flow/nv_flow/fdb/ipo1000/REPs/SUMMARY/fdb.ipo1000.postroute.power.rpt.gz
+
+[36mPower Summary Table:[0m
+        group     |    area    |  count  |   power   : density : cell_avg | internal  : switching :   total   |  leakage  
+   ===============|============|=========|===========:=========:==========|===========:===========:===========|===========
+    combinational |  33078.874 |  540982 | 53115.696 :   1.606 :    0.098 |  6388.842 : 38265.808 : 44654.650 |  8461.046 
+    sequential    | 190477.886 |   61463 | 28386.611 :   0.149 :    0.462 | 17972.632 :  5690.480 : 23663.112 |  4723.500 
+    physical      | 600869.245 | 2120686 |    45.916 :   0.000 :    0.000 |     0.000 :     0.000 :     0.000 |    45.916 
+   ===============|============|=========|===========:=========:==========|===========:===========:===========|===========
+    total         | 824426.005 | 2723131 | 81548.223 :   0.099 :    0.030 | 24361.474 : 43956.288 : 68317.761 | 13230.462 
+   =======================================================================================================================
+
+[36mPost-Route Pictures:[0m
+  Generating HTML image report...
+  HTML Report: /home/avice/scripts/avice_debug_report_fdb_20250918_175015.html
+  Open with: firefox avice_debug_report_fdb_20250918_175015.html &
+
+---------------------------------------- [32mClock Analysis[0m ----------------------------------------
+Innvou Clock Analysis: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pnr_flow/nv_flow/fdb/ipo1000/REPs/SUMMARY/fdb.ipo1000.postroute.clock_tree.skew_and_latency.from_clock_root_source.rpt.gz
+
+[33mClock Tree Analysis for func.std_tt_0c_0p6v.setup.typical:[0m
+  Clock      Period   Skew     Min      Max      Median   Mean     StdDev  
+  ---------- -------- -------- -------- -------- -------- -------- --------
+  i1_clk     1.244    0.471    0.085    0.556    0.509    0.500    0.041   
+  i2_clk     0.622    0.571    0.003    0.574    0.536    0.525    0.055   
+  m1_clk     6.400    0.254    0.193    0.447    0.408    0.405    0.018   
+
+  All values in nanoseconds (ns)
+PT Clock Analysis: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/signoff_flow/auto_pt/work_16.09.25_16:02/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/fdb_func.std_tt_0c_0p6v.setup.typical.clock_latency
+
+[33mPT Clock Latency Analysis:[0m
+  Clock      Min (ns)   Max (ns)  
+  ---------- ---------- ----------
+  i1_clk     0.176      0.575     
+  i2_clk     0.027      0.574     
+  m1_clk     0.321      0.523     
+
+  All values in nanoseconds (ns)
+
+---------------------------------------- [32mFormal Verification[0m ----------------------------------------
+Formal Log: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/formal_flow/rtl_vs_syn_fm/log/rtl_vs_syn_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 0.93 hours
+Formal Log: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/formal_flow/rtl_vs_syn_bbox_fm/log/rtl_vs_syn_bbox_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 1.15 hours
+Formal Log: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/formal_flow/rtl_vs_pnr_fm/log/rtl_vs_pnr_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 1.33 hours
+Formal Log: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/formal_flow/rtl_vs_pnr_bbox_fm/log/rtl_vs_pnr_bbox_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 1.89 hours
+
+---------------------------------------- [32mParasitic Extraction (Star)[0m ----------------------------------------
+SPEF File: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/export/nv_star/fdb/ipo1000/IOs/netlists/fdb.ipo1000.smc1.spef.typical_T0.gz
+SPEF Info: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/export/nv_star/fdb/ipo1000/IOs/netlists/fdb.ipo1000.typical_T0.spef_info
+  opens
+  shorts
+Star Shorts Report: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/export/nv_star/fdb/ipo1000/REPs/fdb.ipo1000.fdb_ipo1000.star_extraction_shorts.rpt
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.4420,123.8200),(187.5120,123.8400)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.4800,123.7170),(187.4960,123.7330)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M2S BBox=(187.4920,123.6100),(187.4920,123.6300)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M2S BBox=(187.5920,123.7150),(187.6260,123.7350)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.5120,123.7150),(187.5120,123.7350)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.4720,123.5070),(187.4880,123.5230)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.4800,123.6120),(187.4960,123.6280)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.4420,123.7170),(187.4480,123.7330)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.4800,123.5070),(187.4960,123.5230)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M2S BBox=(187.4920,123.7150),(187.4920,123.7350)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M5T BBox=(187.5900,123.4770),(187.6100,123.4770)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.4420,123.8220),(187.4480,123.8380)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.4420,123.6120),(187.4480,123.6280)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M2S BBox=(187.4800,123.8220),(187.4920,123.8380)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M5T BBox=(187.5900,123.4770),(187.6100,123.4910)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M2S BBox=(187.4800,123.5070),(187.4920,123.5230)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.4420,123.5070),(187.4480,123.5230)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M2S BBox=(187.4580,123.7150),(187.4920,123.7350)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.4720,123.7170),(187.4880,123.7330)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.4720,123.8220),(187.4880,123.8380)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M2S BBox=(187.4580,123.5050),(187.4920,123.5250)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M5T BBox=(187.5920,123.5770),(187.6080,123.5930)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.4420,123.7150),(187.5120,123.7350)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M5T BBox=(187.5920,123.5070),(187.6080,123.5230)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M5T BBox=(187.5920,123.6120),(187.6080,123.6230)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M2S BBox=(187.4920,123.5050),(187.4920,123.5250)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.5120,123.8200),(187.5120,123.8400)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M2S BBox=(187.5920,123.7170),(187.6040,123.7330)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M2S BBox=(187.6260,123.7150),(187.6260,123.7350)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.4720,123.6120),(187.4880,123.6280)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.4420,123.5050),(187.5120,123.5250)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M2S BBox=(187.4920,123.8200),(187.4920,123.8400)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.4420,123.6100),(187.5175,123.6300)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M2S BBox=(187.4800,123.6120),(187.4920,123.6280)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M2S BBox=(187.4800,123.7170),(187.4920,123.7330)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M2S BBox=(187.4580,123.8200),(187.4920,123.8400)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M5T BBox=(187.5900,123.4770),(187.6100,123.5950)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M5T BBox=(187.5900,123.5950),(187.6100,123.6230)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.5120,123.5050),(187.5120,123.5250)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M2S BBox=(187.6240,123.7170),(187.6260,123.7330)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.4800,123.8220),(187.4960,123.8380)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M4S BBox=(187.5175,123.6100),(187.5175,123.6300)
+Short between net CTS_1 and net FHCTS_i1_clk_net_level4_1 Layer = M2S BBox=(187.4580,123.6100),(187.4920,123.6300)
+
+
+---------------------------------------- [32mSignoff Timing (PT)[0m ----------------------------------------
+HTML Report: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/signoff_flow/auto_pt/work_16.09.25_16:02.html
+HTML Report: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/signoff_flow/auto_pt/work_15.09.25_02:15.html
+HTML Report: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/signoff_flow/auto_pt/work_14.09.25_11:15.html
+HTML Report: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/signoff_flow/auto_pt/work_13.09.25_11:26.html
+All Violators: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/signoff_flow/auto_pt/work_16.09.25_16:02/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/fdb_func.std_tt_0c_0p6v.setup.typical.all_violators.gz
+PT Log: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/signoff_flow/auto_pt/work_16.09.25_16:02/func.std_tt_0c_0p6v.setup.typical/log/fdb_func.std_tt_0c_0p6v.setup.typical.log.gz
+[31mErrors found:[0m
+  -E- [2025/09/16 16:11:13] Design contains not annotated nets, check reports/quality_and_sanity_reports/fdb_func.std_tt_0c_0p6v.setup.typical.annot
+
+---------------------------------------- [32mPhysical Verification (PV)[0m ----------------------------------------
+LVS Errors: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pv_flow/drc_dir/fdb/lvs_icv_ipo1000/fdb_ipo1000_fill.LVS_ERRORS
+  Final comparison result:PASS
+  Successful equivalence points
+  Failed equivalence points
+DRC Errors: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pv_flow/drc_dir/fdb/drc_icv_ipo1000/fdb_ipo1000_fill.LAYOUT_ERRORS
+Total DRC violations: 10
+Antenna Errors: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/pv_flow/drc_dir/fdb/drc_icv_antenna_ipo1000/fdb_ipo1000_fill.LAYOUT_ERRORS
+  LAYOUT ERRORS RESULTS: CLEAN
+
+---------------------------------------- [32mECO Analysis[0m ----------------------------------------
+[31m1 ECO loops were done[0m
+ECO File: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/signoff_flow/auto_pt/work_14.09.25_11:15/pt_eco_out_14.09.25_12:56_final.tcl
+  Total ECO commands: 2253
+  Command breakdown:
+    set_cell_location: 970
+    size_cell: 600
+    add_buffer_on_route: 354
+    insert_buffer: 329
+NV Gate ECO Summary: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/signoff_flow/nv_gate_eco/fdb/ipo1000/sum.eco_change
+  [36mECO Changes Summary:[0m
+    Object     Change          Count   
+    ---------- --------------- --------
+    INST       NONCS_REF_SWAP  30      
+    INST       ADDITION        7       
+    NET        DISCONNECTION   7       
+    NET        CONNECTION      35      
+    NET        ADDITION        7       
+    TOTAL                      86      
+
+---------------------------------------- [32mBlock Release[0m ----------------------------------------
+Block Release Log: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/export/block_release/log/block_release.log
+  Release to: /home/agur_backend_blockRelease/block/fdb/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2__2025_9_16_18_50_8
+  [36mUmake Block Release Commands:[0m
+    [2025/09/16 18:48:17] /home/nbu_be_tools/umake/1.0/2025_ww27_02/umake_main/umake.py -s block_release --step_flags -s -l -f -p --fe_dct_release
+Block Release Summary: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2/export/block_release/reports/fdb.summary
+  USER: dkolesnikov
+  Release fdb from fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2
+  Release to: /home/agur_backend_blockRelease/block/fdb/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2__2025_9_16_18_50_8
+        Text: _2025_9_16_18_50_8
+         Pnr: True
+         Sta: True
+         Fcl: True
+      FE_DCT: True
+   Build ndm: None
+      Beview: True
+  
+
+[32mReview completed successfully![0m
+
+
+STDERR:

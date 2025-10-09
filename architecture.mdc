@@ -1,0 +1,558 @@
+---
+alwaysApply: true
+---
+
+# Avice Workarea Review Project - Architecture Rules
+# This file contains all coding standards, patterns, and rules for the workarea review project
+# Based on .cursorrules and project-specific patterns established during development
+
+# Project Context and Communication
+# When this file is part of the AI assistant's context, the assistant should:
+# 1. Address the user as "Sir avice" in all responses
+# 2. Reference this architecture file when making decisions
+# 3. Confirm adherence to these rules when implementing features
+# 4. Use "Sir avice" as a signal that the architecture.mdc is active in context
+
+# Unix Shell Compatibility Rules
+
+When writing code that outputs to Unix shells or terminals, always use ASCII characters instead of Unicode symbols to ensure proper display across all terminal environments.
+
+## Character Substitutions for Console Output
+
+| Unicode Symbol | ASCII Replacement | Usage Example |
+|----------------|-------------------|---------------|
+| `→` (arrow) | `->` | Show progression/change: "10 -> 20" |
+| `✓` (checkmark) | `[OK]` | Success indicators: "[OK] Complete" |
+| `✗` (X mark) | `[ERROR]` | Error indicators: "[ERROR] Failed" |
+| `⚠` (warning) | `[WARN]` | Warning indicators: "[WARN] Check required" |
+| `•` (bullet) | `-` | List items: "- Item 1" |
+| `▶` (triangle right) | `>` | HTML only (safe in web content) |
+| `▼` (triangle down) | `v` | HTML only (safe in web content) |
+
+## Console Output Examples
+
+**❌ Bad (Unicode - breaks in Unix shells):**
+```python
+print(f"Status: ✓ Complete")
+print(f"Progress: 10 → 20")
+print(f"• Item 1")
+print(f"⚠ Warning message")
+```
+
+**✅ Good (ASCII - works everywhere):**
+```python
+print(f"Status: [OK] Complete")
+print(f"Progress: 10 -> 20")
+print(f"- Item 1")
+print(f"[WARN] Warning message")
+```
+
+## Safe Unicode Usage
+
+Unicode characters are safe to use in:
+- HTML content (web pages and reports)
+- Markdown documentation files
+- File content (not console output)
+- GUI applications
+- Comments and docstrings
+
+## Testing Requirement
+
+Always test console output in actual Unix shells (bash, csh, tcsh) to verify proper display before committing changes.
+
+This applies to all print statements, logging, and console output throughout the project.
+
+# File Path and System Compatibility
+
+1. Use absolute paths when possible for reliability
+2. Handle both relative and absolute paths gracefully
+3. Use os.path.join() for path construction
+4. Check file existence before operations
+5. Handle gzipped files (.gz) appropriately
+6. Use proper encoding (utf-8) for file operations
+
+# Error Handling Best Practices
+
+1. Use try-except blocks for file operations
+2. Provide informative error messages
+3. Log errors with context (file path, operation)
+4. Handle common exceptions: OSError, UnicodeDecodeError, FileNotFoundError
+5. Use specific exception types when possible
+6. Include fallback mechanisms for critical operations
+
+# Code Style and Structure
+
+1. Use descriptive variable and function names
+2. Add docstrings to all functions and classes
+3. Use type hints where appropriate
+4. Keep functions focused on single responsibilities
+5. Use meaningful comments for complex logic
+6. Follow PEP 8 style guidelines
+7. **ALWAYS update documentation when making code changes**:
+   - Update main docstring when changing CLI arguments or behavior
+   - Update help text (epilog) to reflect new features or options
+   - Update function/class docstrings when changing signatures or behavior
+   - Update examples to demonstrate new functionality
+   - Keep README files synchronized with actual behavior
+
+# Output Formatting Standards
+
+1. CRITICAL: Minimize Console Output Lines
+   - Every new line printed to Unix shell makes the review longer and harder to read
+   - Combine related metrics into single lines whenever possible
+   - Use separators like "|" or "," to group information compactly
+   - Examples:
+     * Design Area + Die Dimensions in ONE line
+     * DSR Skew trends for multiple work areas in ONE line
+     * Timing path groups as comma-separated list in ONE line
+   - HTML reports can have unlimited detail and lines - be verbose there
+   - Console output should be concise, scannable, and actionable
+
+2. ALWAYS use table formatting for structured data with multiple parameters:
+   - When displaying multiple rows of data with similar columns
+   - When showing numbers, counts, or metrics in a structured way
+   - When presenting parameters, errors, or status information
+   - Tables make data much easier to read and scan
+
+3. Table formatting guidelines:
+   - Use proper column alignment (left for text, right for numbers)
+   - Include clear headers with appropriate spacing
+   - Truncate long descriptions with "..." if needed
+   - Use consistent column widths for readability
+   - Add separators (dashes) between header and data rows
+
+4. Examples of when to use tables:
+   - GL Check results (Checker Name, Count, Error ID, Description)
+   - Runtime summaries (Stage, Category, Runtime, Start, End)
+   - Error listings (Error Type, Count, Description)
+   - Parameter comparisons (Parameter, Value, Status)
+   - Any structured data with 3+ columns of information
+
+# Performance Considerations
+
+1. Use generators for large data processing
+2. Avoid reading entire files into memory when possible
+3. Use efficient data structures (sets for lookups, etc.)
+4. Cache frequently accessed data
+5. Use appropriate data types for the task
+6. Profile code for bottlenecks
+
+# Security and Safety
+
+1. Validate input paths to prevent directory traversal
+2. Sanitize user input before file operations
+3. Use subprocess safely (avoid shell=True when possible)
+4. Handle sensitive data appropriately
+5. Log security-relevant events
+6. Use proper file permissions
+
+# ASIC/SoC Development Specific
+
+1. Handle large log files efficiently
+2. Parse timing reports with robust regex patterns
+3. Generate HTML reports for complex data visualization
+4. Use appropriate data structures for design metrics
+5. Handle missing or incomplete data gracefully
+6. Provide clear progress indicators for long operations
+
+# Flow Status Detection and Timeline Analysis
+
+1. Flow completion should be determined by both:
+   - Presence/absence of STEP__END__* marker files
+   - Existence of expected output files (primary indicators)
+
+2. Star (Parasitic Extraction) flow status:
+   - Check for SPEF files (*.spef.typical_T0.gz) as primary completion indicator
+   - If SPEF exists but STEP__END is missing, mark as completed with annotation
+   - Use "(inferred from output files)" annotation in yellow when END marker is missing
+   - This handles cases where flows complete but don't write END markers properly
+
+3. PT (PrimeTime) flow status:
+   - Check for timing reports and HTML outputs
+   - Validate completion based on report file timestamps
+
+4. General flow timeline rules:
+   - Always show start/end timestamps from STEP__BEGIN__* and STEP__END__* files
+   - Calculate durations accurately (hours, minutes, seconds)
+   - Mark flows as RUNNING only when: BEGIN exists, END missing, AND output files don't exist
+   - Annotate inferred completion times when using output file timestamps
+
+# Documentation and Branding Standards
+
+1. ALWAYS use the Alon Vice ASCII art logo in script headers:
+   ```
+   #===============================================================================
+   #      +===+ +--+ +--+ +=+ +===+ +===+
+   #      |   | |  | |  | | | |     |    
+   #      |===| |  +-+  | | | |     |=== 
+   #      |   |  |     |  | | |     |    
+   #      |   |   +---+   +=+ +===+ +===+                                 
+   #            ~ Alon Vice Tools ~
+   # Copyright (c) 2025 Alon Vice (avice)
+   # All rights reserved.
+   # This script is the intellectual property of Alon Vice.
+   # For permissions and licensing, contact: avice@nvidia.com
+   #===============================================================================
+   ```
+
+2. Include comprehensive header documentation with:
+   - Script name and purpose
+   - Detailed description
+   - Usage syntax with examples
+   - Arguments explanation
+   - Prerequisites
+   - Output description
+   - Examples section
+
+3. Use consistent formatting:
+   - 80-character width separators (#===============================================================================)
+   - Proper indentation for multi-line descriptions
+   - Clear section headers
+   - Contact information: avice@nvidia.com
+
+4. When generating new scripts or adding headers, always include:
+   - The ASCII art logo
+   - Copyright notice
+   - Intellectual property statement
+   - Contact information
+   - Comprehensive documentation following the established pattern
+
+# Workarea Management Standards
+
+1. ALWAYS maintain a workareas.txt file to track available test workareas:
+   - Add new workareas provided by the user to workareas.txt
+   - Include workarea path, description, and date added
+   - Use these workareas when testing new code changes
+   - Different workareas reveal different outputs and edge cases
+
+2. Workarea file format:
+   ```
+   # Workarea Test Database
+   # Format: PATH|DESCRIPTION|DATE_ADDED|STATUS|IPOS
+   /path/to/workarea1|Description of workarea1|2025-01-21|ACTIVE|ipo1
+   /path/to/workarea2|Description of workarea2|2025-01-21|ACTIVE|ipo1,ipo2
+   ```
+
+3. Workarea management rules:
+   - When user provides a new workarea, add it to workareas.txt
+   - Before testing code, check if workareas still exist
+   - Remove workareas that have been deleted by users
+   - Use multiple workareas to test different scenarios
+   - Prioritize workareas with different characteristics (different designs, flow stages, etc.)
+
+4. Testing workflow:
+   - Use workareas.txt to select appropriate test workareas
+   - Test code changes on multiple workareas when possible
+   - Test multiple workareas in a single command when feasible
+   - Document which workareas were used for testing
+   - Report any workarea-specific issues or differences found
+
+5. Testing efficiency:
+   - When testing functionality, run tests on 2-3 workareas simultaneously
+   - Use workareas with different characteristics (different designs, flow stages, etc.)
+   - Batch test commands instead of running individual tests
+   - Report results for all tested workareas in a single summary
+
+# Cross-Directory Execution Standards
+
+1. CRITICAL SECURITY: NEVER write files to storage that doesn't belong to the user
+   - Always generate HTML reports in the current working directory, not the target workarea
+   - Users may not have write permissions to other users' storage directories
+   - This prevents permission errors and security violations
+
+2. **Path handling principles**:
+   - Generate reports in the script's current directory, not the analyzed workarea
+   - **Use absolute paths in HTML content to ensure links work from any location**
+   - Test scripts from multiple different directories to verify functionality
+   - Remember: relative paths are relative to where the script is run, not where the HTML is generated
+   - **See "HTML Report Portability" section for detailed requirements on absolute paths**
+
+3. Testing cross-directory execution:
+   - Always test running scripts from different directories
+   - Verify that generated HTML reports have working links
+   - Test both relative and absolute path scenarios
+   - Document any path-related issues found during testing
+   - **Test HTML portability**: Copy HTML to different locations and verify all links work
+
+4. HTML Report Organization (for development/testing):
+   - DO NOT change the HTML generation paths in the code (they should remain in current working directory)
+   - When testing the script, move generated HTML files to `/home/avice/scripts/html/` directory for organization
+   - This keeps test artifacts organized without changing user-facing behavior
+   - Example: `mv *.html html/` after running tests from `/home/avice/scripts/`
+
+# Workarea Review Project Specific Rules
+
+## HTML Report Standards
+
+1. **CRITICAL: HTML/Terminal Output Synchronization**
+   - **ALWAYS update HTML reports when terminal output changes**
+   - HTML reports must contain ALL data displayed in terminal output AND MORE
+   - Terminal output = high-level summary for quick review
+   - HTML output = comprehensive deep-dive with extra functionalities
+   - When adding new features to terminal output, IMMEDIATELY update corresponding HTML generation
+   - HTML should include: timestamps, detailed tables, interactive elements, filterable data, downloadable links
+   - Never let HTML reports become stale or missing recent feature additions
+   - Examples of HTML-exclusive features:
+     * Start/End timestamps for all stages
+     * Clickable log file links
+     * Highlighted max runtime stages
+     * Expandable/collapsible sections
+     * Detailed breakdown tables
+     * Flow timeline visualizations
+     * Fast DC detection indicators
+     * RTL stage indicators
+
+2. ALWAYS generate HTML reports with timestamps in filenames:
+   - Format: `avice_[report_type]_[design]_[ipo]_{timestamp}.html`
+   - Example: `avice_pnr_data_fth_ipo1000_20250930_150418.html`
+
+3. HTML report features:
+   - Professional CSS styling with gradients and modern design
+   - Responsive layout for desktop and mobile
+   - Clickable links to log files and reports
+   - Table formatting for structured data
+   - Color-coded status indicators
+   - Alon Vice branding and logo
+   - Interactive elements (modals, tooltips, expandable sections)
+   - Comprehensive data beyond what's shown in terminal
+
+4. HTML report types:
+   - Runtime Report: `avice_runtime_report_[design]_{timestamp}.html`
+   - PnR Data Report: `avice_pnr_data_[design]_[ipo]_{timestamp}.html`
+   - Image Debug Report: `avice_image_debug_report_[design]_{timestamp}.html`
+   - Documentation Manual: `avice_wa_review_manual_{timestamp}.html`
+
+5. Log file viewing integration:
+   - All log file links in HTML reports use the custom tablog viewer: `/home/scratch.avice_vlsi/tablog/tablog`
+   - Clicking "View in tablog" button copies the tablog command to clipboard
+   - Users can paste the command in their terminal to open logs with tablog
+   - Alternative raw file link (📄) provided for direct file access
+   - Toast notifications confirm successful copy to clipboard
+
+6. **CRITICAL: HTML Report Portability - Absolute Paths Required**
+   - **ALWAYS use absolute paths for ALL file links in HTML reports**
+   - HTML reports must work from any location where users open them
+   - Users frequently copy HTML files to their home directories, shared locations, or different mount points
+   - Relative paths break when HTML is opened from a different directory than where it was generated
+   
+   **Path Conversion Requirements**:
+   ```python
+   # ✅ CORRECT - Convert to absolute path before storing for HTML
+   filepath = os.path.abspath(filepath)
+   html_reports.append(os.path.abspath(html_file))
+   key_reports.append((name, os.path.abspath(filepath)))
+   
+   # ✅ CORRECT - Handle paths from external files (e.g., prc.status)
+   abs_path = os.path.abspath(os.path.join(self.workarea, path)) if not os.path.isabs(path) else path
+   
+   # ❌ WRONG - Relative paths break portability
+   html_reports.append(html_file)  # Could be relative!
+   ```
+   
+   **HTML Link Format**:
+   ```html
+   <!-- ✅ CORRECT - Absolute path works from anywhere -->
+   <a href="file:///home/scratch.user/workarea/signoff_flow/auto_pt/work_08.10.25_19:02.html">
+       work_08.10.25_19:02.html
+   </a>
+   
+   <!-- ❌ WRONG - Relative path breaks when HTML opened from different location -->
+   <a href="file://auto_pt/work_08.10.25_19:02.html">work_08.10.25_19:02.html</a>
+   ```
+   
+   **Files That Must Use Absolute Paths**:
+   - Work directory HTML files (PT timing summary)
+   - Log files (GL Check, Runtime, etc.)
+   - Report files (ClockTree.rpt, cellStats.rpt, etc.)
+   - Error files (gl-check.all.waived, gl-check.all.err)
+   - Status files (prc.status)
+   - Any file referenced via `file://` URL in HTML
+   
+   **Testing Protocol**:
+   - Generate HTML report in workarea directory
+   - Copy HTML to user home directory
+   - Open HTML and verify all links work
+   - Test from different mount points
+   - Verify all `file://` URLs open correctly
+   
+   **Impact**: HTML reports are truly portable and work from any location for all users
+
+## Command Line Interface Standards
+
+1. ALWAYS use absolute paths in help text and examples:
+   - Use `/home/avice/scripts/avice_wa_review_launcher.csh` for all examples
+   - Never use relative paths like `./avice_wa_review.py`
+   - Recommend the C-shell launcher over direct Python calls
+
+2. Documentation generation options:
+   - `--help-docs`: Display formatted documentation in terminal
+   - `--open-docs`: Generate HTML documentation and open in browser
+   - `--generate-pdf`: Generate PDF documentation
+   - `--docs-section`: Choose specific section (usage, examples, troubleshooting, organization, all)
+
+3. Section names for selective analysis:
+   - setup, runtime, recipe, synthesis, pnr, clock, formal, parasitic, timing, pv, gl-check, eco, nv-gate-eco, block-release
+
+## Data Extraction Patterns
+
+1. PT (PrimeTime) Signoff Timing Analysis:
+   - **Dual-Scenario Analysis**: Extract both Setup and Hold scenarios
+   - **Default scenarios**: func.std_tt_0c_0p6v.setup.typical (setup) and func.std_ffg_125c_0p825v.hold.typical (hold)
+   - **Auto-select highest TNS scenario** if defaults not found
+   - **CRITICAL: Scenario-Specific Values**:
+     * **Timing values (WNS/TNS/NVP) WILL differ between scenarios** - different corners produce different results
+     * **DSR skew values WILL differ between scenarios** - corner-dependent (e.g., setup: 11ps, hold: 0.45ps)
+     * Each scenario has its own DSR skew file with corner-specific values
+     * NEVER assume setup and hold have the same values - always extract from both
+   - **Internal vs External Timing Groups**:
+     * Internal groups: All timing groups except FEEDTHROUGH/REGIN/REGOUT
+     * External groups (FEEDTHROUGH/REGIN/REGOUT): Relaxed during PT, always 0
+     * Display internal timing sum separately (WNS/TNS/NVP)
+     * In HTML tables, show external groups at the END (less interesting)
+   - **DSR Mux Clock Skew Tracking**:
+     * Extract from BOTH setup and hold scenario files separately
+     * Each scenario has its own file: [scenario]/reports/timing_reports/*.dsr_mux_clock_skew
+     * Color thresholds: Green (<=10ps excellent), Yellow/Red (>10ps unacceptable)
+     * Show separate trends for setup and hold scenarios
+     * Track across all work directories
+   - **PT Runtime**: Extract from "Elapsed time for this session" in work_dir/*.log
+   - **HTML Report Features**:
+     * Separate tables for Setup and Hold scenarios
+     * DSR skew column shows scenario-specific values
+     * Total Internal column shows sum of internal timing groups per scenario
+     * Column order: DSR Skew -> Total Internal -> Internal groups (by TNS) -> External groups
+     * **Internal groups sorted by worst TNS** (most negative first) - makes critical groups immediately visible
+     * External groups sorted alphabetically at the end
+     * Clickable links to PT HTML reports
+     * Color-coded timing violations
+
+2. Runtime Analysis:
+   - **CRITICAL: NEVER use "CPU Time" as runtime** - CPU time is the sum of CPU cycles, not wall-clock time
+   - **ALWAYS use "Elapsed time" or wall-clock time** for runtime calculations
+   - Example: "Elapsed time for this session: X.XX hours" is the correct metric
+   - Extract DC runtime from synthesis logs (including fast_dc if present)
+   - Extract PnR runtime from Innovus logs
+   - Extract GL check runtime from signoff_flow/gl-check/ directory
+   - Extract PV flow runtime from pv_flow status files (include running steps' elapsed time)
+   - Extract Auto PT Fix from "Elapsed time for this session" in auto_pt_fix.log
+   - Highlight the PnR stage with highest runtime in HTML reports
+   - Always extract and display start/end timestamps for all stages
+   - Detect fast_dc and adjust PnR start time to setup step (not BEGIN)
+   - For running flows: show "RUNNING" status with start timestamp and elapsed time
+
+2. Synthesis Analysis:
+   - Parse QoR reports for design metrics
+   - Extract BeFlow configuration variables
+   - Display Scenario Summary as formatted tables
+   - List Timing Path Groups in single line format
+   - Extract floorplan dimensions from DEF files:
+     * Parse DIEAREA top-right coordinates (x2, y2) from `flp/*_fp.def.gz`
+     * Calculate X, Y dimensions in um: x2/2000, y2/2000
+     * Convert Design Area from um2 to mm2 by dividing by 1,000,000
+     * Display in ONE line: "Design Area: X um2 (Y mm2) | Die (X,Y): W um x H um"
+     * Use ASCII-only characters (um2, not um²) to ensure Unix shell compatibility
+
+3. Formal Verification Analysis:
+   - **CRITICAL PURPOSE**: Timestamps help catch when designers run ECO fixes but forget to re-run formal
+   - Always display start/end timestamps for each formal flow
+   - Calculate start time from: end_time - elapsed_time (from log)
+   - Use file modification time as end timestamp
+   - Show status: SUCCEEDED / FAILED / RUNNING / UNRESOLVED
+   - Display runtime in hours
+   - **Compare formal timestamps with design changes** to verify formal was re-run after modifications:
+     * Check 1: Auto PT Fix log (signoff_flow/auto_pt/log/auto_pt_fix.log) - automatic ECO fixes
+     * Check 2: Latest netlist (export/export_innovus/$b.ipo*.lvs.gv.gz) - manual ECOs or any regeneration
+     * Warn if ANY design change occurred after formal verification
+   - Example issue: Netlist updated 10/08 14:01, but formal ended 10/08 13:31 → formal is stale!
+
+4. Configuration Extraction:
+   - Extract runset.tcl variables without truncation
+   - Parse beflow_config.yaml for design parameters
+   - Handle missing or incomplete data gracefully
+
+## File Management Standards
+
+1. Cleanup unused files:
+   - Remove standalone scripts that are no longer used
+   - Keep only essential files in the project directory
+   - Document removed files in README_ORGANIZATION.md
+
+2. File organization:
+   - Main script: `avice_wa_review.py`
+   - Launcher script: `avice_wa_review_launcher.csh`
+   - Documentation: `README_avice_wa_review.md`, `README_ORGANIZATION.md`
+   - Documentation generator: `docs_generator.py`
+   - Workarea database: `workareas.txt`
+   - Architecture rules: `architecture.mdc`
+   - Cleanup script: `cleanup_test_reports.sh`
+
+3. Test-generated HTML file management:
+   - HTML reports generated during testing accumulate quickly
+   - Use `.gitignore` to prevent tracking test HTML files (pattern: `avice_*.html`)
+   - Run `cleanup_test_reports.sh` periodically to remove old test reports
+   - Default cleanup: files older than 1 day
+   - Custom cleanup: `./cleanup_test_reports.sh N` (N = days to keep)
+   - Keep project directory clean by removing test files after development sessions
+   - User-generated reports (from actual workarea analysis) are saved in current working directory
+   - Only test/development HTML files in the project directory need cleanup
+
+## Testing and Validation Standards
+
+1. Always test new features on multiple workareas
+2. Verify cross-directory execution compatibility
+3. Test HTML report generation and link functionality
+4. Validate command line argument parsing
+5. Check Unix shell compatibility for all output
+6. Test both fast_dc and regular DC flows
+7. Test workareas with RTL formal verification
+8. Test workareas with multiple IPOs
+
+## Error Handling and Logging
+
+1. Use Color class for consistent terminal output:
+   - RED for errors
+   - GREEN for success
+   - YELLOW for warnings
+   - CYAN for headers and important information
+
+2. Provide informative error messages with context
+3. Handle file not found errors gracefully
+4. Log all operations with appropriate detail level
+
+## Performance Optimization
+
+1. Use efficient regex patterns for log parsing
+2. Implement caching for frequently accessed data
+3. Generate HTML reports only when needed
+4. Use generators for large file processing
+5. Minimize memory usage for large log files
+
+## Security Considerations
+
+1. Never write to user directories without permission
+2. Validate all input paths
+3. Use safe subprocess calls
+4. Handle sensitive data appropriately
+5. Generate reports in safe locations only
+
+## Python Environment Standards
+
+1. ALWAYS use the specific Python 3.11.9 build for testing and execution:
+   - Path: /home/utils/Python/builds/3.11.9-20250715/bin/python3
+   - Never use generic 'python3' command
+   - This ensures consistent Python version across all environments
+   - Use this path in all test commands, documentation examples, and scripts
+
+2. Python version requirements:
+   - Minimum: Python 3.6 (for compatibility)
+   - Preferred: Python 3.11.9 (for testing and development)
+   - Always specify the full path to avoid version conflicts
+
+3. Testing and execution standards:
+   - All test commands must use the full Python path
+   - Documentation examples must use the full Python path
+   - Batch scripts must use the C-shell launcher: `/home/avice/scripts/avice_wa_review_launcher.csh`
+   - This ensures reproducible results across different systems
+   - The launcher handles Python path setup automatically
+
+This .mdc file should be referenced for all development work on the workarea review project to ensure consistency and adherence to established patterns.

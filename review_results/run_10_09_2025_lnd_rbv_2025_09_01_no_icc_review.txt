@@ -1,0 +1,329 @@
+# Review for: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc
+# Generated: 2025-09-18 17:50:37
+# Command: /bin/python3 avice_wa_review.py /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc
+# Return code: 0
+
+STDOUT:
+
+[36m    +===============================================================+
+    |                                                               |
+    |                    [1mAVICE WORKAREA REVIEW[0m[36m                      |
+    |                                                               |
+    |              [32mAdvanced Verification & Integration[0m[36m              |
+    |                    [32mCircuit Engineering[0m[36m                        |
+    |                                                               |
+    +===============================================================+[0m
+
+UNIT: lnd
+TAG: lnd_rbv_2025_09_01_condb_int3_2025_08_27_0_1NL_snap
+IPO: ipo1000 (Available IPOs: ipo1000)
+
+---------------------------------------- [32mSetup[0m ----------------------------------------
+  [36mEnvironment Information:[0m
+    LIB_SNAP_REV: 20250819
+DC Log: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/syn_flow/dc/log/dc.log
+PnR Status: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/pnr_flow/nv_flow/lnd.prc.status
+
+IPO: ipo1000
+DC runtime: 0
+Design Definition: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/unit_scripts/des_def.tcl
+PnR Configuration: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/pnr_flow/nv_flow/lnd.prc
+Common TCL: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/pnr_flow/nv_flow/COMMON/spr_macro_blockgae.tcl
+Common TCL: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/pnr_flow/nv_flow/COMMON/remove_spr_blockage.tcl
+
+---------------------------------------- [32mSynthesis (DC)[0m ----------------------------------------
+Report: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/syn_flow/dc/reports/be4rtl/internal_high_width_logical_cones.rpt
+Report: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/syn_flow/dc/reports/debug/lnd.rtl2gate.removed_cgates.rep
+Report: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/syn_flow/dc/reports/lnd_rtl2gate.qor.rpt
+Report: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/syn_flow/dc/reports/debug/lnd.rtl2gate.removed_registers.rep
+Clock gates removed: 0
+Removed registers: 81194
+
+---------------------------------------- [32mPost-Route Analysis[0m ----------------------------------------
+Post-Route Data: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/pnr_flow/nv_flow/lnd/ipo1000/reports/lnd_lnd_ipo1000_report_lnd_ipo1000_postroute.func.std_tt_0c_0p6v.setup.typical.data
+
+[33mPost-Route Data Parameters:[0m
+  [36mTiming Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    FEEDTHROUGH_WNS           0.010          
+    FEEDTHROUGH_TNS           0.000          
+    FEEDTHROUGH_ViolPaths     0              
+    REGIN_WNS                 -0.092         
+    REGIN_TNS                 -15.891        
+    REGIN_ViolPaths           683            
+    REGOUT_WNS                -0.080         
+    REGOUT_TNS                -21.595        
+    REGOUT_ViolPaths          1080           
+    i1_clk_WNS                -0.172         
+    i1_clk_TNS                -619.585       
+    i1_clk_ViolPaths          5550           
+    i1_clk_reg2cgate_WNS      -0.181         
+    i1_clk_reg2cgate_TNS      -87.586        
+    i1_clk_reg2cgate_ViolPaths 737            
+    i2_clk_WNS                -0.004         
+    i2_clk_TNS                -0.008         
+    i2_clk_ViolPaths          4              
+    i2_clk_reg2cgate_WNS      0.002          
+    i2_clk_reg2cgate_TNS      0.000          
+    i2_clk_reg2cgate_ViolPaths 0              
+    m1_clk_WNS                0.195          
+    m1_clk_TNS                0.000          
+    m1_clk_ViolPaths          0              
+    m1_clk_reg2cgate_WNS      4.708          
+    m1_clk_reg2cgate_TNS      0.000          
+    m1_clk_reg2cgate_ViolPaths 0              
+    m1_clk_Skew               0.076]         
+    m1_clk_Latency_Max        0.304          
+    m1_clk_Latency_Avg        0.270          
+    i2_clk_Skew               0.099]         
+    i2_clk_Latency_Max        0.537          
+    i2_clk_Latency_Avg        0.492          
+    i1_clk_Skew               NA]            
+    i1_clk_Latency_Max        NA             
+    i1_clk_Latency_Avg        NA             
+    m1_clk_Cycle_Time         6.400          
+    i2_clk_Cycle_Time         0.622          
+    i1_clk_Cycle_Time         1.244          
+
+  [36mArea Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    CellArea                  0.24634459773  
+    CombinationalArea         0.15098507109  
+    SequentialArea            0.09535952664  
+    ArraysArea                0.03842602344  
+    Utilization               63.2051957034% 
+    EffictiveUtilization      63.6164026387% 
+    CoreArea                  0.41131641474  
+    DieArea                   0.4123032984   
+
+  [36mCell Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    CellCount                 2118603        
+    CombinationalCount        2064965        
+    SequentialCount           154274         
+    FFCount                   427179         
+    m1_clk_FFCount            2410           
+    i2_clk_FFCount            6916           
+    i1_clk_FFCount            417853         
+    BufInvCellCount           712350         
+    BufInvPerc                33.6235717593% 
+    GatedFFPerc               97.9695748819% 
+    UngatedFFPerc             0.433073723193%
+    UngatedFF                 1850           
+
+  [36mPower Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    StdCellsLeakage           0              
+    ArraysLeakage             0              
+    POWER_AWARE               no             
+
+  [36mClock Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    ClkGatesCount             10246          
+    NoneRBVClkGatesCount      1384           
+    ClkCellsBiggerThan8       18364          
+
+  [36mOther Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    Unit                      lnd            
+    Date                      25-09-14 06:09:49
+    Project                   agur           
+    Stage                     lnd_ipo1000_report_lnd_ipo1000_postroute
+    Technology                tsmc5          
+    Directory                 /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc
+    WW                        37             
+    Tool                      innovus        
+    User                      shlomoc        
+    RTL_TAG                   lnd_rbv_2025_09_01_condb_int3_2025_08_27_0_1NL_snap
+    Scenario                  func.std_tt_0c_0p6v.setup.typical
+    ArraysSize                76.25KB        
+    ArraysCount               58             
+    MBperc                    90.0755889217% 
+    FFsOverLogicCg            48             
+    PercFFWithOneCg           2.30301583177  
+    PercFFWithMoreThan2Cg     97.2805311123  
+    TotalLogiCg               8878           
+    DelBuffer                 339429         
+    TotalLeakeage             0              
+    LongestScanChain          514            
+    NumScanChains             840            
+    MaxCapViolations          12             
+    MaxTransViolations        772            
+    MaxFanoutViolations       0              
+    HVT_percentage            60.0318397433% 
+    SVT_percentage            39.9681602567% 
+    LVT_percentage            0.0%           
+    ULVT_percentage           0.0%           
+    CongestionBothDir         0.0%           
+    CongestionHDir            0.00%          
+    CongestionVDir            0.00%          
+    ShortsAmount              0              
+    TotalWireLength           2.1106555977e+07 um
+    TAPCount                   0             
+    TAPFanoutSmallerThan10    0              
+    DataCellsBiggerThan4      46467          
+    FFsBiggerThan4            0              
+    CGWithMaxFanout           lnd_channel/g_shiftreg_i2icl02ir_trc_fanout1__out_10496593_0_feed_out/g_ff1/g_clkgate_no_reset/g_clkgate_test/g_wrap_gate_level_clkgate/clkgate_cell
+    MaxCGFanoutNum            30             
+    NoneScanFlopCount         4003           
+    Parrallel_Driver          NVT_CKNM21LD96T6 NVT_CKNM21LD96T6
+    MaxClonedCg               7              
+    ServerName                tlv02-03-sim-a14-009.nvidia.com
+    StepRuntime               192240 s       
+    Memoryusage               177423         
+    CpuNum                    4              
+    ToolVersion               23.34-y076_1   
+    SiteVersion               /home/nbu_be_tools/beflow/1.0/2025_ww13_01_rev13
+    TracksNum                 T6_DIP         
+    GenDefMode                NA             
+    UseMultibit               1              
+    UseHighYieldFlops         N/A            
+    NoDft                     NA             
+    UseSPG                    0              
+    cpu_used                  N/A            
+    cpu_requested             N/A            
+    memory_per_cpu            N/A            
+    max_memory_used           N/A            
+    memory_requested          N/A            
+
+Power Summary: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/pnr_flow/nv_flow/lnd/ipo1000/REPs/SUMMARY/lnd.ipo1000.postroute.power.rpt.gz
+
+[36mPower Summary Table:[0m
+        group     |    area    |  count  |   power   : density : cell_avg | internal : switching : total |  leakage  
+   ===============|============|=========|===========:=========:==========|==========:===========:=======|===========
+    combinational | 127301.588 | 1964327 | 22401.651 :   0.176 :    0.011 |    0.000 :     0.000 : 0.000 | 22401.651 
+    sequential    | 134363.119 |  154341 |  8081.304 :   0.060 :    0.052 |    0.000 :     0.000 : 0.000 |  8081.304 
+    physical      | 150492.315 | 2128207 |     7.575 :   0.000 :    0.000 |    0.000 :     0.000 : 0.000 |     7.575 
+   ===============|============|=========|===========:=========:==========|==========:===========:=======|===========
+    total         | 412157.021 | 4246875 | 30490.530 :   0.074 :    0.007 |    0.000 :     0.000 : 0.000 | 30490.530 
+   ==================================================================================================================
+
+[36mPost-Route Pictures:[0m
+  Generating HTML image report...
+  HTML Report: /home/avice/scripts/avice_debug_report_lnd_20250918_175031.html
+  Open with: firefox avice_debug_report_lnd_20250918_175031.html &
+
+---------------------------------------- [32mClock Analysis[0m ----------------------------------------
+Innvou Clock Analysis: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/pnr_flow/nv_flow/lnd/ipo1000/REPs/SUMMARY/lnd.ipo1000.postroute.clock_tree.skew_and_latency.from_clock_root_source.rpt.gz
+
+[33mClock Tree Analysis for func.std_tt_0c_0p6v.setup.typical:[0m
+  Clock      Period   Skew     Min      Max      Median   Mean     StdDev  
+  ---------- -------- -------- -------- -------- -------- -------- --------
+  i1_clk     1.244    0.461    0.089    0.550    0.513    0.508    0.020   
+  i2_clk     0.622    0.559    0.001    0.560    0.516    0.425    0.163   
+  m1_clk     6.400    0.199    0.111    0.310    0.279    0.276    0.019   
+
+  All values in nanoseconds (ns)
+PT Clock Analysis: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/signoff_flow/auto_pt/work_16.09.25_15:46/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/lnd_func.std_tt_0c_0p6v.setup.typical.clock_latency
+
+[33mPT Clock Latency Analysis:[0m
+  Clock      Min (ns)   Max (ns)  
+  ---------- ---------- ----------
+  i1_clk     0.143      0.551     
+  i2_clk     0.023      0.559     
+  m1_clk     0.210      0.308     
+
+  All values in nanoseconds (ns)
+
+---------------------------------------- [32mFormal Verification[0m ----------------------------------------
+Formal Log: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/formal_flow/rtl_vs_pnr_bbox_fm/log/rtl_vs_pnr_bbox_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 4.23 hours
+Formal Log: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/formal_flow/rtl_vs_pnr_fm/log/rtl_vs_pnr_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 2.55 hours
+
+---------------------------------------- [32mParasitic Extraction (Star)[0m ----------------------------------------
+SPEF File: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/export/nv_star/lnd/ipo1000/IOs/netlists/lnd.ipo1000.smc1.spef.typical_T0.gz
+SPEF Info: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/export/nv_star/lnd/ipo1000/IOs/netlists/lnd.ipo1000.typical_T0.spef_info
+  opens
+  shorts
+Star Shorts Report: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/export/nv_star/lnd/ipo1000/REPs/lnd.ipo1000.lnd_ipo1000.star_extraction_shorts.rpt
+Short between net FE_RN_817 and net lnd_channel/g_dft_wrapper_if/g_dft_wrapper_lnd_channel/adw_nvism_dcap_ctrl1/x1dcap_test_out_low_no_buf Layer = M5T BBox=(206.7120,329.2020),(206.7280,329.2180)
+Short between net FE_RN_817 and net lnd_channel/g_dft_wrapper_if/g_dft_wrapper_lnd_channel/adw_nvism_dcap_ctrl1/x1dcap_test_out_low_no_buf Layer = M5T BBox=(206.7120,329.0970),(206.7280,329.1130)
+Short between net FE_RN_817 and net lnd_channel/g_dft_wrapper_if/g_dft_wrapper_lnd_channel/adw_nvism_dcap_ctrl1/x1dcap_test_out_low_no_buf Layer = M5T BBox=(206.7100,329.0535),(206.7300,329.2615)
+Short between net FE_RN_817 and net lnd_channel/g_dft_wrapper_if/g_dft_wrapper_lnd_channel/adw_nvism_dcap_ctrl1/x1dcap_test_out_low_no_buf Layer = M5T BBox=(206.7100,329.1460),(206.7300,329.1660)
+Short between net FE_OCPN10977845_n322911 and unselectable net Layer = M5T BBox=(160.2300,339.1335),(160.2500,339.3415)
+Short between net FE_OCPN10977845_n322911 and unselectable net Layer = M5T BBox=(160.2300,339.2540),(160.2500,339.2740)
+Short between net FE_OCPN10977845_n322911 and unselectable net Layer = M5T BBox=(160.2320,339.2820),(160.2480,339.2980)
+Short between net FE_OCPN10977845_n322911 and unselectable net Layer = M5T BBox=(160.2320,339.1770),(160.2480,339.1930)
+Short between net FE_OFN10896776_n and unselectable net Layer = M3S BBox=(93.0860,453.8150),(93.1060,453.9800)
+Short between net FE_OFN10896776_n and unselectable net Layer = M3S BBox=(93.0880,453.9420),(93.1040,453.9580)
+Short between net FE_OFN10896776_n and unselectable net Layer = M3S BBox=(93.0880,453.8370),(93.1040,453.8530)
+
+
+---------------------------------------- [32mSignoff Timing (PT)[0m ----------------------------------------
+HTML Report: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/signoff_flow/auto_pt/work_16.09.25_15:46.html
+HTML Report: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/signoff_flow/auto_pt/work_15.09.25_16:30.html
+HTML Report: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/signoff_flow/auto_pt/work_14.09.25_10:46.html
+All Violators: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/signoff_flow/auto_pt/work_16.09.25_15:46/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/lnd_func.std_tt_0c_0p6v.setup.typical.all_violators.gz
+PT Log: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/signoff_flow/auto_pt/work_16.09.25_15:46/func.std_tt_0c_0p6v.setup.typical/log/lnd_func.std_tt_0c_0p6v.setup.typical.log.gz
+[31mErrors found:[0m
+  -E- [2025/09/16 16:00:40] Design contains not annotated nets, check reports/quality_and_sanity_reports/lnd_func.std_tt_0c_0p6v.setup.typical.annot
+
+---------------------------------------- [32mPhysical Verification (PV)[0m ----------------------------------------
+LVS Errors: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/pv_flow/drc_dir/lnd/lvs_icv_ipo1000/lnd_ipo1000_fill.LVS_ERRORS
+  Final comparison result:FAIL
+  Successful equivalence points
+  Failed equivalence points
+  Failed equivalence points:
+DRC Errors: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/pv_flow/drc_dir/lnd/drc_icv_ipo1000/lnd_ipo1000_fill.LAYOUT_ERRORS
+Total DRC violations: 30
+Antenna Errors: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/pv_flow/drc_dir/lnd/drc_icv_antenna_ipo1000/lnd_ipo1000_fill.LAYOUT_ERRORS
+  LAYOUT ERRORS RESULTS: CLEAN
+
+---------------------------------------- [32mECO Analysis[0m ----------------------------------------
+[31m2 ECO loops were done[0m
+ECO File: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/signoff_flow/auto_pt/work_14.09.25_10:46/pt_eco_out_14.09.25_15:23_final.tcl
+  Total ECO commands: 82259
+  Command breakdown:
+    set_cell_location: 40897
+    size_cell: 40498
+    insert_buffer: 476
+    add_buffer_on_route: 388
+ECO File: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/signoff_flow/auto_pt/work_15.09.25_16:30/pt_eco_out_15.09.25_21:44_final.tcl
+  Total ECO commands: 25086
+  Command breakdown:
+    set_cell_location: 12508
+    size_cell: 12478
+    insert_buffer: 70
+    add_buffer_on_route: 30
+NV Gate ECO Summary: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/signoff_flow/nv_gate_eco/lnd/ipo1000/sum.eco_change
+  [36mECO Changes Summary:[0m
+    Object     Change          Count   
+    ---------- --------------- --------
+    INST       NONCS_REF_SWAP  12464   
+    INST       CS_REF_SWAP     14      
+    INST       ADDITION        100     
+    NET        DISCONNECTION   115     
+    NET        CONNECTION      515     
+    NET        ADDITION        100     
+    TOTAL                      13308   
+
+---------------------------------------- [32mBlock Release[0m ----------------------------------------
+Block Release Log: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/export/block_release/log/block_release.log
+  Release to: /home/agur_backend_blockRelease/block/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc__2025_9_18_16_47_19
+  [36mUmake Block Release Commands:[0m
+    [2025/09/18 16:46:01] /home/nbu_be_tools/umake/1.0/2025_ww27_02/umake_main/umake.py -s block_release --step_flags -s -f --fe_dct_release
+Block Release Summary: /home/scratch.shlomoc_vlsi/agur/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc/export/block_release/reports/lnd.summary
+  USER: shlomoc
+  Release lnd from run_10_09_2025_lnd_rbv_2025_09_01_no_icc
+  Release to: /home/agur_backend_blockRelease/block/lnd/run_10_09_2025_lnd_rbv_2025_09_01_no_icc__2025_9_18_16_47_19
+       Force: True
+        Text: _2025_9_18_16_47_19
+         Sta: True
+      FE_DCT: True
+   Build ndm: None
+      Beview: True
+  
+
+[32mReview completed successfully![0m
+
+
+STDERR:

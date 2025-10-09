@@ -1,0 +1,246 @@
+# Review for: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc_20250818_v2.cfg_ref
+# Generated: 2025-09-18 17:50:58
+# Command: /bin/python3 avice_wa_review.py /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc_20250818_v2.cfg_ref
+# Return code: 0
+
+STDOUT:
+
+[36m    +===============================================================+
+    |                                                               |
+    |                    [1mAVICE WORKAREA REVIEW[0m[36m                      |
+    |                                                               |
+    |              [32mAdvanced Verification & Integration[0m[36m              |
+    |                    [32mCircuit Engineering[0m[36m                        |
+    |                                                               |
+    +===============================================================+[0m
+
+UNIT: prtm
+TAG: agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc
+IPO: ipo1000 (Available IPOs: ipo1000)
+
+---------------------------------------- [32mSetup[0m ----------------------------------------
+  [36mEnvironment Information:[0m
+    LIB_SNAP_REV: 20250611
+DC Log: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc_20250818_v2.cfg_ref/syn_flow/dc/log/dc.log
+PnR Status: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc_20250818_v2.cfg_ref/pnr_flow/nv_flow/prtm.prc.status
+
+IPO: ipo1000
+DC runtime: 0
+Design Definition: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc_20250818_v2.cfg_ref/unit_scripts/des_def.tcl
+PnR Configuration: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc_20250818_v2.cfg_ref/pnr_flow/nv_flow/prtm.prc
+Common TCL: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc_20250818_v2.cfg_ref/pnr_flow/nv_flow/COMMON/prtm.modes.interface_effort.tcl
+Common TCL: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc_20250818_v2.cfg_ref/pnr_flow/nv_flow/COMMON/prtm_add_extra_M5T_PG.tcl
+
+---------------------------------------- [32mSynthesis (DC)[0m ----------------------------------------
+Report: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc_20250818_v2.cfg_ref/syn_flow/dc/reports/be4rtl/internal_high_width_logical_cones.rpt
+Report: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc_20250818_v2.cfg_ref/syn_flow/dc/reports/debug/prtm.rtl2gate.removed_cgates.rep
+Report: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc_20250818_v2.cfg_ref/syn_flow/dc/reports/prtm_rtl2gate.qor.rpt
+Report: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc_20250818_v2.cfg_ref/syn_flow/dc/reports/debug/prtm.rtl2gate.removed_registers.rep
+Clock gates removed: 68
+Removed registers: 5508
+
+---------------------------------------- [32mPost-Route Analysis[0m ----------------------------------------
+Post-Route Data: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc_20250818_v2.cfg_ref/pnr_flow/nv_flow/prtm/ipo1000/reports/prtm_prtm_ipo1000_report_prtm_ipo1000_postroute.func.std_tt_0c_0p6v.setup.typical.data
+
+[33mPost-Route Data Parameters:[0m
+  [36mTiming Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    FEEDTHROUGH_WNS           0.021          
+    FEEDTHROUGH_TNS           0.000          
+    FEEDTHROUGH_ViolPaths     0              
+    REGIN_WNS                 -0.199         
+    REGIN_TNS                 -11.721        
+    REGIN_ViolPaths           277            
+    REGOUT_WNS                -0.204         
+    REGOUT_TNS                -16.487        
+    REGOUT_ViolPaths          295            
+    i1_clk_WNS                0.002          
+    i1_clk_TNS                0.000          
+    i1_clk_ViolPaths          0              
+    i1_clk_reg2cgate_WNS      0.002          
+    i1_clk_reg2cgate_TNS      0.000          
+    i1_clk_reg2cgate_ViolPaths 0              
+    i2_clk_WNS                0.004          
+    i2_clk_TNS                0.000          
+    i2_clk_ViolPaths          0              
+    i2_clk_reg2cgate_WNS      0.008          
+    i2_clk_reg2cgate_TNS      0.000          
+    i2_clk_reg2cgate_ViolPaths 0              
+    m1_clk_WNS                0.612          
+    m1_clk_TNS                0.000          
+    m1_clk_ViolPaths          0              
+    m1_clk_reg2cgate_WNS      4.775          
+    m1_clk_reg2cgate_TNS      0.000          
+    m1_clk_reg2cgate_ViolPaths 0              
+    m1_clk_Skew               0.060]         
+    m1_clk_Latency_Max        0.191          
+    m1_clk_Latency_Avg        0.181          
+    i2_clk_Skew               0.098]         
+    i2_clk_Latency_Max        0.469          
+    i2_clk_Latency_Avg        0.422          
+    i1_clk_Skew               NA]            
+    i1_clk_Latency_Max        NA             
+    i1_clk_Latency_Avg        NA             
+    m1_clk_Cycle_Time         6.400          
+    i2_clk_Cycle_Time         0.622          
+    i1_clk_Cycle_Time         1.244          
+
+  [36mArea Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    CellArea                  0.09139023999  
+    CombinationalArea         0.06809656833  
+    SequentialArea            0.02329367166  
+    ArraysArea                0.05002315416  
+    Utilization               27.5621998977% 
+    EffictiveUtilization      35.8426718109% 
+    CoreArea                  0.38508573978  
+    DieArea                   0.3860123904   
+
+  [36mCell Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    CellCount                 1044876        
+    CombinationalCount        1031941        
+    SequentialCount           47357          
+    FFCount                   104086         
+    m1_clk_FFCount            2059           
+    i2_clk_FFCount            713            
+    i1_clk_FFCount            101314         
+    BufInvCellCount           211657         
+    BufInvPerc                20.2566620345% 
+    GatedFFPerc               87.9936522331% 
+    UngatedFFPerc             7.4938032012%  
+    UngatedFF                 7800           
+
+  [36mPower Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    StdCellsLeakage           0              
+    ArraysLeakage             0              
+    POWER_AWARE               no             
+
+  [36mClock Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    ClkGatesCount             3157           
+    NoneRBVClkGatesCount      443            
+    ClkCellsBiggerThan8       6961           
+
+  [36mOther Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    Unit                      prtm           
+    Date                      25-09-04 03:00:33
+    Project                   agur           
+    Stage                     prtm_ipo1000_report_prtm_ipo1000_postroute
+    Technology                tsmc5          
+    Directory                 /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc_20250818_v2.cfg_ref
+    WW                        36             
+    Tool                      innovus        
+    User                      avice          
+    RTL_TAG                   agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc
+    Scenario                  func.std_tt_0c_0p6v.setup.typical
+    ArraysSize                120.996KB      
+    ArraysCount               44             
+    MBperc                    78.9942931806% 
+    FFsOverLogicCg            37             
+    PercFFWithOneCg           72.6745191476  
+    PercFFWithMoreThan2Cg     19.8316776512  
+    TotalLogiCg               2765           
+    DelBuffer                 68115          
+    TotalLeakeage             0              
+    LongestScanChain          308            
+    NumScanChains             342            
+    MaxCapViolations          0              
+    MaxTransViolations        273            
+    MaxFanoutViolations       5              
+    HVT_percentage            52.7916293739% 
+    SVT_percentage            47.2083706261% 
+    LVT_percentage            0.0%           
+    ULVT_percentage           0.0%           
+    CongestionBothDir         0.0%           
+    CongestionHDir            0.00%          
+    CongestionVDir            0.00%          
+    ShortsAmount              0              
+    TotalWireLength           0.86725607665e+07 um
+    TAPCount                   0             
+    TAPFanoutSmallerThan10    0              
+    DataCellsBiggerThan4      10846          
+    FFsBiggerThan4            0              
+    CGWithMaxFanout           hier_atpg_11_output_pltxm_pltx_logic_pltx_common_plu_pcs_tx_400g_top_p0_plu_pcs_tx_plu_pcs_tx_lanes_plu_eb_l1_plu_eb_data_sample_g_ff_tdm_eb_data0_g_ff0_g_clkgate_no_reset_g_clkgate_test_g_wrap_gate_level_clkgate_clkgate_cell_clone_1
+    MaxCGFanoutNum            30             
+    NoneScanFlopCount         2872           
+    Parrallel_Driver          NVT_CKNM21LD96T6 NVT_CKNM21LD96T6 NVT_CKNM21LD96T6
+    MaxClonedCg               7              
+    ServerName                tlv02-03-sim-a22-041.nvidia.com
+    StepRuntime               86244 s        
+    Memoryusage               238093         
+    CpuNum                    4              
+    ToolVersion               23.34-y076_1   
+    SiteVersion               /home/nbu_be_tools/beflow/1.0/2025_ww13_01_rev13
+    TracksNum                 T6_DIP         
+    GenDefMode                NA             
+    UseMultibit               1              
+    UseHighYieldFlops         N/A            
+    NoDft                     NA             
+    UseSPG                    0              
+    cpu_used                  N/A            
+    cpu_requested             N/A            
+    memory_per_cpu            N/A            
+    max_memory_used           N/A            
+    memory_requested          N/A            
+
+Power Summary: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc_20250818_v2.cfg_ref/pnr_flow/nv_flow/prtm/ipo1000/REPs/SUMMARY/prtm.ipo1000.postroute.power.rpt.gz
+
+[36mPower Summary Table:[0m
+        group     |    area    |  count  |   power   : density : cell_avg | internal : switching : total |  leakage  
+   ===============|============|=========|===========:=========:==========|==========:===========:=======|===========
+    combinational |  64390.876 |  997516 | 11992.891 :   0.186 :    0.012 |    0.000 :     0.000 : 0.000 | 11992.891 
+    sequential    |  73634.142 |   47405 |  2458.883 :   0.033 :    0.052 |    0.000 :     0.000 : 0.000 |  2458.883 
+    physical      | 247845.572 | 1563204 |    15.088 :   0.000 :    0.000 |    0.000 :     0.000 : 0.000 |    15.088 
+   ===============|============|=========|===========:=========:==========|==========:===========:=======|===========
+    total         | 385870.590 | 2608125 | 14466.862 :   0.037 :    0.006 |    0.000 :     0.000 : 0.000 | 14466.862 
+   ==================================================================================================================
+
+[36mPost-Route Pictures:[0m
+  Generating HTML image report...
+  HTML Report: /home/avice/scripts/avice_debug_report_prtm_20250918_175058.html
+  Open with: firefox avice_debug_report_prtm_20250918_175058.html &
+
+---------------------------------------- [32mClock Analysis[0m ----------------------------------------
+Innvou Clock Analysis: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_08_26_condb_int2_23_5r1_BE_SFNL_snap_with_two_parts_parity_calc_20250818_v2.cfg_ref/pnr_flow/nv_flow/prtm/ipo1000/REPs/SUMMARY/prtm.ipo1000.postroute.clock_tree.skew_and_latency.from_clock_root_source.rpt.gz
+
+[33mClock Tree Analysis for func.std_tt_0c_0p6v.setup.typical:[0m
+  Clock      Period   Skew     Min      Max      Median   Mean     StdDev  
+  ---------- -------- -------- -------- -------- -------- -------- --------
+  i1_clk     1.244    0.368    0.100    0.468    0.442    0.432    0.029   
+  i2_clk     0.622    0.486    0.001    0.487    0.458    0.422    0.105   
+  m1_clk     6.400    0.146    0.052    0.198    0.191    0.187    0.013   
+
+  All values in nanoseconds (ns)
+
+---------------------------------------- [32mFormal Verification[0m ----------------------------------------
+No formal verification logs found
+
+---------------------------------------- [32mParasitic Extraction (Star)[0m ----------------------------------------
+
+---------------------------------------- [32mSignoff Timing (PT)[0m ----------------------------------------
+All Violators: File not found
+PT Log: File not found
+
+---------------------------------------- [32mPhysical Verification (PV)[0m ----------------------------------------
+
+---------------------------------------- [32mECO Analysis[0m ----------------------------------------
+[31m0 ECO loops were done[0m
+Didn't run PT ECO
+Didn't run NV Gate ECO
+
+---------------------------------------- [32mBlock Release[0m ----------------------------------------
+No release was done
+
+[32mReview completed successfully![0m
+
+
+STDERR:

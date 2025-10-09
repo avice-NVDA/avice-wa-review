@@ -1,0 +1,309 @@
+# Review for: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10
+# Generated: 2025-09-18 17:50:42
+# Command: /bin/python3 avice_wa_review.py /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10
+# Return code: 0
+
+STDOUT:
+
+[36m    +===============================================================+
+    |                                                               |
+    |                    [1mAVICE WORKAREA REVIEW[0m[36m                      |
+    |                                                               |
+    |              [32mAdvanced Verification & Integration[0m[36m              |
+    |                    [32mCircuit Engineering[0m[36m                        |
+    |                                                               |
+    +===============================================================+[0m
+
+UNIT: pmux
+TAG: pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap
+IPO: ipo1000 (Available IPOs: ipo1000)
+
+---------------------------------------- [32mSetup[0m ----------------------------------------
+  [36mEnvironment Information:[0m
+    LIB_SNAP_REV: 20250819
+DC Log: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/syn_flow/dc/log/dc.log
+PnR Status: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/pnr_flow/nv_flow/pmux.prc.status
+
+IPO: ipo1000
+DC runtime: 0
+Design Definition: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/unit_scripts/des_def.tcl
+PnR Configuration: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/pnr_flow/nv_flow/pmux.prc
+Common TCL: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/pnr_flow/nv_flow/COMMON/NVISM_NMEAS_via_fix.tcl
+Common TCL: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/pnr_flow/nv_flow/COMMON/NVISM_ROSC_BIN_TT6_via_fix.tcl
+Common TCL: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/pnr_flow/nv_flow/COMMON/pdfeed_pblkg.tcl
+Common TCL: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/pnr_flow/nv_flow/COMMON/pmux.modes.interface_effort.tcl
+Common TCL: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/pnr_flow/nv_flow/COMMON/remove_spr_blockage.tcl
+Common TCL: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/pnr_flow/nv_flow/COMMON/sensor_workaround.tcl
+Common TCL: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/pnr_flow/nv_flow/COMMON/spr_macro_blockgae.tcl
+
+---------------------------------------- [32mSynthesis (DC)[0m ----------------------------------------
+Report: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/syn_flow/dc/reports/be4rtl/internal_high_width_logical_cones.rpt
+Report: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/syn_flow/dc/reports/debug/pmux.rtl2gate.removed_cgates.rep
+Report: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/syn_flow/dc/reports/pmux_rtl2gate.qor.rpt
+Report: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/syn_flow/dc/reports/debug/pmux.rtl2gate.removed_registers.rep
+Clock gates removed: 0
+Removed registers: 955
+
+---------------------------------------- [32mPost-Route Analysis[0m ----------------------------------------
+Post-Route Data: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/pnr_flow/nv_flow/pmux/ipo1000/reports/pmux_pmux_ipo1000_report_pmux_ipo1000_postroute.func.std_tt_0c_0p6v.setup.typical.data
+
+[33mPost-Route Data Parameters:[0m
+  [36mTiming Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    FEEDTHROUGH_WNS           9.400          
+    FEEDTHROUGH_TNS           0.000          
+    FEEDTHROUGH_ViolPaths     0              
+    REGIN_WNS                 -0.072         
+    REGIN_TNS                 -6.742         
+    REGIN_ViolPaths           524            
+    REGOUT_WNS                -0.071         
+    REGOUT_TNS                -11.945        
+    REGOUT_ViolPaths          764            
+    i1_clk_WNS                0.001          
+    i1_clk_TNS                0.000          
+    i1_clk_ViolPaths          0              
+    i1_clk_reg2cgate_WNS      0.001          
+    i1_clk_reg2cgate_TNS      0.000          
+    i1_clk_reg2cgate_ViolPaths 0              
+    i2_clk_WNS                0.001          
+    i2_clk_TNS                0.000          
+    i2_clk_ViolPaths          0              
+    i2_clk_reg2cgate_WNS      0.003          
+    i2_clk_reg2cgate_TNS      0.000          
+    i2_clk_reg2cgate_ViolPaths 0              
+    m1_clk_WNS                0.276          
+    m1_clk_TNS                0.000          
+    m1_clk_ViolPaths          0              
+    m1_clk_reg2cgate_WNS      3.981          
+    m1_clk_reg2cgate_TNS      0.000          
+    m1_clk_reg2cgate_ViolPaths 0              
+    m1_clk_Skew               0.054]         
+    m1_clk_Latency_Max        0.246          
+    m1_clk_Latency_Avg        0.225          
+    i2_clk_Skew               0.091]         
+    i2_clk_Latency_Max        0.482          
+    i2_clk_Latency_Avg        0.449          
+    i1_clk_Skew               NA]            
+    i1_clk_Latency_Max        NA             
+    i1_clk_Latency_Avg        NA             
+    m1_clk_Cycle_Time         6.400          
+    i2_clk_Cycle_Time         0.622          
+    i1_clk_Cycle_Time         1.244          
+
+  [36mArea Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    CellArea                  0.07659904455  
+    CombinationalArea         0.05937507261  
+    SequentialArea            0.01722397194  
+    ArraysArea                0.01386011088  
+    Utilization               45.550290945%  
+    EffictiveUtilization      47.8471872232% 
+    CoreArea                  0.21025364346  
+    DieArea                   0.2109458736   
+
+  [36mCell Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    CellCount                 803804         
+    CombinationalCount        802581         
+    SequentialCount           35785          
+    FFCount                   76978          
+    m1_clk_FFCount            1833           
+    i2_clk_FFCount            7148           
+    i1_clk_FFCount            67997          
+    BufInvCellCount           229592         
+    BufInvPerc                28.5631820693% 
+    GatedFFPerc               94.9089280382% 
+    UngatedFFPerc             1.82649588194% 
+    UngatedFF                 1406           
+
+  [36mPower Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    StdCellsLeakage           0              
+    ArraysLeakage             0              
+    POWER_AWARE               no             
+
+  [36mClock Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    ClkGatesCount             2206           
+    NoneRBVClkGatesCount      408            
+    ClkCellsBiggerThan8       6675           
+
+  [36mOther Parameters:[0m
+    Parameter                 Value          
+    ------------------------- ---------------
+    Unit                      pmux           
+    Date                      25-09-11 17:08:25
+    Project                   agur           
+    Stage                     pmux_ipo1000_report_pmux_ipo1000_postroute
+    Technology                tsmc5          
+    Directory                 /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10
+    WW                        37             
+    Tool                      innovus        
+    User                      brachas        
+    RTL_TAG                   pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap
+    Scenario                  func.std_tt_0c_0p6v.setup.typical
+    ArraysSize                22.32KB        
+    ArraysCount               27             
+    MBperc                    77.9989087791% 
+    FFsOverLogicCg            42             
+    PercFFWithOneCg           7.86068746915  
+    PercFFWithMoreThan2Cg     90.4362285328  
+    TotalLogiCg               1818           
+    DelBuffer                 57886          
+    TotalLeakeage             0              
+    LongestScanChain          496            
+    NumScanChains             163            
+    MaxCapViolations          4              
+    MaxTransViolations        194            
+    MaxFanoutViolations       0              
+    HVT_percentage            60.5087754036% 
+    SVT_percentage            39.4912245964% 
+    LVT_percentage            0.0%           
+    ULVT_percentage           0.0%           
+    CongestionBothDir         0.0%           
+    CongestionHDir            0.00%          
+    CongestionVDir            0.00%          
+    ShortsAmount              0              
+    TotalWireLength           1.0452237672e+07 um
+    TAPCount                   0             
+    TAPFanoutSmallerThan10    0              
+    DataCellsBiggerThan4      15669          
+    FFsBiggerThan4            0              
+    CGWithMaxFanout           pmux_logic/pmux_common/plu_pmux_regout_wrapper/g_ff_port_data0_l0/g_clkgate_no_reset/g_clkgate_test/g_wrap_gate_level_clkgate/clkgate_cell_clone_1
+    MaxCGFanoutNum            30             
+    NoneScanFlopCount         2466           
+    Parrallel_Driver          NVT_CKNM21LD96T6 NVT_CKNM21LD96T6
+    MaxClonedCg               15             
+    ServerName                tlv02-03-sim-a14-025.nvidia.com
+    StepRuntime               89113 s        
+    Memoryusage               236236         
+    CpuNum                    4              
+    ToolVersion               23.34-y076_1   
+    SiteVersion               /home/nbu_be_tools/beflow/1.0/2025_ww13_01_rev13
+    TracksNum                 T6_DIP         
+    GenDefMode                NA             
+    UseMultibit               1              
+    UseHighYieldFlops         N/A            
+    NoDft                     NA             
+    UseSPG                    0              
+    cpu_used                  N/A            
+    cpu_requested             N/A            
+    memory_per_cpu            N/A            
+    max_memory_used           N/A            
+    memory_requested          N/A            
+
+Power Summary: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/pnr_flow/nv_flow/pmux/ipo1000/REPs/SUMMARY/pmux.ipo1000.postroute.power.rpt.gz
+
+[36mPower Summary Table:[0m
+        group     |    area    |  count  |   power   : density : cell_avg | internal : switching : total |  leakage  
+   ===============|============|=========|===========:=========:==========|==========:===========:=======|===========
+    combinational |  52927.952 |  768016 |  9133.988 :   0.173 :    0.012 |    0.000 :     0.000 : 0.000 |  9133.988 
+    sequential    |  47672.502 |   35820 |  1917.790 :   0.040 :    0.054 |    0.000 :     0.000 : 0.000 |  1917.790 
+    physical      | 110280.731 | 1133927 |     6.222 :   0.000 :    0.000 |    0.000 :     0.000 : 0.000 |     6.222 
+   ===============|============|=========|===========:=========:==========|==========:===========:=======|===========
+    total         | 210881.185 | 1937763 | 11058.000 :   0.052 :    0.006 |    0.000 :     0.000 : 0.000 | 11058.000 
+   ==================================================================================================================
+
+[36mPost-Route Pictures:[0m
+  Generating HTML image report...
+  HTML Report: /home/avice/scripts/avice_debug_report_pmux_20250918_175039.html
+  Open with: firefox avice_debug_report_pmux_20250918_175039.html &
+
+---------------------------------------- [32mClock Analysis[0m ----------------------------------------
+Innvou Clock Analysis: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/pnr_flow/nv_flow/pmux/ipo1000/REPs/SUMMARY/pmux.ipo1000.postroute.clock_tree.skew_and_latency.from_clock_root_source.rpt.gz
+
+[33mClock Tree Analysis for func.std_tt_0c_0p6v.setup.typical:[0m
+  Clock      Period   Skew     Min      Max      Median   Mean     StdDev  
+  ---------- -------- -------- -------- -------- -------- -------- --------
+  i1_clk     1.244    0.399    0.097    0.496    0.467    0.459    0.029   
+  i2_clk     0.622    0.499    0.022    0.499    0.481    0.472    0.040   
+  m1_clk     6.400    0.242    0.011    0.253    0.239    0.231    0.018   
+
+  All values in nanoseconds (ns)
+PT Clock Analysis: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/signoff_flow/auto_pt/work_17.09.25_08:56/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/pmux_func.std_tt_0c_0p6v.setup.typical.clock_latency
+
+[33mPT Clock Latency Analysis:[0m
+  Clock      Min (ns)   Max (ns)  
+  ---------- ---------- ----------
+  i1_clk     0.255      0.484     
+  i2_clk     0.022      0.495     
+  m1_clk     0.177      0.311     
+
+  All values in nanoseconds (ns)
+
+---------------------------------------- [32mFormal Verification[0m ----------------------------------------
+Formal Log: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/formal_flow/rtl_vs_pnr_bbox_fm/log/rtl_vs_pnr_bbox_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 1.12 hours
+Formal Log: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/formal_flow/rtl_vs_pnr_fm/log/rtl_vs_pnr_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 0.80 hours
+
+---------------------------------------- [32mParasitic Extraction (Star)[0m ----------------------------------------
+SPEF File: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/export/nv_star/pmux/ipo1000/IOs/netlists/pmux.ipo1000.smc1.spef.typical_T0.gz
+SPEF Info: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/export/nv_star/pmux/ipo1000/IOs/netlists/pmux.ipo1000.typical_T0.spef_info
+  opens
+  shorts
+
+---------------------------------------- [32mSignoff Timing (PT)[0m ----------------------------------------
+HTML Report: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/signoff_flow/auto_pt/work_17.09.25_08:56.html
+HTML Report: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/signoff_flow/auto_pt/work_15.09.25_23:08.html
+HTML Report: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/signoff_flow/auto_pt/work_15.09.25_09:09.html
+All Violators: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/signoff_flow/auto_pt/work_17.09.25_08:56/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/pmux_func.std_tt_0c_0p6v.setup.typical.all_violators.gz
+PT Log: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/signoff_flow/auto_pt/work_17.09.25_08:56/func.std_tt_0c_0p6v.setup.typical/log/pmux_func.std_tt_0c_0p6v.setup.typical.log.gz
+[31mErrors found:[0m
+  -E- [2025/09/17 09:06:11] Design contains not annotated nets, check reports/quality_and_sanity_reports/pmux_func.std_tt_0c_0p6v.setup.typical.annot
+
+---------------------------------------- [32mPhysical Verification (PV)[0m ----------------------------------------
+LVS Errors: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/pv_flow/drc_dir/pmux/lvs_icv_ipo1000/pmux_ipo1000_fill.LVS_ERRORS
+  Final comparison result:PASS
+  Successful equivalence points
+  Failed equivalence points
+DRC Errors: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/pv_flow/drc_dir/pmux/drc_icv_ipo1000/pmux_ipo1000_fill.LAYOUT_ERRORS
+Total DRC violations: 6
+Antenna Errors: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/pv_flow/drc_dir/pmux/drc_icv_antenna_ipo1000/pmux_ipo1000_fill.LAYOUT_ERRORS
+  LAYOUT ERRORS RESULTS: CLEAN
+
+---------------------------------------- [32mECO Analysis[0m ----------------------------------------
+[31m1 ECO loops were done[0m
+ECO File: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/signoff_flow/auto_pt/work_15.09.25_09:09/pt_eco_out_15.09.25_12:58_final.tcl
+  Total ECO commands: 999
+  Command breakdown:
+    set_cell_location: 396
+    insert_buffer: 210
+    size_cell: 204
+    add_buffer_on_route: 189
+NV Gate ECO Summary: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/signoff_flow/nv_gate_eco/pmux/ipo1000/sum.eco_change
+  [36mECO Changes Summary:[0m
+    Object     Change          Count   
+    ---------- --------------- --------
+    TOTAL                      0       
+
+---------------------------------------- [32mBlock Release[0m ----------------------------------------
+Block Release Log: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/export/block_release/log/block_release.log
+  Release to: /home/agur_backend_blockRelease/block/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_9_17_15_56_31
+  [36mUmake Block Release Commands:[0m
+    [2025/09/17 10:41:36] /home/nbu_be_tools/umake/1.0/2025_ww27_02/umake_main/umake.py -s block_release --step_flags --fe_dct_release
+    [2025/09/17 15:54:56] /home/nbu_be_tools/umake/1.0/2025_ww27_02/umake_main/umake.py -s block_release --step_flags -s -l -f -p --fe_dct_release
+Block Release Summary: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10/export/block_release/reports/pmux.summary
+  USER: brachas
+  Release pmux from pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10
+  Release to: /home/agur_backend_blockRelease/block/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_9_17_15_56_31
+        Text: _2025_9_17_15_56_31
+         Pnr: True
+         Sta: True
+         Fcl: True
+      FE_DCT: True
+   Build ndm: None
+      Beview: True
+  
+
+[32mReview completed successfully![0m
+
+
+STDERR:

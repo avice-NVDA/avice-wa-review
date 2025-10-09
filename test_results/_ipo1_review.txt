@@ -1,0 +1,249 @@
+# Review for: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/
+# Generated: 2025-10-01 17:41:50
+# Command: /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/ ipo1 --skip-validation
+# Return code: 0
+
+STDOUT:
+[33m⚠️  Skipping workarea validation (--skip-validation used)[0m
+
+[36m    +===============================================================+
+    |                                                               |
+    |                    [1mAVICE WORKAREA REVIEW[0m[36m                      |
+    |                                                               |
+    |              [32mAdvanced Verification & Integration[0m[36m              |
+    |                    [32mCircuit Engineering[0m[36m                        |
+    |                                                               |
+    +===============================================================+[0m
+
+
+---------------------------------------- [32mSetup[0m ----------------------------------------
+UNIT: prtm
+TAG: agur_prtm_rbv_2025_07_31_with_xor_new_calc
+IPO: ipo1 (Available IPOs: ipo1000)
+  [36mEnvironment Information:[0m
+    LIB_SNAP_REV: 20250611
+
+---------------------------------------- [32mRuntime[0m ----------------------------------------
+PnR Status: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pnr_flow/nv_flow/prtm.prc.status
+  NV Gate ECO Status file not found
+
+[36mRuntime Summary Table:[0m
+  Category     Stage                       Runtime                
+  ------------ --------------------------- -----------------------
+  Construction DC                          7.68 hours             
+  Construction PnR (ipo1000)               32.93 hours (1.37 days)
+  Signoff      Star                        0.59 hours             
+  Signoff      Auto PT                     0.76 hours             
+  Signoff      Formal (rtl_vs_pnr_bbox_fm) 6.91 hours             
+  Signoff      Formal (rtl_vs_pnr_fm)      1.70 days (40.80 hours)
+  ECO          Auto PT Fix                 0.02 hours             
+
+  [36mRuntime HTML Report:[0m
+  HTML Report: /home/avice/scripts/avice_wa_review/avice_runtime_report_prtm_20251001_174149.html
+  Open with: firefox avice_runtime_report_prtm_20251001_174149.html &
+
+---------------------------------------- [32mSynthesis (DC)[0m ----------------------------------------
+Design Definition: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/unit_scripts/des_def.tcl
+DC Log: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/syn_flow/dc/log/dc.log
+QoR Report (Quality of Results): /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/syn_flow/dc/reports/prtm_rtl2gate.qor.rpt
+  [36mQoR Analysis:[0m
+    [32mKey QoR Metrics:[0m
+      Design Area: 138738.6466
+      Leaf Cell Count: 1065617
+      Combinational Cells: 957741
+      Sequential Cells: 107876
+      Total Nets: 1074609
+      Critical Path Slack: -0.0002
+      Total Negative Slack: -0.0171
+      Violating Paths: 23.0000
+      Macro Count: 44
+    [36mScenario Summary:[0m
+    Scenario                                           WNS        TNS        Violating Paths
+    -------------------------------------------------- ---------- ---------- ---------------
+    func.std_tt_0c_0p6v.setup.typical                  0.0198     1.4851     908            
+    func.std_tt_0c_0p6v.setup.typical (Hold)           0.0747     83.4537    3092           
+    [36mTiming Path Groups:[0m CLKGATE, FEEDTHROUGH, REGIN, REGOUT, Wrapper_path, i1_clk, i2_clk, m1_clk, default
+BeFlow Configuration: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/syn_flow/dc/beflow_config.yaml
+  [36mBeFlow Configuration Analysis:[0m
+    [32mKey Configuration Variables:[0m
+      Library Snapshot: 20250611
+      NV Process: tsmc5_t6
+      Tracks Number: t6
+      Project: agur
+      Default Scenario: func.std_tt_0c_0p6v.setup.typical
+      StdCell Library Path: /home/nbu_be_agur/ip/lib_snap/20250611/syn
+      Memories Path: /home/nbu_be_agur/ip/arrays/13897726_02032025_RAM_SYNLIB/arrays_release
+      VT Types: svt, hvt, lvt
+      Array Names: RAMPDP_36X84_AH6R2S_M1_G40, RAMPDP_40X102_AH6R2S_M1_G40, RAMPDP_44X104_AH6R2S_M1_G32, RAMPDP_76X68_AH6R2S_M1_G32, RAMPDP_800X67_AH6RSU_M4_G42
+      Agur Unit BE IP: nvidia_pads_tsmc5_cust_mixvt, nvidia_analog_tsmc5_cust_mixvt, adw_n5_v2f_thermal_sensor, nvidia_stdcell_tsmc5_t6_sup
+Report: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/syn_flow/dc/reports/be4rtl/internal_high_width_logical_cones.rpt
+Report: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/syn_flow/dc/reports/debug/prtm.rtl2gate.removed_cgates.rep
+Report: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/syn_flow/dc/reports/prtm_rtl2gate.qor.rpt
+Report: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/syn_flow/dc/reports/debug/prtm.rtl2gate.removed_registers.rep
+Clock gates removed: 25
+Removed registers: 4883
+
+---------------------------------------- [32mPnR Analysis[0m ----------------------------------------
+PnR Status: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pnr_flow/nv_flow/prtm.prc.status
+
+[36mPnR Flow Status Analysis:[0m
+
+  [36mIPO ipo1000:[0m
+    PnR Flow: Completed through: postroute (6/9)
+    Reporting: Completed through: report_postroute (5/5)
+    [32mStatus: COMPLETED (13/13 steps)[0m
+PnR Configuration: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pnr_flow/nv_flow/prtm.prc
+  [36mAvailable IPOs:[0m 1000
+  [36mTools:[0m edi
+  [36mFlow Sequence (ipo1000):[0m setup -> edi_plan -> place -> cts -> route -> postroute -> prtm_add_extra_M5T_PG.tcl -> io_buf_add.tcl -> myscripts.tcl
+  [36mClock Names:[0m
+    ipo1000: i2_clk i1_clk i2_clk
+  [36mCommon TCL Files:[0m
+Common TCL: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pnr_flow/nv_flow/COMMON/prtm_add_extra_M5T_PG.tcl
+Common TCL: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pnr_flow/nv_flow/COMMON/myscripts.tcl
+Common TCL: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pnr_flow/nv_flow/COMMON/io_buf_add.tcl
+  [36mTCL Usage Verification:[0m
+    [32m[OK] Used TCL files (3):[0m
+      - io_buf_add.tcl
+      - myscripts.tcl
+      - prtm_add_extra_M5T_PG.tcl
+PnR Runset: File not found
+  [33mPnR Data: No data files found for any stage or temperature corner[0m
+    [33mTried stages: postroute, route, cts, place, plan[0m
+    [33mTried corners: 0c_0p6v, 125c_0p6v, 25c_0p6v, 85c_0p6v[0m
+    [33mThis could be due to:[0m
+      - Flow still running (data files not yet generated)
+      - Flow failed at this stage
+      - Different temperature corner used
+      - File permissions issue
+Power Summary: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pnr_flow/nv_flow/prtm/ipo1000/REPs/SUMMARY/prtm.ipo1000.postroute.power.rpt.gz
+
+[36mPower Summary Table:[0m
+        group     |    area    |  count  |   power   : density : cell_avg | internal : switching : total |  leakage  
+   ===============|============|=========|===========:=========:==========|==========:===========:=======|===========
+    combinational |  68829.850 | 1051313 | 12217.027 :   0.177 :    0.012 |    0.000 :     0.000 : 0.000 | 12217.027 
+    sequential    |  73532.118 |   45262 |  2214.453 :   0.030 :    0.049 |    0.000 :     0.000 : 0.000 |  2214.453 
+    physical      | 243509.264 | 1883958 |    14.439 :   0.000 :    0.000 |    0.000 :     0.000 : 0.000 |    14.439 
+   ===============|============|=========|===========:=========:==========|==========:===========:=======|===========
+    total         | 385871.233 | 2980533 | 14445.918 :   0.037 :    0.005 |    0.000 :     0.000 : 0.000 | 14445.918 
+   ==================================================================================================================
+  [33mPnR Timing Setup: No timing setup reports found for any stage[0m
+    [33mTried stages: postroute, route, cts, place, plan[0m
+    [33mThis could be due to:[0m
+      - Flow still running (timing reports not yet generated)
+      - Flow failed at this stage
+      - Different file naming convention
+      - File permissions issue
+
+[36mPnR Pictures:[0m
+  Generating HTML image report...
+  HTML Report: /home/avice/scripts/avice_wa_review/avice_image_report_prtm_20251001_174149.html
+  Open with: firefox avice_image_report_prtm_20251001_174149.html &
+
+---------------------------------------- [32mClock Analysis[0m ----------------------------------------
+PT Clock Analysis: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/signoff_flow/auto_pt/work_16.08.25_18:02/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/prtm_func.std_tt_0c_0p6v.setup.typical.clock_latency
+
+[33mPT Clock Latency Analysis:[0m
+  Clock      Min (ns)   Max (ns)  
+  ---------- ---------- ----------
+  i1_clk     0.202      0.472     
+  i2_clk     0.025      0.472     
+  m1_clk     0.108      0.189     
+
+  All values in nanoseconds (ns)
+  [31mNote: Max latency values > 550ps (0.55ns) are highlighted in red[0m
+
+---------------------------------------- [32mFormal Verification[0m ----------------------------------------
+Formal Log: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/formal_flow/rtl_vs_pnr_bbox_fm/log/rtl_vs_pnr_bbox_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 6.91 hours
+Formal Log: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/formal_flow/rtl_vs_pnr_fm/log/rtl_vs_pnr_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 40.80 hours
+
+---------------------------------------- [32mParasitic Extraction (Star)[0m ----------------------------------------
+SPEF File: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/export/nv_star/prtm/ipo1000/IOs/netlists/prtm.ipo1000.smc1.spef.typical_T0.gz
+SPEF Info: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/export/nv_star/prtm/ipo1000/IOs/netlists/prtm.ipo1000.typical_T0.spef_info
+  Opens: 0
+  Shorts: 2
+Star Shorts Report: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/export/nv_star/prtm/ipo1000/REPs/prtm.ipo1000.prtm_ipo1000.star_extraction_shorts.rpt
+Short between net FE_OFN1729840375_n and net plrxm/plrx_logic/plrx_common/plu_pcs_rx_top_p0/plu_pcs_rx/plu_rx_lanes/plu_rx_dual_lane1/plu_rx_lane1/plu_rx_lane_slip_and_deskew_fifo/plu_rx_lane_64_66_slip_fifo/plu_shift/n1229 Layer = M1_mask2 BBox=(255.2280,521.5080),(255.2480,521.5080)
+Short between net FE_OFN1729840375_n and net plrxm/plrx_logic/plrx_common/plu_pcs_rx_top_p0/plu_pcs_rx/plu_rx_lanes/plu_rx_dual_lane1/plu_rx_lane1/plu_rx_lane_slip_and_deskew_fifo/plu_rx_lane_64_66_slip_fifo/plu_shift/n1229 Layer = M1_mask2 BBox=(255.2280,521.5050),(255.2480,521.5080)
+
+
+---------------------------------------- [32mSignoff Timing (PT)[0m ----------------------------------------
+HTML Report: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/signoff_flow/auto_pt/work_16.08.25_18:02.html
+All Violators: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/signoff_flow/auto_pt/work_16.08.25_18:02/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/prtm_func.std_tt_0c_0p6v.setup.typical.all_violators.gz
+PT Log: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/signoff_flow/auto_pt/log/auto_pt.log
+[31mErrors found (1 total):[0m
+  Error: Library Compiler executable path is not set. (PT-063)
+
+  [36mTiming Summary Report:[0m
+    HTML Report: /home/avice/scripts/avice_wa_review/avice_PT_timing_summary_prtm_20251001_174149.html
+    Open with: firefox avice_PT_timing_summary_prtm_20251001_174149.html &
+    Work Areas: 1
+
+---------------------------------------- [32mPhysical Verification (PV)[0m ----------------------------------------
+LVS Errors: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pv_flow/drc_dir/prtm/lvs_icv_ipo1000/prtm_ipo1000_fill.LVS_ERRORS
+  [31mStatus: FAIL[0m
+  Failed Equivalence Points: 1
+  First Priority Errors: 1
+  Second Priority Errors: 0
+  Successful Equivalence Points: 2546
+
+  [33mUnmatched Items:[0m
+    Schematic Instances: 0
+    Schematic Nets:      0
+    Layout Instances:    0
+    Layout Nets:         0
+    Schematic Ports:     0
+    Layout Ports:        0
+    [31mTotal Unmatched Items: 0[0m
+
+  [32mMatched Items:[0m
+    Instances: 9,026,320
+    Nets:      4,028,473
+    Ports:     4,200
+DRC Errors: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pv_flow/drc_dir/prtm/drc_icv_ipo1000/prtm_ipo1000_fill.LAYOUT_ERRORS
+Total DRC violations: 6
+Antenna Errors: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/pv_flow/drc_dir/prtm/drc_icv_antenna_ipo1000/prtm_ipo1000_fill.LAYOUT_ERRORS
+  [32mLAYOUT ERRORS RESULTS: CLEAN[0m
+
+---------------------------------------- [32mGL Checks[0m ----------------------------------------
+GL Check Report: /home/scratch.avice_vlsi/agur/SFNL/prtm/agur_prtm_rbv_2025_07_31_with_xor_new_calc/signoff_flow/gl-check/reports/err.long.rep
+
+  [36mGL Check Results:[0m
+  Checker Name                   Count    Error ID   Description
+  ------------------------------ -------- ---------- --------------------------------------------------
+  ---------------------------------- --------- ------------ -----------------------------------------------...
+  ClockTree                      1        003        Clk: %s Connected through pin: %s
+  clkOfSequentials               1        271        Non clock pin: %s is connected to clocktree: %s
+  dontUseCells                   1        019        Found %d instantiations of %s
+  ScanChains                     1        1000       Missing or wrong beflow vars %s. Not aborting C...
+  dftAtpgIso                     2        531        %s is driven by internals: %s
+  multipleRootClockgatePerClkInput 1        280        Multiple root clock gates on clock: %s . Clock ...
+  deAssertedInShiftMode          1        1000       Missing or wrong beflow vars %s. Aborting Checker
+  excludeDrivesInclude           83       021        Chained sequential cell gets a clock from an ex...
+  SeparateChains                 2        1000       Missing or wrong beflow vars %s. Aborting Checker
+  nonScannableFlops              30       107        Flop connected to a scan chain but has an exclu...
+  captureDuringExternal          8        044        '%s' flop to input flop path: %s ==> %s
+  flopScanEnGroup                1        1000       Missing or wrong beflow vars %s. Aborting Checker
+  clkgateScanEnGroup             1        1000       Missing or wrong beflow vars %s. Aborting Checker
+  inputClkgateIsolation          1        1000       Missing or wrong beflow vars %s. Aborting Checker
+  clockgateEnableNotConst        29       051        Clockgate enable: %s . is constant: %s
+
+---------------------------------------- [32mECO Analysis[0m ----------------------------------------
+[31m0 ECO loops were done[0m
+Didn't run PT ECO
+Didn't run NV Gate ECO
+
+---------------------------------------- [32mNV Gate ECO[0m ----------------------------------------
+  Didn't run NV Gate ECO
+
+---------------------------------------- [32mBlock Release[0m ----------------------------------------
+No release was done
+
+[32mReview completed successfully![0m
+
+
+STDERR:
