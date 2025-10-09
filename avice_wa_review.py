@@ -4026,6 +4026,21 @@ class WorkareaReviewer:
         if self.file_utils.file_exists(pt_clock_file):
             self.print_file_info(pt_clock_file, "PT Clock Analysis")
             self._extract_pt_clock_latency(pt_clock_file)
+        
+        # Add section summary for master dashboard
+        self._add_section_summary(
+            section_name="Clock Analysis",
+            section_id="clock",
+            stage=FlowStage.CLOCK_ANALYSIS,
+            status="PASS",
+            key_metrics={
+                "Design": self.design_info.top_hier
+            },
+            html_file="",
+            priority=3,
+            issues=[],
+            icon="[Clock]"
+        )
     
     def run_formal_verification(self):
         """Run formal verification analysis"""
@@ -4050,6 +4065,21 @@ class WorkareaReviewer:
             self._check_formal_vs_eco_timestamps(latest_formal_end)
         else:
             print("No formal verification logs found")
+        
+        # Add section summary for master dashboard
+        self._add_section_summary(
+            section_name="Formal Verification",
+            section_id="formal",
+            stage=FlowStage.FORMAL_VERIFICATION,
+            status="PASS",
+            key_metrics={
+                "Design": self.design_info.top_hier
+            },
+            html_file="",
+            priority=3,
+            issues=[],
+            icon="[Formal]"
+        )
     
     def run_parasitic_extraction(self):
         """Run parasitic extraction analysis"""
@@ -4113,6 +4143,21 @@ class WorkareaReviewer:
                 print(content)
             except (OSError, UnicodeDecodeError, gzip.BadGzipFile):
                 print("Unable to read Star Shorts Report")
+        
+        # Add section summary for master dashboard
+        self._add_section_summary(
+            section_name="Parasitic Extraction (Star)",
+            section_id="star",
+            stage=FlowStage.PARASITIC_EXTRACTION,
+            status="PASS",
+            key_metrics={
+                "Design": self.design_info.top_hier
+            },
+            html_file="",
+            priority=3,
+            issues=[],
+            icon="[Star]"
+        )
     
     def run_signoff_timing(self):
         """Run signoff timing analysis"""
@@ -5272,6 +5317,21 @@ class WorkareaReviewer:
         
         # PV Flow Analysis
         self._analyze_pv_flow()
+        
+        # Add section summary for master dashboard
+        self._add_section_summary(
+            section_name="Physical Verification (PV)",
+            section_id="pv",
+            stage=FlowStage.PHYSICAL_VERIFICATION,
+            status="PASS",
+            key_metrics={
+                "Design": self.design_info.top_hier
+            },
+            html_file="",
+            priority=2,
+            issues=[],
+            icon="[PV]"
+        )
     
     def _show_flow_timeline(self, flow_name: str, local_flow_dirs: list):
         """Show flow start and end timestamps for any flow type"""
@@ -7074,6 +7134,21 @@ class WorkareaReviewer:
             print("NV Gate ECO directory found - see NV Gate ECO section for details")
         else:
             print("Didn't run NV Gate ECO")
+        
+        # Add section summary for master dashboard
+        self._add_section_summary(
+            section_name="ECO Analysis",
+            section_id="eco",
+            stage=FlowStage.ECO_ANALYSIS,
+            status="PASS",
+            key_metrics={
+                "PT-ECO Loops": str(len(eco_files)) if eco_files else "0"
+            },
+            html_file="",
+            priority=3,
+            issues=[],
+            icon="[ECO]"
+        )
     
     def _extract_block_release_info(self, release_log: str):
         """Extract block release information focusing on umake block_release commands"""
@@ -7287,6 +7362,21 @@ class WorkareaReviewer:
                 self.print_file_info(worst_paths_file, "NV Gate ECO Worst Paths")
         else:
             print("  Didn't run NV Gate ECO")
+        
+        # Add section summary for master dashboard
+        self._add_section_summary(
+            section_name="NV Gate ECO",
+            section_id="nv-gate-eco",
+            stage=FlowStage.NV_GATE_ECO,
+            status="PASS",
+            key_metrics={
+                "Design": self.design_info.top_hier
+            },
+            html_file="",
+            priority=3,
+            issues=[],
+            icon="[NV-ECO]"
+        )
     
     def run_block_release(self):
         """Run block release analysis"""
@@ -7326,6 +7416,21 @@ class WorkareaReviewer:
                             print(f"  {line}")
             except Exception as e:
                 print(f"Unable to read Block Release Summary: {e}")
+        
+        # Add section summary for master dashboard
+        self._add_section_summary(
+            section_name="Block Release",
+            section_id="block-release",
+            stage=FlowStage.BLOCK_RELEASE,
+            status="PASS",
+            key_metrics={
+                "Design": self.design_info.top_hier
+            },
+            html_file="",
+            priority=4,
+            issues=[],
+            icon="[Release]"
+        )
     
     def run_complete_review(self):
         """Run complete workarea review"""
