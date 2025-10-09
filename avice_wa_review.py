@@ -2500,6 +2500,22 @@ class WorkareaReviewer:
                     print(f"{Color.GREEN}No don't use cells{Color.RESET}")
             except (OSError, UnicodeDecodeError, gzip.BadGzipFile) as e:
                 print(f"{Color.YELLOW}Don't use cells report found but unable to read: {e}{Color.RESET}")
+        
+        # Add section summary for master dashboard
+        self._add_section_summary(
+            section_name="Synthesis (DC)",
+            section_id="synthesis",
+            stage=FlowStage.SYNTHESIS,
+            status="PASS",
+            key_metrics={
+                "Design": self.design_info.top_hier,
+                "IPO": self.design_info.ipo
+            },
+            html_file="",
+            priority=3,
+            issues=[],
+            icon="[DC]"
+        )
     
     def _extract_floorplan_dimensions(self):
         """Extract floorplan dimensions from DEF file"""
@@ -2746,22 +2762,6 @@ class WorkareaReviewer:
                 
         except (OSError, UnicodeDecodeError) as e:
             print(f"    {Color.RED}Error reading BeFlow config: {e}{Color.RESET}")
-        
-        # Add section summary for master dashboard
-        self._add_section_summary(
-            section_name="Synthesis (DC)",
-            section_id="synthesis",
-            stage=FlowStage.SYNTHESIS,
-            status="PASS",
-            key_metrics={
-                "Design": self.design_info.top_hier,
-                "IPO": self.design_info.ipo
-            },
-            html_file="",
-            priority=3,
-            issues=[],
-            icon="[DC]"
-        )
     
     def run_setup_analysis(self):
         """Run setup analysis including environment and runtime information"""
