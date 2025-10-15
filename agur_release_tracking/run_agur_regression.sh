@@ -402,8 +402,8 @@ parse_pv_output() {
         fi
     fi
     
-    # Extract runtime if available
-    runtime=$(echo "$pv_section" | grep -i "Runtime:" | head -1 | grep -oP "Runtime:\s*\K[0-9.]+ (hours|minutes|seconds)")
+    # Extract runtime if available (look for Duration from PV Flow Timeline)
+    runtime=$(echo "$pv_section" | grep -i "Duration:" | head -1 | grep -oP "Duration:\s*\K.*")
     [ -z "$runtime" ] && runtime="N/A"
     
     # Return pipe-delimited string
