@@ -71,8 +71,12 @@ The tool is organized into the following flow stages:
 # Or directly with Python
 /home/utils/Python/builds/3.11.9-20250715/bin/python3 /home/avice/scripts/avice_wa_review/avice_wa_review.py <workarea_path> --sections setup runtime synthesis
 
-# Available sections: setup, runtime, recipe, synthesis, pnr, clock, formal, 
-# parasitic, timing, pv, gl-check, eco, nv-gate-eco, block-release
+# Available sections: setup, runtime, synthesis (syn/dc), pnr, clock, formal, 
+# star, pt, pv, gl-check, eco, nv-gate-eco, block-release
+# Aliases: syn/dc = synthesis, star = parasitic extraction, pt = signoff timing
+
+# Use aliases for shorter commands
+/home/avice/scripts/avice_wa_review_launcher.csh <workarea_path> -s setup dc pnr
 ```
 
 ### Verbose Output

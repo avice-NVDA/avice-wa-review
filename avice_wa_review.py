@@ -73,7 +73,7 @@ Options:
                           Run only specific analysis sections (case-insensitive)
                           Available: setup, runtime, synthesis, pnr, clock, formal, 
                                     star, pt, pv, gl-check, eco, nv-gate-eco, block-release
-                          Aliases: 'star' = parasitic extraction, 'pt' = signoff timing
+                          Aliases: 'syn'/'dc' = synthesis, 'star' = parasitic, 'pt' = timing
     
     --no-logo             Disable ASCII logo display (useful for automated scripts)
     --skip-validation     Skip workarea validation checks (use with caution)
@@ -15966,6 +15966,8 @@ For questions or support, contact: avice@nvidia.com
                 "setup": reviewer.run_setup_analysis,
                 "runtime": reviewer.run_runtime_analysis,
                 "synthesis": reviewer.run_synthesis_analysis,
+                "syn": reviewer.run_synthesis_analysis,  # Alias for synthesis
+                "dc": reviewer.run_synthesis_analysis,   # Alias for synthesis (Design Compiler)
                 "pnr": reviewer.run_pnr_analysis,
                 "clock": reviewer.run_clock_analysis,
                 "formal": reviewer.run_formal_verification,
