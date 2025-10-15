@@ -12225,16 +12225,23 @@ class WorkareaReviewer:
                 for line in checker_content.split('\n'):
                     line_stripped = line.strip()
                     
-                    # Extract elapsed time
+                    # Extract elapsed time - try multiple formats
                     if line_stripped.startswith('Elapsed Time:'):
                         elapsed_time = line_stripped.replace('Elapsed Time:', '').strip()
+                    elif line_stripped.startswith('Elapsed time:'):
+                        elapsed_time = line_stripped.replace('Elapsed time:', '').strip()
+                    elif 'elapsed time:' in line_stripped.lower():
+                        # Handle case-insensitive match
+                        parts = line_stripped.split(':', 1)
+                        if len(parts) > 1:
+                            elapsed_time = parts[1].strip()
                     
                     # Count errors
                     if line_stripped.startswith('-E-'):
                         error_count += 1
                     
                     # Stop collecting description when we hit logs or end time
-                    if line_stripped.startswith(('-I-', '-E-', '-W-', 'End Time:')):
+                    if line_stripped.startswith(('-I-', '-E-', '-W-', 'End Time:', 'End time:')):
                         break
                     
                     # Collect description lines (skip empty lines at start)
@@ -12243,6 +12250,18 @@ class WorkareaReviewer:
                 
                 # Clean up description
                 description = '\n'.join(description_lines).strip()
+                
+                # Format elapsed time nicely (remove "seconds" suffix if present, keep it clean)
+                if elapsed_time != "N/A":
+                    # Handle formats like "123 seconds", "123s", "1.5 hours", etc.
+                    elapsed_time = elapsed_time.replace(' seconds', 's').replace('seconds', 's')
+                    if elapsed_time and elapsed_time[-1] != 's' and elapsed_time[-1] != 'h':
+                        # If it's just a number, assume seconds
+                        try:
+                            float(elapsed_time)
+                            elapsed_time = f"{elapsed_time}s"
+                        except ValueError:
+                            pass
                 
                 # Store checker info
                 checker_rules[checker_name] = {
