@@ -940,6 +940,8 @@ done
     [[ "$running_count" == "0" ]] && running_count=0
     not_found_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "NOT_FOUND")
     [[ "$not_found_count" == "0" ]] && not_found_count=0
+    no_data_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "NO_DATA")
+    [[ "$no_data_count" == "0" ]] && no_data_count=0
     
     # Store statistics for this regression type
     REGRESSION_RESULTS["${REGRESSION_TYPE}_passed_count"]=$passed_count
@@ -951,6 +953,7 @@ done
     REGRESSION_RESULTS["${REGRESSION_TYPE}_error_count"]=$error_count
     REGRESSION_RESULTS["${REGRESSION_TYPE}_running_count"]=$running_count
     REGRESSION_RESULTS["${REGRESSION_TYPE}_not_found_count"]=$not_found_count
+    REGRESSION_RESULTS["${REGRESSION_TYPE}_no_data_count"]=$no_data_count
     
     # Clean up temporary arrays
     unset ANALYSIS_STATUS
@@ -991,6 +994,7 @@ if [ ${#REGRESSION_TYPES[@]} -eq 1 ]; then
     error_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_error_count"]}
     running_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_running_count"]}
     not_found_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_not_found_count"]}
+    no_data_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_no_data_count"]}
     
     # Restore unit results
     declare -a ANALYSIS_STATUS
@@ -1577,6 +1581,24 @@ HTML_STATS4
 
 echo "                <div class=\"stat-value stat-crashed\">$crashed_count</div>" >> "$HTML_FILE"
 echo "                <div class=\"stat-label\">$(( crashed_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
+
+cat >> "$HTML_FILE" << 'HTML_STATS_NOTFOUND'
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">❓ Not Found</div>
+HTML_STATS_NOTFOUND
+
+echo "                <div class=\"stat-value stat-unresolved\">$not_found_count</div>" >> "$HTML_FILE"
+echo "                <div class=\"stat-label\">$(( not_found_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
+
+cat >> "$HTML_FILE" << 'HTML_STATS_NODATA'
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">📊 No Data</div>
+HTML_STATS_NODATA
+
+echo "                <div class=\"stat-value stat-unresolved\">$no_data_count</div>" >> "$HTML_FILE"
+echo "                <div class=\"stat-label\">$(( no_data_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
 
 cat >> "$HTML_FILE" << 'HTML_CONTENT_START'
             </div>
@@ -2468,6 +2490,16 @@ MULTI_TABS_START
                     <div class="stat-value stat-crashed">$crashed_count</div>
                     <div class="stat-label">$(( crashed_count * 100 / TOTAL_UNITS ))%</div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-label">❓ Not Found</div>
+                    <div class="stat-value stat-unresolved">$not_found_count</div>
+                    <div class="stat-label">$(( not_found_count * 100 / TOTAL_UNITS ))%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">📊 No Data</div>
+                    <div class="stat-value stat-unresolved">$no_data_count</div>
+                    <div class="stat-label">$(( no_data_count * 100 / TOTAL_UNITS ))%</div>
+                </div>
             </div>
             
             <div class="content">
@@ -2841,6 +2873,7 @@ echo -e "  - ${RED}Crashed: $crashed_count${NC}"
 echo -e "  - ${YELLOW}Running: $running_count${NC}"
 echo -e "  - ${YELLOW}Errors: $error_count${NC}"
 echo -e "  - ${YELLOW}Not Found: $not_found_count${NC}"
+echo -e "  - ${YELLOW}No Data: $no_data_count${NC}"
 echo ""
 echo "Output File:"
 echo "  - HTML Dashboard: $HTML_FILE"
