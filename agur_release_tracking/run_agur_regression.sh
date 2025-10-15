@@ -803,7 +803,7 @@ for i in "${!UNITS[@]}"; do
         ANALYSIS_RUNTIMES+=("N/A")
     else
         # Call appropriate parser function based on regression type
-        local parse_result=""
+        parse_result=""
         case "$REGRESSION_TYPE" in
             formal)
                 parse_result=$(parse_formal_output "$OUTPUT_FILE")
@@ -834,7 +834,7 @@ for i in "${!UNITS[@]}"; do
         ANALYSIS_RUNTIMES+=("$runtime")
         
         # Determine status color for console output
-        local status_color="${YELLOW}"
+        status_color="${YELLOW}"
         case "$overall_status" in
             PASSED)
                 status_color="${GREEN}"
