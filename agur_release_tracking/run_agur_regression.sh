@@ -341,20 +341,25 @@ parse_pv_output() {
         return
     fi
     
-    # Extract PV metrics - try multiple patterns
-    local drc_violations=$(echo "$pv_section" | grep -i "DRC.*violations\?" | grep -oP "[0-9]+" | head -1)
-    local lvs_violations=$(echo "$pv_section" | grep -i "LVS.*violations\?" | grep -oP "[0-9]+" | head -1)
-    local antenna_violations=$(echo "$pv_section" | grep -i "Antenna.*violations\?" | grep -oP "[0-9]+" | head -1)
+    # Extract PV metrics - match actual avice_wa_review.py output format
     
-    # Alternative patterns
+    # LVS: Extract "Failed Equivalence Points: X"
+    local lvs_violations=$(echo "$pv_section" | grep -i "Failed Equivalence Points:" | grep -oP "Failed Equivalence Points:\s*\K[0-9]+" | head -1)
+    
+    # DRC: Extract "Total DRC violations: X" or check for CLEAN
+    local drc_violations=$(echo "$pv_section" | grep -i "Total DRC violations:" | grep -oP "Total DRC violations:\s*\K[0-9]+" | head -1)
     if [ -z "$drc_violations" ]; then
-        drc_violations=$(echo "$pv_section" | grep -i "DRC:" | grep -oP "DRC:\s*\K[0-9]+" | head -1)
+        # Check if it says CLEAN
+        if echo "$pv_section" | grep -qi "CLEAN.*No DRC violations"; then
+            drc_violations="0"
+        fi
     fi
-    if [ -z "$lvs_violations" ]; then
-        lvs_violations=$(echo "$pv_section" | grep -i "LVS:" | grep -oP "LVS:\s*\K[0-9]+" | head -1)
-    fi
-    if [ -z "$antenna_violations" ]; then
-        antenna_violations=$(echo "$pv_section" | grep -i "Antenna:" | grep -oP "Antenna:\s*\K[0-9]+" | head -1)
+    
+    # Antenna: Check for "No antenna violations found" or extract count
+    if echo "$pv_section" | grep -qi "No antenna violations found"; then
+        antenna_violations="0"
+    else
+        antenna_violations=$(echo "$pv_section" | grep -i "Total.*antenna.*violations\|Antenna.*violations:" | grep -oP "[0-9]+" | head -1)
     fi
     
     # Set defaults if extraction failed
