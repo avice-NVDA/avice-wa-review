@@ -54,7 +54,7 @@ TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
 TEMP_DIR="/tmp/agur_regression_$$"
 
 # Filters
-FILTER_CHIPLET=""
+FILTER_CHIPLETS=()  # Array to store multiple chiplets: CPORT, CFAN, etc.
 FILTER_UNIT=""
 
 # Colors for terminal output
@@ -81,6 +81,7 @@ Required Options:
 
 Optional Filters:
   -c, --chiplet CHIPLET    Filter by chiplet (e.g., CPORT)
+                           Multiple chiplets: comma-separated or multiple -c flags
   -u, --unit UNIT          Run for specific unit only
   -h, --help               Show this help message
 
@@ -89,6 +90,8 @@ Examples:
   $0 -t formal,pv          # Run formal AND PV regressions (multi-tab HTML)
   $0 -t formal -t pv       # Same as above (multiple -t flags)
   $0 -t formal -c CPORT    # Run formal on CPORT units only
+  $0 -t formal -c CPORT,CFAN  # Run formal on CPORT and CFAN units
+  $0 -t formal -c CPORT -c CFAN  # Same as above (multiple -c flags)
   $0 -t timing -u prt      # Run timing regression on prt unit only
   $0 -t pv,formal,timing   # Run 3 regressions in one dashboard
 
@@ -286,13 +289,32 @@ parse_timing_output() {
         # Convert WNS to float for comparison (bash doesn't handle floats well, use awk)
         local wns_check=$(echo "$wns 0" | awk '{if ($1 >= $2) print "PASS"; else print "FAIL"}')
         
+        # Format timing values: if < 0.5ns, show in ps for better readability
+        local wns_formatted="$wns"
+        local tns_formatted="$tns"
+        local wns_unit="ns"
+        local tns_unit="ns"
+        
+        # Check if WNS absolute value is less than 0.5ns
+        local wns_abs=$(echo "$wns" | tr -d '-')
+        if [ $(echo "$wns_abs 0.5" | awk '{if ($1 < $2) print "1"; else print "0"}') -eq 1 ]; then
+            wns_formatted=$(echo "$wns" | awk '{printf "%.0f", $1 * 1000}')
+            wns_unit="ps"
+        fi
+        
+        # Check if TNS absolute value is less than 0.5ns
+        local tns_abs=$(echo "$tns" | tr -d '-')
+        if [ $(echo "$tns_abs 0.5" | awk '{if ($1 < $2) print "1"; else print "0"}') -eq 1 ]; then
+            tns_formatted=$(echo "$tns" | awk '{printf "%.0f", $1 * 1000}')
+            tns_unit="ps"
+        fi
+        
         if [ "$wns_check" = "PASS" ]; then
             overall_status="PASSED"
-            details="WNS: ${wns}ns, TNS: ${tns}ns"
+            details="WNS: ${wns_formatted}${wns_unit}, TNS: ${tns_formatted}${tns_unit}"
             [ "$nvp" != "N/A" ] && details="${details}, Violating Paths: ${nvp}"
         else
             # Check severity of violation (in nanoseconds)
-            local wns_abs=$(echo "$wns" | tr -d '-')
             # Critical if WNS < -0.05ns (50ps)
             local is_critical=$(echo "$wns_abs 0.05" | awk '{if ($1 > $2) print "YES"; else print "NO"}')
             
@@ -301,7 +323,7 @@ parse_timing_output() {
             else
                 overall_status="WARN"
             fi
-            details="WNS: ${wns}ns (VIOLATION), TNS: ${tns}ns"
+            details="WNS: ${wns_formatted}${wns_unit} (VIOLATION), TNS: ${tns_formatted}${tns_unit}"
             [ "$nvp" != "N/A" ] && details="${details}, Violating Paths: ${nvp}"
         fi
     else
@@ -641,7 +663,11 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         -c|--chiplet)
-            FILTER_CHIPLET="$2"
+            # Support comma-separated chiplets: -c CPORT,CFAN
+            IFS=',' read -ra CHIPLETS <<< "$2"
+            for chiplet in "${CHIPLETS[@]}"; do
+                FILTER_CHIPLETS+=("$chiplet")
+            done
             shift 2
             ;;
         -u|--unit)
@@ -731,8 +757,18 @@ while IFS='|' read -r unit chiplet workarea rtl_tag release_types release_date r
     release_user=$(echo "$release_user" | xargs)
     
     # Apply filters
-    if [ -n "$FILTER_CHIPLET" ] && [ "$chiplet" != "$FILTER_CHIPLET" ]; then
-        continue
+    if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
+        # Check if unit's chiplet is in the FILTER_CHIPLETS array
+        chiplet_match=0
+        for filter_chiplet in "${FILTER_CHIPLETS[@]}"; do
+            if [ "$chiplet" = "$filter_chiplet" ]; then
+                chiplet_match=1
+                break
+            fi
+        done
+        if [ $chiplet_match -eq 0 ]; then
+            continue
+        fi
     fi
     if [ -n "$FILTER_UNIT" ] && [ "$unit" != "$FILTER_UNIT" ]; then
         continue
@@ -754,8 +790,8 @@ if [ $TOTAL_UNITS -eq 0 ]; then
 fi
 
 echo -e "${GREEN}Found $TOTAL_UNITS unit(s) to analyze${NC}"
-if [ -n "$FILTER_CHIPLET" ]; then
-    echo "Filter: Chiplet = $FILTER_CHIPLET"
+if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
+    echo "Filter: Chiplet = ${FILTER_CHIPLETS[*]}"
 fi
 if [ -n "$FILTER_UNIT" ]; then
     echo "Filter: Unit = $FILTER_UNIT"
@@ -1451,8 +1487,8 @@ if [ -n "$LOGO_DATA" ]; then
                     <div class="subtitle">Generated: $(date '+%Y-%m-%d %H:%M:%S')</div>
 HTML_META
     
-    if [ -n "$FILTER_CHIPLET" ]; then
-        echo "                    <div class=\"subtitle\">Filter: Chiplet = $FILTER_CHIPLET</div>" >> "$HTML_FILE"
+    if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
+        echo "                    <div class=\"subtitle\">Filter: Chiplet = ${FILTER_CHIPLETS[*]}</div>" >> "$HTML_FILE"
     fi
     if [ -n "$FILTER_UNIT" ]; then
         echo "                    <div class=\"subtitle\">Filter: Unit = $FILTER_UNIT</div>" >> "$HTML_FILE"
@@ -1469,8 +1505,8 @@ else
             <div class="subtitle">Generated: $(date '+%Y-%m-%d %H:%M:%S')</div>
 HTML_META
     
-    if [ -n "$FILTER_CHIPLET" ]; then
-        echo "            <div class=\"subtitle\">Filter: Chiplet = $FILTER_CHIPLET</div>" >> "$HTML_FILE"
+    if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
+        echo "            <div class=\"subtitle\">Filter: Chiplet = ${FILTER_CHIPLETS[*]}</div>" >> "$HTML_FILE"
     fi
     if [ -n "$FILTER_UNIT" ]; then
         echo "            <div class=\"subtitle\">Filter: Unit = $FILTER_UNIT</div>" >> "$HTML_FILE"
@@ -1650,6 +1686,11 @@ CHIPLET_SECTION
                                     <span class="info-label">Release Date:</span>
                                     <span class="info-value">$release_date</span>
                                 </div>
+UNIT_CARD
+        
+        # RTL Tag is only relevant for formal and release regressions
+        if [ "$REGRESSION_TYPE" = "formal" ] || [ "$REGRESSION_TYPE" = "release" ]; then
+            cat >> "$HTML_FILE" << RTL_TAG
                                 <div class="info-row workarea-row">
                                     <span class="info-label">RTL Tag:</span>
                                     <span class="info-value workarea-path" id="rtl-$unit">$rtl_tag</span>
@@ -1657,6 +1698,10 @@ CHIPLET_SECTION
                                         📋 Copy
                                     </button>
                                 </div>
+RTL_TAG
+        fi
+        
+        cat >> "$HTML_FILE" << RUNTIME_WA
                                 <div class="info-row">
                                     <span class="info-label">Runtime:</span>
                                     <span class="info-value">$runtime</span>
@@ -1669,7 +1714,7 @@ CHIPLET_SECTION
                                     </button>
                                 </div>
                             </div>
-UNIT_CARD
+RUNTIME_WA
         
         # Display details based on regression type
         if [ "$REGRESSION_TYPE" = "pv" ]; then
@@ -2337,8 +2382,8 @@ MULTI_HTML_START
             <div class="subtitle">Regression Types: ${REGRESSION_TYPES[*]}</div>
 MULTI_META
 
-    if [ -n "$FILTER_CHIPLET" ]; then
-        echo "            <div class=\"subtitle\">Filter: Chiplet = $FILTER_CHIPLET</div>" >> "$HTML_FILE"
+    if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
+        echo "            <div class=\"subtitle\">Filter: Chiplet = ${FILTER_CHIPLETS[*]}</div>" >> "$HTML_FILE"
     fi
     
     # Add tab navigation
@@ -2531,6 +2576,11 @@ CHIPLET_SECTION
                                         <span class="info-label">Release Date:</span>
                                         <span class="info-value">$release_date</span>
                                     </div>
+UNIT_CARD
+                
+                # RTL Tag is only relevant for formal and release regressions
+                if [ "$REGRESSION_TYPE" = "formal" ] || [ "$REGRESSION_TYPE" = "release" ]; then
+                    cat >> "$HTML_FILE" << RTL_TAG
                                     <div class="info-row workarea-row">
                                         <span class="info-label">RTL Tag:</span>
                                         <span class="info-value workarea-path" id="rtl-${REGRESSION_TYPE}-$unit">$rtl_tag</span>
@@ -2538,6 +2588,10 @@ CHIPLET_SECTION
                                             📋 Copy
                                         </button>
                                     </div>
+RTL_TAG
+                fi
+                
+                cat >> "$HTML_FILE" << RUNTIME_WA
                                     <div class="info-row">
                                         <span class="info-label">Runtime:</span>
                                         <span class="info-value">$runtime</span>
@@ -2550,7 +2604,7 @@ CHIPLET_SECTION
                                         </button>
                                     </div>
                                 </div>
-UNIT_CARD
+RUNTIME_WA
                 
                 # Display details based on regression type
                 if [ "$REGRESSION_TYPE" = "pv" ]; then
