@@ -1555,17 +1555,26 @@ HTML_STATS_WARN
 echo "                <div class=\"stat-value stat-unresolved\">$warn_count</div>" >> "$HTML_FILE"
 echo "                <div class=\"stat-label\">$(( warn_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
 
-cat >> "$HTML_FILE" << 'HTML_STATS2'
+cat >> "$HTML_FILE" << 'HTML_STATS_WARN_END'
             </div>
+HTML_STATS_WARN_END
+
+# Unresolved is only relevant for formal regression
+if [ "$REGRESSION_TYPE" = "formal" ]; then
+    cat >> "$HTML_FILE" << 'HTML_STATS2'
             <div class="stat-card">
                 <div class="stat-label">⚠️ Unresolved</div>
 HTML_STATS2
 
-echo "                <div class=\"stat-value stat-unresolved\">$unresolved_count</div>" >> "$HTML_FILE"
-echo "                <div class=\"stat-label\">$(( unresolved_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
+    echo "                <div class=\"stat-value stat-unresolved\">$unresolved_count</div>" >> "$HTML_FILE"
+    echo "                <div class=\"stat-label\">$(( unresolved_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
+    
+    cat >> "$HTML_FILE" << 'HTML_STATS_UNRESOLVED_END'
+            </div>
+HTML_STATS_UNRESOLVED_END
+fi
 
 cat >> "$HTML_FILE" << 'HTML_STATS3'
-            </div>
             <div class="stat-card">
                 <div class="stat-label">❌ Failed</div>
 HTML_STATS3
@@ -2475,11 +2484,20 @@ MULTI_TABS_START
                     <div class="stat-value stat-unresolved">$warn_count</div>
                     <div class="stat-label">$(( warn_count * 100 / TOTAL_UNITS ))%</div>
                 </div>
+TAB_CONTENT_START
+        
+        # Unresolved is only relevant for formal regression
+        if [ "$REGRESSION_TYPE" = "formal" ]; then
+            cat >> "$HTML_FILE" << TAB_UNRESOLVED
                 <div class="stat-card">
                     <div class="stat-label">⚠️ Unresolved</div>
                     <div class="stat-value stat-unresolved">$unresolved_count</div>
                     <div class="stat-label">$(( unresolved_count * 100 / TOTAL_UNITS ))%</div>
                 </div>
+TAB_UNRESOLVED
+        fi
+        
+        cat >> "$HTML_FILE" << TAB_STATS_REST
                 <div class="stat-card">
                     <div class="stat-label">❌ Failed</div>
                     <div class="stat-value stat-failed">$failed_count</div>
@@ -2503,7 +2521,7 @@ MULTI_TABS_START
             </div>
             
             <div class="content">
-TAB_CONTENT_START
+TAB_STATS_REST
 
         # Group units by chiplet
         declare -A chiplet_units_tab
