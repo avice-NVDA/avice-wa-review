@@ -231,7 +231,49 @@ The tool provides colorized output with:
 
 ## Recent Updates and Improvements
 
-### Version 1.0.0 Features
+### Version 2.0.0 Features (October 2025)
+
+1. **Master Dashboard**:
+   - Unified dashboard with 13 integrated sections
+   - Single HTML report combining all workarea analysis
+   - Expandable/collapsible section cards with statistics
+   - Quick navigation and comprehensive overview
+   - Linked to individual detailed HTML reports
+
+2. **AGUR Release Tracking System**:
+   - Automated AGUR release extraction and tracking
+   - Formal regression testing dashboard
+   - Support for 57 design units
+   - Auto-update scripts and documentation
+   - CSV/Markdown/TXT format exports
+
+3. **Enhanced HTML Reports**:
+   - Copyright footer on all reports
+   - Back-to-top button for long reports
+   - Absolute path support for portability
+   - Improved styling and responsiveness
+   - Better cross-directory compatibility
+
+4. **Runtime Enhancements**:
+   - Color-coded runtime analysis
+   - Stage highlighting for max runtime
+   - Improved timestamp handling
+   - Better RUNNING flow detection
+
+5. **Architecture Updates**:
+   - Comprehensive architecture.mdc documentation
+   - HTML/CSS rendering compatibility updates
+   - Cross-directory execution standards
+   - Testing and validation guidelines
+
+6. **Image Debug Improvements**:
+   - Enhanced reporting capabilities
+   - Better error handling
+   - Improved image analysis
+
+**Statistics**: 27 files changed, 21,880 insertions, 5,082 deletions
+
+### Version 1.0.0 Features (Initial Release)
 
 1. **Enhanced PnR Analysis**:
    - PnR status tracking with flow progress monitoring

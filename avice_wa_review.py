@@ -13,6 +13,7 @@
 #===============================================================================
 """
 Script Name: avice_wa_review.py
+Version: 2.0.0
 Purpose: Comprehensive ASIC/SoC design workarea analysis and review tool
 
 Description:
@@ -15847,7 +15848,7 @@ For questions or support, contact: avice@nvidia.com
     
     parser.add_argument("--verbose", "-v", action="store_true", 
                        help="Enable verbose output with detailed information")
-    parser.add_argument("--version", action="version", version="%(prog)s 1.0.0",
+    parser.add_argument("--version", action="version", version="%(prog)s 2.0.0",
                        help="Show version information and exit")
     parser.add_argument("--no-logo", action="store_true",
                        help="Disable logo display (useful for automated scripts)")
