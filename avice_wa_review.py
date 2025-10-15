@@ -10960,8 +10960,8 @@ class WorkareaReviewer:
     def _generate_gl_check_html_content(self, waived_checkers, non_waived_checkers, non_waived_errors_detail,
                                         sorted_checkers, total_errors, total_waived, total_non_waived,
                                         allowed_clktree_cells, dont_use_cells, key_reports, main_logs, timestamped_dirs,
-                                        waived_file, non_waived_file):
-        """Generate the HTML content for GL Check report"""
+                                        waived_file, non_waived_file, checker_rules=None):
+        """Generate the HTML content for GL Check report with filterable checker rules dictionary"""
         
         # Read and encode logo
         import base64
@@ -11055,6 +11055,41 @@ class WorkareaReviewer:
             logs_html += "</div>"
         else:
             logs_html = "<div class='no-data'>No logs found</div>"
+        
+        # Build checker rules HTML
+        checker_rules_html = ""
+        if checker_rules:
+            for checker_name in sorted(checker_rules.keys()):
+                rule_info = checker_rules[checker_name]
+                description = rule_info.get('description', 'No description available')
+                elapsed_time = rule_info.get('elapsed_time', 'N/A')
+                error_count = rule_info.get('error_count', 0)
+                
+                # Truncate description for display, show full in tooltip
+                desc_display = description[:200] + "..." if len(description) > 200 else description
+                
+                # Color code error count
+                if error_count > 0:
+                    error_style = "color: #e74c3c; font-weight: bold;"
+                else:
+                    error_style = "color: #27ae60;"
+                
+                checker_rules_html += f"""
+                                <tr class="rules-row" data-checker="{checker_name.lower()}" data-desc="{description.lower()}">
+                                    <td style="font-weight: 600; color: #667eea;">{checker_name}</td>
+                                    <td style="font-size: 13px; line-height: 1.4;" title="{description}">{desc_display}</td>
+                                    <td style="text-align: center; color: #555;">{elapsed_time}</td>
+                                    <td style="text-align: center; {error_style}">{error_count}</td>
+                                </tr>
+"""
+        else:
+            checker_rules_html = """
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: #999; padding: 40px;">
+                                        No checker rules available. gl-check.log may not be present or could not be parsed.
+                                    </td>
+                                </tr>
+"""
         
         # Build run history HTML
         run_history_html = ""
@@ -11735,6 +11770,45 @@ class WorkareaReviewer:
                 </div>
             </div>
             
+            <!-- Checker Rules Section -->
+            <div class="section" id="checker-rules">
+                <div class="section-header collapsed" onclick="toggleSection(this)">
+                    <h2>Checker Rules Dictionary ({len(checker_rules or {{}})} checkers)</h2>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="section-content collapsed">
+                    <p style="margin-bottom: 15px; color: #555;">
+                        <strong>Description:</strong> Complete list of all GL-check checkers with their descriptions and runtime statistics extracted from gl-check.log. 
+                        Use the search box below to filter by checker name or description.
+                    </p>
+                    
+                    <div class="search-box" style="margin-bottom: 20px;">
+                        <input type="text" id="rulesSearch" placeholder="🔍 Search checker names or descriptions..." 
+                               onkeyup="filterRules()" style="width: 100%; padding: 12px; font-size: 14px; border: 2px solid #667eea; border-radius: 8px;">
+                        <div style="margin-top: 10px; color: #666; font-size: 13px;">
+                            <span id="rulesCount">{len(checker_rules or {{}})}</span> checker(s) shown | 
+                            <a href="javascript:void(0)" onclick="document.getElementById('rulesSearch').value=''; filterRules();" style="color: #667eea;">Clear Filter</a>
+                        </div>
+                    </div>
+                    
+                    <div style="max-height: 600px; overflow-y: auto;">
+                        <table class="error-table" id="rulesTable">
+                            <thead style="position: sticky; top: 0; background: white; z-index: 10;">
+                                <tr>
+                                    <th style="width: 25%;">Checker Name</th>
+                                    <th style="width: 55%;">Description / Rule</th>
+                                    <th style="width: 10%; text-align: center;">Runtime</th>
+                                    <th style="width: 10%; text-align: center;">Errors</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+{checker_rules_html}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Allowed Clock Tree Cells Section -->
             <div class="section" id="clock-cells">
                 <div class="section-header collapsed" onclick="toggleSection(this)">
@@ -11828,6 +11902,7 @@ class WorkareaReviewer:
     <div class="quick-nav" id="quickNav" style="display: none;">
         <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('summary')">Summary</a>
         <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('error-analysis')">Error Analysis</a>
+        <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('checker-rules')">Checker Rules</a>
         <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('clock-cells')">Clock Cells</a>
         <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('dont-use')">Don't Use</a>
         <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('reports')">Reports</a>
@@ -11982,6 +12057,32 @@ class WorkareaReviewer:
             }});
         }}
         
+        function filterRules() {{
+            const searchTerm = document.getElementById('rulesSearch').value.toLowerCase();
+            const rows = document.querySelectorAll('#rulesTable tbody tr.rules-row');
+            let visibleCount = 0;
+            
+            // Convert NodeList to Array for compatibility with older browsers
+            Array.prototype.slice.call(rows).forEach(function(row) {{
+                const checkerName = row.getAttribute('data-checker').toLowerCase();
+                const description = row.getAttribute('data-desc').toLowerCase();
+                const matchesSearch = checkerName.includes(searchTerm) || description.includes(searchTerm);
+                
+                if (matchesSearch) {{
+                    row.style.display = '';
+                    visibleCount++;
+                }} else {{
+                    row.style.display = 'none';
+                }}
+            }});
+            
+            // Update visible count
+            const countElement = document.getElementById('rulesCount');
+            if (countElement) {{
+                countElement.textContent = visibleCount;
+            }}
+        }}
+        
         function toggleDontUseCells(btn) {{
             const moreSection = document.getElementById('dontUseCellsMore');
             if (moreSection) {{
@@ -12088,6 +12189,73 @@ class WorkareaReviewer:
         
         return html
     
+    def _parse_gl_check_rules(self, gl_check_log_path):
+        """Parse checker rules and descriptions from gl-check.log
+        
+        Returns:
+            dict: Dictionary mapping checker names to their descriptions
+                  Example: {'instNotAllowedOnClocks': {
+                      'description': 'Create path from each root clock...',
+                      'elapsed_time': '3s',
+                      'error_count': 1
+                  }}
+        """
+        checker_rules = {}
+        
+        if not os.path.exists(gl_check_log_path):
+            return checker_rules
+        
+        try:
+            with open(gl_check_log_path, 'r') as f:
+                content = f.read()
+            
+            # Find all checker blocks using regex
+            # Pattern: Start <checker_name> ... <content> ... End <checker_name>
+            checker_pattern = re.compile(r'Start\s+(\w+)\s+\.\.\.(.*?)End\s+\1', re.DOTALL)
+            
+            for match in checker_pattern.finditer(content):
+                checker_name = match.group(1)
+                checker_content = match.group(2)
+                
+                # Extract description (lines before first -I-/-E-/-W- line or "End Time:")
+                description_lines = []
+                error_count = 0
+                elapsed_time = "N/A"
+                
+                for line in checker_content.split('\n'):
+                    line_stripped = line.strip()
+                    
+                    # Extract elapsed time
+                    if line_stripped.startswith('Elapsed Time:'):
+                        elapsed_time = line_stripped.replace('Elapsed Time:', '').strip()
+                    
+                    # Count errors
+                    if line_stripped.startswith('-E-'):
+                        error_count += 1
+                    
+                    # Stop collecting description when we hit logs or end time
+                    if line_stripped.startswith(('-I-', '-E-', '-W-', 'End Time:')):
+                        break
+                    
+                    # Collect description lines (skip empty lines at start)
+                    if line_stripped or description_lines:
+                        description_lines.append(line_stripped)
+                
+                # Clean up description
+                description = '\n'.join(description_lines).strip()
+                
+                # Store checker info
+                checker_rules[checker_name] = {
+                    'description': description,
+                    'elapsed_time': elapsed_time,
+                    'error_count': error_count
+                }
+        
+        except Exception as e:
+            print(f"    {Color.YELLOW}[WARN] Error parsing GL Check rules: {e}{Color.RESET}")
+        
+        return checker_rules
+    
     def _generate_gl_check_html_report(self, gl_check_dir, waived_file, non_waived_file, timestamped_dirs):
         """Generate comprehensive HTML report for GL Check analysis"""
         try:
@@ -12191,6 +12359,19 @@ class WorkareaReviewer:
                     # Convert to absolute path for HTML links to work from any location
                     main_logs.append((name, abs_filepath))
             
+            # Parse checker rules from gl-check.log
+            checker_rules = {}
+            gl_check_log_path = None
+            for log_name, log_path in main_logs:
+                if log_name == 'GL Check Log':
+                    gl_check_log_path = log_path
+                    break
+            
+            if gl_check_log_path and os.path.exists(gl_check_log_path):
+                print(f"    {Color.CYAN}Parsing checker rules from gl-check.log...{Color.RESET}")
+                checker_rules = self._parse_gl_check_rules(gl_check_log_path)
+                print(f"    {Color.GREEN}[OK] Found {len(checker_rules)} checker rules{Color.RESET}")
+            
             # Combine all checkers
             all_checkers = set(waived_checkers.keys()) | set(non_waived_checkers.keys())
             
@@ -12213,7 +12394,7 @@ class WorkareaReviewer:
                 waived_checkers, non_waived_checkers, non_waived_errors_detail,
                 sorted_checkers, total_errors, total_waived, total_non_waived,
                 allowed_clktree_cells, dont_use_cells, key_reports, main_logs, timestamped_dirs,
-                waived_file, non_waived_file
+                waived_file, non_waived_file, checker_rules
             )
             
             with open(html_path, 'w') as f:
