@@ -10960,8 +10960,14 @@ class WorkareaReviewer:
     def _generate_gl_check_html_content(self, waived_checkers, non_waived_checkers, non_waived_errors_detail,
                                         sorted_checkers, total_errors, total_waived, total_non_waived,
                                         allowed_clktree_cells, dont_use_cells, key_reports, main_logs, timestamped_dirs,
-                                        waived_file, non_waived_file, checker_rules=None):
-        """Generate the HTML content for GL Check report with filterable checker rules dictionary"""
+                                        waived_file, non_waived_file, checker_rules=None, executed_checkers=None, skipped_checkers=None):
+        """Generate the HTML content for GL Check report with filterable checker rules dictionary and executed/skipped lists"""
+        
+        # Handle defaults
+        if executed_checkers is None:
+            executed_checkers = []
+        if skipped_checkers is None:
+            skipped_checkers = []
         
         # Read and encode logo
         import base64
@@ -11769,6 +11775,74 @@ class WorkareaReviewer:
                 </div>
             </div>
             
+            <!-- Executed Checkers Section -->
+            <div class="section" id="executed-checkers">
+                <div class="section-header collapsed" onclick="toggleSection(this)">
+                    <h2>Executed Checkers ({len(executed_checkers)} checkers)</h2>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="section-content collapsed">
+                    <p style="margin-bottom: 15px; color: #555;">
+                        <strong>Description:</strong> List of all checkers that were executed in this GL-check run, as reported in gl-check.log.
+                    </p>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;">
+"""
+        
+        if executed_checkers:
+            for checker in executed_checkers:
+                html += f"""
+                            <div style="padding: 8px 12px; background: #e8f5e9; border-left: 3px solid #4caf50; border-radius: 4px; font-size: 13px;">
+                                {checker}
+                            </div>
+"""
+        else:
+            html += """
+                            <div style="padding: 20px; text-align: center; color: #999;">
+                                No executed checkers information available
+                            </div>
+"""
+        
+        html += """
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Skipped Checkers Section -->
+            <div class="section" id="skipped-checkers">
+                <div class="section-header collapsed" onclick="toggleSection(this)">
+                    <h2>Skipped Checkers ({len(skipped_checkers)} checkers)</h2>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="section-content collapsed">
+                    <p style="margin-bottom: 15px; color: #555;">
+                        <strong>Description:</strong> List of checkers that were skipped in this GL-check run, as reported in gl-check.log.
+                    </p>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;">
+"""
+        
+        if skipped_checkers:
+            for checker in skipped_checkers:
+                html += f"""
+                            <div style="padding: 8px 12px; background: #fff3e0; border-left: 3px solid #ff9800; border-radius: 4px; font-size: 13px;">
+                                {checker}
+                            </div>
+"""
+        else:
+            html += """
+                            <div style="padding: 20px; text-align: center; color: #999;">
+                                No skipped checkers information available
+                            </div>
+"""
+        
+        html += """
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Checker Rules Section -->
             <div class="section" id="checker-rules">
                 <div class="section-header collapsed" onclick="toggleSection(this)">
@@ -11900,6 +11974,8 @@ class WorkareaReviewer:
     <div class="quick-nav" id="quickNav" style="display: none;">
         <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('summary')">Summary</a>
         <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('error-analysis')">Error Analysis</a>
+        <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('executed-checkers')">Executed Checkers</a>
+        <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('skipped-checkers')">Skipped Checkers</a>
         <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('checker-rules')">Checker Rules</a>
         <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('clock-cells')">Clock Cells</a>
         <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('dont-use')">Don't Use</a>
@@ -12191,21 +12267,41 @@ class WorkareaReviewer:
         """Parse checker rules and descriptions from gl-check.log
         
         Returns:
-            dict: Dictionary mapping checker names to their descriptions
-                  Example: {'instNotAllowedOnClocks': {
-                      'description': 'Create path from each root clock...',
-                      'elapsed_time': '3s',
-                      'error_count': 1
-                  }}
+            tuple: (checker_rules, executed_checkers, skipped_checkers)
+                checker_rules: Dictionary mapping checker names to their descriptions
+                executed_checkers: List of checker names that were executed
+                skipped_checkers: List of checker names that were skipped
         """
         checker_rules = {}
+        executed_checkers = []
+        skipped_checkers = []
         
         if not os.path.exists(gl_check_log_path):
-            return checker_rules
+            return checker_rules, executed_checkers, skipped_checkers
         
         try:
             with open(gl_check_log_path, 'r') as f:
                 content = f.read()
+            
+            # Parse executed checkers list
+            executed_match = re.search(r'-I-\(<module>\)Executing checkers:\s*(.*?)(?=-[IEW]-|\Z)', content, re.DOTALL)
+            if executed_match:
+                executed_text = executed_match.group(1)
+                # Extract checker names (they appear in the list, one per line or comma-separated)
+                executed_checkers = [line.strip() for line in executed_text.strip().split('\n') if line.strip() and not line.strip().startswith('-')]
+                # Also handle comma-separated format
+                if len(executed_checkers) == 1 and ',' in executed_checkers[0]:
+                    executed_checkers = [c.strip() for c in executed_checkers[0].split(',') if c.strip()]
+            
+            # Parse skipped checkers list
+            skipped_match = re.search(r'-I-\(<module>\)Skipping checkers:\s*(.*?)(?=-[IEW]-|\Z)', content, re.DOTALL)
+            if skipped_match:
+                skipped_text = skipped_match.group(1)
+                # Extract checker names
+                skipped_checkers = [line.strip() for line in skipped_text.strip().split('\n') if line.strip() and not line.strip().startswith('-')]
+                # Also handle comma-separated format
+                if len(skipped_checkers) == 1 and ',' in skipped_checkers[0]:
+                    skipped_checkers = [c.strip() for c in skipped_checkers[0].split(',') if c.strip()]
             
             # Find all checker blocks using regex
             # Pattern: Start <checker_name> ... <content> ... End <checker_name>
@@ -12272,7 +12368,7 @@ class WorkareaReviewer:
         except Exception as e:
             print(f"    {Color.YELLOW}[WARN] Error parsing GL Check rules: {e}{Color.RESET}")
         
-        return checker_rules
+        return checker_rules, executed_checkers, skipped_checkers
     
     def _generate_gl_check_html_report(self, gl_check_dir, waived_file, non_waived_file, timestamped_dirs):
         """Generate comprehensive HTML report for GL Check analysis"""
@@ -12379,6 +12475,8 @@ class WorkareaReviewer:
             
             # Parse checker rules from gl-check.log
             checker_rules = {}
+            executed_checkers = []
+            skipped_checkers = []
             gl_check_log_path = None
             for log_name, log_path in main_logs:
                 if log_name == 'GL Check Log':
@@ -12387,8 +12485,8 @@ class WorkareaReviewer:
             
             if gl_check_log_path and os.path.exists(gl_check_log_path):
                 print(f"    {Color.CYAN}Parsing checker rules from gl-check.log...{Color.RESET}")
-                checker_rules = self._parse_gl_check_rules(gl_check_log_path)
-                print(f"    {Color.GREEN}[OK] Found {len(checker_rules)} checker rules{Color.RESET}")
+                checker_rules, executed_checkers, skipped_checkers = self._parse_gl_check_rules(gl_check_log_path)
+                print(f"    {Color.GREEN}[OK] Found {len(checker_rules)} checker rules ({len(executed_checkers)} executed, {len(skipped_checkers)} skipped){Color.RESET}")
             
             # Combine all checkers
             all_checkers = set(waived_checkers.keys()) | set(non_waived_checkers.keys())
@@ -12412,7 +12510,7 @@ class WorkareaReviewer:
                 waived_checkers, non_waived_checkers, non_waived_errors_detail,
                 sorted_checkers, total_errors, total_waived, total_non_waived,
                 allowed_clktree_cells, dont_use_cells, key_reports, main_logs, timestamped_dirs,
-                waived_file, non_waived_file, checker_rules
+                waived_file, non_waived_file, checker_rules, executed_checkers, skipped_checkers
             )
             
             with open(html_path, 'w') as f:
