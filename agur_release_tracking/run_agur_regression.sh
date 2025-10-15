@@ -871,10 +871,13 @@ for i in "${!UNITS[@]}"; do
 done
 
     # Store results for this regression type
+    # Use sequential counter to match ANALYSIS_STATUS array indices
+    result_idx=0
     for i in "${!UNITS[@]}"; do
-        REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_status"]="${ANALYSIS_STATUS[$i]}"
-        REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_details"]="${ANALYSIS_DETAILS[$i]}"
-        REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_runtime"]="${ANALYSIS_RUNTIMES[$i]}"
+        REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_status"]="${ANALYSIS_STATUS[$result_idx]}"
+        REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_details"]="${ANALYSIS_DETAILS[$result_idx]}"
+        REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_runtime"]="${ANALYSIS_RUNTIMES[$result_idx]}"
+        ((result_idx++))
     done
     
     # Calculate statistics for this regression type
