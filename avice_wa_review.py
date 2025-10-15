@@ -11775,84 +11775,66 @@ class WorkareaReviewer:
                 </div>
             </div>
             
-            <!-- Executed Checkers Section -->
-            <div class="section" id="executed-checkers">
+            <!-- Unified Checker Information Section -->
+            <div class="section" id="checker-info">
                 <div class="section-header collapsed" onclick="toggleSection(this)">
-                    <h2>Executed Checkers ({len(executed_checkers)} checkers)</h2>
+                    <h2>Checker Information ({len(checker_rules or {{}})} checkers: {len(executed_checkers)} executed, {len(skipped_checkers)} skipped)</h2>
                     <span class="toggle-icon">▼</span>
                 </div>
                 <div class="section-content collapsed">
-                    <p style="margin-bottom: 15px; color: #555;">
-                        <strong>Description:</strong> List of all checkers that were executed in this GL-check run, as reported in gl-check.log.
+                    <p style="margin-bottom: 20px; color: #555;">
+                        <strong>Description:</strong> Complete checker information including execution status, descriptions, and rules extracted from gl-check.log.
                     </p>
-                    <div style="max-height: 400px; overflow-y: auto;">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;">
+                    
+                    <!-- Execution Status Summary -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                        <div style="padding: 20px; background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-radius: 8px; border-left: 4px solid #4caf50;">
+                            <h3 style="margin: 0 0 15px 0; color: #2e7d32; font-size: 18px;">✓ Executed Checkers ({len(executed_checkers)})</h3>
+                            <div style="max-height: 200px; overflow-y: auto;">
+                                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
 """
         
         if executed_checkers:
             for checker in executed_checkers:
                 html += f"""
-                            <div style="padding: 8px 12px; background: #e8f5e9; border-left: 3px solid #4caf50; border-radius: 4px; font-size: 13px;">
-                                {checker}
-                            </div>
+                                    <span style="padding: 4px 10px; background: white; border-radius: 4px; font-size: 12px; border: 1px solid #4caf50;">{checker}</span>
 """
         else:
             html += """
-                            <div style="padding: 20px; text-align: center; color: #999;">
-                                No executed checkers information available
-                            </div>
+                                    <span style="color: #666;">No executed checkers</span>
 """
         
         html += f"""
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Skipped Checkers Section -->
-            <div class="section" id="skipped-checkers">
-                <div class="section-header collapsed" onclick="toggleSection(this)">
-                    <h2>Skipped Checkers ({len(skipped_checkers)} checkers)</h2>
-                    <span class="toggle-icon">▼</span>
-                </div>
-                <div class="section-content collapsed">
-                    <p style="margin-bottom: 15px; color: #555;">
-                        <strong>Description:</strong> List of checkers that were skipped in this GL-check run, as reported in gl-check.log.
-                    </p>
-                    <div style="max-height: 400px; overflow-y: auto;">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;">
+                        
+                        <div style="padding: 20px; background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border-radius: 8px; border-left: 4px solid #ff9800;">
+                            <h3 style="margin: 0 0 15px 0; color: #e65100; font-size: 18px;">⊘ Skipped Checkers ({len(skipped_checkers)})</h3>
+                            <div style="max-height: 200px; overflow-y: auto;">
+                                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
 """
         
         if skipped_checkers:
             for checker in skipped_checkers:
                 html += f"""
-                            <div style="padding: 8px 12px; background: #fff3e0; border-left: 3px solid #ff9800; border-radius: 4px; font-size: 13px;">
-                                {checker}
-                            </div>
+                                    <span style="padding: 4px 10px; background: white; border-radius: 4px; font-size: 12px; border: 1px solid #ff9800;">{checker}</span>
 """
         else:
             html += """
-                            <div style="padding: 20px; text-align: center; color: #999;">
-                                No skipped checkers information available
-                            </div>
+                                    <span style="color: #666;">No skipped checkers</span>
 """
         
         html += f"""
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Checker Rules Section -->
-            <div class="section" id="checker-rules">
-                <div class="section-header collapsed" onclick="toggleSection(this)">
-                    <h2>Checker Rules Dictionary ({len(checker_rules or {{}})} checkers)</h2>
-                    <span class="toggle-icon">▼</span>
-                </div>
-                <div class="section-content collapsed">
-                    <p style="margin-bottom: 15px; color: #555;">
-                        <strong>Description:</strong> Complete list of all GL-check checkers with their descriptions and runtime statistics extracted from gl-check.log. 
-                        Use the search box below to filter by checker name or description.
+                    
+                    <!-- Checker Rules Dictionary -->
+                    <h3 style="color: #667eea; margin-bottom: 15px; font-size: 18px;">📖 Checker Rules Dictionary</h3>
+                    <p style="margin-bottom: 15px; color: #555; font-size: 14px;">
+                        Detailed descriptions and rules for each checker. Use the search box to filter by name or description.
                     </p>
                     
                     <div class="search-box" style="margin-bottom: 20px;">
@@ -11880,6 +11862,11 @@ class WorkareaReviewer:
                     </div>
                 </div>
             </div>
+            
+            <!-- Legacy anchor for backward compatibility -->
+            <div id="checker-rules"></div>
+            <div id="executed-checkers"></div>
+            <div id="skipped-checkers"></div>
             
             <!-- Allowed Clock Tree Cells Section -->
             <div class="section" id="clock-cells">
@@ -11974,9 +11961,7 @@ class WorkareaReviewer:
     <div class="quick-nav" id="quickNav" style="display: none;">
         <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('summary')">Summary</a>
         <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('error-analysis')">Error Analysis</a>
-        <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('executed-checkers')">Executed Checkers</a>
-        <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('skipped-checkers')">Skipped Checkers</a>
-        <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('checker-rules')">Checker Rules</a>
+        <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('checker-info')">Checker Info</a>
         <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('clock-cells')">Clock Cells</a>
         <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('dont-use')">Don't Use</a>
         <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('reports')">Reports</a>
