@@ -1,5 +1,6 @@
 # HTML reports generated during testing
 avice_*.html
+html/
 
 # Python cache
 __pycache__/

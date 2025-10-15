@@ -228,18 +228,8 @@ def categorize_images(image_list):
             ]
         },
         
-        'Clock Tree Visualization': {
-            'FHCTS Clock Grids': [
-                (r'fhcts.*grid', 95, 'FHCTS clock grid visualization'),
-                (r'fhcts_i1_clk_grid', 90, 'i1 clock grid visualization'),
-                (r'fhcts_i2_clk.*grid', 90, 'i2 clock grid visualization'),
-            ],
-            'FHCTS Clock Trees': [
-                (r'fhcts.*tree', 95, 'FHCTS clock tree topology'),
-                (r'fhcts_i1_clk_tree', 90, 'i1 clock tree topology'),
-                (r'fhcts_i2_clk.*tree', 90, 'i2 clock tree topology'),
-            ]
-        },
+        # Clock Tree Visualization moved to Synthesis Flow category
+        # (removed duplicate - consolidated under single Clock Tree category)
         
         'DRC Violation Snapshots': {
             'Metal Short Violations': [
@@ -330,6 +320,14 @@ def categorize_images(image_list):
                 (r'clock_tree\.endpoint_density', 90, 'Clock endpoint density map'),
                 (r'clock_tree\..*topology', 85, 'Clock tree topology'),
                 (r'clock_tree\..*structure', 80, 'Clock tree structure'),
+            ],
+            'FHCTS Visualizations': [
+                (r'fhcts.*grid', 95, 'FHCTS clock grid visualization'),
+                (r'fhcts_i1_clk_grid', 90, 'i1 clock grid visualization'),
+                (r'fhcts_i2_clk.*grid', 90, 'i2 clock grid visualization'),
+                (r'fhcts.*tree', 95, 'FHCTS clock tree topology'),
+                (r'fhcts_i1_clk_tree', 90, 'i1 clock tree topology'),
+                (r'fhcts_i2_clk.*tree', 90, 'i2 clock tree topology'),
             ],
             'Clock Timing': [
                 (r'clock_tree\.insertion_delay_from_clock_source.*\.(hold|setup)', 95, 'Clock insertion delay timing'),
@@ -523,6 +521,14 @@ def categorize_images(image_list):
 def generate_html_report(unit_name, images_dir, categorized_images, output_file):
     """Generate HTML debug report"""
     
+    # Read and encode logo
+    import base64
+    logo_data = ""
+    logo_path = os.path.join(os.path.dirname(__file__), "images/avice_logo.png")
+    if os.path.exists(logo_path):
+        with open(logo_path, "rb") as logo_file:
+            logo_data = base64.b64encode(logo_file.read()).decode('utf-8')
+    
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     html_content = f"""<!DOCTYPE html>
@@ -541,25 +547,81 @@ def generate_html_report(unit_name, images_dir, categorized_images, output_file)
         }}
         
         .header {{
-            text-align: center;
-            border-bottom: 2px solid #00ff00;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 20px;
+            align-items: center;
+            border-radius: 15px 15px 0 0;
+            margin: -30px -30px 30px -30px;
         }}
         
         .logo {{
-            text-align: center;
-            margin-bottom: 10px;
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            background: white;
+            padding: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }}
         
-        .logo img {{
-            max-height: 120px;
-            max-width: 400px;
-            height: auto;
-            width: auto;
+        .logo:hover {{
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }}
+        
+        .header-text .title {{
+            font-size: 28px;
+            margin: 0 0 8px 0;
+            color: white;
+            font-weight: bold;
+        }}
+        
+        .header-text .info {{
+            opacity: 0.9;
+            font-size: 14px;
+            margin: 4px 0;
+            color: white;
+        }}
+        
+        .logo-modal {{
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+        }}
+        
+        .logo-modal.active {{
+            display: flex;
+        }}
+        
+        .logo-modal-content {{
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+        }}
+        
+        .logo-modal-close {{
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s ease;
-            border-radius: 6px;
+        }}
+        
+        .logo-modal-close:hover {{
+            color: #bbb;
         }}
         
         .logo img:hover {{
@@ -649,14 +711,45 @@ def generate_html_report(unit_name, images_dir, categorized_images, output_file)
             clear: both;
         }}
         
-        /* Try CSS Grid first for modern browsers */
+        /* Enhanced CSS Grid Layout (Firefox 143+ confirmed working) */
         @supports (display: grid) {{
             .images-grid {{
                 display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                grid-gap: 15px;
-                margin: 15px;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 20px;
+                margin: 20px;
                 overflow: visible;
+            }}
+            
+            /* Responsive Grid breakpoints for optimal layout */
+            @media (min-width: 1800px) {{
+                .images-grid {{
+                    grid-template-columns: repeat(5, 1fr);
+                }}
+            }}
+            
+            @media (min-width: 1400px) and (max-width: 1799px) {{
+                .images-grid {{
+                    grid-template-columns: repeat(4, 1fr);
+                }}
+            }}
+            
+            @media (min-width: 1000px) and (max-width: 1399px) {{
+                .images-grid {{
+                    grid-template-columns: repeat(3, 1fr);
+                }}
+            }}
+            
+            @media (min-width: 700px) and (max-width: 999px) {{
+                .images-grid {{
+                    grid-template-columns: repeat(2, 1fr);
+                }}
+            }}
+            
+            @media (max-width: 699px) {{
+                .images-grid {{
+                    grid-template-columns: 1fr;
+                }}
             }}
         }}
         
@@ -1015,16 +1108,41 @@ def generate_html_report(unit_name, images_dir, categorized_images, output_file)
                 border-spacing: 15px 0;
             }}
         }}
+        
+        /* Copyright Footer */
+        .footer {{
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 10px;
+            font-size: 14px;
+        }}
+        
+        .footer p {{
+            margin: 5px 0;
+        }}
+        
+        .footer strong {{
+            color: #00ff00;
+        }}
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="logo">
-            <img src="/home/avice/scripts/avice_wa_review/images/avice_logo.png" alt="AVICE Logo" style="max-height: 120px; margin-bottom: 10px; cursor: pointer;" onclick="expandImage(this)">
+        <img class='logo' src='data:image/png;base64,{logo_data}' alt='AVICE Logo' onclick="showLogoModal()" title="Click to enlarge">
+        <div class="header-text">
+            <div class="title">P&R Debug Report</div>
+            <div class="info">Unit: {unit_name} | Generated: {timestamp}</div>
+            <div class="info">Images Directory: {images_dir}</div>
         </div>
-        <div class="title">P&R Debug Report</div>
-        <div class="info">Unit: {unit_name} | Generated: {timestamp}</div>
-        <div class="info">Images Directory: {images_dir}</div>
+    </div>
+    
+    <!-- Logo Modal -->
+    <div id="logoModal" class="logo-modal" onclick="hideLogoModal()">
+        <span class="logo-modal-close">&times;</span>
+        <img class="logo-modal-content" src='data:image/png;base64,{logo_data}' alt='AVICE Logo'>
     </div>
 """
     
@@ -1046,7 +1164,21 @@ def generate_html_report(unit_name, images_dir, categorized_images, output_file)
 """
         
         # Generate categorized content
-        category_priority = ['Synthesis Flow', 'Clock Tree Visualization', 'Timing', 'DRC/DRV', 'Clock Tree', 'Power', 'Placement', 'Routing', 'Signal Integrity', 'Floorplan/Layout', 'DRC Violation Snapshots', 'ECO/Signoff Analysis', 'Other']
+        # Category order follows ASIC design flow progression
+        category_priority = [
+            'Synthesis Flow',         # 1. Synthesis (DC)
+            'Floorplan/Layout',       # 2. Floorplanning
+            'Placement',              # 3. Placement
+            'Clock Tree',             # 4. Clock Tree Synthesis (CTS)
+            'Routing',                # 5. Routing
+            'Timing',                 # 6. Timing Analysis
+            'Power',                  # 7. Power Analysis
+            'Signal Integrity',       # 8. Signal Integrity
+            'DRC/DRV',                # 9. Design Rule Checks
+            'DRC Violation Snapshots', # 10. DRC Details
+            'ECO/Signoff Analysis',   # 11. ECO & Signoff
+            'Other'                   # 12. Uncategorized
+        ]
         
         for category in category_priority:
             if category not in categorized_images:
@@ -1280,8 +1412,56 @@ def generate_html_report(unit_name, images_dir, categorized_images, output_file)
             }
         }
         
+        // Logo modal functions
+        function showLogoModal() {
+            document.getElementById('logoModal').classList.add('active');
+        }
+        
+        function hideLogoModal() {
+            document.getElementById('logoModal').classList.remove('active');
+        }
+        
+        // Allow ESC key to close logo modal
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                hideLogoModal();
+            }
+        });
+        
         // Categories start collapsed by default
+        
+        // Back to top button functionality
+        const backToTopBtn = document.getElementById('backToTopBtn');
+        if (backToTopBtn) {
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    backToTopBtn.style.display = 'block';
+                } else {
+                    backToTopBtn.style.display = 'none';
+                }
+            });
+            
+            backToTopBtn.addEventListener('click', function() {
+                window.scrollTo(0, 0);
+            });
+        }
     </script>
+    
+    <button id="backToTopBtn" style="display: none; position: fixed; bottom: 30px; right: 30px; 
+            z-index: 99; border: none; outline: none; background-color: #667eea; color: white; 
+            cursor: pointer; padding: 15px 20px; border-radius: 50px; font-size: 16px; 
+            font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease;"
+            onmouseover="this.style.backgroundColor='#5568d3'; this.style.transform='scale(1.1)';"
+            onmouseout="this.style.backgroundColor='#667eea'; this.style.transform='scale(1)';">
+        ↑ Top
+    </button>
+    
+    <!-- Copyright Footer -->
+    <div class="footer">
+        <p><strong>AVICE P&R Image Debug Report</strong></p>
+        <p>Copyright (c) 2025 Alon Vice (avice)</p>
+        <p>Contact: avice@nvidia.com</p>
+    </div>
 </body>
 </html>"""
     

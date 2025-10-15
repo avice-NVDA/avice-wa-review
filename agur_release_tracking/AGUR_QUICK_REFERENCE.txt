@@ -1,0 +1,101 @@
+================================================================================
+              AGUR RELEASE TRACKING - QUICK REFERENCE
+================================================================================
+
+FILES OVERVIEW:
+---------------
+AGUR_UNITS_TABLE.txt    - Pipe-delimited table (for scripts)
+AGUR_UNITS_TABLE.csv    - CSV format (for Excel/data processing)
+AGUR_UNITS_TABLE.md     - Markdown table (for viewing)
+AGUR_RELEASES.md        - Detailed release information
+
+extract_agur_cport_releases.sh - Updates all table files from release logs
+
+================================================================================
+
+USAGE - AGUR RELEASE TRACKING (STANDALONE UTILITY):
+---------------------------------------------------
+
+1. Update Release Data:
+   cd /home/avice/scripts/avice_wa_review
+   ./extract_agur_cport_releases.sh
+
+2. View Available Units:
+   cat AGUR_UNITS_TABLE.txt
+   cat AGUR_UNITS_TABLE.md
+
+3. Get Workarea Path for a Unit:
+   grep "^prt" AGUR_UNITS_TABLE.txt | cut -d'|' -f3
+
+================================================================================
+
+USAGE - AVICE_WA_REVIEW WITH --unit FLAG:
+------------------------------------------
+
+1. Analyze Latest Released Workarea for a Unit:
+   /home/avice/scripts/avice_wa_review_launcher.csh --unit prt
+
+2. Analyze with Specific Sections:
+   /home/avice/scripts/avice_wa_review_launcher.csh --unit pmux -s runtime pt
+
+3. Analyze All CPORT Units (Batch):
+   for unit in prt pmux fdb fth lnd; do
+       echo "=== Analyzing $unit ==="
+       /home/avice/scripts/avice_wa_review_launcher.csh --unit $unit --no-logo
+   done
+
+4. Quick Runtime Check for a Unit:
+   /home/avice/scripts/avice_wa_review_launcher.csh --unit fdb -s runtime
+
+================================================================================
+
+CURRENT TRACKED UNITS (CPORT CHIPLET):
+---------------------------------------
+Unit  | Chiplet | Latest Release      | Workarea
+------|---------|---------------------|----------------------------------
+prt   | CPORT   | 2025/10/08 10:14   | ykatzav workarea
+pmux  | CPORT   | 2025/10/09 17:04   | brachas workarea
+fdb   | CPORT   | 2025/10/09 10:51   | dkolesnikov workarea
+fth   | CPORT   | 2025/10/08 15:10   | miancu workarea
+lnd   | CPORT   | 2025/10/08 09:00   | shlomoc workarea
+
+Total: 5/70 units tracked (7%)
+
+================================================================================
+
+KEY FEATURES:
+-------------
+✅ Automatic workarea path lookup by unit name
+✅ Tracks latest STA/FCL releases
+✅ Pipe-delimited, CSV, and Markdown formats
+✅ Case-insensitive unit name matching
+✅ Integrates with avice_wa_review.py via --unit flag
+✅ Standalone utility - no dependencies on avice_wa_review.py
+
+================================================================================
+
+ERROR HANDLING:
+---------------
+If unit not found:
+  -> Lists all available units
+  -> Shows table file location
+  -> Suggests running extraction script
+
+If table file missing:
+  -> Shows expected location
+  -> Suggests running: ./extract_agur_cport_releases.sh
+
+================================================================================
+
+NEXT PHASE: Add Remaining Chiplets
+-----------------------------------
+- 4 more chiplets to add
+- 65 more units to track
+- Table automatically supports all chiplets
+- No code changes needed - just update extraction script
+
+================================================================================
+Last Updated: 2025-10-14
+Contact: avice@nvidia.com
+================================================================================
+

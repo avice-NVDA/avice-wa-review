@@ -17,58 +17,147 @@ Purpose: Comprehensive ASIC/SoC design workarea analysis and review tool
 
 Description:
     This script provides a comprehensive analysis of ASIC/SoC design workareas,
-    converting the original C-shell script to Python with organized flow stages.
-    It analyzes various aspects of the design flow including setup, runtime,
-    synthesis, place & route (PnR), clock analysis, formal verification,
-    parasitic extraction, signoff timing, physical verification, GL checks,
-    ECO analysis, and block release information.
+    covering the complete ASIC design flow from synthesis through signoff.
+    It extracts, analyzes, and visualizes design metrics, timing data, runtime
+    statistics, verification results, and generates interactive HTML reports.
+    
+    Key Features:
+    - Multi-IPO support with automatic IPO detection
+    - Selective section analysis for faster debugging
+    - Professional HTML reports with absolute paths for portability
+    - Runtime analysis with timeline tracking and flow detection
+    - Timing analysis with dual-scenario (setup/hold) extraction
+    - DSR Mux Clock Skew tracking across work directories
+    - ECO analysis with dont_use cell validation
+    - Formal verification timestamp tracking
+    - Physical verification (LVS/DRC/Antenna) flow analysis
+    - GL Check error categorization and analysis
+    - Cross-directory execution support
+
+Analysis Sections:
+    Setup           - Environment info, BeFlow config, PRC configuration
+    Runtime         - DC, PnR, Star, PT, Formal, PV, GL Check runtimes
+    Synthesis       - QoR reports, floorplan dimensions, timing groups
+    PnR             - Step sequence, routing data, timing histograms
+    Clock           - Clock tree analysis, DSR latency, clock gating
+    Formal          - Formal verification status, timestamp tracking
+    Star            - Parasitic extraction (SPEF) runtime and status
+    PT              - Signoff timing, dual-scenario WNS/TNS/NVP, DSR skew
+    PV              - Physical verification (LVS/DRC/Antenna) analysis
+    GL-Check        - Gate-level check error analysis and categorization
+    ECO             - PT-ECO and NV Gate ECO analysis, dont_use cell checks
+    NV-Gate-ECO     - NVIDIA Gate ECO command analysis and validation
+    Block-Release   - Block release information and umake commands
 
 Usage:
-    /home/avice/scripts/avice_wa_review_launcher.csh <workarea_path> [ipo_name]
+    # Recommended: Use C-shell launcher (handles Python path automatically)
+    /home/avice/scripts/avice_wa_review_launcher.csh <workarea_path> [ipo_name] [options]
+    
+    # Direct Python invocation (requires correct Python version)
+    /home/utils/Python/builds/3.11.9-20250715/bin/python3 avice_wa_review.py <workarea_path> [ipo_name] [options]
+    
+    # Display help and examples
     /home/avice/scripts/avice_wa_review_launcher.csh --help
-    /home/avice/scripts/avice_wa_review_launcher.csh <workarea_path> -s setup runtime
-    /home/avice/scripts/avice_wa_review_launcher.csh <workarea_path> -s star pt
 
 Arguments:
-    workarea_path    - Path to the workarea directory to analyze
-    ipo_name        - Optional IPO name to analyze (auto-detected if not specified)
-    -s, --sections  - Run only specific analysis sections (use 'star' for parasitic, 'pt' for timing)
-    --no-logo       - Disable logo display (useful for automated scripts)
-    --verbose       - Enable verbose output with detailed information
-    --output, -o    - Output file to save results
-    --format        - Output format (text or json)
+    workarea_path         Path to the workarea directory to analyze (required unless --unit is used)
+    ipo_name              IPO name to analyze (optional, auto-detected if not specified)
+    
+Options:
+    -u, --unit UNIT       Unit name from agur release table (e.g., prt, pmux, fdb, fth, lnd)
+                          Automatically looks up released workarea path from AGUR_UNITS_TABLE.txt
+                          Use this instead of providing workarea_path
+    
+    -s, --sections SECTION [SECTION ...]
+                          Run only specific analysis sections (case-insensitive)
+                          Available: setup, runtime, synthesis, pnr, clock, formal, 
+                                    star, pt, pv, gl-check, eco, nv-gate-eco, block-release
+                          Aliases: 'star' = parasitic extraction, 'pt' = signoff timing
+    
+    --no-logo             Disable ASCII logo display (useful for automated scripts)
+    --skip-validation     Skip workarea validation checks (use with caution)
+    --verbose, -v         Enable verbose output with detailed information
+    --output, -o FILE     Save results to output file (not yet fully implemented)
+    --format FORMAT       Output format: text or json (default: text)
+    --version             Show version information and exit
+    
+Documentation Options:
+    --help-docs           Display formatted documentation in terminal
+    --open-docs           Generate HTML documentation and open in browser
+    --generate-pdf        Generate PDF documentation
+    --docs-section SECTION
+                          Specific documentation section: usage, examples, 
+                          troubleshooting, organization, or all (default: all)
 
 Prerequisites:
-    - Python 3.6 or higher
-    - Access to workarea directory with proper permissions
-    - Unix/Linux environment with standard tools (grep, sed, awk, zcat)
-    - Design flow tools (DC, Innovus, PrimeTime, Star, etc.)
+    - Python 3.6 or higher (recommended: Python 3.11.9)
+    - Access to workarea directory with proper read permissions
+    - Unix/Linux environment with standard tools (grep, zcat)
+    - Design flow tools output files (DC, Innovus, PrimeTime, Star, etc.)
+    - Firefox browser for viewing HTML reports
 
 Output:
-    - Console output with color-coded analysis results
-    - HTML reports for detailed data visualization
-    - Runtime summary tables with categorized stages
-    - Error analysis and status reporting
+    Terminal Output:
+    - Color-coded analysis results with ASCII characters only
+    - Compact summary tables for quick review
+    - Status indicators: [OK], [ERROR], [WARN], [SKIP]
+    - Minimal line count for easy scanning
+    
+    HTML Reports (generated in current working directory):
+    - avice_runtime_report_<design>_<timestamp>.html
+    - avice_pnr_data_<design>_<ipo>_<timestamp>.html
+    - avice_timing_summary_<design>_<ipo>_<timestamp>.html
+    - avice_gl_check_<design>_<ipo>_<timestamp>.html
+    - avice_image_debug_report_<design>_<timestamp>.html
+    
+    HTML Features:
+    - Comprehensive data beyond terminal output
+    - Clickable log file links with absolute paths
+    - Interactive tables with sorting and filtering
+    - Expandable/collapsible sections
+    - Timeline visualizations
+    - Professional CSS styling with gradients
+    - Mobile-responsive layout
+    - Portable across directories (uses absolute paths)
 
 Examples:
-    # Complete workarea analysis
-    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea
+    # Complete workarea analysis (all sections)
+    /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea
     
     # Analyze specific IPO
-    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea ipo1000
+    /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea ipo1000
     
-    # Run only specific sections
-    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s setup runtime synthesis
+    # Analyze using unit name from agur release table (automatic workarea lookup)
+    /home/avice/scripts/avice_wa_review_launcher.csh --unit prt
+    /home/avice/scripts/avice_wa_review_launcher.csh --unit pmux
     
-    # Run Star and PT sections using aliases
-    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s star pt
+    # Run only runtime and timing analysis (fast debug)
+    /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea -s runtime pt
     
-    # Generate output file
-    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea --output results.txt
+    # Run only parasitic extraction and signoff timing sections
+    /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea -s star pt
+    
+    # Run setup, synthesis, and PnR sections
+    /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea -s setup synthesis pnr
+    
+    # Run with no logo for automation
+    /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea --no-logo
+    
+    # Display documentation
+    /home/avice/scripts/avice_wa_review_launcher.csh --help-docs
+    /home/avice/scripts/avice_wa_review_launcher.csh --open-docs
 
-IMPORTANT: This script outputs to Unix shells - always use ASCII characters
-instead of Unicode symbols (→, ✓, ✗, ⚠, •) to ensure proper display.
-Use ASCII equivalents: ->, [OK], [ERROR], [WARN], - instead.
+Important Notes:
+    - This script outputs to Unix shells - always use ASCII characters
+      instead of Unicode symbols (→, ✓, ✗, ⚠, •) to ensure proper display
+    - Use ASCII equivalents: ->, [OK], [ERROR], [WARN], - instead
+    - HTML reports are generated in current working directory, not the workarea
+    - All file links in HTML use absolute paths for portability
+    - Test HTML portability by copying to different directories
+    - For tablog viewer integration, use the copy-to-clipboard feature in HTML
+
+Contact:
+    For questions, bug reports, or feature requests, contact: avice@nvidia.com
 """
 
 import os
@@ -242,7 +331,7 @@ class SectionSummary:
     stage: FlowStage            # FlowStage enum
     status: str                 # PASS, WARN, FAIL, NOT_RUN, SKIP
     key_metrics: Dict[str, str] # e.g., {"Setup WNS": "-0.052", "Hold WNS": "+0.150"}
-    html_file: str              # Path to detailed section HTML (absolute path)
+    html_file: str              # Path to detailed section HTML (relative path for cross-user compatibility)
     priority: int               # 1=Critical, 2=High, 3=Medium, 4=Low
     issues: List[str]           # List of notable issues/warnings
     timestamp: str              # When this section was analyzed
@@ -315,7 +404,7 @@ class MasterDashboard:
             # Create default output path using design name (not tag)
             output_path = os.path.join(
                 os.getcwd(),
-                f"avice_MASTER_dashboard_{self.design_info.top_hier}_{self.date_str}.html"
+                f"{self.design_info.top_hier}_{os.environ.get('USER', 'avice')}_MASTER_dashboard_{self.date_str}.html"
             )
         
         # Ensure output path is absolute
@@ -460,21 +549,36 @@ class MasterDashboard:
             margin-bottom: 15px;
         }}
         
+        /* Enhanced Grid Layout for Status Stats */
         .status-stats {{
-            display: flex;
-            justify-content: center;
-            gap: 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 30px;
             margin-top: 20px;
-            flex-wrap: wrap;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
         }}
         
         .status-stat {{
             font-size: 1.2em;
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.2s ease;
+        }}
+        
+        .status-stat:hover {{
+            transform: scale(1.05);
         }}
         
         .status-stat strong {{
-            font-size: 1.5em;
+            font-size: 2em;
             display: block;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }}
         
         /* Quick Actions */
@@ -564,10 +668,33 @@ class MasterDashboard:
             color: #2c3e50;
         }}
         
+        /* Enhanced Grid Layout for Section Cards */
         .sections-grid {{
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            align-items: start;
+            max-width: 100%;
+        }}
+        
+        @media (min-width: 1400px) {{
+            .sections-grid {{
+                grid-template-columns: repeat(3, 1fr);
+                max-width: 1400px;
+                margin: 0 auto;
+            }}
+        }}
+        
+        @media (min-width: 1000px) and (max-width: 1399px) {{
+            .sections-grid {{
+                grid-template-columns: repeat(2, 1fr);
+            }}
+        }}
+        
+        @media (max-width: 999px) {{
+            .sections-grid {{
+                grid-template-columns: 1fr;
+            }}
         }}
         
         /* Section Card */
@@ -579,6 +706,9 @@ class MasterDashboard:
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             border-left: 5px solid #667eea;
             position: relative;
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
         }}
         
         .section-card:hover {{
@@ -609,6 +739,8 @@ class MasterDashboard:
             margin-bottom: 15px;
             cursor: pointer;
             user-select: none;
+            gap: 10px;
+            min-width: 0;
         }}
         
         .section-header:hover {{
@@ -622,6 +754,15 @@ class MasterDashboard:
             display: flex;
             align-items: center;
             gap: 10px;
+            flex: 1;
+            min-width: 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }}
+        
+        .section-title span {{
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }}
         
         .card-toggle-icon {{
@@ -681,17 +822,22 @@ class MasterDashboard:
             background: #95a5a6;
         }}
         
+        /* Enhanced Grid Layout for Section Metrics */
         .section-metrics {{
             margin: 15px 0;
             padding: 15px;
             background: #f8f9fa;
             border-radius: 8px;
+            display: grid;
+            gap: 10px;
         }}
         
         .metric-row {{
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            align-items: center;
+            padding: 8px 0;
             border-bottom: 1px solid #dee2e6;
         }}
         
@@ -702,6 +848,7 @@ class MasterDashboard:
         .metric-label {{
             color: #7f8c8d;
             font-weight: 600;
+            text-align: left;
         }}
         
         .metric-value {{
@@ -740,6 +887,17 @@ class MasterDashboard:
         
         .view-details-btn:hover {{
             transform: scale(1.05);
+        }}
+        
+        .no-report-msg {{
+            display: inline-block;
+            padding: 10px 20px;
+            background: #ecf0f1;
+            color: #7f8c8d;
+            border-radius: 20px;
+            font-style: italic;
+            font-size: 0.9em;
+            border: 2px dashed #bdc3c7;
         }}
         
         .section-timestamp {{
@@ -856,8 +1014,8 @@ class MasterDashboard:
         
         <!-- Quick Actions -->
         <div class="quick-actions">
-            <button class="action-btn" onclick="openAllSections()">Open All Failed/Warning Sections</button>
-            <button class="action-btn secondary" onclick="openAllSectionsComplete()">Open All Sections</button>
+            <button class="action-btn">Open All Failed/Warning Sections</button>
+            <button class="action-btn secondary">Open All Sections</button>
             <button class="action-btn secondary" onclick="window.print()">Print Dashboard</button>
         </div>
 """
@@ -871,12 +1029,23 @@ class MasterDashboard:
             <ul class="attention-list">
 """
             for section in attention_sections:
-                html += f"""
+                if section.html_file:
+                    html += f"""
                 <li>
                     <a href="{section.html_file}" target="_blank">
                         [{section.status}] {section.section_name}
                     </a>
                     {f' - {section.issues[0]}' if section.issues else ''}
+                </li>
+"""
+                else:
+                    html += f"""
+                <li>
+                    <span style="color: #856404;">
+                        [{section.status}] {section.section_name}
+                    </span>
+                    {f' - {section.issues[0]}' if section.issues else ''}
+                    <em style="color: #95a5a6; font-size: 0.9em;"> (No detailed report)</em>
                 </li>
 """
             html += """
@@ -914,44 +1083,126 @@ class MasterDashboard:
     </div>
     
     <script>
-        function expandImage(img) {
+        function expandImage(img) {{
             var overlay = document.getElementById('expandedImage');
             var expandedImg = document.getElementById('expandedImageContent');
             expandedImg.src = img.src;
             overlay.style.display = 'flex';
-        }
+        }}
         
-        function closeImage() {
+        function closeImage() {{
             document.getElementById('expandedImage').style.display = 'none';
-        }
+        }}
         
-        function toggleCard(cardId) {
+        function toggleCard(cardId) {{
             var content = document.getElementById(cardId);
             var icon = document.getElementById('icon-' + cardId);
             
-            if (content.classList.contains('expanded')) {
+            if (content.classList.contains('expanded')) {{
                 content.classList.remove('expanded');
                 icon.classList.remove('expanded');
-            } else {
+            }} else {{
                 content.classList.add('expanded');
                 icon.classList.add('expanded');
-            }
-        }
+            }}
+        }}
         
-        function openAllSections() {
+        function openAllSections() {{
             var sections = document.querySelectorAll('.section-card.FAIL a, .section-card.WARN a');
-            sections.forEach(function(link) {
-                window.open(link.href, '_blank');
-            });
-        }
+            console.log('Opening ' + sections.length + ' failed/warning sections');
+            var delay = 0;
+            // Convert NodeList to Array for compatibility
+            var sectionsArray = Array.prototype.slice.call(sections);
+            sectionsArray.forEach(function(link) {{
+                if (link.href && link.href !== '') {{
+                    console.log('Opening: ' + link.href);
+                    setTimeout(function() {{
+                        window.open(link.href, '_blank');
+                    }}, delay);
+                    delay += 300; // 300ms delay between each window to avoid popup blocker
+                }}
+            }});
+        }}
         
-        function openAllSectionsComplete() {
+        function openAllSectionsComplete() {{
             var sections = document.querySelectorAll('.section-card a');
-            sections.forEach(function(link) {
-                window.open(link.href, '_blank');
-            });
-        }
+            console.log('Opening all ' + sections.length + ' sections');
+            if (sections.length === 0) {{
+                alert('No section links found. This might indicate a problem with the dashboard generation.');
+                return;
+            }}
+            var delay = 0;
+            // Convert NodeList to Array for compatibility
+            var sectionsArray = Array.prototype.slice.call(sections);
+            sectionsArray.forEach(function(link) {{
+                if (link.href && link.href !== '') {{
+                    console.log('Opening: ' + link.href);
+                    setTimeout(function() {{
+                        window.open(link.href, '_blank');
+                    }}, delay);
+                    delay += 300; // 300ms delay between each window to avoid popup blocker
+                }} else {{
+                    console.log('Skipping link with no href');
+                }}
+            }});
+        }}
+        
+        // Back to top button functionality - wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {{
+            var backToTopBtn = document.getElementById('backToTopBtn');
+            if (backToTopBtn) {{
+                window.addEventListener('scroll', function() {{
+                    if (window.pageYOffset > 300) {{
+                        backToTopBtn.style.display = 'block';
+                    }} else {{
+                        backToTopBtn.style.display = 'none';
+                    }}
+                }});
+                
+                backToTopBtn.addEventListener('click', function() {{
+                    window.scrollTo(0, 0);
+                }});
+            }}
+        }});
+        
+        // Add event listeners to buttons when DOM is ready (more reliable than inline onclick)
+        document.addEventListener('DOMContentLoaded', function() {{
+            console.log('DOM loaded, setting up button listeners');
+            
+            // Open Failed/Warning Sections button
+            var actionBtns = document.querySelectorAll('.action-btn');
+            console.log('Found action buttons:', actionBtns.length);
+            
+            if (actionBtns.length > 0) {{
+                // First button (Open Failed/Warning)
+                actionBtns[0].addEventListener('click', function(e) {{
+                    console.log('Button clicked: Open Failed/Warning Sections');
+                    e.preventDefault();
+                    openAllSections();
+                }});
+                console.log('Attached listener to button 1');
+            }}
+            
+            if (actionBtns.length > 1) {{
+                // Second button (Open All Sections)
+                actionBtns[1].addEventListener('click', function(e) {{
+                    console.log('Button clicked: Open All Sections');
+                    e.preventDefault();
+                    openAllSectionsComplete();
+                }});
+                console.log('Attached listener to button 2');
+            }}
+        }});
     </script>
+    
+    <button id="backToTopBtn" style="display: none; position: fixed; bottom: 30px; right: 30px; 
+            z-index: 99; border: none; outline: none; background-color: #667eea; color: white; 
+            cursor: pointer; padding: 15px 20px; border-radius: 50px; font-size: 16px; 
+            font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease;"
+            onmouseover="this.style.backgroundColor='#5568d3'; this.style.transform='scale(1.1)';"
+            onmouseout="this.style.backgroundColor='#667eea'; this.style.transform='scale(1)';">
+        ↑ Top
+    </button>
 </body>
 </html>
 """
@@ -984,19 +1235,30 @@ class MasterDashboard:
                 <div class="issue-item">... and {len(section.issues) - 3} more</div>
 """
         
-        # Default to expanded for FAIL/WARN status, collapsed for others
-        default_expanded = section.status in ['FAIL', 'WARN']
+        # Generate tooltip text for status badge (show criteria that weren't met)
+        tooltip_text = ""
+        if section.status in ['FAIL', 'WARN'] and section.issues:
+            # Create tooltip showing which criteria failed
+            tooltip_text = "Criteria not met:\\n" + "\\n".join(f"- {issue}" for issue in section.issues)
+            # Escape HTML special characters for safe tooltip display
+            tooltip_text = tooltip_text.replace('"', '&quot;').replace('<', '&lt;').replace('>', '&gt;')
+        
+        # Default to collapsed for all cards
+        default_expanded = False
         expanded_class = 'expanded' if default_expanded else ''
+        
+        # Add title attribute to status badge if there are issues
+        status_badge_html = f'<div class="status-badge {section.status}" title="{tooltip_text}">{section.get_status_icon()}</div>' if tooltip_text else f'<div class="status-badge {section.status}">{section.get_status_icon()}</div>'
         
         card_html = f"""
                 <div class="section-card {section.status}">
                     <div class="section-header" onclick="toggleCard('card-{section.section_id}-{index}')">
                         <div class="section-title">
                             <span class="section-index">{index}</span>
-                            <span>{section.icon} {section.section_name}</span>
+                            <span>{section.section_name}</span>
                         </div>
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <div class="status-badge {section.status}">{section.get_status_icon()}</div>
+                            {status_badge_html}
                             <span class="card-toggle-icon {expanded_class}" id="icon-card-{section.section_id}-{index}">▼</span>
                         </div>
                     </div>
@@ -1007,7 +1269,7 @@ class MasterDashboard:
                         {f'<div class="section-issues">{issues_html}</div>' if issues_html else ''}
                         
                         <div class="section-footer">
-                            <a href="{section.html_file}" target="_blank" class="view-details-btn" onclick="event.stopPropagation()">View Detailed Report</a>
+                            {f'<a href="{section.html_file}" target="_blank" class="view-details-btn" onclick="event.stopPropagation()">View Detailed Report</a>' if section.html_file else '<span class="no-report-msg">No detailed report available</span>'}
                         </div>
                         
                         <div class="section-timestamp">Analyzed: {section.timestamp}</div>
@@ -1138,6 +1400,38 @@ class WorkareaReviewer:
         self.master_dashboard = MasterDashboard(self.design_info)
         self.section_summaries = []  # Collect section summaries for master dashboard
     
+    def _cleanup_old_html_files(self):
+        """Remove old HTML files from previous runs to prevent confusion"""
+        try:
+            # Get current working directory where HTMLs are generated
+            cwd = os.getcwd()
+            
+            # Define patterns for HTML files that should be cleaned up
+            # Only clean up files for the current design
+            design_pattern = f"*{self.design_info.top_hier}*.html"
+            
+            # Find all matching HTML files
+            matching_files = glob.glob(os.path.join(cwd, design_pattern))
+            
+            if matching_files:
+                # Keep track of what was cleaned
+                cleaned_count = 0
+                
+                for html_file in matching_files:
+                    try:
+                        os.remove(html_file)
+                        cleaned_count += 1
+                    except OSError as e:
+                        # If we can't delete (permissions, etc.), just skip
+                        pass
+                
+                if cleaned_count > 0:
+                    print(f"{Color.CYAN}Cleaned up {cleaned_count} old HTML file(s) from previous runs{Color.RESET}")
+        
+        except Exception as e:
+            # Don't fail the review if cleanup fails
+            pass
+    
     def _add_section_summary(self, section_name: str, section_id: str, stage: FlowStage, 
                             status: str = "NOT_RUN", key_metrics: Dict[str, str] = None,
                             html_file: str = "", priority: int = 3, issues: List[str] = None,
@@ -1147,6 +1441,11 @@ class WorkareaReviewer:
             key_metrics = {}
         if issues is None:
             issues = []
+        
+        # Convert absolute path to relative (just filename) for cross-user compatibility
+        # This ensures the master dashboard works when opened by different users
+        if html_file:
+            html_file = os.path.basename(html_file)
         
         summary = SectionSummary(
             section_name=section_name,
@@ -1561,7 +1860,7 @@ class WorkareaReviewer:
                         break
                 
                 if html_file and os.path.exists(html_file):
-                    print(f"  Open with: firefox {Color.MAGENTA}{html_file}{Color.RESET} &")
+                    print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{os.path.basename(html_file)}{Color.RESET} &")
                     return os.path.abspath(html_file)
                 else:
                     print(f"  HTML report generated successfully")
@@ -1663,11 +1962,24 @@ class WorkareaReviewer:
                 
                 print(f"\n  All values in nanoseconds (ns)")
                 print(f"  {Color.RED}Note: Max latency values > 550ps (0.55ns) are highlighted in red{Color.RESET}")
+                
+                # Return the maximum latency found across all clocks
+                max_latencies = []
+                for data in clock_data:
+                    try:
+                        max_latencies.append(float(data['max_delay']))
+                    except (ValueError, TypeError):
+                        pass
+                if max_latencies:
+                    return max(max_latencies) * 1000  # Convert to ps
             else:
                 print(f"  Scenario {target_scenario} not found in clock tree report")
+            
+            return 0
                 
         except (OSError, UnicodeDecodeError, gzip.BadGzipFile) as e:
             print(f"  Error reading clock file: {e}")
+            return 0
     
     def _extract_pt_clock_latency(self, pt_clock_file: str):
         """Extract min and max total clock latency per clock from PT clock latency report"""
@@ -1727,14 +2039,27 @@ class WorkareaReviewer:
                 
                 print(f"\n  All values in nanoseconds (ns)")
                 print(f"  {Color.RED}Note: Max latency values > 550ps (0.55ns) are highlighted in red{Color.RESET}")
+                
+                # Return the maximum latency found across all clocks
+                max_latencies = []
+                for clock, latencies in clock_latencies.items():
+                    if latencies:
+                        max_latencies.append(max(latencies))
+                if max_latencies:
+                    return max(max_latencies) * 1000  # Convert to ps
             else:
                 print(f"  No clock latency data found in PT report")
+            
+            return 0
                 
         except (OSError, UnicodeDecodeError) as e:
             print(f"  Error reading PT clock file: {e}")
+            return 0
     
-    def _extract_formal_verification_status(self, log_file: str):
-        """Extract verification status and runtime from formal verification log"""
+    def _extract_formal_verification_status(self, log_file: str) -> tuple:
+        """Extract verification status and runtime from formal verification log
+        Returns: (status, runtime, flow_name, passing_points, failing_points, compare_table, failing_points_list) tuple
+        """
         try:
             # Check if formal is currently running
             file_mtime = os.path.getmtime(log_file)
@@ -1746,18 +2071,89 @@ class WorkareaReviewer:
             
             lines = content.split('\n')
             
-            # Extract verification status
+            # Extract verification status from "Verification Results" section
+            # Use the LAST occurrence if there are multiple runs in the log
             status = "UNKNOWN"
-            for line in lines:
-                if "Verification SUCCEEDED" in line:
-                    status = "SUCCEEDED"
-                    break
-                elif "Verification FAILED" in line:
-                    status = "FAILED"
-                    break
-                elif "Verification UNRESOLVED" in line:
-                    status = "UNRESOLVED"
-                    break
+            passing_points = 0
+            failing_points = 0
+            compare_table = {}  # Dictionary to store the matched compare points table
+            failing_points_list = []  # List of failing compare point names
+            last_results_index = -1
+            
+            # Find the last "Verification Results" section
+            for i, line in enumerate(lines):
+                if "Verification Results" in line and "*****" in line:
+                    last_results_index = i
+            
+            # Extract status from the last Verification Results section
+            if last_results_index >= 0:
+                # Look in the next 20 lines after "Verification Results" header to get status and compare points
+                for i in range(last_results_index + 1, min(last_results_index + 21, len(lines))):
+                    line = lines[i]
+                    if "Verification SUCCEEDED" in line:
+                        status = "SUCCEEDED"
+                    elif "Verification FAILED" in line:
+                        status = "FAILED"
+                    elif "Verification UNRESOLVED" in line:
+                        status = "UNRESOLVED"
+                    elif "Verification INCONCLUSIVE" in line:
+                        status = "UNRESOLVED"
+                    
+                    # Extract passing compare points
+                    # Format: "238522 Passing compare points"
+                    if "Passing compare points" in line:
+                        match = re.search(r'(\d+)\s+Passing compare points', line)
+                        if match:
+                            passing_points = int(match.group(1))
+                    
+                    # Extract failing compare points
+                    # Format: "8 Failing compare points (8 matched, 0 unmatched)"
+                    if "Failing compare points" in line:
+                        match = re.search(r'(\d+)\s+Failing compare points', line)
+                        if match:
+                            failing_points = int(match.group(1))
+            
+            # Fallback: if no "Verification Results" section found, search entire log
+            if status == "UNKNOWN":
+                for line in lines:
+                    if "Verification SUCCEEDED" in line:
+                        status = "SUCCEEDED"
+                    elif "Verification FAILED" in line:
+                        status = "FAILED"
+                    elif "Verification UNRESOLVED" in line or "Verification INCONCLUSIVE" in line:
+                        status = "UNRESOLVED"
+            
+            # Check for tool crash/error before completion
+            # If status is still UNKNOWN, check for crash indicators
+            if status == "UNKNOWN":
+                has_crash_error = False
+                crash_error_msg = ""
+                
+                # Look for common crash patterns in the last 100 lines
+                for line in lines[-100:]:
+                    # CMD-081: Script stopped due to error
+                    if "stopped at line" in line and "due to error" in line:
+                        has_crash_error = True
+                        crash_error_msg = "Script execution error"
+                        break
+                    # FM-036: Unknown design name error
+                    elif "Error: Unknown name:" in line and "FM-036" in line:
+                        has_crash_error = True
+                        crash_error_msg = "Design not loaded"
+                        break
+                    # FM-008: Design not set error
+                    elif "Error: The current design is not set" in line and "FM-008" in line:
+                        has_crash_error = True
+                        crash_error_msg = "Design not set"
+                        break
+                    # General error patterns that indicate crashes
+                    elif line.strip().startswith("-E-") and "errMsg:" in line:
+                        has_crash_error = True
+                        crash_error_msg = "Tool error encountered"
+                        break
+                
+                if has_crash_error:
+                    status = f"CRASHED ({crash_error_msg})"
             
             # Check if running (file updated within last 5 minutes and no final status)
             is_running = False
@@ -1796,6 +2192,8 @@ class WorkareaReviewer:
                 status_color = Color.GREEN
             elif status == "FAILED":
                 status_color = Color.RED
+            elif "CRASHED" in status:
+                status_color = Color.RED
             else:
                 status_color = Color.YELLOW
             
@@ -1805,8 +2203,91 @@ class WorkareaReviewer:
             else:
                 print(f"  Runtime: In progress...")
             
+            # Display compare points if FAILED
+            if status == "FAILED" and (passing_points > 0 or failing_points > 0):
+                print(f"  {Color.GREEN}Passing compare points: {passing_points}{Color.RESET}")
+                print(f"  {Color.RED}Failing compare points: {failing_points}{Color.RESET}")
+            
+            # Extract Matched Compare Points table
+            for i, line in enumerate(lines):
+                if "Matched Compare Points" in line and "BBPin" in line:
+                    # Found the table header, parse the next lines
+                    # Skip the separator line
+                    if i + 2 < len(lines):
+                        # Parse "Passing (equivalent)" line
+                        passing_line = lines[i + 2]
+                        if "Passing (equivalent)" in passing_line:
+                            parts = passing_line.split()
+                            if len(parts) >= 9:
+                                compare_table['passing'] = {
+                                    'BBPin': int(parts[2]),
+                                    'Loop': int(parts[3]),
+                                    'BBNet': int(parts[4]),
+                                    'Cut': int(parts[5]),
+                                    'Port': int(parts[6]),
+                                    'DFF': int(parts[7]),
+                                    'LAT': int(parts[8]),
+                                    'TOTAL': int(parts[9])
+                                }
+                        
+                        # Parse "Failing (not equivalent)" line
+                        if i + 3 < len(lines):
+                            failing_line = lines[i + 3]
+                            if "Failing (not equivalent)" in failing_line:
+                                parts = failing_line.split()
+                                if len(parts) >= 9:
+                                    compare_table['failing'] = {
+                                        'BBPin': int(parts[3]),
+                                        'Loop': int(parts[4]),
+                                        'BBNet': int(parts[5]),
+                                        'Cut': int(parts[6]),
+                                        'Port': int(parts[7]),
+                                        'DFF': int(parts[8]),
+                                        'LAT': int(parts[9]),
+                                        'TOTAL': int(parts[10])
+                                    }
+                        
+                        # Parse "Not Compared" section
+                        compare_table['not_compared'] = {}
+                        for j in range(i + 5, min(i + 10, len(lines))):
+                            line = lines[j].strip()
+                            if not line or line.startswith('*'):
+                                break
+                            # Parse lines like "  Clock-gate LAT                                                            6659    6659"
+                            if any(keyword in line for keyword in ['Clock-gate', 'Constant', 'Unread']):
+                                parts = line.split()
+                                if len(parts) >= 2:
+                                    # The category name is the first 1-2 words, the last number is the total
+                                    try:
+                                        count = int(parts[-1])
+                                        # Category name is usually first 2 words or until we hit numbers
+                                        name_parts = []
+                                        for part in parts:
+                                            if part.isdigit():
+                                                break
+                                            name_parts.append(part)
+                                        name = ' '.join(name_parts)
+                                        compare_table['not_compared'][name] = count
+                                    except:
+                                        pass
+                    break
+            
+            # Extract failing compare point names
+            for line in lines:
+                if "Compare point" in line and "failed (is not equivalent)" in line:
+                    # Extract the compare point name between "Compare point" and "failed"
+                    match = re.search(r'Compare point\s+(.+?)\s+failed \(is not equivalent\)', line)
+                    if match:
+                        failing_points_list.append(match.group(1).strip())
+            
+            # Extract flow name from log file path (e.g., rtl_vs_pnr_fm)
+            flow_name = os.path.basename(os.path.dirname(os.path.dirname(log_file)))
+            
+            return (status, elapsed_time, flow_name, passing_points, failing_points, compare_table, failing_points_list)
+            
         except (OSError, UnicodeDecodeError) as e:
             print(f"  Error reading formal log: {e}")
+            return ("UNKNOWN", "Unknown", "Unknown", 0, 0, {}, [])
     
     def _display_formal_timestamps(self, log_file: str):
         """Extract and display start/end timestamps for formal verification"""
@@ -1880,7 +2361,7 @@ class WorkareaReviewer:
                 print(f"\n  {Color.YELLOW}[WARN] Design changes were made AFTER formal verification!{Color.RESET}")
                 print(f"    Latest formal ended:  {formal_end_str}")
                 print(f"    {eco_source} updated: {eco_str} ({time_diff_hours:.1f} hours later)")
-                print(f"    {Color.YELLOW}→ Formal verification should be re-run to verify design changes{Color.RESET}")
+                print(f"    {Color.YELLOW}-> Formal verification should be re-run to verify design changes{Color.RESET}")
         except Exception:
             pass  # Silently skip if check fails
     
@@ -1911,11 +2392,23 @@ class WorkareaReviewer:
                     param_name, param_value = line.split(' = ', 1)
                     all_params[param_name] = param_value
             
+            # Extract DieArea from floorplan DEF file
+            floorplan_dims = self._extract_floorplan_dimensions()
+            
             # Print only most significant parameters
             stage_display = stage.upper() if stage != 'postroute' else 'Post-Route'
             print(f"\n{Color.YELLOW}Key {stage_display} Parameters:{Color.RESET}")
             print(f"  {'Parameter':<25} {'Value':<15}")
             print(f"  {'-'*25} {'-'*15}")
+            
+            # Print DieArea first if available
+            if floorplan_dims:
+                x_dim = floorplan_dims['x_dim_um']
+                y_dim = floorplan_dims['y_dim_um']
+                die_area_um2 = x_dim * y_dim
+                die_area_mm2 = die_area_um2 / 1_000_000
+                print(f"  {'Die Dimensions (X x Y)':<25} {f'{x_dim:.2f} x {y_dim:.2f} um':<15}")
+                print(f"  {'DieArea (mm2)':<25} {f'{die_area_mm2:.3f}':<15}")
             
             for param_name in significant_params:
                 if param_name in all_params:
@@ -1924,6 +2417,8 @@ class WorkareaReviewer:
             # Generate HTML table with full data for all stages
             self._generate_postroute_html_table(all_params)
             
+            return all_params
+            
         except (OSError, UnicodeDecodeError) as e:
             print(f"  {Color.RED}Error reading post-route data file: {e}{Color.RESET}")
             print(f"  {Color.YELLOW}This could be due to:{Color.RESET}")
@@ -1931,6 +2426,7 @@ class WorkareaReviewer:
             print(f"    - Flow failed at this stage")
             print(f"    - File permissions issue")
             print(f"    - File corrupted or incomplete")
+            return {}
     
     def _generate_postroute_html_table(self, all_params: dict):
         """Generate HTML table with full post-route data for all stages"""
@@ -1983,14 +2479,14 @@ class WorkareaReviewer:
             
             # Save HTML file
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            html_filename = f"{os.environ.get('USER', 'avice')}_pnr_data_{self.design_info.top_hier}_{self.design_info.ipo}_{timestamp}.html"
+            html_filename = f"{self.design_info.top_hier}_{os.environ.get('USER', 'avice')}_pnr_data_{self.design_info.ipo}_{timestamp}.html"
             html_path = os.path.join(os.getcwd(), html_filename)
             
             with open(html_path, 'w', encoding='utf-8') as f:
                 f.write(html_content)
             
             print(f"\n  {Color.CYAN}Full PnR Data Table:{Color.RESET}")
-            print(f"  Open with: firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+            print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
             
         except Exception as e:
             print(f"  Error generating HTML table: {e}")
@@ -2151,6 +2647,25 @@ class WorkareaReviewer:
             margin: 0;
             white-space: pre;
             color: #2c3e50;
+        }}
+        
+        /* Copyright Footer */
+        .footer {{
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 10px;
+            font-size: 14px;
+        }}
+        
+        .footer p {{
+            margin: 5px 0;
+        }}
+        
+        .footer strong {{
+            color: #00ff00;
         }}
     </style>
 </head>
@@ -2452,7 +2967,38 @@ class WorkareaReviewer:
                 document.attachEvent('onkeydown', escapeHandler);
             }}
         }}
+        // Back to top button functionality
+        var backToTopBtn = document.getElementById('backToTopBtn');
+        if (backToTopBtn) {{
+            window.addEventListener('scroll', function() {{
+                if (window.pageYOffset > 300) {{
+                    backToTopBtn.style.display = 'block';
+                }} else {{
+                    backToTopBtn.style.display = 'none';
+                }}
+            }});
+            
+            backToTopBtn.addEventListener('click', function() {{
+                window.scrollTo(0, 0);
+            }});
+        }}
     </script>
+    
+    <button id="backToTopBtn" style="display: none; position: fixed; bottom: 30px; right: 30px; 
+            z-index: 99; border: none; outline: none; background-color: #667eea; color: white; 
+            cursor: pointer; padding: 15px 20px; border-radius: 50px; font-size: 16px; 
+            font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease;"
+            onmouseover="this.style.backgroundColor='#5568d3'; this.style.transform='scale(1.1)';"
+            onmouseout="this.style.backgroundColor='#667eea'; this.style.transform='scale(1)';">
+        ↑ Top
+    </button>
+    
+    <!-- Copyright Footer -->
+    <div class="footer">
+        <p><strong>AVICE P&R Data Analysis Report</strong></p>
+        <p>Copyright (c) 2025 Alon Vice (avice)</p>
+        <p>Contact: avice@nvidia.com</p>
+    </div>
 </body>
 </html>
 """
@@ -2553,17 +3099,20 @@ class WorkareaReviewer:
             except (OSError, UnicodeDecodeError, gzip.BadGzipFile) as e:
                 print(f"{Color.YELLOW}Don't use cells report found but unable to read: {e}{Color.RESET}")
         
+        # Generate unified DC HTML report
+        dc_html = self._generate_unified_dc_html()
+        
         # Add section summary for master dashboard
         self._add_section_summary(
             section_name="Synthesis (DC)",
             section_id="synthesis",
             stage=FlowStage.SYNTHESIS,
             status="PASS",
+            html_file=dc_html if dc_html else "",
             key_metrics={
                 "Design": self.design_info.top_hier,
                 "IPO": self.design_info.ipo
             },
-            html_file="",
             priority=3,
             issues=[],
             icon="[DC]"
@@ -3500,6 +4049,7 @@ class WorkareaReviewer:
             if data_files:
                 break
         
+        all_params = {}
         if data_files:
             if found_stage == 'postroute':
                 self.print_file_info(data_files[0], "Post-Route Data")
@@ -3507,7 +4057,7 @@ class WorkareaReviewer:
                 self.print_file_info(data_files[0], f"PnR Data ({found_stage.upper()} stage)")
                 print(f"    {Color.YELLOW}Note: Post-route data not available, showing {found_stage.upper()} stage data instead{Color.RESET}")
             
-            self._extract_postroute_data_parameters(data_files[0], found_stage)
+            all_params = self._extract_postroute_data_parameters(data_files[0], found_stage)
         else:
             print(f"  {Color.YELLOW}PnR Data: No data files found for any stage or temperature corner{Color.RESET}")
             print(f"    {Color.YELLOW}Tried stages: {', '.join(pnr_stages)}{Color.RESET}")
@@ -3529,28 +4079,2281 @@ class WorkareaReviewer:
         # PnR Timing Histogram
         self._extract_pnr_timing_histogram()
         
-        # Generate timing histogram HTML report (after displaying tables)
-        self._generate_timing_histogram_html()
+        # Generate unified PnR HTML report combining all sections
+        print(f"\n{Color.CYAN}Generating Unified PnR HTML Report...{Color.RESET}")
+        unified_pnr_html = self._generate_unified_pnr_html()
         
-        # Visualization commands
-        print(f"\n{Color.CYAN}PnR Pictures:{Color.RESET}")
-        pnr_image_html = self._generate_image_html_report()
+        # Collect metrics for dashboard summary
+        status = "NOT_RUN"
+        key_metrics = {"Design": self.design_info.top_hier, "IPO": self.design_info.ipo}
+        issues = []
+        priority = 2
+        
+        # Check if we have PnR data
+        if data_files and all_params:
+            status = "PASS"
+            
+            # Extract key metrics
+            if 'EffictiveUtilization' in all_params:
+                util = all_params['EffictiveUtilization']
+                key_metrics["Utilization"] = util
+                # WARN if utilization > 85%, FAIL if > 95%
+                try:
+                    util_float = float(util.strip('%'))
+                    if util_float > 95:
+                        status = "FAIL"
+                        issues.append(f"Utilization extremely high: {util}")
+                    elif util_float > 85:
+                        status = "WARN"
+                        issues.append(f"Utilization high: {util}")
+                except ValueError:
+                    pass
+            
+            if 'CellCount' in all_params:
+                key_metrics["Cells"] = all_params['CellCount']
+            
+            # Check for timing violations in PnR data
+            for param in ['w1_clk_WNS', 'i1_clk_WNS', 'i2_clk_WNS']:
+                if param in all_params:
+                    try:
+                        wns = float(all_params[param])
+                        if wns < 0:
+                            if status == "PASS":
+                                status = "WARN"
+                            clock_name = param.replace('_WNS', '')
+                            issues.append(f"{clock_name} WNS negative: {wns:.3f} ns")
+                    except ValueError:
+                        pass
+        elif prc_status and self.file_utils.file_exists(prc_status):
+            # PnR exists but no data files yet - possibly still running
+            status = "WARN"
+            issues.append("PnR data files not found - flow may still be running")
         
         # Add section summary for master dashboard
         self._add_section_summary(
             section_name="Place & Route (PnR)",
             section_id="pnr",
             stage=FlowStage.PNR_ANALYSIS,
-            status="PASS",
-            key_metrics={
-                "Design": self.design_info.top_hier,
-                "IPO": self.design_info.ipo
-            },
-            html_file=pnr_image_html if pnr_image_html else "",
-            priority=2,
-            issues=[],
+            status=status,
+            key_metrics=key_metrics,
+            html_file=unified_pnr_html if unified_pnr_html else "",
+            priority=priority,
+            issues=issues,
             icon="[PnR]"
         )
+    
+    def _generate_unified_pnr_html(self):
+        """Generate unified PnR HTML report combining PnR Data, Timing Histogram, and Images"""
+        try:
+            # Generate timestamp for filename
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            html_filename = f"{self.design_info.top_hier}_{os.environ.get('USER', 'avice')}_PnR_comprehensive_{self.design_info.ipo}_{timestamp}.html"
+            html_path = os.path.join(os.getcwd(), html_filename)
+            
+            # Read and encode logo
+            logo_data = ""
+            logo_path = os.path.join(os.path.dirname(__file__), "images/avice_logo.png")
+            if os.path.exists(logo_path):
+                with open(logo_path, "rb") as logo_file:
+                    logo_data = base64.b64encode(logo_file.read()).decode('utf-8')
+            
+            # Collect PnR Data content
+            pnr_data_content = self._get_pnr_data_html_content()
+            
+            # Collect Timing Histogram content
+            timing_histogram_content = self._get_timing_histogram_html_content()
+            
+            # Collect Images content  
+            images_content = self._get_images_html_content()
+            
+            # Generate unified HTML
+            html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PnR Comprehensive Report - {self.design_info.top_hier}</title>
+    <style>
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }}
+        
+        .header {{
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 20px;
+            align-items: center;
+        }}
+        
+        .logo {{
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            background: white;
+            padding: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }}
+        
+        .logo:hover {{
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }}
+        
+        .header-text h1 {{
+            font-size: 32px;
+            margin: 0 0 8px 0;
+        }}
+        
+        .header-text p {{
+            opacity: 0.9;
+            font-size: 14px;
+            margin: 4px 0;
+        }}
+        
+        .logo-modal {{
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+        }}
+        
+        .logo-modal.active {{
+            display: flex;
+        }}
+        
+        .logo-modal-content {{
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+        }}
+        
+        .logo-modal-close {{
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }}
+        
+        .logo-modal-close:hover {{
+            color: #bbb;
+        }}
+        
+        .container {{
+            max-width: 98%;
+            margin: 20px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }}
+        
+        /* Tab Navigation */
+        .tab-navigation {{
+            display: flex;
+            background: #34495e;
+            border-bottom: 3px solid #2c3e50;
+        }}
+        
+        .tab-btn {{
+            flex: 1;
+            padding: 18px 20px;
+            background: #34495e;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-right: 1px solid #2c3e50;
+        }}
+        
+        .tab-btn:last-child {{
+            border-right: none;
+        }}
+        
+        .tab-btn:hover {{
+            background: #2c3e50;
+        }}
+        
+        .tab-btn.active {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }}
+        
+        .tab-content {{
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.3s ease;
+        }}
+        
+        .tab-content.active {{
+            display: block;
+        }}
+        
+        @keyframes fadeIn {{
+            from {{ opacity: 0; transform: translateY(-10px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+        
+        /* Section Headers */
+        .section-header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 20px;
+            font-weight: bold;
+        }}
+        
+        .no-data {{
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+            font-size: 18px;
+            font-style: italic;
+        }}
+        
+        /* Override nested styles to work within tabs */
+        .tab-content table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }}
+        
+        .tab-content th,
+        .tab-content td {{
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }}
+        
+        .tab-content th {{
+            background-color: #34495e;
+            color: white;
+        }}
+        
+        .tab-content tr:nth-child(even) {{
+            background-color: #f9f9f9;
+        }}
+        
+        /* Copyright Footer */
+        .footer {{
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 10px;
+            font-size: 14px;
+        }}
+        
+        .footer p {{
+            margin: 5px 0;
+        }}
+        
+        .footer strong {{
+            color: #00ff00;
+        }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img class='logo' src='data:image/png;base64,{logo_data}' alt='AVICE Logo' onclick="showLogoModal()" title="Click to enlarge">
+        <div class="header-text">
+            <h1>PnR Comprehensive Report</h1>
+            <p>Design: {self.design_info.top_hier} | IPO: {self.design_info.ipo}</p>
+            <p>Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+        </div>
+    </div>
+    
+    <!-- Logo Modal -->
+    <div id="logoModal" class="logo-modal" onclick="hideLogoModal()">
+        <span class="logo-modal-close">&times;</span>
+        <img class="logo-modal-content" src='data:image/png;base64,{logo_data}' alt='AVICE Logo'>
+    </div>
+    
+    <div class="container">
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" onclick="openTab(event, 'pnr-data')">PnR Data</button>
+            <button class="tab-btn" onclick="openTab(event, 'timing-histogram')">Timing Histogram</button>
+            <button class="tab-btn" onclick="openTab(event, 'images')">Debug Images</button>
+        </div>
+        
+        <!-- PnR Data Tab -->
+        <div id="pnr-data" class="tab-content active">
+            {pnr_data_content}
+        </div>
+        
+        <!-- Timing Histogram Tab -->
+        <div id="timing-histogram" class="tab-content">
+            {timing_histogram_content}
+        </div>
+        
+        <!-- Images Tab -->
+        <div id="images" class="tab-content">
+            {images_content}
+        </div>
+    </div>
+    
+    <script>
+        // Tab switching function
+        function openTab(evt, tabName) {{
+            // Hide all tab contents
+            var tabContents = document.getElementsByClassName('tab-content');
+            for (var i = 0; i < tabContents.length; i++) {{
+                tabContents[i].classList.remove('active');
+            }}
+            
+            // Remove active class from all tab buttons
+            var tabBtns = document.getElementsByClassName('tab-btn');
+            for (var i = 0; i < tabBtns.length; i++) {{
+                tabBtns[i].classList.remove('active');
+            }}
+            
+            // Show the selected tab and mark button as active
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }}
+        
+        // Logo modal functions
+        function showLogoModal() {{
+            document.getElementById('logoModal').classList.add('active');
+        }}
+        
+        function hideLogoModal() {{
+            document.getElementById('logoModal').classList.remove('active');
+        }}
+        
+        // Allow ESC key to close logo modal
+        document.addEventListener('keydown', function(event) {{
+            if (event.key === 'Escape') {{
+                hideLogoModal();
+            }}
+        }});
+        
+        // Back to top button functionality - wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {{
+            var backToTopBtn = document.getElementById('backToTopBtn');
+            if (backToTopBtn) {{
+                window.addEventListener('scroll', function() {{
+                    if (window.pageYOffset > 300) {{
+                        backToTopBtn.style.display = 'block';
+                    }} else {{
+                        backToTopBtn.style.display = 'none';
+                    }}
+                }});
+                
+                backToTopBtn.addEventListener('click', function() {{
+                    window.scrollTo(0, 0);
+                }});
+            }}
+        }});
+    </script>
+    
+    <button id="backToTopBtn" style="display: none; position: fixed; bottom: 30px; right: 30px; 
+            z-index: 99; border: none; outline: none; background-color: #667eea; color: white; 
+            cursor: pointer; padding: 15px 20px; border-radius: 50px; font-size: 16px; 
+            font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease;"
+            onmouseover="this.style.backgroundColor='#5568d3'; this.style.transform='scale(1.1)';"
+            onmouseout="this.style.backgroundColor='#667eea'; this.style.transform='scale(1)';">
+        ↑ Top
+    </button>
+    
+    <!-- Copyright Footer -->
+    <div class="footer">
+        <p><strong>AVICE P&R Comprehensive Report</strong></p>
+        <p>Copyright (c) 2025 Alon Vice (avice)</p>
+        <p>Contact: avice@nvidia.com</p>
+    </div>
+</body>
+</html>"""
+            
+            # Write HTML file
+            with open(html_path, 'w', encoding='utf-8') as f:
+                f.write(html_content)
+            
+            print(f"  {Color.GREEN}[OK] Unified PnR HTML Report Generated{Color.RESET}")
+            print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+            
+            return os.path.abspath(html_path)
+            
+        except Exception as e:
+            print(f"  {Color.RED}Error generating unified PnR HTML: {e}{Color.RESET}")
+            import traceback
+            traceback.print_exc()
+            return None
+    
+    def _get_pnr_data_html_content(self):
+        """Extract PnR data content for unified HTML"""
+        try:
+            # Get postroute data from all stages
+            stages = ['plan', 'place', 'cts', 'route', 'postroute']
+            stage_data = {}
+            
+            for stage in stages:
+                stage_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/reports/{self.design_info.top_hier}_{self.design_info.top_hier}_{self.design_info.ipo}_report_{self.design_info.top_hier}_{self.design_info.ipo}_{stage}.func.std_tt_0c_0p6v.setup.typical.data"
+                stage_file = os.path.join(self.workarea, stage_pattern)
+                
+                if os.path.exists(stage_file):
+                    try:
+                        with open(stage_file, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                        
+                        stage_params = {}
+                        for line in content.split('\n'):
+                            line = line.strip()
+                            if ' = ' in line:
+                                param_name, param_value = line.split(' = ', 1)
+                                stage_params[param_name] = param_value
+                        
+                        stage_data[stage] = stage_params
+                    except:
+                        pass
+            
+            if not stage_data:
+                return '<div class="no-data">No PnR data available</div>'
+            
+            # Build data table with all parameters
+            content = '<div class="section-header">PnR Stage Data - Key Metrics</div>'
+            content += '<p>Comparison of key design metrics across all PnR stages.</p>'
+            
+            # Add filter bar
+            content += '''
+            <div style="margin: 20px 0;">
+                <input type="text" id="paramFilter" placeholder="Filter parameters..." 
+                       style="width: 100%; padding: 10px; font-size: 14px; border: 2px solid #667eea; 
+                              border-radius: 5px; box-sizing: border-box;">
+            </div>
+            '''
+            
+            # Get all unique parameters and sort them
+            all_params = set()
+            for stage_params in stage_data.values():
+                all_params.update(stage_params.keys())
+            
+            # Define parameter groups for better organization
+            timing_params = []
+            area_params = []
+            power_params = []
+            clock_params = []
+            dft_params = []
+            compute_params = []
+            metadata_params = []
+            other_params = []
+            
+            for param in sorted(all_params):
+                param_lower = param.lower()
+                # Metadata/Run Info - check first for run metadata patterns
+                if param in ['User', 'WW', 'Tool', 'RTL_TAG', 'Scenario', 'Stage', 'Date', 'Directory', 'Technology', 'ToolVersion', 'TracksNum', 'Unit', 'Project', 'SiteVersion']:
+                    metadata_params.append(param)
+                # Compute Metrics - check for cpu/memory/server/runtime patterns
+                elif any(x in param_lower for x in ['cpu', 'memory', 'server', 'stepruntime']):
+                    compute_params.append(param)
+                # Clock Metrics - check for clock-specific patterns
+                elif any(x in param_lower for x in ['latency', 'skew', 'cycle_time', 'clk_ffcount', 'parrallel_driver']):
+                    clock_params.append(param)
+                # DFT Metrics - check for scan/dft patterns
+                elif any(x in param_lower for x in ['dft', 'scan']):
+                    dft_params.append(param)
+                # Timing Metrics (removed cycle_time as it goes to clock)
+                elif any(x in param_lower for x in ['wns', 'tns', 'nvp', 'slack', 'timing', 'violpaths', 'maxfanoutviolations', 'maxtransviolations']):
+                    timing_params.append(param)
+                # Area & Cell Metrics
+                elif any(x in param_lower for x in ['area', 'cell', 'instance', 'net', 'utilization', 'array', 'ffcount', 'buffer', 'gate', 'count', 'bufinv']):
+                    area_params.append(param)
+                # Power Metrics
+                elif any(x in param_lower for x in ['power', 'leakage', 'dynamic', 'vt_percentage', 'svt_', 'lvt_', 'hvt_', 'ulvt_', 'mbperc', 
+                                                     'ungatedff', 'ffsbigger', 'ffsoverlogic', 'maxclonedcg', 'tapfanout', 'usemultibit', 'percffwith',
+                                                     'totalleakage', 'totallogicg']):
+                    power_params.append(param)
+                else:
+                    other_params.append(param)
+            
+            # Parameter display name mapping for cleaner presentation
+            param_display_names = {
+                'HVT_percentage': '%HVT',
+                'LVT_percentage': '%LVT',
+                'SVT_percentage': '%SVT',
+                'ULVT_percentage': '%ULVT',
+                'Utilization': '%Utilization',
+                'EffictiveUtilization': '%EffictiveUtilization'
+            }
+            
+            # Custom sort function to group VT percentages together in Power Metrics
+            def sort_power_params(params):
+                """Sort power parameters with VT percentages grouped together (high to low threshold)"""
+                vt_order = ['HVT_percentage', 'SVT_percentage', 'LVT_percentage', 'ULVT_percentage']
+                vt_params = [p for p in vt_order if p in params]
+                other_params = [p for p in sorted(params) if p not in vt_order]
+                return vt_params + other_params
+            
+            # Custom sort function to group Utilization parameters together in Area & Cell Metrics
+            def sort_area_params(params):
+                """Sort area parameters with utilization metrics grouped together"""
+                util_order = ['Utilization', 'EffictiveUtilization']
+                util_params = [p for p in util_order if p in params]
+                other_params = [p for p in sorted(params) if p not in util_order]
+                return util_params + other_params
+            
+            # Custom sort function to order metadata parameters
+            def sort_metadata_params(params):
+                """Sort metadata parameters in a specific order"""
+                meta_order = ['User', 'WW', 'Tool', 'RTL_TAG', 'Scenario', 'Stage', 'Date', 'Directory', 'Technology', 'ToolVersion', 'TracksNum', 'Unit', 'Project', 'SiteVersion']
+                ordered_params = [p for p in meta_order if p in params]
+                other_params = [p for p in sorted(params) if p not in meta_order]
+                return ordered_params + other_params
+            
+            # Sort power_params with custom ordering
+            power_params = sort_power_params(power_params)
+            
+            # Sort area_params with custom ordering
+            area_params = sort_area_params(area_params)
+            
+            # Sort metadata_params with custom ordering
+            metadata_params = sort_metadata_params(metadata_params)
+            
+            # Build tables by category
+            param_groups = [
+                ('Environment Details', metadata_params),
+                ('Timing Metrics', timing_params),
+                ('Clock Metrics', clock_params),
+                ('Area & Cell Metrics', area_params),
+                ('Power Metrics', power_params),
+                ('DFT Metrics', dft_params),
+                ('Compute Metrics', compute_params),
+                ('Other Parameters', other_params)
+            ]
+            
+            for group_name, params in param_groups:
+                if params:
+                    content += f'<h3 style="color: #667eea; margin-top: 30px;">{group_name}</h3>'
+                    content += '<table style="width: 100%; border-collapse: collapse; margin: 15px 0;">'
+                    content += '<thead><tr><th style="background-color: #34495e; color: white; padding: 12px; text-align: left;">Parameter</th>'
+                    
+                    for stage in stages:
+                        if stage in stage_data:
+                            content += f'<th style="background-color: #34495e; color: white; padding: 12px; text-align: center;">{stage.upper()}</th>'
+                    content += '</tr></thead><tbody>'
+                    
+                    # Add rows for parameters in this group
+                    for param in params:
+                        # Get display name (use mapping if available, otherwise use original)
+                        display_name = param_display_names.get(param, param)
+                        content += f'<tr class="param-row" data-param-name="{param.lower()}" data-display-name="{display_name.lower()}">'
+                        content += f'<td style="padding: 10px; border: 1px solid #ddd;"><strong>{display_name}</strong></td>'
+                        for stage in stages:
+                            if stage in stage_data:
+                                value = stage_data[stage].get(param, '-')
+                                # Color code timing violations
+                                cell_style = 'padding: 10px; border: 1px solid #ddd; text-align: center;'
+                                if 'WNS' in param or 'TNS' in param:
+                                    try:
+                                        num_val = float(value)
+                                        if num_val < 0:
+                                            cell_style += ' background-color: #ffebee; color: #c62828;'
+                                    except:
+                                        pass
+                                content += f'<td style="{cell_style}">{value}</td>'
+                        content += '</tr>'
+                    
+                    content += '</tbody></table>'
+            
+            # Add "Back to Top" button
+            content += '''
+            <button id="backToTopBtn" style="display: none; position: fixed; bottom: 30px; right: 30px; 
+                    z-index: 99; border: none; outline: none; background-color: #667eea; color: white; 
+                    cursor: pointer; padding: 15px 20px; border-radius: 50px; font-size: 16px; 
+                    font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease;"
+                    onmouseover="this.style.backgroundColor='#5568d3'; this.style.transform='scale(1.1)';"
+                    onmouseout="this.style.backgroundColor='#667eea'; this.style.transform='scale(1)';">
+                ↑ Top
+            </button>
+            '''
+            
+            # Add JavaScript for filtering and back-to-top button
+            content += '''
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Filter functionality
+                const filterInput = document.getElementById('paramFilter');
+                if (filterInput) {
+                    filterInput.addEventListener('input', function() {
+                        const filterText = this.value.toLowerCase();
+                        const rows = document.querySelectorAll('.param-row');
+                        
+                        rows.forEach(function(row) {
+                            const paramName = row.getAttribute('data-param-name') || '';
+                            const displayName = row.getAttribute('data-display-name') || '';
+                            
+                            // Show row if filter text is found in either param name or display name
+                            if (paramName.includes(filterText) || displayName.includes(filterText)) {
+                                row.style.display = '';
+                            } else {
+                                row.style.display = 'none';
+                            }
+                        });
+                    });
+                }
+                
+                // Back to top button functionality
+                var backToTopBtn = document.getElementById('backToTopBtn');
+                if (backToTopBtn) {
+                    // Show button when user scrolls down 300px
+                    window.addEventListener('scroll', function() {
+                        if (window.pageYOffset > 300) {
+                            backToTopBtn.style.display = 'block';
+                        } else {
+                            backToTopBtn.style.display = 'none';
+                        }
+                    });
+                    
+                    // Scroll to top when button is clicked
+                    backToTopBtn.addEventListener('click', function() {
+                        window.scrollTo({
+                            top: 0,
+                            behavior: 'smooth'
+                        });
+                    });
+                }
+            });
+            </script>
+            '''
+            
+            return content
+            
+        except Exception as e:
+            import traceback
+            return f'<div class="no-data">Error loading PnR data: {e}<br><pre>{traceback.format_exc()}</pre></div>'
+    
+    def _colorize_histogram_table(self, table_text):
+        """Add color coding to histogram table - highlight negative slack columns in red"""
+        try:
+            import re
+            lines = table_text.split('\n')
+            colored_lines = []
+            
+            for line in lines:
+                # Check if this line contains negative slack values
+                # Pattern 1: Header row with negative slack ranges (e.g., "-0.010 -0.020 -0.030")
+                # Pattern 2: Data rows with negative values in WNS/TNS columns
+                
+                if '|' in line:
+                    # Color any negative numbers (with minus sign and digits)
+                    # This will catch: -0.010, -1.234, -0.094, etc.
+                    colored_line = re.sub(
+                        r'(-\d+\.?\d*)',
+                        r'<span style="color: #e74c3c; font-weight: bold;">\1</span>',
+                        line
+                    )
+                    colored_lines.append(colored_line)
+                else:
+                    colored_lines.append(line)
+            
+            return '\n'.join(colored_lines)
+        except Exception as e:
+            # If coloring fails, return original text
+            return table_text
+    
+    def _colorize_timing_summary(self, summary_text):
+        """Add color coding to timing summary - highlight negative WNS/TNS values in red"""
+        try:
+            import re
+            lines = summary_text.split('\n')
+            colored_lines = []
+            
+            for line in lines:
+                # Look for negative numbers in WNS/TNS lines
+                if any(keyword in line for keyword in ['WNS', 'TNS', 'NVP']):
+                    # Find negative numbers (e.g., -0.123, -1.5)
+                    colored_line = re.sub(
+                        r'(-\d+\.?\d*)',
+                        r'<span style="color: #e74c3c; font-weight: bold;">\1</span>',
+                        line
+                    )
+                    colored_lines.append(colored_line)
+                else:
+                    colored_lines.append(line)
+            
+            return '\n'.join(colored_lines)
+        except Exception as e:
+            # If coloring fails, return original text
+            return summary_text
+    
+    def _get_timing_histogram_html_content(self):
+        """Extract timing histogram content for unified HTML"""
+        try:
+            # Find timing histogram files (both setup and hold)
+            pnr_stages = ['postroute', 'route', 'cts', 'place', 'plan']
+            setup_file = None
+            hold_file = None
+            found_stage = None
+            
+            for stage in pnr_stages:
+                setup_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/SUMMARY/{self.design_info.top_hier}.{self.design_info.ipo}.{stage}.timing.setup.rpt.gz"
+                hold_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/SUMMARY/{self.design_info.top_hier}.{self.design_info.ipo}.{stage}.timing.hold.rpt.gz"
+                
+                setup_files = self.file_utils.find_files(setup_pattern, self.workarea)
+                hold_files = self.file_utils.find_files(hold_pattern, self.workarea)
+                
+                if setup_files or hold_files:
+                    setup_file = setup_files[0] if setup_files else None
+                    hold_file = hold_files[0] if hold_files else None
+                    found_stage = stage
+                    break
+            
+            if not setup_file and not hold_file:
+                return '<div class="no-data">No timing histogram data available</div>'
+            
+            content = f'<div class="section-header">Timing Histogram Analysis - {found_stage.upper()} Stage</div>'
+            content += '<p>Timing path distribution across different slack ranges. Negative slack indicates timing violations.</p>'
+            
+            # Add Legend
+            content += '''
+            <div style="background: #f0f8ff; border: 2px solid #3498db; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                <h3 style="color: #2c3e50; margin-top: 0; margin-bottom: 10px;">
+                    <span style="font-size: 18px;">&#9432;</span> Histogram Legend
+                </h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 13px;">
+                    <div>
+                        <strong style="color: #16a085;">Slack Ranges:</strong>
+                        <ul style="margin: 5px 0; padding-left: 20px;">
+                            <li><span style="background: #e74c3c; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold;">Red</span> = Negative slack (timing violations)</li>
+                            <li>Positive slack = Paths meeting timing</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <strong style="color: #16a085;">Column Meanings:</strong>
+                        <ul style="margin: 5px 0; padding-left: 20px;">
+                            <li><strong>WNS:</strong> Worst Negative Slack</li>
+                            <li><strong>TNS:</strong> Total Negative Slack</li>
+                            <li><strong>NVP:</strong> Number of Violating Paths</li>
+                            <li><strong>Histogram:</strong> Path count per slack bucket</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            '''
+            
+            # Setup Timing Section
+            if setup_file:
+                try:
+                    content += '<h2 style="color: #27ae60; background: #ecf9f0; padding: 10px; border-left: 4px solid #27ae60; margin-top: 20px;">Setup Timing</h2>'
+                    
+                    result = self.file_utils.run_command(f"zcat {setup_file} | grep -n 'histogram' | grep '|'")
+                    if result.strip():
+                        histogram_lines = result.strip().split('\n')
+                        if len(histogram_lines) >= 2:
+                            # Get the last table (sub-category breakdown is most detailed)
+                            table_start = int(histogram_lines[-1].split(':')[0])
+                            
+                            # Extract the table (get 30 lines for more complete view)
+                            table_result = self.file_utils.run_command(f"zcat {setup_file} | sed -n '{table_start},{table_start+30}p'")
+                            
+                            if table_result.strip():
+                                content += '<h3 style="color: #667eea; margin-top: 15px;">Setup Path Distribution by Category</h3>'
+                                
+                                # Apply color coding to negative slack ranges
+                                colored_table = self._colorize_histogram_table(table_result.strip())
+                                
+                                content += '<pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: monospace; font-size: 11px;">'
+                                content += colored_table
+                                content += '</pre>'
+                            
+                            # Get summary info
+                            summary_result = self.file_utils.run_command(f"zcat {setup_file} | grep -E 'WNS|TNS|NVP' | head -10")
+                            if summary_result.strip():
+                                content += '<h3 style="color: #667eea; margin-top: 20px;">Setup Timing Summary</h3>'
+                                
+                                # Apply color coding to summary
+                                colored_summary = self._colorize_timing_summary(summary_result.strip())
+                                
+                                content += '<pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; font-family: monospace; font-size: 12px;">'
+                                content += colored_summary
+                                content += '</pre>'
+                    
+                    content += f'<p style="margin-top: 10px; font-size: 11px; color: #666;"><strong>Source:</strong> {setup_file}</p>'
+                    
+                except Exception as e:
+                    content += f'<p style="color: #e74c3c;">Error parsing setup histogram: {e}</p>'
+            
+            # Hold Timing Section
+            if hold_file:
+                try:
+                    content += '<h2 style="color: #e67e22; background: #fef5e7; padding: 10px; border-left: 4px solid #e67e22; margin-top: 30px;">Hold Timing</h2>'
+                    
+                    # Extract Table 8 specifically (category + sub_category + scenario)
+                    # This is detailed breakdown without logic depth
+                    result = self.file_utils.run_command(f"zcat {hold_file} | grep -n 'histogram' | grep '|'")
+                    if result.strip():
+                        histogram_lines = result.strip().split('\n')
+                        if len(histogram_lines) >= 2:
+                            # Get the second-to-last table (Table 8) - sub-category breakdown
+                            # Last table is Table 9 with logic_depth, we want the one before it
+                            table_8_start = int(histogram_lines[-2].split(':')[0])
+                            table_9_start = int(histogram_lines[-1].split(':')[0])
+                            
+                            # Extract only Table 8 (stop before Table 9 starts)
+                            # Go back 2 lines from Table 9 start to avoid including its header
+                            table_8_end = table_9_start - 2
+                            
+                            table_result = self.file_utils.run_command(f"zcat {hold_file} | sed -n '{table_8_start},{table_8_end}p'")
+                            
+                            if table_result.strip():
+                                content += '<h3 style="color: #667eea; margin-top: 15px;">Hold Path Distribution by Category (Table 8)</h3>'
+                                content += '<p style="font-size: 12px; color: #666;">Detailed breakdown showing path distribution across categories and sub-categories.</p>'
+                                
+                                # Apply color coding to negative slack ranges
+                                colored_table = self._colorize_histogram_table(table_result.strip())
+                                
+                                content += '<pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: monospace; font-size: 10px;">'
+                                content += colored_table
+                                content += '</pre>'
+                    
+                    # Get hold timing summary with WNS/TNS/NVP
+                    summary_result = self.file_utils.run_command(f"zcat {hold_file} | grep -E 'WNS|TNS|NVP' | head -10")
+                    if summary_result.strip():
+                        content += '<h3 style="color: #667eea; margin-top: 20px;">Hold Timing Summary</h3>'
+                        
+                        # Apply color coding to summary
+                        colored_summary = self._colorize_timing_summary(summary_result.strip())
+                        
+                        content += '<pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; font-family: monospace; font-size: 12px;">'
+                        content += colored_summary
+                        content += '</pre>'
+                    
+                    content += f'<p style="margin-top: 10px; font-size: 11px; color: #666;"><strong>Source:</strong> {hold_file}</p>'
+                    
+                except Exception as e:
+                    content += f'<p style="color: #e74c3c;">Error parsing hold histogram: {e}</p>'
+            
+            return content
+            
+        except Exception as e:
+            import traceback
+            return f'<div class="no-data">Error loading timing histogram: {e}<br><pre>{traceback.format_exc()}</pre></div>'
+    
+    def _get_images_html_content(self):
+        """Extract images content for unified HTML with full categorization"""
+        try:
+            # Find images directory
+            images_dir = os.path.join(self.workarea, f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/IMAGES")
+            
+            if not os.path.exists(images_dir):
+                return '<div class="no-data">No debug images directory found</div>'
+            
+            # Find all image files (excluding hidden files starting with .)
+            image_files = []
+            for ext in ['*.png', '*.jpg', '*.jpeg', '*.gif']:
+                all_files = glob.glob(os.path.join(images_dir, ext))
+                # Filter out hidden files
+                image_files.extend([f for f in all_files if not os.path.basename(f).startswith('.')])
+            
+            if not image_files:
+                return f'<div class="no-data">No images found<br><small>{images_dir}</small></div>'
+            
+            # Categorize images
+            categorized_images = self._categorize_images(image_files)
+            
+            content = '<div class="section-header">Debug Images Gallery</div>'
+            content += f'<p><strong>Total Images:</strong> {len(image_files)} | <strong>Directory:</strong> {images_dir}</p>'
+            
+            # Add styles
+            content += '''
+            <style>
+                .category-container {
+                    margin: 20px 0;
+                    border: 1px solid #ddd;
+                    border-radius: 8px;
+                    overflow: hidden;
+                }
+                .category-header {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 15px 20px;
+                    cursor: pointer;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-weight: bold;
+                    font-size: 16px;
+                }
+                .category-header:hover {
+                    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+                }
+                .category-toggle {
+                    transition: transform 0.3s ease;
+                }
+                .category-toggle.collapsed {
+                    transform: rotate(-90deg);
+                }
+                .category-content {
+                    padding: 20px;
+                    background: #f9f9f9;
+                    display: block;
+                }
+                .category-content.collapsed {
+                    display: none;
+                }
+                .subcategory-header {
+                    background: #34495e;
+                    color: white;
+                    padding: 10px 15px;
+                    margin: 15px 0 10px 0;
+                    border-radius: 5px;
+                    font-weight: bold;
+                }
+                .image-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                    gap: 15px;
+                    margin: 15px 0;
+                }
+                .image-card {
+                    border: 1px solid #ddd;
+                    border-radius: 8px;
+                    padding: 10px;
+                    background: white;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                }
+                .image-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                }
+                .image-card img {
+                    width: 100%;
+                    height: 160px;
+                    object-fit: contain;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    background: #f5f5f5;
+                }
+                .image-name {
+                    font-size: 10px;
+                    margin-top: 8px;
+                    color: #666;
+                    word-break: break-all;
+                    line-height: 1.3;
+                }
+                .image-description {
+                    font-size: 9px;
+                    color: #999;
+                    margin-top: 4px;
+                    font-style: italic;
+                }
+                .image-count {
+                    background: rgba(255,255,255,0.2);
+                    padding: 2px 8px;
+                    border-radius: 12px;
+                    font-size: 12px;
+                }
+                .image-modal {
+                    display: none;
+                    position: fixed;
+                    z-index: 10000;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0,0,0,0.95);
+                    justify-content: center;
+                    align-items: center;
+                }
+                .image-modal.active {
+                    display: flex;
+                }
+                .image-modal img {
+                    max-width: 95%;
+                    max-height: 95%;
+                    border-radius: 5px;
+                }
+                .image-modal-close {
+                    position: absolute;
+                    top: 20px;
+                    right: 40px;
+                    color: white;
+                    font-size: 40px;
+                    font-weight: bold;
+                    cursor: pointer;
+                }
+                .show-more-btn {
+                    display: block;
+                    margin: 15px auto;
+                    padding: 10px 30px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border: none;
+                    border-radius: 25px;
+                    font-size: 14px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                }
+                .show-more-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                }
+                .show-more-btn:active {
+                    transform: translateY(0);
+                }
+                .image-card.hidden {
+                    display: none;
+                }
+            </style>
+            '''
+            
+            # Category priority order
+            category_priority = [
+                'Synthesis Flow',
+                'Floorplan/Layout',
+                'Placement',
+                'Clock Tree',
+                'Routing',
+                'Timing',
+                'Power',
+                'Signal Integrity',
+                'DRC/DRV',
+                'DRC Violation Snapshots',
+                'ECO/Signoff Analysis',
+                'Other'
+            ]
+            
+            # Generate categorized sections
+            for category in category_priority:
+                if category not in categorized_images:
+                    continue
+                    
+                # Count images in this category
+                category_image_count = sum(len(categorized_images[category][subcategory]) 
+                                         for subcategory in categorized_images[category])
+                
+                if category_image_count == 0:
+                    continue
+                    
+                cat_id = category.replace(' ', '_').replace('/', '_')
+                content += f'''
+                <div class="category-container">
+                    <div class="category-header" onclick="toggleImgCategory('{cat_id}')">
+                        <span>{category}</span>
+                        <span><span class="image-count">{category_image_count} images</span> <span class="category-toggle" id="toggle_{cat_id}">▼</span></span>
+                    </div>
+                    <div class="category-content" id="content_{cat_id}">
+                '''
+                
+                # Generate subcategories
+                subcat_index = 0
+                for subcategory in categorized_images[category]:
+                    images = categorized_images[category][subcategory]
+                    if not images:
+                        continue
+                    
+                    subcat_id = f"{cat_id}_subcat_{subcat_index}"
+                    subcat_index += 1
+                    initial_show = 12  # Show first 12 images by default
+                    
+                    content += f'''
+                        <div class="subcategory-header">{subcategory} ({len(images)} images)</div>
+                        <div class="image-grid" id="grid_{subcat_id}">
+                    '''
+                    
+                    for idx, img_data in enumerate(images):
+                        img_path = img_data['path']
+                        img_name = img_data['name']
+                        img_desc = img_data['description']
+                        img_url = f"file://{os.path.abspath(img_path)}"
+                        
+                        # Add 'hidden' class to images beyond initial_show count
+                        hidden_class = ' hidden' if idx >= initial_show else ''
+                        
+                        content += f'''
+                            <div class="image-card{hidden_class}">
+                                <img src="{img_url}" alt="{img_name}" onclick="showImageModal(this.src)" title="{img_desc}">
+                                <div class="image-name">{img_name}</div>
+                                <div class="image-description">{img_desc}</div>
+                            </div>
+                        '''
+                    
+                    content += '</div>'  # Close image-grid
+                    
+                    # Add "Show More" button if there are more than initial_show images
+                    if len(images) > initial_show:
+                        remaining = len(images) - initial_show
+                        content += f'''
+                        <button class="show-more-btn" onclick="showMoreImages('{subcat_id}', this)">
+                            Show {remaining} More Images
+                        </button>
+                        '''
+                
+                content += '''
+                    </div>
+                </div>
+                '''
+            
+            # Add image modal and scripts
+            content += '''
+            <div id="imageModal" class="image-modal" onclick="hideImageModal()">
+                <span class="image-modal-close">&times;</span>
+                <img id="modalImage" src="">
+            </div>
+            <script>
+                function showImageModal(src) {
+                    document.getElementById('modalImage').src = src;
+                    document.getElementById('imageModal').classList.add('active');
+                }
+                function hideImageModal() {
+                    document.getElementById('imageModal').classList.remove('active');
+                }
+                function toggleImgCategory(categoryId) {
+                    var content = document.getElementById('content_' + categoryId);
+                    var toggle = document.getElementById('toggle_' + categoryId);
+                    if (content.classList.contains('collapsed')) {
+                        content.classList.remove('collapsed');
+                        toggle.classList.remove('collapsed');
+                        toggle.textContent = '▼';
+                    } else {
+                        content.classList.add('collapsed');
+                        toggle.classList.add('collapsed');
+                        toggle.textContent = '▶';
+                    }
+                }
+                function showMoreImages(subcatId, button) {
+                    var grid = document.getElementById('grid_' + subcatId);
+                    var hiddenImages = grid.querySelectorAll('.image-card.hidden');
+                    
+                    // Show next batch of images (12 at a time)
+                    var showCount = Math.min(12, hiddenImages.length);
+                    for (var i = 0; i < showCount; i++) {
+                        hiddenImages[i].classList.remove('hidden');
+                    }
+                    
+                    // Update button text or hide it if all images are shown
+                    var remainingHidden = grid.querySelectorAll('.image-card.hidden').length;
+                    if (remainingHidden > 0) {
+                        button.textContent = 'Show ' + remainingHidden + ' More Images';
+                    } else {
+                        button.style.display = 'none';
+                    }
+                }
+            </script>
+            '''
+            
+            return content
+            
+        except Exception as e:
+            import traceback
+            return f'<div class="no-data">Error loading images: {e}<br><pre>{traceback.format_exc()}</pre></div>'
+    
+    def _categorize_images(self, image_files):
+        """Categorize images into sections based on patterns"""
+        import re
+        
+        # Image categories with patterns (same as standalone report)
+        image_categories = {
+            'Synthesis Flow': {
+                'RTL-to-Gate Analysis': [
+                    (r'rtl2gate_layout', 95, 'RTL-to-gate layout visualization'),
+                    (r'rtl2gate_glbroutecongestion', 90, 'Global routing congestion from synthesis'),
+                    (r'rtl2gate_traces.*clock.*color', 85, 'Clock trace analysis from synthesis'),
+                    (r'rtl2gate_traces.*color', 80, 'Signal trace analysis from synthesis'),
+                ],
+                'Clock Trace Analysis': [
+                    (r'rtl2gate_traces_i1_clk_color', 90, 'i1 clock trace analysis'),
+                    (r'rtl2gate_traces_i2_clk_color', 90, 'i2 clock trace analysis'),
+                    (r'rtl2gate_traces_m1_clk_color', 85, 'm1 clock trace analysis'),
+                    (r'rtl2gate_traces_clkgate_color', 80, 'Clock gating trace analysis'),
+                ],
+                'Signal Trace Analysis': [
+                    (r'rtl2gate_traces_regin_color', 75, 'Register input trace analysis'),
+                    (r'rtl2gate_traces_regout_color', 75, 'Register output trace analysis'),
+                    (r'rtl2gate_traces_feedthrough_color', 70, 'Feedthrough trace analysis'),
+                    (r'rtl2gate_traces_wrapper_path_color', 70, 'Wrapper path trace analysis'),
+                ]
+            },
+            'DRC Violation Snapshots': {
+                'Metal Short Violations': [
+                    (r'.*metal_short.*zoom', 95, 'Metal short violation snapshot'),
+                    (r'.*metal_short', 90, 'Metal short violation'),
+                ],
+                'End of Line Keepout Violations': [
+                    (r'.*endofline_keepout.*zoom', 95, 'End of line keepout violation snapshot'),
+                    (r'.*endofline_keepout', 90, 'End of line keepout violation'),
+                ],
+                'Via Stack Violations': [
+                    (r'maxviastack.*v3s', 90, 'Via stack violation V3S layer'),
+                    (r'maxviastack.*v4t', 90, 'Via stack violation V4T layer'),
+                    (r'maxviastack', 85, 'Via stack violations'),
+                ],
+                'Spacing Violations': [
+                    (r'parallel_run_length_spacing', 85, 'Parallel run length spacing violation'),
+                    (r'spacing.*violation', 80, 'Spacing violations'),
+                ],
+                'General DRC Snapshots': [
+                    (r'.*zoom.*\.png$', 80, 'DRC violation snapshot'),
+                    (r'.*drc.*snapshot', 75, 'DRC snapshot'),
+                    (r'.*violation.*zoom', 70, 'Violation snapshot'),
+                ]
+            },
+            'ECO/Signoff Analysis': {
+                'ECO Impact Analysis': [
+                    (r'eco.*images.*eco_in', 90, 'ECO input analysis'),
+                    (r'cell_displacement.*eco_in', 85, 'Cell displacement ECO analysis'),
+                    (r'cell_displacement', 80, 'Cell displacement analysis'),
+                    (r'eco_summary.*drc', 85, 'ECO DRC summary'),
+                ],
+                'Legalization Issues': [
+                    (r'bad_legalizations', 80, 'Bad legalization cases'),
+                    (r'legalization.*issue', 75, 'Legalization issues'),
+                ]
+            },
+            'Timing': {
+                'Hold Violations': [
+                    (r'timing\.hold\.external\.(input|output)\.worst.*failed.*paths', 100, 'Critical hold timing violations'),
+                    (r'timing\.hold\.external\.(input|output)\.path_slack_heatmap', 95, 'Hold timing slack heatmap'),
+                    (r'timing\.hold\.internal\.(input|output)\.worst.*failed.*paths', 90, 'Internal hold violations'),
+                    (r'timing\.hold\..*violations', 85, 'Hold timing violations'),
+                    (r'timing\.hold', 80, 'General hold timing analysis'),
+                ],
+                'Setup Violations': [
+                    (r'timing\.setup\.external\.(input|output)\.worst.*failed.*paths', 100, 'Critical setup timing violations'),
+                    (r'timing\.setup\.external\.(input|output)\.path_slack_heatmap', 95, 'Setup timing slack heatmap'),
+                    (r'timing\.setup\.internal\.(input|output)\.worst.*failed.*paths', 90, 'Internal setup violations'),
+                    (r'timing\.setup\..*violations', 85, 'Setup timing violations'),
+                    (r'timing\.setup', 80, 'General setup timing analysis'),
+                ],
+                'Input/Output Timing': [
+                    (r'timing\..*external\.input', 85, 'Input timing analysis'),
+                    (r'timing\..*external\.output', 85, 'Output timing analysis'),
+                    (r'timing\..*io.*constraints', 75, 'I/O timing constraints'),
+                    (r'timing\..*external', 70, 'External timing analysis'),
+                ],
+                'General Timing': [
+                    (r'timing\..*slack.*histogram', 85, 'Timing slack distribution'),
+                    (r'timing\..*summary', 80, 'Overall timing summary'),
+                    (r'timing\..*paths', 75, 'Critical path analysis'),
+                    (r'timing\..*report', 70, 'General timing report'),
+                    (r'timing\.', 65, 'Timing analysis'),
+                ]
+            },
+            'DRC/DRV': {
+                'Design Rule Violations': [
+                    (r'drc.*violations', 90, 'Design rule check violations'),
+                    (r'drv.*violations', 90, 'Design rule violations'),
+                    (r'drc.*summary', 85, 'DRC summary report'),
+                    (r'spacing.*violations', 80, 'Metal spacing violations'),
+                    (r'width.*violations', 80, 'Wire width violations'),
+                ],
+                'Layer Violations': [
+                    (r'drc.*layer', 80, 'Layer-specific DRC violations'),
+                    (r'drv.*layer', 80, 'Layer-specific violations'),
+                ],
+                'DRC Analysis': [
+                    (r'drc\.all\.class', 85, 'DRC violations by class'),
+                    (r'drc\.all\.criticality', 85, 'DRC violations by criticality'),
+                    (r'drc\.all\.interaction', 80, 'DRC interaction analysis'),
+                    (r'drc\.all\.layer', 80, 'DRC violations by layer'),
+                    (r'drc\.all\.type', 80, 'DRC violations by type'),
+                    (r'drc\.signal_clock_or_preroute', 75, 'Signal/clock/preroute DRC'),
+                    (r'drc\.', 70, 'General DRC analysis'),
+                ],
+                'DRV Analysis': [
+                    (r'drv\.max_capacitance', 85, 'Maximum capacitance violations'),
+                    (r'drv\.max_transition.*net\.clock', 85, 'Clock net max transition violations'),
+                    (r'drv\.max_transition.*net\.signal', 80, 'Signal net max transition violations'),
+                    (r'drv\.max_transition', 80, 'Maximum transition violations'),
+                    (r'drv\.max_fanout', 75, 'Maximum fanout violations'),
+                    (r'drv\.', 70, 'General DRV analysis'),
+                ]
+            },
+            'Power': {
+                'Power Density': [
+                    (r'power_density\.total', 95, 'Total power density distribution'),
+                    (r'power_density\.switching', 90, 'Switching power density'),
+                    (r'power_density\.leakage', 90, 'Leakage power density'),
+                    (r'power_density', 85, 'Power density analysis'),
+                ],
+                'Rail Analysis': [
+                    (r'rail_analysis', 85, 'Power rail analysis'),
+                    (r'ir_drop', 85, 'IR drop analysis'),
+                ],
+                'General Power': [
+                    (r'power\..*histogram', 80, 'Power distribution'),
+                    (r'power\..*summary', 75, 'Power summary'),
+                    (r'power\.', 70, 'Power analysis'),
+                ]
+            },
+            'Signal Integrity': {
+                'Crosstalk Analysis': [
+                    (r'crosstalk', 85, 'Signal crosstalk analysis'),
+                    (r'coupling', 80, 'Coupling analysis'),
+                ],
+                'SI Violations': [
+                    (r'si.*violations', 85, 'Signal integrity violations'),
+                    (r'noise.*violations', 80, 'Noise violations'),
+                ]
+            },
+            'Floorplan/Layout': {
+                'Floorplan': [
+                    (r'floorplan', 85, 'Floorplan view'),
+                    (r'fp_view', 80, 'Floorplan visualization'),
+                ],
+                'Placement Density': [
+                    (r'placement.*density', 85, 'Cell placement density'),
+                    (r'density.*map', 80, 'Density heatmap'),
+                ],
+                'Macros and Blockages': [
+                    (r'macro.*placement', 80, 'Macro placement'),
+                    (r'blockage', 75, 'Placement blockages'),
+                ]
+            },
+            'Placement': {
+                'Placement Quality': [
+                    (r'placement.*congestion', 90, 'Placement congestion'),
+                    (r'placement.*legalization', 85, 'Legalization analysis'),
+                    (r'placement.*quality', 80, 'Placement quality'),
+                ],
+                'Via Ladder': [
+                    (r'via_ladder', 85, 'Via ladder visualization'),
+                ]
+            },
+            'Clock Tree': {
+                'Clock Tree QoR': [
+                    (r'clock_tree.*arc_wire_resistance', 95, 'Arc wire resistance analysis'),
+                    (r'clock_tree.*spine_qor', 90, 'Spine QoR analysis'),
+                    (r'clock_tree.*qor', 85, 'Clock tree quality of results'),
+                ],
+                'Clock Latency': [
+                    (r'clock.*latency', 85, 'Clock latency analysis'),
+                    (r'clock.*skew', 85, 'Clock skew analysis'),
+                ],
+                'General Clock': [
+                    (r'clock_tree', 80, 'Clock tree analysis'),
+                    (r'clock\.', 75, 'Clock analysis'),
+                ]
+            },
+            'Routing': {
+                'Routing Congestion': [
+                    (r'routing.*congestion', 90, 'Routing congestion analysis'),
+                    (r'congestion.*map', 85, 'Congestion heatmap'),
+                ],
+                'Route Length': [
+                    (r'routing\.route_length\.net_type', 85, 'Route length by net type'),
+                    (r'routing\.route_length', 80, 'Wire length distribution'),
+                ],
+                'General Routing': [
+                    (r'routing\.', 75, 'Routing analysis'),
+                    (r'route\.', 70, 'Route visualization'),
+                ]
+            },
+            'Other': {
+                'Uncategorized': []
+            }
+        }
+        
+        # Initialize categorized storage
+        categorized = {}
+        for category in image_categories:
+            categorized[category] = {}
+            for subcategory in image_categories[category]:
+                categorized[category][subcategory] = []
+        
+        # Categorize each image
+        for image_path in image_files:
+            image_name = os.path.basename(image_path).lower()
+            best_match = None
+            best_score = 0
+            best_category = 'Other'
+            best_subcategory = 'Uncategorized'
+            best_description = 'Debug image'
+            
+            # Check against all patterns
+            for category, subcategories in image_categories.items():
+                for subcategory, patterns in subcategories.items():
+                    for pattern, score, description in patterns:
+                        if re.search(pattern, image_name) and score > best_score:
+                            best_score = score
+                            best_category = category
+                            best_subcategory = subcategory
+                            best_description = description
+            
+            # P&R flow stage priority boosts
+            flow_stage_boosts = {
+                'postroute': 50,
+                'route': 30,
+                'cts': 20,
+                'place': 10,
+                'plan': 5
+            }
+            
+            flow_stage_names = {
+                'postroute': 'Post-route',
+                'route': 'Routing',
+                'cts': 'CTS',
+                'place': 'Placement',
+                'plan': 'Floorplan'
+            }
+            
+            for stage, boost in flow_stage_boosts.items():
+                if re.search(rf'\.{stage}\.custom\.', image_name):
+                    best_score += boost
+                    best_description += f' ({flow_stage_names[stage]} stage)'
+                    break
+            
+            # Default score for uncategorized
+            if best_score == 0:
+                best_score = 10
+            
+            # Add to appropriate category
+            categorized[best_category][best_subcategory].append({
+                'path': image_path,
+                'name': os.path.basename(image_path),
+                'score': best_score,
+                'description': best_description
+            })
+        
+        # Sort images within each subcategory by score (descending)
+        for category in categorized:
+            for subcategory in categorized[category]:
+                categorized[category][subcategory].sort(key=lambda x: x['score'], reverse=True)
+        
+        return categorized
+    
+    def _generate_unified_dc_html(self):
+        """Generate unified DC (Synthesis) HTML report"""
+        try:
+            from datetime import datetime
+            import base64
+            
+            # Generate timestamp for filename
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            html_filename = f"{self.design_info.top_hier}_{os.environ.get('USER', 'avice')}_DC_comprehensive_{timestamp}.html"
+            html_path = os.path.abspath(html_filename)
+            
+            # Read and encode logo
+            logo_data = ""
+            logo_path = os.path.join(os.path.dirname(__file__), "images/avice_logo.png")
+            if os.path.exists(logo_path):
+                with open(logo_path, 'rb') as f:
+                    logo_data = base64.b64encode(f.read()).decode('utf-8')
+            
+            print(f"{Color.CYAN}Generating Unified DC HTML Report...{Color.RESET}")
+            
+            # Collect content from helper methods
+            qor_data_content = self._get_dc_qor_html_content()
+            beflow_config_content = self._get_dc_beflow_html_content()
+            images_content = self._get_dc_images_html_content()
+            
+            html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DC Comprehensive Report - {self.design_info.top_hier}</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }}
+        .container {{
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }}
+        .logo {{
+            height: 60px;
+            cursor: pointer;
+        }}
+        .header-text h1 {{
+            font-size: 28px;
+            margin-bottom: 10px;
+        }}
+        .header-text p {{
+            font-size: 14px;
+            opacity: 0.9;
+        }}
+        .logo-modal {{
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+        }}
+        .logo-modal.active {{
+            display: flex;
+        }}
+        .logo-modal-content {{
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+        }}
+        .logo-modal-close {{
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }}
+        .tab-navigation {{
+            display: flex;
+            background: #34495e;
+            border-bottom: 3px solid #667eea;
+        }}
+        .tab-btn {{
+            flex: 1;
+            padding: 15px 20px;
+            background: #34495e;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border-right: 1px solid #2c3e50;
+        }}
+        .tab-btn:last-child {{
+            border-right: none;
+        }}
+        .tab-btn:hover {{
+            background: #2c3e50;
+        }}
+        .tab-btn.active {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: translateY(-2px);
+        }}
+        .tab-content {{
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.3s ease;
+        }}
+        .tab-content.active {{
+            display: block;
+        }}
+        @keyframes fadeIn {{
+            from {{ opacity: 0; transform: translateY(-10px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+        .section-header {{
+            font-size: 24px;
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }}
+        .no-data {{
+            padding: 40px;
+            text-align: center;
+            color: #999;
+            font-size: 18px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }}
+        th, td {{
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }}
+        th {{
+            background-color: #34495e;
+            color: white;
+            font-weight: bold;
+        }}
+        tr:nth-child(even) {{
+            background-color: #f9f9f9;
+        }}
+        tr:hover {{
+            background-color: #f0f0f0;
+        }}
+        
+        /* Copyright Footer */
+        .footer {{
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 10px;
+            font-size: 14px;
+        }}
+        
+        .footer p {{
+            margin: 5px 0;
+        }}
+        
+        .footer strong {{
+            color: #00ff00;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">"""
+            
+            if logo_data:
+                html_content += f"""
+            <img class='logo' src='data:image/png;base64,{logo_data}' alt='AVICE Logo' onclick="showLogoModal()" title="Click to enlarge">"""
+            
+            html_content += f"""
+            <div class="header-text">
+                <h1>DC (Synthesis) Comprehensive Report</h1>
+                <p>Design: {self.design_info.top_hier} | IPO: {self.design_info.ipo}</p>
+                <p>Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+            </div>
+        </div>
+        
+        <!-- Logo Modal -->
+        <div id="logoModal" class="logo-modal" onclick="hideLogoModal()">
+            <span class="logo-modal-close">&times;</span>"""
+            
+            if logo_data:
+                html_content += f"""
+            <img class="logo-modal-content" src='data:image/png;base64,{logo_data}' alt='AVICE Logo'>"""
+            
+            html_content += """
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" onclick="openTab(event, 'qor-data')">QoR Data</button>
+            <button class="tab-btn" onclick="openTab(event, 'beflow-config')">BeFlow Config</button>
+            <button class="tab-btn" onclick="openTab(event, 'images')">Synthesis Images</button>
+        </div>
+        
+        <!-- QoR Data Tab -->
+        <div id="qor-data" class="tab-content active">"""
+            html_content += qor_data_content
+            html_content += """
+        </div>
+        
+        <!-- BeFlow Config Tab -->
+        <div id="beflow-config" class="tab-content">"""
+            html_content += beflow_config_content
+            html_content += """
+        </div>
+        
+        <!-- Synthesis Images Tab -->
+        <div id="images" class="tab-content">"""
+            html_content += images_content
+            html_content += """
+        </div>
+    </div>
+    
+    <script>
+        // Tab switching function
+        function openTab(evt, tabName) {
+            var tabContents = document.getElementsByClassName('tab-content');
+            for (var i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            var tabBtns = document.getElementsByClassName('tab-btn');
+            for (var i = 0; i < tabBtns.length; i++) {
+                tabBtns[i].classList.remove('active');
+            }
+            
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+        
+        // Logo modal functions
+        function showLogoModal() {
+            document.getElementById('logoModal').classList.add('active');
+        }
+        
+        function hideLogoModal() {
+            document.getElementById('logoModal').classList.remove('active');
+        }
+        
+        // Allow ESC key to close logo modal
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                hideLogoModal();
+            }
+        });
+        
+        // Back to top button functionality - wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {{
+            var backToTopBtn = document.getElementById('backToTopBtn');
+            if (backToTopBtn) {{
+                window.addEventListener('scroll', function() {{
+                    if (window.pageYOffset > 300) {{
+                        backToTopBtn.style.display = 'block';
+                    }} else {{
+                        backToTopBtn.style.display = 'none';
+                    }}
+                }});
+                
+                backToTopBtn.addEventListener('click', function() {{
+                    window.scrollTo(0, 0);
+                }});
+            }}
+        }});
+    </script>
+    
+    <button id="backToTopBtn" style="display: none; position: fixed; bottom: 30px; right: 30px; 
+            z-index: 99; border: none; outline: none; background-color: #667eea; color: white; 
+            cursor: pointer; padding: 15px 20px; border-radius: 50px; font-size: 16px; 
+            font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease;"
+            onmouseover="this.style.backgroundColor='#5568d3'; this.style.transform='scale(1.1)';"
+            onmouseout="this.style.backgroundColor='#667eea'; this.style.transform='scale(1)';">
+        ↑ Top
+    </button>
+    
+    <!-- Copyright Footer -->
+    <div class="footer">
+        <p><strong>AVICE DC Comprehensive Report</strong></p>
+        <p>Copyright (c) 2025 Alon Vice (avice)</p>
+        <p>Contact: avice@nvidia.com</p>
+    </div>
+</body>
+</html>"""
+            
+            # Write HTML to file
+            with open(html_path, 'w', encoding='utf-8') as f:
+                f.write(html_content)
+            
+            print(f"  {Color.GREEN}[OK] Unified DC HTML Report Generated{Color.RESET}")
+            print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{os.path.basename(html_path)}{Color.RESET} &")
+            
+            return html_path
+            
+        except Exception as e:
+            print(f"  {Color.RED}Error generating unified DC HTML: {e}{Color.RESET}")
+            import traceback
+            traceback.print_exc()
+            return None
+    
+    def _get_dc_qor_html_content(self):
+        """Extract DC QoR data content for unified HTML"""
+        try:
+            content = '<div class="section-header">QoR Data (Quality of Results)</div>'
+            
+            # Find QoR report
+            qor_report = os.path.join(self.workarea, f"syn_flow/dc/reports/{self.design_info.top_hier}_rtl2gate.qor.rpt")
+            
+            if not os.path.exists(qor_report):
+                return content + '<div class="no-data">QoR report not found</div>'
+            
+            try:
+                with open(qor_report, 'r', encoding='utf-8') as f:
+                    qor_content = f.read()
+                
+                # Extract key sections
+                content += '<h3 style="color: #667eea; margin-top: 20px;">Timing Summary</h3>'
+                
+                # Extract timing information
+                timing_info = {}
+                for line in qor_content.split('\n'):
+                    line = line.strip()
+                    if 'Timing Path Group' in line or 'clock' in line.lower():
+                        if '(Setup)' in line or '(Hold)' in line:
+                            parts = line.split()
+                            if len(parts) >= 3:
+                                group = parts[0]
+                                if 'Setup' in line:
+                                    timing_info[f"{group}_setup"] = line
+                                elif 'Hold' in line:
+                                    timing_info[f"{group}_hold"] = line
+                
+                if timing_info:
+                    content += '<table><thead><tr><th>Timing Group</th><th>Information</th></tr></thead><tbody>'
+                    for group, info in timing_info.items():
+                        content += f'<tr><td>{group}</td><td style="font-family: monospace; font-size: 11px;">{info}</td></tr>'
+                    content += '</tbody></table>'
+                
+                # Extract design metrics
+                content += '<h3 style="color: #667eea; margin-top: 30px;">Design Metrics</h3>'
+                
+                metrics = {}
+                in_design_section = False
+                for line in qor_content.split('\n'):
+                    if 'Design' in line and 'Compiler' not in line:
+                        in_design_section = True
+                    if in_design_section and ':' in line:
+                        parts = line.split(':', 1)
+                        if len(parts) == 2:
+                            key = parts[0].strip()
+                            value = parts[1].strip()
+                            if key and value and len(key) < 50:
+                                metrics[key] = value
+                    if in_design_section and line.strip() == '':
+                        if metrics:
+                            break
+                
+                if metrics:
+                    content += '<table><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>'
+                    for key, value in list(metrics.items())[:20]:  # Limit to first 20 metrics
+                        content += f'<tr><td><strong>{key}</strong></td><td>{value}</td></tr>'
+                    content += '</tbody></table>'
+                else:
+                    content += '<p>No design metrics found in QoR report</p>'
+                
+                # Add full report preview
+                content += '<h3 style="color: #667eea; margin-top: 30px;">Full QoR Report Preview</h3>'
+                content += f'<p><strong>Report Location:</strong> {qor_report}</p>'
+                content += '<pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; max-height: 500px; font-size: 11px; line-height: 1.4;">'
+                content += qor_content[:5000]  # First 5000 characters
+                if len(qor_content) > 5000:
+                    content += '\n\n... (report truncated, see full file for complete data)'
+                content += '</pre>'
+                
+            except Exception as e:
+                content += f'<div class="no-data">Error reading QoR report: {e}</div>'
+            
+            return content
+            
+        except Exception as e:
+            import traceback
+            return f'<div class="no-data">Error loading QoR data: {e}<br><pre>{traceback.format_exc()}</pre></div>'
+    
+    def _get_dc_beflow_html_content(self):
+        """Extract BeFlow configuration content for unified HTML"""
+        try:
+            content = '<div class="section-header">BeFlow Configuration</div>'
+            
+            # Find BeFlow config file
+            beflow_config = os.path.join(self.workarea, "syn_flow/dc/beflow_config.yaml")
+            
+            if not os.path.exists(beflow_config):
+                return content + '<div class="no-data">BeFlow configuration file not found</div>'
+            
+            try:
+                import yaml
+                with open(beflow_config, 'r', encoding='utf-8') as f:
+                    config_data = yaml.safe_load(f)
+                
+                if not config_data:
+                    return content + '<div class="no-data">BeFlow configuration is empty</div>'
+                
+                # Display configuration in organized sections
+                content += '<p>Synthesis flow configuration parameters extracted from beflow_config.yaml</p>'
+                
+                # Group configurations by category
+                categories = {
+                    'Design': ['design', 'top_hier', 'unit', 'module'],
+                    'Clocks': ['clock', 'clk', 'frequency', 'period'],
+                    'Timing': ['timing', 'constraint', 'sdc', 'uncertainty'],
+                    'Area': ['area', 'utilization', 'density'],
+                    'Power': ['power', 'leakage', 'dynamic'],
+                    'Technology': ['tech', 'library', 'lib', 'cell'],
+                }
+                
+                def find_matching_keys(data, keywords, prefix=''):
+                    """Recursively find keys matching keywords"""
+                    matches = {}
+                    if isinstance(data, dict):
+                        for key, value in data.items():
+                            full_key = f"{prefix}.{key}" if prefix else key
+                            key_lower = key.lower()
+                            
+                            # Check if key matches any keyword
+                            if any(kw in key_lower for kw in keywords):
+                                if isinstance(value, (str, int, float, bool)):
+                                    matches[full_key] = value
+                                elif isinstance(value, list) and len(value) < 10:
+                                    matches[full_key] = ', '.join(str(v) for v in value)
+                            
+                            # Recursively search nested dicts
+                            if isinstance(value, dict):
+                                nested = find_matching_keys(value, keywords, full_key)
+                                matches.update(nested)
+                    
+                    return matches
+                
+                # Extract and display by category
+                for category, keywords in categories.items():
+                    matches = find_matching_keys(config_data, keywords)
+                    
+                    if matches:
+                        content += f'<h3 style="color: #667eea; margin-top: 30px;">{category} Configuration</h3>'
+                        content += '<table><thead><tr><th>Parameter</th><th>Value</th></tr></thead><tbody>'
+                        for key, value in sorted(matches.items()):
+                            # Truncate very long values
+                            value_str = str(value)
+                            if len(value_str) > 100:
+                                value_str = value_str[:97] + '...'
+                            content += f'<tr><td><strong>{key}</strong></td><td>{value_str}</td></tr>'
+                        content += '</tbody></table>'
+                
+                # Add general/uncategorized parameters
+                content += '<h3 style="color: #667eea; margin-top: 30px;">General Configuration</h3>'
+                
+                def flatten_dict(data, prefix='', max_depth=3, current_depth=0):
+                    """Flatten nested dictionary"""
+                    items = {}
+                    if current_depth >= max_depth or not isinstance(data, dict):
+                        return items
+                    
+                    for key, value in data.items():
+                        full_key = f"{prefix}.{key}" if prefix else key
+                        if isinstance(value, dict):
+                            items.update(flatten_dict(value, full_key, max_depth, current_depth + 1))
+                        elif isinstance(value, (str, int, float, bool)):
+                            items[full_key] = value
+                        elif isinstance(value, list) and len(value) < 10:
+                            items[full_key] = ', '.join(str(v) for v in value)
+                    
+                    return items
+                
+                all_params = flatten_dict(config_data, max_depth=2)
+                
+                # Show first 30 general parameters
+                if all_params:
+                    content += '<table><thead><tr><th>Parameter</th><th>Value</th></tr></thead><tbody>'
+                    for key, value in list(sorted(all_params.items()))[:30]:
+                        value_str = str(value)
+                        if len(value_str) > 100:
+                            value_str = value_str[:97] + '...'
+                        content += f'<tr><td><strong>{key}</strong></td><td>{value_str}</td></tr>'
+                    content += '</tbody></table>'
+                    
+                    if len(all_params) > 30:
+                        content += f'<p style="color: #666; font-style: italic; margin-top: 10px;">Showing 30 of {len(all_params)} parameters. See full file for complete configuration.</p>'
+                
+                # Add link to full config file
+                content += '<h3 style="color: #667eea; margin-top: 30px;">Full Configuration File</h3>'
+                content += f'<p><strong>File Location:</strong> {beflow_config}</p>'
+                
+                # Show first part of raw YAML
+                with open(beflow_config, 'r', encoding='utf-8') as f:
+                    yaml_content = f.read()
+                
+                content += '<pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; max-height: 500px; font-size: 11px; line-height: 1.4;">'
+                content += yaml_content[:3000]  # First 3000 characters
+                if len(yaml_content) > 3000:
+                    content += '\n\n... (file truncated, see full file for complete configuration)'
+                content += '</pre>'
+                
+            except ImportError:
+                # If yaml module not available, show raw file
+                content += '<p style="color: #e74c3c;">YAML parser not available. Showing raw configuration file.</p>'
+                with open(beflow_config, 'r', encoding='utf-8') as f:
+                    yaml_content = f.read()
+                content += '<pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; max-height: 600px; font-size: 11px; line-height: 1.4;">'
+                content += yaml_content
+                content += '</pre>'
+            except Exception as e:
+                content += f'<div class="no-data">Error reading BeFlow configuration: {e}</div>'
+            
+            return content
+            
+        except Exception as e:
+            import traceback
+            return f'<div class="no-data">Error loading BeFlow config: {e}<br><pre>{traceback.format_exc()}</pre></div>'
+    
+    def _get_dc_images_html_content(self):
+        """Extract synthesis images content for unified HTML"""
+        try:
+            # Find DC images directory
+            images_dir = os.path.join(self.workarea, "syn_flow/dc/reports/color")
+            
+            if not os.path.exists(images_dir):
+                return '<div class="no-data">No synthesis images directory found</div>'
+            
+            # Find all image files
+            image_files = []
+            for ext in ['*.png', '*.jpg', '*.jpeg', '*.gif']:
+                image_files.extend(glob.glob(os.path.join(images_dir, ext)))
+            
+            if not image_files:
+                return f'<div class="no-data">No synthesis images found<br><small>{images_dir}</small></div>'
+            
+            # Categorize images (synthesis images will mostly be in "Synthesis Flow" category)
+            categorized_images = self._categorize_images(image_files)
+            
+            content = '<div class="section-header">Synthesis Images Gallery</div>'
+            content += f'<p><strong>Total Images:</strong> {len(image_files)} | <strong>Directory:</strong> {images_dir}</p>'
+            
+            # Add styles (reuse from PnR images)
+            content += '''
+            <style>
+                .category-container {
+                    margin: 20px 0;
+                    border: 1px solid #ddd;
+                    border-radius: 8px;
+                    overflow: hidden;
+                }
+                .category-header {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 15px 20px;
+                    cursor: pointer;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-weight: bold;
+                    font-size: 16px;
+                }
+                .category-header:hover {
+                    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+                }
+                .category-toggle {
+                    transition: transform 0.3s ease;
+                }
+                .category-toggle.collapsed {
+                    transform: rotate(-90deg);
+                }
+                .category-content {
+                    padding: 20px;
+                    background: #f9f9f9;
+                    display: block;
+                }
+                .category-content.collapsed {
+                    display: none;
+                }
+                .subcategory-header {
+                    background: #34495e;
+                    color: white;
+                    padding: 10px 15px;
+                    margin: 15px 0 10px 0;
+                    border-radius: 5px;
+                    font-weight: bold;
+                }
+                .image-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                    gap: 15px;
+                    margin: 15px 0;
+                }
+                .image-card {
+                    border: 1px solid #ddd;
+                    border-radius: 8px;
+                    padding: 10px;
+                    background: white;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                }
+                .image-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                }
+                .image-card img {
+                    width: 100%;
+                    height: 160px;
+                    object-fit: contain;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    background: #f5f5f5;
+                }
+                .image-name {
+                    font-size: 10px;
+                    margin-top: 8px;
+                    color: #666;
+                    word-break: break-all;
+                    line-height: 1.3;
+                }
+                .image-description {
+                    font-size: 9px;
+                    color: #999;
+                    margin-top: 4px;
+                    font-style: italic;
+                }
+                .image-count {
+                    background: rgba(255,255,255,0.2);
+                    padding: 2px 8px;
+                    border-radius: 12px;
+                    font-size: 12px;
+                }
+                .image-modal {
+                    display: none;
+                    position: fixed;
+                    z-index: 10000;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0,0,0,0.95);
+                    justify-content: center;
+                    align-items: center;
+                }
+                .image-modal.active {
+                    display: flex;
+                }
+                .image-modal img {
+                    max-width: 95%;
+                    max-height: 95%;
+                    border-radius: 5px;
+                }
+                .image-modal-close {
+                    position: absolute;
+                    top: 20px;
+                    right: 40px;
+                    color: white;
+                    font-size: 40px;
+                    font-weight: bold;
+                    cursor: pointer;
+                }
+            </style>
+            '''
+            
+            # Category priority order
+            category_priority = [
+                'Synthesis Flow',
+                'Floorplan/Layout',
+                'Placement',
+                'Clock Tree',
+                'Routing',
+                'Timing',
+                'Power',
+                'Signal Integrity',
+                'DRC/DRV',
+                'DRC Violation Snapshots',
+                'ECO/Signoff Analysis',
+                'Other'
+            ]
+            
+            # Generate categorized sections
+            for category in category_priority:
+                if category not in categorized_images:
+                    continue
+                    
+                # Count images in this category
+                category_image_count = sum(len(categorized_images[category][subcategory]) 
+                                         for subcategory in categorized_images[category])
+                
+                if category_image_count == 0:
+                    continue
+                    
+                cat_id = category.replace(' ', '_').replace('/', '_')
+                content += f'''
+                <div class="category-container">
+                    <div class="category-header" onclick="toggleImgCategory('{cat_id}')">
+                        <span>{category}</span>
+                        <span><span class="image-count">{category_image_count} images</span> <span class="category-toggle" id="toggle_{cat_id}">▼</span></span>
+                    </div>
+                    <div class="category-content" id="content_{cat_id}">
+                '''
+                
+                # Generate subcategories
+                subcat_index = 0
+                for subcategory in categorized_images[category]:
+                    images = categorized_images[category][subcategory]
+                    if not images:
+                        continue
+                    
+                    subcat_id = f"{cat_id}_subcat_{subcat_index}"
+                    subcat_index += 1
+                    initial_show = 12  # Show first 12 images by default
+                    
+                    content += f'''
+                        <div class="subcategory-header">{subcategory} ({len(images)} images)</div>
+                        <div class="image-grid" id="grid_{subcat_id}">
+                    '''
+                    
+                    for idx, img_data in enumerate(images):
+                        img_path = img_data['path']
+                        img_name = img_data['name']
+                        img_desc = img_data['description']
+                        img_url = f"file://{os.path.abspath(img_path)}"
+                        
+                        # Add 'hidden' class to images beyond initial_show count
+                        hidden_class = ' hidden' if idx >= initial_show else ''
+                        
+                        content += f'''
+                            <div class="image-card{hidden_class}">
+                                <img src="{img_url}" alt="{img_name}" onclick="showImageModal(this.src)" title="{img_desc}">
+                                <div class="image-name">{img_name}</div>
+                                <div class="image-description">{img_desc}</div>
+                            </div>
+                        '''
+                    
+                    content += '</div>'  # Close image-grid
+                    
+                    # Add "Show More" button if there are more than initial_show images
+                    if len(images) > initial_show:
+                        remaining = len(images) - initial_show
+                        content += f'''
+                        <button class="show-more-btn" onclick="showMoreImages('{subcat_id}', this)">
+                            Show {remaining} More Images
+                        </button>
+                        '''
+                
+                content += '''
+                    </div>
+                </div>
+                '''
+            
+            # Add image modal and scripts
+            content += '''
+            <div id="imageModal" class="image-modal" onclick="hideImageModal()">
+                <span class="image-modal-close">&times;</span>
+                <img id="modalImage" src="">
+            </div>
+            <script>
+                function showImageModal(src) {
+                    document.getElementById('modalImage').src = src;
+                    document.getElementById('imageModal').classList.add('active');
+                }
+                function hideImageModal() {
+                    document.getElementById('imageModal').classList.remove('active');
+                }
+                function toggleImgCategory(categoryId) {
+                    var content = document.getElementById('content_' + categoryId);
+                    var toggle = document.getElementById('toggle_' + categoryId);
+                    if (content.classList.contains('collapsed')) {
+                        content.classList.remove('collapsed');
+                        toggle.classList.remove('collapsed');
+                        toggle.textContent = '▼';
+                    } else {
+                        content.classList.add('collapsed');
+                        toggle.classList.add('collapsed');
+                        toggle.textContent = '▶';
+                    }
+                }
+            </script>
+            '''
+            
+            return content
+            
+        except Exception as e:
+            import traceback
+            return f'<div class="no-data">Error loading images: {e}<br><pre>{traceback.format_exc()}</pre></div>'
     
     def _generate_timing_histogram_html(self):
         """Generate HTML report with timing histogram tables"""
@@ -3601,20 +6404,30 @@ class WorkareaReviewer:
                             html_content = self._create_timing_histogram_html(table_category_result.strip(), table_subcat_result.strip(), table_subcat_scenario_result.strip(), found_stage)
                             
                             # Save HTML file
-                            html_filename = f"{os.environ.get('USER', 'avice')}_innovus_timing_histogram_{self.design_info.top_hier}_{self.design_info.ipo}.html"
+                            html_filename = f"{self.design_info.top_hier}_{os.environ.get('USER', 'avice')}_innovus_timing_histogram_{self.design_info.ipo}.html"
                             html_path = os.path.join(os.getcwd(), html_filename)
                             
                             with open(html_path, 'w', encoding='utf-8') as f:
                                 f.write(html_content)
                             
                             print(f"\n  {Color.CYAN}Timing Histogram HTML Report:{Color.RESET}")
-                            print(f"  Open with: firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+                            print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+                            return os.path.abspath(html_path)  # Return absolute path for master dashboard
                         
         except Exception as e:
             print(f"  Error generating timing histogram HTML: {e}")
+        
+        return None
     
     def _create_timing_histogram_html(self, category_data: str, sub_category_data: str, scenario_data: str, stage: str) -> str:
         """Create HTML content for timing histogram tables"""
+        # Read and encode logo
+        logo_data = ""
+        logo_path = os.path.join(os.path.dirname(__file__), "images/avice_logo.png")
+        if os.path.exists(logo_path):
+            with open(logo_path, "rb") as logo_file:
+                logo_data = base64.b64encode(logo_file.read()).decode('utf-8')
+        
         # Process the three separate tables
         category_table = [line.strip() for line in category_data.split('\n') if line.strip()]
         sub_category_table = [line.strip() for line in sub_category_data.split('\n') if line.strip()]
@@ -3642,58 +6455,109 @@ class WorkareaReviewer:
         .legend h4 {{ margin-top: 0; color: #2c3e50; }}
         .legend ul {{ margin: 10px 0; padding-left: 20px; }}
         .legend li {{ margin: 5px 0; }}
-        .header {{ text-align: center; border-bottom: 3px solid #3498db; padding-bottom: 20px; margin-bottom: 30px; }}
-        .logo {{ text-align: center; margin-bottom: 10px; }}
-        .logo img {{ 
-            max-height: 80px; 
-            max-width: 300px; 
-            height: auto; 
-            width: auto; 
+        .header {{ 
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 20px;
+            align-items: center;
+            border-radius: 15px 15px 0 0;
+            margin: -20px -20px 0 -20px;
+        }}
+        .logo {{
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            background: white;
+            padding: 10px;
             cursor: pointer;
-            transition: transform 0.2s ease;
-            border-radius: 6px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }}
-        .logo img:hover {{
+        .logo:hover {{
             transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
         }}
-        .image-expanded {{
+        .header-text h1 {{
+            font-size: 28px;
+            margin: 0 0 8px 0;
+            color: white;
+            border: none;
+        }}
+        .header-text p {{
+            opacity: 0.9;
+            font-size: 14px;
+            margin: 0;
+        }}
+        .logo-modal {{
+            display: none;
             position: fixed;
-            top: 0;
+            z-index: 9999;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(0, 0, 0, 0.9);
-            z-index: 1000;
-            display: flex;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
             justify-content: center;
             align-items: center;
-            cursor: pointer;
         }}
-        .image-expanded img {{
+        .logo-modal.active {{
+            display: flex;
+        }}
+        .logo-modal-content {{
             max-width: 90%;
             max-height: 90%;
-            border: 3px solid #3498db;
+            border-radius: 10px;
+        }}
+        .logo-modal-close {{
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }}
+        .logo-modal-close:hover {{
+            color: #bbb;
+        }}
+        
+        /* Copyright Footer */
+        .footer {{
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 10px;
+            font-size: 14px;
+        }}
+        
+        .footer p {{
+            margin: 5px 0;
+        }}
+        
+        .footer strong {{
+            color: #00ff00;
         }}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">
-                <img src="/home/avice/scripts/avice_wa_review/images/avice_logo.png" alt="AVICE Logo" onclick="expandImage(this)">
+            <img class='logo' src='data:image/png;base64,{logo_data}' alt='AVICE Logo' onclick="showLogoModal()" title="Click to enlarge">
+            <div class="header-text">
+                <h1>Timing Histogram Analysis</h1>
+                <p>Design: {self.design_info.top_hier} | IPO: {self.design_info.ipo} | Stage: {stage.upper()}</p>
+                <p>Workarea: {self.workarea_abs} | Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
             </div>
-            <h1>Timing Histogram Analysis</h1>
         </div>
         
-        <div class="info">
-            <h3>Report Information</h3>
-            <p><strong>Design:</strong> {self.design_info.top_hier}</p>
-            <p><strong>IPO:</strong> {self.design_info.ipo}</p>
-            <p><strong>Tag:</strong> {self.design_info.tag}</p>
-            <p><strong>Workarea:</strong> {self.workarea_abs}</p>
-            <p><strong>Stage:</strong> {stage.upper()}</p>
-            <p><strong>Generated:</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+        <!-- Logo Modal -->
+        <div id="logoModal" class="logo-modal" onclick="hideLogoModal()">
+            <span class="logo-modal-close">&times;</span>
+            <img class="logo-modal-content" src='data:image/png;base64,{logo_data}' alt='AVICE Logo'>
         </div>
         
                 <h2>Category Breakdown</h2>
@@ -3959,48 +6823,56 @@ class WorkareaReviewer:
     </div>
     
     <script>
-        function expandImage(imgElement) {{
-            // Create overlay
-            var overlay = document.createElement('div');
-            overlay.className = 'image-expanded';
-            
-            // Create expanded image
-            var expandedImg = document.createElement('img');
-            expandedImg.src = imgElement.src;
-            expandedImg.alt = imgElement.alt;
-            
-            overlay.appendChild(expandedImg);
-            document.body.appendChild(overlay);
-            
-            // Close on click
-            overlay.onclick = function() {{
-                if (document.body.contains(overlay)) {{
-                    document.body.removeChild(overlay);
-                }}
-            }};
-            
-            // Close on escape key
-            function escapeHandler(e) {{
-                e = e || window.event;
-                if ((e.keyCode || e.which) === 27) {{
-                    if (document.body.contains(overlay)) {{
-                        document.body.removeChild(overlay);
-                        if (document.removeEventListener) {{
-                            document.removeEventListener('keydown', escapeHandler);
-                        }} else if (document.detachEvent) {{
-                            document.detachEvent('onkeydown', escapeHandler);
-                        }}
-                    }}
-                }}
-            }}
-            
-            if (document.addEventListener) {{
-                document.addEventListener('keydown', escapeHandler);
-            }} else if (document.attachEvent) {{
-                document.attachEvent('onkeydown', escapeHandler);
-            }}
+        // Logo modal functions
+        function showLogoModal() {{
+            document.getElementById('logoModal').classList.add('active');
         }}
+        
+        function hideLogoModal() {{
+            document.getElementById('logoModal').classList.remove('active');
+        }}
+        
+        // Allow ESC key to close logo modal
+        document.addEventListener('keydown', function(event) {{
+            if (event.key === 'Escape') {{
+                hideLogoModal();
+            }}
+        }});
+        
+        // Back to top button functionality - wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {{
+            var backToTopBtn = document.getElementById('backToTopBtn');
+            if (backToTopBtn) {{
+                window.addEventListener('scroll', function() {{
+                    if (window.pageYOffset > 300) {{
+                        backToTopBtn.style.display = 'block';
+                    }} else {{
+                        backToTopBtn.style.display = 'none';
+                    }}
+                }});
+                
+                backToTopBtn.addEventListener('click', function() {{
+                    window.scrollTo(0, 0);
+                }});
+            }}
+        }});
     </script>
+    
+    <button id="backToTopBtn" style="display: none; position: fixed; bottom: 30px; right: 30px; 
+            z-index: 99; border: none; outline: none; background-color: #667eea; color: white; 
+            cursor: pointer; padding: 15px 20px; border-radius: 50px; font-size: 16px; 
+            font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease;"
+            onmouseover="this.style.backgroundColor='#5568d3'; this.style.transform='scale(1.1)';"
+            onmouseout="this.style.backgroundColor='#667eea'; this.style.transform='scale(1)';">
+        ↑ Top
+    </button>
+    
+    <!-- Copyright Footer -->
+    <div class="footer">
+        <p><strong>AVICE Timing Histogram Report</strong></p>
+        <p>Copyright (c) 2025 Alon Vice (avice)</p>
+        <p>Contact: avice@nvidia.com</p>
+    </div>
 </body>
 </html>
 """
@@ -4011,13 +6883,17 @@ class WorkareaReviewer:
         """Run clock analysis"""
         self.print_header(FlowStage.CLOCK_ANALYSIS)
         
-        # Innvou clock analysis
+        # Initialize max latency
+        max_latency_ps = 0
+        
+        # Innovus clock analysis
         clock_skew_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/SUMMARY/{self.design_info.top_hier}.{self.design_info.ipo}.postroute.clock_tree.skew_and_latency.from_clock_root_source.rpt*"
         clock_files = self.file_utils.find_files(clock_skew_pattern, self.workarea)
         
         if clock_files:
-            self.print_file_info(clock_files[0], "Innvou Clock Analysis")
-            self._extract_clock_tree_data(clock_files[0])
+            self.print_file_info(clock_files[0], "Innovus Clock Analysis")
+            innovus_max_latency = self._extract_clock_tree_data(clock_files[0])
+            max_latency_ps = max(max_latency_ps, innovus_max_latency)
         
         # PrimeTime clock analysis
         pt_clock_pattern = f"signoff_flow/auto_pt/last_work/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/{self.design_info.top_hier}_func.std_tt_0c_0p6v.setup.typical.clock_latency"
@@ -4025,20 +6901,38 @@ class WorkareaReviewer:
         
         if self.file_utils.file_exists(pt_clock_file):
             self.print_file_info(pt_clock_file, "PT Clock Analysis")
-            self._extract_pt_clock_latency(pt_clock_file)
+            pt_max_latency = self._extract_pt_clock_latency(pt_clock_file)
+            max_latency_ps = max(max_latency_ps, pt_max_latency)
+        
+        # Determine status based on max latency
+        # Thresholds: FAIL ≥ 580ps, WARN 550ps < latency < 580ps, PASS ≤ 550ps
+        status = "PASS"
+        issues = []
+        
+        if max_latency_ps >= 580:
+            status = "FAIL"
+            issues.append(f"Max clock latency: {max_latency_ps:.1f}ps (threshold: <580ps)")
+        elif max_latency_ps > 550:
+            status = "WARN"
+            issues.append(f"Max clock latency: {max_latency_ps:.1f}ps (threshold: ≤550ps)")
+        
+        # Prepare key metrics
+        key_metrics = {}
+        if max_latency_ps > 0:
+            key_metrics["Max Latency"] = f"{max_latency_ps:.1f}ps"
+        else:
+            key_metrics["Design"] = self.design_info.top_hier
         
         # Add section summary for master dashboard
         self._add_section_summary(
             section_name="Clock Analysis",
             section_id="clock",
             stage=FlowStage.CLOCK_ANALYSIS,
-            status="PASS",
-            key_metrics={
-                "Design": self.design_info.top_hier
-            },
+            status=status,
+            key_metrics=key_metrics,
             html_file="",
             priority=3,
-            issues=[],
+            issues=issues,
             icon="[Clock]"
         )
     
@@ -4046,8 +6940,29 @@ class WorkareaReviewer:
         """Run formal verification analysis"""
         self.print_header(FlowStage.FORMAL_VERIFICATION)
         
+        # Extract and display RTL tag
+        rtl_readme_path = os.path.join(self.workarea, "rbv", "README")
+        rtl_tag = "N/A"
+        if os.path.isfile(rtl_readme_path):
+            try:
+                with open(rtl_readme_path, 'r') as f:
+                    lines = f.readlines()
+                    if len(lines) >= 2:
+                        # Line 2 contains: TAG: <rtl_tag>
+                        tag_line = lines[1].strip()
+                        if tag_line.startswith("TAG:"):
+                            rtl_tag = tag_line.split("TAG:", 1)[1].strip()
+                print(f"{Color.CYAN}RTL Tag: {Color.RESET}{rtl_tag}")
+            except (OSError, UnicodeDecodeError):
+                pass
+        
         formal_log_pattern = "formal_flow/*_vs_*_fm/log/*_vs_*_fm.log"
         formal_files = self.file_utils.find_files(formal_log_pattern, self.workarea)
+        
+        # Track formal verification results for master dashboard
+        formal_results = []
+        overall_status = "NOT_RUN"
+        issues = []
         
         if formal_files:
             # Get latest formal end time for comparison with ECO
@@ -4055,7 +6970,9 @@ class WorkareaReviewer:
             
             for log_file in formal_files:
                 self.print_file_info(log_file, "Formal Log")
-                self._extract_formal_verification_status(log_file)
+                status, runtime, flow_name, passing_pts, failing_pts, compare_tbl, failing_list = self._extract_formal_verification_status(log_file)
+                formal_results.append((flow_name, status, runtime, passing_pts, failing_pts, compare_tbl, failing_list))
+                
                 # Extract and display timestamps
                 formal_end_time = self._display_formal_timestamps(log_file)
                 if formal_end_time and formal_end_time > latest_formal_end:
@@ -4063,52 +6980,1175 @@ class WorkareaReviewer:
             
             # Check if ECO was run after formal (potential issue)
             self._check_formal_vs_eco_timestamps(latest_formal_end)
+            
+            # Determine overall status based on all formal results
+            statuses = [result[1] for result in formal_results]
+            
+            # Check for CRASHED flows first (highest priority - tool error)
+            crashed_flows = [f"{r[0]}: {r[1]}" for r in formal_results if "CRASHED" in r[1]]
+            if crashed_flows:
+                overall_status = "FAIL"
+                issues.extend(crashed_flows)
+            elif "FAILED" in statuses:
+                overall_status = "FAIL"
+                # Include failing compare points in issues
+                for r in formal_results:
+                    if r[1] == "FAILED":
+                        if r[4] > 0:  # failing_pts > 0
+                            issues.append(f"{r[0]}: FAILED ({r[4]} failing points)")
+                        else:
+                            issues.append(f"{r[0]}: FAILED")
+            elif "UNRESOLVED" in statuses:
+                overall_status = "WARN"
+                unresolved_flows = [f"{r[0]}: UNRESOLVED" for r in formal_results if r[1] == "UNRESOLVED"]
+                issues.extend(unresolved_flows)
+            elif "SUCCEEDED" in statuses:
+                overall_status = "PASS"
+            elif "RUNNING" in statuses:
+                overall_status = "WARN"
+                issues.append("Formal verification still running")
         else:
             print("No formal verification logs found")
+            overall_status = "NOT_RUN"
+        
+        # Build key metrics
+        key_metrics = {"Design": self.design_info.top_hier, "RTL Tag": rtl_tag}
+        for flow_name, status, runtime, passing_pts, failing_pts, compare_tbl, failing_list in formal_results:
+            if status == "FAILED" and failing_pts > 0:
+                key_metrics[flow_name] = f"{status} ({failing_pts} fail, {runtime})"
+            else:
+                key_metrics[flow_name] = f"{status} ({runtime})"
+        
+        # Generate comprehensive HTML report for formal verification
+        html_path = ""
+        if formal_results:
+            html_path = self._generate_formal_html_report(formal_results, rtl_tag, latest_formal_end)
+            if html_path:
+                html_filename = os.path.basename(html_path)
+                print(f"\n  {Color.CYAN}Formal Verification HTML Report:{Color.RESET}")
+                print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
         
         # Add section summary for master dashboard
         self._add_section_summary(
             section_name="Formal Verification",
             section_id="formal",
             stage=FlowStage.FORMAL_VERIFICATION,
-            status="PASS",
-            key_metrics={
-                "Design": self.design_info.top_hier
-            },
-            html_file="",
-            priority=3,
-            issues=[],
+            status=overall_status,
+            key_metrics=key_metrics,
+            html_file=html_path,
+            priority=1 if overall_status == "FAIL" else (2 if overall_status == "WARN" else 3),
+            issues=issues,
             icon="[Formal]"
         )
+    
+    def _generate_formal_html_report(self, formal_results, rtl_tag, latest_formal_end):
+        """Generate comprehensive HTML report for Formal Verification"""
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            username = os.environ.get('USER', 'avice')
+            html_filename = f"{self.design_info.top_hier}_{username}_formal_verification_{timestamp}.html"
+            html_path = os.path.abspath(html_filename)
+            
+            # Determine overall status
+            statuses = [result[1] for result in formal_results]
+            overall_status = "PASS"
+            if any("CRASHED" in s for s in statuses):
+                overall_status = "CRASHED"
+            elif "FAILED" in statuses:
+                overall_status = "FAILED"
+            elif "UNRESOLVED" in statuses:
+                overall_status = "UNRESOLVED"
+            elif "RUNNING" in statuses:
+                overall_status = "RUNNING"
+            elif "SUCCEEDED" in statuses:
+                overall_status = "PASS"
+            
+            status_color = {
+                "PASS": "#28a745",
+                "FAILED": "#dc3545",
+                "CRASHED": "#dc3545",
+                "UNRESOLVED": "#ffc107",
+                "RUNNING": "#17a2b8"
+            }.get(overall_status, "#6c757d")
+            
+            # Generate HTML content
+            html_content = self._generate_formal_html_content(
+                formal_results, rtl_tag, overall_status, status_color, html_filename
+            )
+            
+            # Write HTML file
+            with open(html_path, 'w') as f:
+                f.write(html_content)
+            
+            return html_path
+            
+        except Exception as e:
+            print(f"  Error generating Formal HTML report: {e}")
+            import traceback
+            traceback.print_exc()
+            return ""
+    
+    def _generate_formal_html_content(self, formal_results, rtl_tag, overall_status, status_color, html_filename):
+        """Generate HTML content for formal verification report"""
+        
+        # Load and encode logo
+        logo_data = ""
+        logo_path = os.path.join(os.path.dirname(__file__), "images", "avice_logo.png")
+        try:
+            with open(logo_path, 'rb') as f:
+                import base64
+                logo_data = base64.b64encode(f.read()).decode('utf-8')
+        except:
+            pass  # If logo not found, continue without it
+        
+        # Count statuses
+        total_flows = len(formal_results)
+        passed_flows = sum(1 for r in formal_results if r[1] == "SUCCEEDED")
+        failed_flows = sum(1 for r in formal_results if r[1] == "FAILED")
+        crashed_flows = sum(1 for r in formal_results if "CRASHED" in r[1])
+        unresolved_flows = sum(1 for r in formal_results if r[1] == "UNRESOLVED")
+        running_flows = sum(1 for r in formal_results if r[1] == "RUNNING")
+        
+        # Calculate total compare points
+        total_passing = sum(r[3] for r in formal_results)
+        total_failing = sum(r[4] for r in formal_results)
+        
+        # Generate flow cards HTML
+        flow_cards_html = ""
+        for flow_name, status, runtime, passing_pts, failing_pts, compare_table, failing_points_list in formal_results:
+            status_class = {
+                "SUCCEEDED": "status-pass",
+                "FAILED": "status-fail",
+                "UNRESOLVED": "status-warn",
+                "RUNNING": "status-running"
+            }.get(status, "status-fail" if "CRASHED" in status else "status-unknown")
+            
+            status_icon = {
+                "SUCCEEDED": "✓",
+                "FAILED": "✗",
+                "UNRESOLVED": "⚠",
+                "RUNNING": "↻"
+            }.get(status, "⚠" if "CRASHED" not in status else "💥")
+            
+            # Compare points section
+            compare_points_html = ""
+            if status == "FAILED" and (passing_pts > 0 or failing_pts > 0):
+                total_pts = passing_pts + failing_pts
+                pass_percentage = (passing_pts / total_pts * 100) if total_pts > 0 else 0
+                
+                # Generate matched compare points table HTML
+                compare_table_html = ""
+                if compare_table:
+                    compare_table_html = """
+                <div class="compare-table-section">
+                    <h4>Matched Compare Points Breakdown</h4>
+                    <table class="compare-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>BBPin</th>
+                                <th>Loop</th>
+                                <th>BBNet</th>
+                                <th>Cut</th>
+                                <th>Port</th>
+                                <th>DFF</th>
+                                <th>LAT</th>
+                                <th>TOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                    """
+                    
+                    if 'passing' in compare_table:
+                        p = compare_table['passing']
+                        compare_table_html += f"""
+                            <tr class="passing-row">
+                                <td><strong>Passing (equivalent)</strong></td>
+                                <td>{p.get('BBPin', 0):,}</td>
+                                <td>{p.get('Loop', 0):,}</td>
+                                <td>{p.get('BBNet', 0):,}</td>
+                                <td>{p.get('Cut', 0):,}</td>
+                                <td>{p.get('Port', 0):,}</td>
+                                <td>{p.get('DFF', 0):,}</td>
+                                <td>{p.get('LAT', 0):,}</td>
+                                <td><strong>{p.get('TOTAL', 0):,}</strong></td>
+                            </tr>
+                        """
+                    
+                    if 'failing' in compare_table:
+                        f = compare_table['failing']
+                        compare_table_html += f"""
+                            <tr class="failing-row">
+                                <td><strong>Failing (not equivalent)</strong></td>
+                                <td>{f.get('BBPin', 0):,}</td>
+                                <td>{f.get('Loop', 0):,}</td>
+                                <td>{f.get('BBNet', 0):,}</td>
+                                <td>{f.get('Cut', 0):,}</td>
+                                <td>{f.get('Port', 0):,}</td>
+                                <td>{f.get('DFF', 0):,}</td>
+                                <td>{f.get('LAT', 0):,}</td>
+                                <td><strong>{f.get('TOTAL', 0):,}</strong></td>
+                            </tr>
+                        """
+                    
+                    if 'not_compared' in compare_table and compare_table['not_compared']:
+                        compare_table_html += """
+                            <tr class="separator-row">
+                                <td colspan="9"><strong>Not Compared</strong></td>
+                            </tr>
+                        """
+                        for name, count in compare_table['not_compared'].items():
+                            compare_table_html += f"""
+                            <tr class="not-compared-row">
+                                <td>&nbsp;&nbsp;{name}</td>
+                                <td colspan="7"></td>
+                                <td>{count:,}</td>
+                            </tr>
+                            """
+                    
+                    compare_table_html += """
+                        </tbody>
+                    </table>
+                </div>
+                    """
+                
+                # Generate failing points list HTML
+                failing_points_html = ""
+                if failing_points_list:
+                    failing_points_html = f"""
+                <div class="failing-points-section">
+                    <h4>Failing Compare Points ({len(failing_points_list)} points)</h4>
+                    <div class="failing-points-list">
+                    """
+                    for point in failing_points_list:
+                        failing_points_html += f'<div class="failing-point">✗ {point}</div>\n'
+                    failing_points_html += """
+                    </div>
+                </div>
+                    """
+                
+                compare_points_html = f"""
+                <div class="compare-points">
+                    <h4>Compare Points Summary</h4>
+                    <div class="points-grid">
+                        <div class="point-card pass">
+                            <div class="point-label">Passing</div>
+                            <div class="point-value">{passing_pts:,}</div>
+                            <div class="point-percentage">{pass_percentage:.2f}%</div>
+                        </div>
+                        <div class="point-card fail">
+                            <div class="point-label">Failing</div>
+                            <div class="point-value">{failing_pts:,}</div>
+                            <div class="point-percentage">{100-pass_percentage:.2f}%</div>
+                        </div>
+                        <div class="point-card total">
+                            <div class="point-label">Total</div>
+                            <div class="point-value">{total_pts:,}</div>
+                        </div>
+                    </div>
+                    {compare_table_html}
+                    {failing_points_html}
+                </div>
+                """
+            elif status == "SUCCEEDED" and passing_pts > 0:
+                compare_points_html = f"""
+                <div class="compare-points success">
+                    <div class="success-message">
+                        <span class="success-icon">✓</span>
+                        All {passing_pts:,} compare points passed
+                    </div>
+                </div>
+                """
+            
+            flow_cards_html += f"""
+            <div class="flow-card {status_class}">
+                <div class="flow-header">
+                    <h3>{flow_name}</h3>
+                    <span class="status-badge {status_class}">{status_icon} {status}</span>
+                </div>
+                <div class="flow-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Runtime:</span>
+                        <span class="detail-value">{runtime}</span>
+                    </div>
+                </div>
+                {compare_points_html}
+            </div>
+            """
+        
+        # Generate HTML
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formal Verification Report - {self.design_info.top_hier}</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #333;
+        }}
+        
+        .container {{
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }}
+        
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+        }}
+        
+        .header-content {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }}
+        
+        .logo {{
+            max-width: 120px;
+            height: auto;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }}
+        
+        .logo:hover {{
+            transform: scale(1.05);
+        }}
+        
+        .header-text {{
+            flex: 1;
+            min-width: 300px;
+        }}
+        
+        .header h1 {{
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }}
+        
+        .header-subtitle {{
+            font-size: 1.1em;
+            opacity: 0.9;
+        }}
+        
+        /* Logo Modal */
+        .logo-modal {{
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.9);
+            cursor: pointer;
+        }}
+        
+        .logo-modal-content {{
+            margin: auto;
+            display: block;
+            width: 80%;
+            max-width: 700px;
+            position: relative;
+            top: 50%;
+            transform: translateY(-50%);
+        }}
+        
+        .logo-modal-close {{
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+        }}
+        
+        .logo-modal-close:hover,
+        .logo-modal-close:focus {{
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }}
+        
+        .summary-section {{
+            padding: 30px 40px;
+            background: #f8f9fa;
+            border-bottom: 3px solid #e9ecef;
+        }}
+        
+        .summary-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }}
+        
+        .summary-card {{
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }}
+        
+        .summary-card.overall {{
+            border-left-color: {status_color};
+            background: linear-gradient(135deg, white 0%, {status_color}10 100%);
+        }}
+        
+        .summary-card.passed {{
+            border-left-color: #28a745;
+        }}
+        
+        .summary-card.failed {{
+            border-left-color: #dc3545;
+        }}
+        
+        .summary-card.crashed {{
+            border-left-color: #dc3545;
+        }}
+        
+        .summary-card.unresolved {{
+            border-left-color: #ffc107;
+        }}
+        
+        .summary-label {{
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }}
+        
+        .summary-value {{
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+        }}
+        
+        .rtl-section {{
+            padding: 20px 40px;
+            background: #fff9e6;
+            border-left: 4px solid #ffc107;
+            margin: 20px 40px;
+            border-radius: 8px;
+        }}
+        
+        .rtl-container {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }}
+        
+        .rtl-label {{
+            font-weight: bold;
+            color: #856404;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }}
+        
+        .rtl-value {{
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            color: #333;
+            font-size: 1.1em;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }}
+        
+        .copy-btn {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }}
+        
+        .copy-btn:hover {{
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }}
+        
+        .copy-btn:active {{
+            transform: scale(0.95);
+        }}
+        
+        .copy-btn.copied {{
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }}
+        
+        .content {{
+            padding: 40px;
+        }}
+        
+        .section-title {{
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }}
+        
+        .flow-card {{
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }}
+        
+        .flow-card:hover {{
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }}
+        
+        .flow-card.status-pass {{
+            border-left: 6px solid #28a745;
+        }}
+        
+        .flow-card.status-fail {{
+            border-left: 6px solid #dc3545;
+        }}
+        
+        .flow-card.status-warn {{
+            border-left: 6px solid #ffc107;
+        }}
+        
+        .flow-card.status-running {{
+            border-left: 6px solid #17a2b8;
+        }}
+        
+        .flow-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f8f9fa;
+        }}
+        
+        .flow-header h3 {{
+            color: #333;
+            font-size: 1.4em;
+        }}
+        
+        .status-badge {{
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }}
+        
+        .status-badge.status-pass {{
+            background: #28a745;
+            color: white;
+        }}
+        
+        .status-badge.status-fail {{
+            background: #dc3545;
+            color: white;
+        }}
+        
+        .status-badge.status-warn {{
+            background: #ffc107;
+            color: #333;
+        }}
+        
+        .status-badge.status-running {{
+            background: #17a2b8;
+            color: white;
+        }}
+        
+        .flow-details {{
+            margin-bottom: 20px;
+        }}
+        
+        .detail-item {{
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f8f9fa;
+        }}
+        
+        .detail-label {{
+            font-weight: 600;
+            color: #666;
+        }}
+        
+        .detail-value {{
+            font-family: 'Courier New', monospace;
+            color: #333;
+        }}
+        
+        .compare-points {{
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }}
+        
+        .compare-points h4 {{
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }}
+        
+        .points-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }}
+        
+        .point-card {{
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        
+        .point-card.pass {{
+            border-top: 4px solid #28a745;
+        }}
+        
+        .point-card.fail {{
+            border-top: 4px solid #dc3545;
+        }}
+        
+        .point-card.total {{
+            border-top: 4px solid #667eea;
+        }}
+        
+        .point-label {{
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }}
+        
+        .point-value {{
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }}
+        
+        .point-percentage {{
+            font-size: 0.9em;
+            color: #666;
+        }}
+        
+        .compare-points.success {{
+            background: linear-gradient(135deg, #28a74510 0%, #28a74520 100%);
+            border: 2px solid #28a745;
+        }}
+        
+        .success-message {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.2em;
+            color: #155724;
+            font-weight: 600;
+        }}
+        
+        .success-icon {{
+            font-size: 1.5em;
+            color: #28a745;
+        }}
+        
+        .compare-table-section {{
+            margin-top: 20px;
+        }}
+        
+        .compare-table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        
+        .compare-table thead {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }}
+        
+        .compare-table th {{
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9em;
+            border: 1px solid rgba(255,255,255,0.2);
+        }}
+        
+        .compare-table td {{
+            padding: 10px 8px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }}
+        
+        .compare-table td:first-child {{
+            text-align: left;
+            padding-left: 15px;
+        }}
+        
+        .compare-table .passing-row {{
+            background: linear-gradient(90deg, #28a74510 0%, white 100%);
+        }}
+        
+        .compare-table .passing-row td:last-child {{
+            color: #28a745;
+            font-weight: bold;
+        }}
+        
+        .compare-table .failing-row {{
+            background: linear-gradient(90deg, #dc354510 0%, white 100%);
+        }}
+        
+        .compare-table .failing-row td:last-child {{
+            color: #dc3545;
+            font-weight: bold;
+        }}
+        
+        .compare-table .separator-row {{
+            background: #f8f9fa;
+            font-weight: bold;
+        }}
+        
+        .compare-table .separator-row td {{
+            padding: 12px 15px;
+            text-align: left;
+            border-top: 2px solid #667eea;
+        }}
+        
+        .compare-table .not-compared-row {{
+            background: white;
+        }}
+        
+        .compare-table .not-compared-row:hover {{
+            background: #f8f9fa;
+        }}
+        
+        .failing-points-section {{
+            margin-top: 20px;
+            background: #fff5f5;
+            border: 2px solid #dc3545;
+            border-radius: 8px;
+            padding: 15px;
+        }}
+        
+        .failing-points-section h4 {{
+            color: #dc3545;
+            margin-bottom: 15px;
+        }}
+        
+        .failing-points-list {{
+            max-height: 400px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 4px;
+            padding: 10px;
+        }}
+        
+        .failing-point {{
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-left: 4px solid #dc3545;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #333;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }}
+        
+        .failing-point:hover {{
+            background: #e9ecef;
+            transform: translateX(5px);
+        }}
+        
+        .footer {{
+            background: #f8f9fa;
+            padding: 20px 40px;
+            text-align: center;
+            color: #666;
+            border-top: 3px solid #e9ecef;
+        }}
+        
+        .footer-info {{
+            font-size: 0.9em;
+        }}
+        
+        @media print {{
+            body {{
+                background: white;
+                padding: 0;
+            }}
+            
+            .container {{
+                box-shadow: none;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <!-- Logo Modal -->
+    <div id="logoModal" class="logo-modal" onclick="hideLogoModal()">
+        <span class="logo-modal-close">&times;</span>
+        <img class="logo-modal-content" id="logoModalImg">
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                {f'<img class="logo" src="data:image/png;base64,{logo_data}" alt="AVICE Logo" onclick="showLogoModal()" title="Click to enlarge">' if logo_data else ''}
+                <div class="header-text">
+                    <h1>🔍 Formal Verification Report</h1>
+                    <div class="header-subtitle">Design: {self.design_info.top_hier}</div>
+                    <div class="header-subtitle">Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="summary-section">
+            <h2>Verification Summary</h2>
+            <div class="summary-grid">
+                <div class="summary-card overall">
+                    <div class="summary-label">Overall Status</div>
+                    <div class="summary-value" style="color: {status_color};">{overall_status}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Total Flows</div>
+                    <div class="summary-value">{total_flows}</div>
+                </div>
+                <div class="summary-card passed">
+                    <div class="summary-label">Passed</div>
+                    <div class="summary-value" style="color: #28a745;">{passed_flows}</div>
+                </div>
+                <div class="summary-card failed">
+                    <div class="summary-label">Failed</div>
+                    <div class="summary-value" style="color: #dc3545;">{failed_flows}</div>
+                </div>
+                {f'''<div class="summary-card crashed">
+                    <div class="summary-label">Crashed</div>
+                    <div class="summary-value" style="color: #dc3545;">{crashed_flows}</div>
+                </div>''' if crashed_flows > 0 else ''}
+                {f'''<div class="summary-card unresolved">
+                    <div class="summary-label">Unresolved</div>
+                    <div class="summary-value" style="color: #ffc107;">{unresolved_flows}</div>
+                </div>''' if unresolved_flows > 0 else ''}
+            </div>
+            {f'''<div class="summary-grid" style="margin-top: 20px;">
+                <div class="summary-card passed">
+                    <div class="summary-label">Total Passing Points</div>
+                    <div class="summary-value" style="color: #28a745;">{total_passing:,}</div>
+                </div>
+                <div class="summary-card failed">
+                    <div class="summary-label">Total Failing Points</div>
+                    <div class="summary-value" style="color: #dc3545;">{total_failing:,}</div>
+                </div>
+            </div>''' if total_passing > 0 or total_failing > 0 else ''}
+        </div>
+        
+        <div class="rtl-section">
+            <div class="rtl-label">RTL Tag</div>
+            <div class="rtl-container">
+                <div class="rtl-value" id="rtl-tag">{rtl_tag}</div>
+                <button class="copy-btn" onclick="copyToClipboard('rtl-tag', this)" title="Copy RTL tag">
+                    📋 Copy
+                </button>
+            </div>
+        </div>
+        
+        <div class="content">
+            <h2 class="section-title">Formal Verification Flows</h2>
+            {flow_cards_html}
+        </div>
+        
+        <div class="footer">
+            <div class="footer-info">
+                <p><strong>AVICE Formal Verification Report</strong></p>
+                <p>Report generated by AVICE Workarea Review Tool</p>
+                <p>Workarea: {self.workarea}</p>
+                <p>File: {html_filename}</p>
+                <p>Copyright (c) 2025 Alon Vice (avice)</p>
+                <p>Contact: avice@nvidia.com</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Back to Top Button -->
+    <button id="backToTopBtn" style="display: none; position: fixed; bottom: 30px; right: 30px; 
+            z-index: 9999; border: none; outline: none; background-color: #667eea; color: white; 
+            cursor: pointer; padding: 15px 20px; border-radius: 50px; font-size: 16px; 
+            font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease;"
+            onmouseover="this.style.backgroundColor='#5568d3'; this.style.transform='scale(1.1)';"
+            onmouseout="this.style.backgroundColor='#667eea'; this.style.transform='scale(1)';">
+        ↑ Top
+    </button>
+    
+    <script>
+        // Logo modal functions
+        function showLogoModal() {{
+            const modal = document.getElementById('logoModal');
+            const modalImg = document.getElementById('logoModalImg');
+            const logo = document.querySelector('.logo');
+            if (modal && modalImg && logo) {{
+                modal.style.display = 'block';
+                modalImg.src = logo.src;
+            }}
+        }}
+        
+        function hideLogoModal() {{
+            const modal = document.getElementById('logoModal');
+            if (modal) {{
+                modal.style.display = 'none';
+            }}
+        }}
+        
+        // Back to top button functionality
+        const backToTopBtn = document.getElementById('backToTopBtn');
+        if (backToTopBtn) {{
+            window.addEventListener('scroll', function() {{
+                if (window.pageYOffset > 300) {{
+                    backToTopBtn.style.display = 'block';
+                }} else {{
+                    backToTopBtn.style.display = 'none';
+                }}
+            }});
+            
+            backToTopBtn.addEventListener('click', function() {{
+                window.scrollTo({{ top: 0, behavior: 'smooth' }});
+            }});
+        }}
+        
+        // Copy to clipboard function
+        function copyToClipboard(elementId, button) {{
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            
+            // Use modern clipboard API
+            if (navigator.clipboard && navigator.clipboard.writeText) {{
+                navigator.clipboard.writeText(text).then(function() {{
+                    // Success feedback
+                    const originalText = button.innerHTML;
+                    button.innerHTML = '✅ Copied!';
+                    button.classList.add('copied');
+                    
+                    // Reset after 2 seconds
+                    setTimeout(function() {{
+                        button.innerHTML = originalText;
+                        button.classList.remove('copied');
+                    }}, 2000);
+                }}).catch(function(err) {{
+                    console.error('Failed to copy:', err);
+                    button.innerHTML = '❌ Failed';
+                    setTimeout(function() {{
+                        button.innerHTML = '📋 Copy';
+                    }}, 2000);
+                }});
+            }} else {{
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {{
+                    document.execCommand('copy');
+                    button.innerHTML = '✅ Copied!';
+                    button.classList.add('copied');
+                    setTimeout(function() {{
+                        button.innerHTML = '📋 Copy';
+                        button.classList.remove('copied');
+                    }}, 2000);
+                }} catch (err) {{
+                    console.error('Fallback copy failed:', err);
+                    button.innerHTML = '❌ Failed';
+                    setTimeout(function() {{
+                        button.innerHTML = '📋 Copy';
+                    }}, 2000);
+                }}
+                document.body.removeChild(textArea);
+            }}
+        }}
+    </script>
+</body>
+</html>
+"""
+        return html
     
     def run_parasitic_extraction(self):
         """Run parasitic extraction analysis"""
         self.print_header(FlowStage.PARASITIC_EXTRACTION)
         
-        # Show Star flow timeline
-        star_local_flow_dirs = [
-            os.path.join(self.workarea, f"export/nv_star/{self.design_info.top_hier}/local_flow"),
-            os.path.join(self.workarea, f"export/nv_star/local_flow"),
-            os.path.join(self.workarea, f"export/nv_star/{self.design_info.top_hier}/ipo*/LOGs/PRIME"),
-            os.path.join(self.workarea, f"export/nv_star/ipo*/LOGs/PRIME")
-        ]
-        self._show_flow_timeline("Star", star_local_flow_dirs)
+        # Find all Star runs by looking for summary.rpt files
+        summary_pattern = f"export/nv_star/{self.design_info.top_hier}/ipo*/REPs/*.checks.summary.rpt"
+        summary_files = self.file_utils.find_files(summary_pattern, self.workarea)
         
-        # Star extraction files
-        spef_pattern = f"export/nv_star/{self.design_info.top_hier}/ipo*/IOs/netlists/*.spef.typical_T0.gz"
-        spef_files = self.file_utils.find_files(spef_pattern, self.workarea)
+        if summary_files:
+            # Extract run information from each summary file
+            star_runs = []
+            for summary_file in summary_files:
+                # Extract timestamp from filename (e.g., STAR.setup.smc.1.fdb_ipo1000.10_08_18_15.checks.summary.rpt)
+                basename = os.path.basename(summary_file)
+                timestamp_match = re.search(r'\.(\d{2}_\d{2}_\d{2}_\d{2})\.checks\.summary\.rpt', basename)
+                if timestamp_match:
+                    timestamp_str = timestamp_match.group(1)
+                    # Parse timestamp: MM_DD_HH_MM
+                    try:
+                        month, day, hour, minute = timestamp_str.split('_')
+                        timestamp_display = f"{month}/{day} {hour}:{minute}"
+                    except:
+                        timestamp_display = timestamp_str
+                    
+                    # Extract shorts count from SX-0955 code
+                    shorts_count = 0
+                    try:
+                        with open(summary_file, 'r') as f:
+                            for line in f:
+                                if 'SX-0955' in line:
+                                    # Format: SX-0955     COUNT    WAIVED    TOTAL
+                                    parts = line.split()
+                                    if len(parts) >= 2:
+                                        shorts_count = int(parts[1])
+                                    break
+                    except:
+                        pass
+                    
+                    # Get file modification time for sorting
+                    mtime = os.path.getmtime(summary_file)
+                    
+                    star_runs.append({
+                        'timestamp': timestamp_display,
+                        'shorts': shorts_count,
+                        'mtime': mtime,
+                        'file': summary_file
+                    })
+            
+            # Sort by modification time (oldest first)
+            star_runs.sort(key=lambda x: x['mtime'])
+            
+            # Display Star runs summary table
+            print(f"\n{Color.CYAN}Star Extraction Runs:{Color.RESET}")
+            print(f"  Total Runs: {len(star_runs)}")
+            print(f"\n  {'Run':<6} {'Timestamp':<12} {'Shorts':<8}")
+            print(f"  {'-'*6} {'-'*12} {'-'*8}")
+            for idx, run in enumerate(star_runs, 1):
+                shorts_color = Color.RED if run['shorts'] > 0 else Color.GREEN
+                is_latest = " (latest)" if idx == len(star_runs) else ""
+                print(f"  {idx:<6} {run['timestamp']:<12} {shorts_color}{run['shorts']:<8}{Color.RESET}{is_latest}")
+            
+            # Show latest run details
+            if star_runs:
+                latest_run = star_runs[-1]
+                print(f"\n{Color.CYAN}Latest Run Details:{Color.RESET}")
+                print(f"  Timestamp: {latest_run['timestamp']}")
+                print(f"  Shorts: {Color.GREEN if latest_run['shorts'] == 0 else Color.RED}{latest_run['shorts']}{Color.RESET}")
+        else:
+            print(f"  {Color.YELLOW}No Star extraction runs found{Color.RESET}")
         
-        if spef_files:
-            self.print_file_info(spef_files[0], "SPEF File")
+        # Star extraction SPEF files (all corners from latest run)
+        print(f"\n{Color.CYAN}SPEF Files (All Corners):{Color.RESET}")
+        spef_pattern = f"export/nv_star/{self.design_info.top_hier}/ipo*/IOs/netlists/*.spef.*.gz"
+        all_spef_files = self.file_utils.find_files(spef_pattern, self.workarea)
         
+        if all_spef_files:
+            # Get the most recent modification time to group latest run
+            if all_spef_files:
+                latest_mtime = max(os.path.getmtime(f) for f in all_spef_files)
+                # Consider files modified within 5 minutes of latest as part of same run
+                latest_spef_files = [f for f in all_spef_files if abs(os.path.getmtime(f) - latest_mtime) < 300]
+                
+                # Sort by corner name for consistent display
+                latest_spef_files.sort()
+                
+                print(f"  Total SPEF files: {len(latest_spef_files)}")
+                if len(latest_spef_files) < 6:
+                    print(f"  {Color.YELLOW}Warning: Expected at least 6 SPEF files, found {len(latest_spef_files)}{Color.RESET}")
+                else:
+                    print(f"  {Color.GREEN}[OK] All required SPEF files present{Color.RESET}")
+                
+                # Show location once
+                if latest_spef_files:
+                    spef_dir = os.path.dirname(latest_spef_files[0])
+                    print(f"  Location: {spef_dir}")
+                    print(f"\n  {'Corner':<25} {'Size':>8}")
+                    print(f"  {'-'*25} {'-'*8}")
+                    
+                    # Extract corner information and display
+                    for spef_file in latest_spef_files:
+                        basename = os.path.basename(spef_file)
+                        # Extract corner name (e.g., typical_T0, cworst_CCworst_T0, etc.)
+                        corner_match = re.search(r'\.spef\.([^.]+)\.gz', basename)
+                        if corner_match:
+                            corner = corner_match.group(1)
+                            file_size_bytes = os.path.getsize(spef_file)
+                            file_size_gb = file_size_bytes / (1024**3)
+                            print(f"  {corner:<25} {file_size_gb:>6.2f} GB")
+                        else:
+                            print(f"  {basename}")
+        else:
+            print(f"  {Color.YELLOW}No SPEF files found{Color.RESET}")
+        
+        # SPEF info file for typical corner
         spef_info_pattern = f"export/nv_star/{self.design_info.top_hier}/ipo*/IOs/netlists/*.typical_T0.spef_info"
         spef_info_files = self.file_utils.find_files(spef_info_pattern, self.workarea)
         
         if spef_info_files:
-            self.print_file_info(spef_info_files[0], "SPEF Info")
+            # Get the most recent SPEF info file
+            latest_spef_info = max(spef_info_files, key=os.path.getmtime)
+            self.print_file_info(latest_spef_info, "SPEF Info (Typical Corner)")
+            
+            print(f"\n{Color.CYAN}Star Extraction Configuration:{Color.RESET}")
             try:
-                with open(spef_info_files[0], 'r') as f:
+                with open(latest_spef_info, 'r') as f:
                     content = f.read()
+                
+                # Extract date
+                date_match = re.search(r'date:\s*(.+)', content)
+                if date_match:
+                    date_str = date_match.group(1).strip()
+                    print(f"  Date: {date_str}")
                 
                 # Extract opens and shorts counts
                 opens_match = re.search(r'opens:\s*(\d+)', content)
@@ -4120,19 +8160,61 @@ class WorkareaReviewer:
                 print(f"  Opens: {opens_count}")
                 print(f"  Shorts: {shorts_count}")
                 
+                # Extract project_rdl_file
+                project_rdl_match = re.search(r'project_rdl_file:\s*(.+)', content)
+                if project_rdl_match:
+                    project_rdl = project_rdl_match.group(1).strip()
+                    print(f"  Project RDL: {project_rdl}")
+                
+                # Extract GDS_LAYER_MAP_FILE
+                gds_layer_map_match = re.search(r'GDS_LAYER_MAP_FILE:\s*(.+)', content)
+                if gds_layer_map_match:
+                    gds_layer_map = gds_layer_map_match.group(1).strip()
+                    print(f"  GDS Layer Map: {gds_layer_map}")
+                
+                # Extract MAPPING_FILE
+                mapping_file_match = re.search(r'MAPPING_FILE:\s*(.+)', content)
+                if mapping_file_match:
+                    mapping_file = mapping_file_match.group(1).strip()
+                    print(f"  Mapping File: {mapping_file}")
+                
             except Exception as e:
                 print(f"  Error reading SPEF info: {e}")
                 # Fallback to original grep method
-                matches = self.file_utils.grep_file(r"opens|shorts", spef_info_files[0])
+                matches = self.file_utils.grep_file(r"opens|shorts|date:", latest_spef_info)
                 for match in matches:
                     print(f"  {match}")
         
-        # Star extraction shorts report
+        # Star extraction detailed shorts report (generated only when shorts exist)
         shorts_pattern = f"export/nv_star/{self.design_info.top_hier}/ipo*/REPs/*.star_extraction_shorts.rpt"
         shorts_files = self.file_utils.find_files(shorts_pattern, self.workarea)
         
         if shorts_files:
-            self.print_file_info(shorts_files[0], "Star Shorts Report")
+            self.print_file_info(shorts_files[0], "Star Detailed Shorts Report")
+            
+            # Identify which run this shorts report is from
+            if summary_files:  # If we have star_runs data
+                shorts_mtime = os.path.getmtime(shorts_files[0])
+                
+                # Find the run with the closest timestamp (within 5 minutes)
+                matching_run = None
+                min_time_diff = float('inf')
+                for idx, run in enumerate(star_runs, 1):
+                    time_diff = abs(run['mtime'] - shorts_mtime)
+                    if time_diff < min_time_diff and time_diff < 300:  # Within 5 minutes
+                        min_time_diff = time_diff
+                        matching_run = (idx, run)
+                
+                if matching_run:
+                    run_num, run_data = matching_run
+                    is_latest = (run_num == len(star_runs))
+                    latest_note = " (latest run)" if is_latest else f" (NOT the latest - latest is run #{len(star_runs)})"
+                    print(f"  {Color.YELLOW}Note: This report is from Run #{run_num} ({run_data['timestamp']}){latest_note}{Color.RESET}")
+                else:
+                    print(f"  {Color.YELLOW}Note: This report shows shorts from a previous run{Color.RESET}")
+            else:
+                print(f"  {Color.YELLOW}Note: This report shows shorts from the most recent run that had shorts{Color.RESET}")
+            
             try:
                 if shorts_files[0].endswith('.gz'):
                     with gzip.open(shorts_files[0], 'rt', encoding='utf-8') as f:
@@ -4140,24 +8222,634 @@ class WorkareaReviewer:
                 else:
                     with open(shorts_files[0], 'r', encoding='utf-8') as f:
                         content = f.read()
-                print(content)
+                # Show first 50 lines to avoid overwhelming output
+                lines = content.split('\n')[:50]
+                print('\n'.join(lines))
+                if len(content.split('\n')) > 50:
+                    print(f"\n  {Color.YELLOW}... (truncated, see file for full details){Color.RESET}")
             except (OSError, UnicodeDecodeError, gzip.BadGzipFile):
-                print("Unable to read Star Shorts Report")
+                print("  Unable to read Star Shorts Report")
+        
+        # Generate Star HTML report
+        star_html = self._generate_star_html_report(star_runs if summary_files else [], 
+                                                     latest_spef_files if all_spef_files else [],
+                                                     latest_spef_info if spef_info_files else None,
+                                                     shorts_files[0] if shorts_files else None)
+        
+        # Determine status based on shorts and SPEF files
+        status = "NOT_RUN"
+        key_metrics = {"Design": self.design_info.top_hier}
+        issues = []
+        priority = 3
+        
+        if summary_files and star_runs:
+            latest_shorts = star_runs[-1]['shorts']
+            key_metrics["Total Runs"] = len(star_runs)
+            key_metrics["Latest Shorts"] = latest_shorts
+            
+            # Check SPEF files
+            spef_count = len(latest_spef_files) if all_spef_files else 0
+            key_metrics["SPEF Files"] = spef_count
+            
+            # Status logic:
+            # FAIL: shorts > 0
+            # WARN: SPEF files < 6 (missing corners)
+            # PASS: shorts == 0 and SPEF files >= 6
+            if latest_shorts > 0:
+                status = "FAIL"
+                priority = 1
+                issues.append(f"Star extraction has {latest_shorts} shorts")
+            elif spef_count < 6:
+                status = "WARN"
+                priority = 2
+                issues.append(f"Only {spef_count} SPEF files found (expected >= 6)")
+            else:
+                status = "PASS"
         
         # Add section summary for master dashboard
         self._add_section_summary(
             section_name="Parasitic Extraction (Star)",
             section_id="star",
             stage=FlowStage.PARASITIC_EXTRACTION,
-            status="PASS",
-            key_metrics={
-                "Design": self.design_info.top_hier
-            },
-            html_file="",
-            priority=3,
-            issues=[],
+            status=status,
+            key_metrics=key_metrics,
+            html_file=star_html if star_html else "",
+            priority=priority,
+            issues=issues,
             icon="[Star]"
         )
+    
+    def _generate_star_html_report(self, star_runs, spef_files, spef_info_file, shorts_file):
+        """Generate comprehensive HTML report for Star extraction analysis"""
+        try:
+            # Generate timestamp for filename
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            html_filename = f"{self.design_info.top_hier}_{os.environ.get('USER', 'avice')}_star_extraction_{timestamp}.html"
+            html_path = os.path.join(os.getcwd(), html_filename)
+            
+            # Read and encode logo
+            logo_data = ""
+            logo_path = os.path.join(os.path.dirname(__file__), "images/avice_logo.png")
+            if os.path.exists(logo_path):
+                with open(logo_path, "rb") as logo_file:
+                    logo_data = base64.b64encode(logo_file.read()).decode('utf-8')
+            
+            # Extract configuration data from spef_info
+            config_data = {}
+            if spef_info_file and os.path.exists(spef_info_file):
+                try:
+                    with open(spef_info_file, 'r') as f:
+                        content = f.read()
+                    config_data['date'] = re.search(r'date:\s*(.+)', content).group(1).strip() if re.search(r'date:\s*(.+)', content) else "N/A"
+                    config_data['opens'] = int(re.search(r'opens:\s*(\d+)', content).group(1)) if re.search(r'opens:\s*(\d+)', content) else 0
+                    config_data['shorts'] = int(re.search(r'shorts:\s*(\d+)', content).group(1)) if re.search(r'shorts:\s*(\d+)', content) else 0
+                    config_data['project_rdl'] = re.search(r'project_rdl_file:\s*(.+)', content).group(1).strip() if re.search(r'project_rdl_file:\s*(.+)', content) else "N/A"
+                    config_data['gds_layer_map'] = re.search(r'GDS_LAYER_MAP_FILE:\s*(.+)', content).group(1).strip() if re.search(r'GDS_LAYER_MAP_FILE:\s*(.+)', content) else "N/A"
+                    config_data['mapping_file'] = re.search(r'MAPPING_FILE:\s*(.+)', content).group(1).strip() if re.search(r'MAPPING_FILE:\s*(.+)', content) else "N/A"
+                except:
+                    pass
+            
+            # Read shorts details if available
+            shorts_content = ""
+            shorts_run_info = ""
+            if shorts_file and os.path.exists(shorts_file):
+                try:
+                    if shorts_file.endswith('.gz'):
+                        with gzip.open(shorts_file, 'rt', encoding='utf-8') as f:
+                            shorts_content = f.read()
+                    else:
+                        with open(shorts_file, 'r', encoding='utf-8') as f:
+                            shorts_content = f.read()
+                    
+                    # Identify which run this shorts report is from
+                    if star_runs:
+                        shorts_mtime = os.path.getmtime(shorts_file)
+                        for idx, run in enumerate(star_runs, 1):
+                            time_diff = abs(run['mtime'] - shorts_mtime)
+                            if time_diff < 300:  # Within 5 minutes
+                                is_latest = (idx == len(star_runs))
+                                shorts_run_info = f"Run #{idx} ({run['timestamp']})" + (" - Latest" if is_latest else f" - NOT latest (latest is #{len(star_runs)})")
+                                break
+                except:
+                    shorts_content = "Unable to read shorts report"
+            
+            # Generate HTML content
+            html_content = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Extraction Report - {self.design_info.top_hier}</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #333;
+        }}
+        
+        .container {{
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }}
+        
+        .header {{
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 20px;
+            align-items: center;
+        }}
+        
+        .logo {{
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            background: white;
+            padding: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }}
+        
+        .logo:hover {{
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }}
+        
+        .logo-modal {{
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+        }}
+        
+        .logo-modal.active {{
+            display: flex;
+        }}
+        
+        .logo-modal-content {{
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+        }}
+        
+        .logo-modal-close {{
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }}
+        
+        .logo-modal-close:hover {{
+            color: #bbb;
+        }}
+        
+        .header-text h1 {{
+            font-size: 28px;
+            margin-bottom: 8px;
+        }}
+        
+        .header-text p {{
+            opacity: 0.9;
+            font-size: 14px;
+        }}
+        
+        .content {{
+            padding: 30px;
+        }}
+        
+        .summary-cards {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }}
+        
+        .card {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }}
+        
+        .card-label {{
+            font-size: 12px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }}
+        
+        .card-value {{
+            font-size: 24px;
+            font-weight: bold;
+        }}
+        
+        .card.success {{
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }}
+        
+        .card.warning {{
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }}
+        
+        .section {{
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }}
+        
+        .section-title {{
+            font-size: 20px;
+            font-weight: bold;
+            color: #2a5298;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }}
+        
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        
+        th {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }}
+        
+        td {{
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }}
+        
+        tr:hover {{
+            background: #f8f9fa;
+        }}
+        
+        .status-clean {{
+            color: #28a745;
+            font-weight: bold;
+        }}
+        
+        .status-shorts {{
+            color: #dc3545;
+            font-weight: bold;
+        }}
+        
+        .latest-badge {{
+            background: #ffc107;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-left: 8px;
+        }}
+        
+        .config-grid {{
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 12px 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }}
+        
+        .config-label {{
+            font-weight: 600;
+            color: #495057;
+        }}
+        
+        .config-value {{
+            color: #6c757d;
+            word-break: break-all;
+        }}
+        
+        .shorts-details {{
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }}
+        
+        .shorts-details-title {{
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 10px;
+        }}
+        
+        pre {{
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            line-height: 1.5;
+            max-height: 400px;
+            overflow-y: auto;
+        }}
+        
+        /* Copyright Footer */
+        .footer {{
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 10px;
+            font-size: 14px;
+        }}
+        
+        .footer p {{
+            margin: 5px 0;
+        }}
+        
+        .footer strong {{
+            color: #00ff00;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">"""
+            
+            if logo_data:
+                html_content += f"""
+            <img class='logo' src='data:image/png;base64,{logo_data}' alt='AVICE Logo' onclick="showLogoModal()" title="Click to enlarge">"""
+            
+            html_content += f"""
+            <div class="header-text">
+                <h1>Star Extraction Report</h1>
+                <p>Design: {self.design_info.top_hier} | IPO: {self.design_info.ipo}</p>
+                <p>Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+            </div>
+        </div>
+        
+        <!-- Logo Modal -->
+        <div id="logoModal" class="logo-modal" onclick="hideLogoModal()">
+            <span class="logo-modal-close">&times;</span>"""
+            
+            if logo_data:
+                html_content += f"""
+            <img class="logo-modal-content" src='data:image/png;base64,{logo_data}' alt='AVICE Logo'>"""
+            
+            html_content += """
+        </div>
+        
+        <div class="content">"""
+            
+            # Summary Cards
+            if star_runs:
+                latest_run = star_runs[-1]
+                total_runs = len(star_runs)
+                shorts_count = latest_run['shorts']
+                
+                html_content += f"""
+            <div class="summary-cards">
+                <div class="card">
+                    <div class="card-label">Total Runs</div>
+                    <div class="card-value">{total_runs}</div>
+                </div>
+                <div class="card {'success' if shorts_count == 0 else 'warning'}">
+                    <div class="card-label">Latest Run Shorts</div>
+                    <div class="card-value">{shorts_count}</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Latest Run</div>
+                    <div class="card-value" style="font-size: 18px;">{latest_run['timestamp']}</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">SPEF Files</div>
+                    <div class="card-value">{len(spef_files)}</div>
+                </div>
+            </div>"""
+            
+            # Star Runs Table
+            if star_runs:
+                html_content += """
+            <div class="section">
+                <div class="section-title">Star Extraction Runs History</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Run #</th>
+                            <th>Timestamp</th>
+                            <th>Shorts</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>"""
+                
+                for idx, run in enumerate(star_runs, 1):
+                    is_latest = (idx == len(star_runs))
+                    status_class = 'status-clean' if run['shorts'] == 0 else 'status-shorts'
+                    status_text = '✓ Clean' if run['shorts'] == 0 else f'⚠ {run["shorts"]} Short(s)'
+                    latest_badge = '<span class="latest-badge">LATEST</span>' if is_latest else ''
+                    
+                    html_content += f"""
+                        <tr>
+                            <td><strong>#{idx}</strong></td>
+                            <td>{run['timestamp']}{latest_badge}</td>
+                            <td class="{status_class}">{run['shorts']}</td>
+                            <td class="{status_class}">{status_text}</td>
+                        </tr>"""
+                
+                html_content += """
+                    </tbody>
+                </table>
+            </div>"""
+            
+            # SPEF Files Table
+            if spef_files:
+                spef_dir = os.path.dirname(spef_files[0])
+                html_content += f"""
+            <div class="section">
+                <div class="section-title">SPEF Files (All RC Corners)</div>
+                <p style="margin-bottom: 15px; color: #6c757d;"><strong>Location:</strong> {spef_dir}</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Corner</th>
+                            <th>File Size</th>
+                            <th>Filename</th>
+                        </tr>
+                    </thead>
+                    <tbody>"""
+                
+                for spef_file in sorted(spef_files):
+                    basename = os.path.basename(spef_file)
+                    corner_match = re.search(r'\.spef\.([^.]+)\.gz', basename)
+                    corner = corner_match.group(1) if corner_match else basename
+                    file_size_gb = os.path.getsize(spef_file) / (1024**3)
+                    
+                    html_content += f"""
+                        <tr>
+                            <td><strong>{corner}</strong></td>
+                            <td>{file_size_gb:.2f} GB</td>
+                            <td>{basename}</td>
+                        </tr>"""
+                
+                html_content += """
+                    </tbody>
+                </table>
+            </div>"""
+            
+            # Configuration Section
+            if config_data:
+                html_content += f"""
+            <div class="section">
+                <div class="section-title">Star Extraction Configuration</div>
+                <div class="config-grid">
+                    <div class="config-label">Extraction Date:</div>
+                    <div class="config-value">{config_data.get('date', 'N/A')}</div>
+                    
+                    <div class="config-label">Opens:</div>
+                    <div class="config-value">{config_data.get('opens', 0)}</div>
+                    
+                    <div class="config-label">Shorts:</div>
+                    <div class="config-value">{config_data.get('shorts', 0)}</div>
+                    
+                    <div class="config-label">Project RDL File:</div>
+                    <div class="config-value">{config_data.get('project_rdl', 'N/A')}</div>
+                    
+                    <div class="config-label">GDS Layer Map:</div>
+                    <div class="config-value">{config_data.get('gds_layer_map', 'N/A')}</div>
+                    
+                    <div class="config-label">Mapping File:</div>
+                    <div class="config-value">{config_data.get('mapping_file', 'N/A')}</div>
+                </div>
+            </div>"""
+            
+            # Shorts Details Section
+            if shorts_content:
+                html_content += f"""
+            <div class="section">
+                <div class="section-title">Detailed Shorts Report</div>"""
+                
+                if shorts_run_info:
+                    html_content += f"""
+                <div class="shorts-details">
+                    <div class="shorts-details-title">⚠ Note</div>
+                    <p>This report is from {shorts_run_info}</p>
+                </div>"""
+                
+                # Limit shorts content to first 100 lines
+                shorts_lines = shorts_content.split('\n')[:100]
+                shorts_display = '\n'.join(shorts_lines)
+                if len(shorts_content.split('\n')) > 100:
+                    shorts_display += "\n\n... (truncated, see file for full details)"
+                
+                html_content += f"""
+                <pre>{shorts_display}</pre>
+            </div>"""
+            
+            html_content += """
+        </div>
+    </div>
+    
+    <!-- Copyright Footer -->
+    <div class="footer">
+        <p><strong>AVICE Star Parasitic Extraction Report</strong></p>
+        <p>Copyright (c) 2025 Alon Vice (avice)</p>
+        <p>Contact: avice@nvidia.com</p>
+    </div>
+    
+    <script>
+        function showLogoModal() {
+            document.getElementById('logoModal').classList.add('active');
+        }
+        
+        function hideLogoModal() {
+            document.getElementById('logoModal').classList.remove('active');
+        }
+        
+        // Allow ESC key to close modal
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                hideLogoModal();
+            }
+        });
+        
+        // Back to top button functionality - wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {{
+            var backToTopBtn = document.getElementById('backToTopBtn');
+            if (backToTopBtn) {{
+                window.addEventListener('scroll', function() {{
+                    if (window.pageYOffset > 300) {{
+                        backToTopBtn.style.display = 'block';
+                    }} else {{
+                        backToTopBtn.style.display = 'none';
+                    }}
+                }});
+                
+                backToTopBtn.addEventListener('click', function() {{
+                    window.scrollTo(0, 0);
+                }});
+            }}
+        }});
+    </script>
+    
+    <button id="backToTopBtn" style="display: none; position: fixed; bottom: 30px; right: 30px; 
+            z-index: 99; border: none; outline: none; background-color: #667eea; color: white; 
+            cursor: pointer; padding: 15px 20px; border-radius: 50px; font-size: 16px; 
+            font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease;"
+            onmouseover="this.style.backgroundColor='#5568d3'; this.style.transform='scale(1.1)';"
+            onmouseout="this.style.backgroundColor='#667eea'; this.style.transform='scale(1)';">
+        ↑ Top
+    </button>
+</body>
+</html>"""
+            
+            # Write HTML file
+            with open(html_path, 'w', encoding='utf-8') as f:
+                f.write(html_content)
+            
+            print(f"\n{Color.CYAN}  Star Extraction HTML Report:{Color.RESET}")
+            print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+            
+            return os.path.abspath(html_path)
+            
+        except Exception as e:
+            print(f"  Error generating Star HTML report: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
     
     def run_signoff_timing(self):
         """Run signoff timing analysis"""
@@ -4287,14 +8979,18 @@ class WorkareaReviewer:
                         if internal_wns is None or group_data['WNS'] < internal_wns:
                             internal_wns = group_data['WNS']
                 
-                # Determine status based on WNS
+                # Determine status based on WNS and TNS thresholds
+                # Thresholds:
+                #   FAIL: WNS < -0.050 ns OR TNS < -10.0 ns (significant violations)
+                #   WARN: WNS < 0 OR TNS < 0 (any violation but minor)
+                #   PASS: WNS >= 0 AND TNS >= 0
                 if internal_wns is not None:
-                    if internal_wns < 0:
+                    if internal_wns < -0.050 or internal_tns < -10.0:
                         status = "FAIL"
-                        issues.append(f"Setup timing violation: WNS = {internal_wns:.3f} ns")
-                    elif internal_wns < 0.1:
+                        issues.append(f"Setup timing violation: WNS = {internal_wns:.3f} ns, TNS = {internal_tns:.2f} ns")
+                    elif internal_wns < 0 or internal_tns < 0:
                         status = "WARN"
-                        issues.append(f"Setup timing marginal: WNS = {internal_wns:.3f} ns")
+                        issues.append(f"Setup timing minor violation: WNS = {internal_wns:.3f} ns, TNS = {internal_tns:.2f} ns")
                     else:
                         status = "PASS"
                     
@@ -4319,11 +9015,47 @@ class WorkareaReviewer:
                             hold_wns = group_data['WNS']
                 
                 if hold_wns is not None:
-                    if hold_wns < 0:
-                        status = "FAIL"  # Hold violation is critical
-                        issues.append(f"Hold timing violation: WNS = {hold_wns:.3f} ns")
+                    # Hold timing thresholds (stricter than setup - hold is harder to fix)
+                    #   FAIL: WNS < -0.025 ns OR TNS < -5.0 ns (tighter threshold than setup)
+                    #   WARN: WNS < 0 OR TNS < 0 (small violations - acceptable during development)
+                    if hold_wns < -0.025 or hold_tns < -5.0:
+                        status = "FAIL"  # Significant hold violation
+                        issues.append(f"Hold timing violation: WNS = {hold_wns:.3f} ns, TNS = {hold_tns:.2f} ns")
+                    elif hold_wns < 0 or hold_tns < 0:
+                        # Only upgrade to WARN if not already FAIL from setup
+                        if status != "FAIL":
+                            status = "WARN"
+                        issues.append(f"Hold timing minor violation: WNS = {hold_wns:.3f} ns, TNS = {hold_tns:.2f} ns")
                     
                     key_metrics["Hold WNS"] = f"{hold_wns:.3f} ns"
+                    key_metrics["Hold TNS"] = f"{hold_tns:.2f} ns"
+            
+            # Check DSR Mux Clock Skew thresholds
+            # Thresholds: FAIL > 10ps, WARN 5ps < skew <= 10ps, PASS <= 5ps
+            dsr_skew_setup = latest.get('dsr_skew_setup')
+            dsr_skew_hold = latest.get('dsr_skew_hold')
+            
+            if dsr_skew_setup is not None:
+                key_metrics["DSR Skew (Setup)"] = f"{dsr_skew_setup:.2f} ps"
+                if dsr_skew_setup > 10.0:
+                    if status != "FAIL":
+                        status = "FAIL"
+                    issues.append(f"DSR skew (setup) violation: {dsr_skew_setup:.2f} ps (target: <=5ps)")
+                elif dsr_skew_setup > 5.0:
+                    if status != "FAIL":
+                        status = "WARN"
+                    issues.append(f"DSR skew (setup) marginal: {dsr_skew_setup:.2f} ps (target: <=5ps)")
+            
+            if dsr_skew_hold is not None:
+                key_metrics["DSR Skew (Hold)"] = f"{dsr_skew_hold:.2f} ps"
+                if dsr_skew_hold > 10.0:
+                    if status != "FAIL":
+                        status = "FAIL"
+                    issues.append(f"DSR skew (hold) violation: {dsr_skew_hold:.2f} ps (target: <=5ps)")
+                elif dsr_skew_hold > 5.0:
+                    if status != "FAIL":
+                        status = "WARN"
+                    issues.append(f"DSR skew (hold) marginal: {dsr_skew_hold:.2f} ps (target: <=5ps)")
             
             key_metrics["Work Areas"] = str(len(timing_data))
         
@@ -4545,7 +9277,7 @@ class WorkareaReviewer:
         
         # Generate timestamp for filename
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        html_filename = f"{os.environ.get('USER', 'avice')}_PT_timing_summary_{self.design_info.top_hier}_{timestamp}.html"
+        html_filename = f"{self.design_info.top_hier}_{os.environ.get('USER', 'avice')}_PT_timing_summary_{timestamp}.html"
         
         # Read and encode logo as base64 for HTML embedding (portability)
         logo_data = ""
@@ -4577,45 +9309,71 @@ class WorkareaReviewer:
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }}
         .header {{
-            text-align: center;
-            border-bottom: 3px solid #3498db;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 20px;
+            align-items: center;
+            border-radius: 15px 15px 0 0;
+            margin: -20px -20px 0 -20px;
         }}
         .logo {{
-            text-align: center;
-            margin-bottom: 10px;
-        }}
-        .logo img {{
-            max-height: 80px;
-            max-width: 300px;
-            height: auto;
-            width: auto;
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            background: white;
+            padding: 10px;
             cursor: pointer;
-            transition: transform 0.2s ease;
-            border-radius: 6px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }}
-        .logo img:hover {{
+        .logo:hover {{
             transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
         }}
-        .image-expanded {{
+        .header-text h1 {{
+            font-size: 28px;
+            margin: 0 0 8px 0;
+            color: white;
+            border: none;
+        }}
+        .header-text p {{
+            opacity: 0.9;
+            font-size: 14px;
+            margin: 0;
+        }}
+        .logo-modal {{
+            display: none;
             position: fixed;
-            top: 0;
+            z-index: 9999;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(0, 0, 0, 0.9);
-            z-index: 1000;
-            display: flex;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
             justify-content: center;
             align-items: center;
-            cursor: pointer;
         }}
-        .image-expanded img {{
+        .logo-modal.active {{
+            display: flex;
+        }}
+        .logo-modal-content {{
             max-width: 90%;
             max-height: 90%;
-            border: 3px solid #3498db;
+            border-radius: 10px;
+        }}
+        .logo-modal-close {{
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }}
+        .logo-modal-close:hover {{
+            color: #bbb;
         }}
         h1 {{
             color: #2c3e50;
@@ -4624,15 +9382,39 @@ class WorkareaReviewer:
             border-bottom: 3px solid #3498db;
             padding-bottom: 10px;
         }}
+        /* Enhanced Grid Layout for Info Panels */
         .info {{
             background-color: #ecf0f1;
-            padding: 15px;
-            border-radius: 5px;
+            padding: 20px;
+            border-radius: 8px;
             margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 15px;
+            align-items: start;
+            border-left: 5px solid #3498db;
         }}
         .info h3 {{
             margin-top: 0;
             color: #34495e;
+            grid-column: 1 / -1;
+        }}
+        .info-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            grid-column: 1 / -1;
+        }}
+        .info-item {{
+            background: white;
+            padding: 12px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }}
+        .info-item strong {{
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 5px;
         }}
         .table-wrapper {{
             overflow-x: auto;
@@ -4760,44 +9542,49 @@ class WorkareaReviewer:
                 transform: translateY(0);
             }}
         }}
+        
+        /* Copyright Footer */
+        .footer {{
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 10px;
+            font-size: 14px;
+        }}
+        
+        .footer p {{
+            margin: 5px 0;
+        }}
+        
+        .footer strong {{
+            color: #00ff00;
+        }}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">
-                <img src="data:image/png;base64,{logo_data}" alt="AVICE Logo" onclick="expandImage(this)">
+            <img class='logo' src='data:image/png;base64,{logo_data}' alt='AVICE Logo' onclick="showLogoModal()" title="Click to enlarge">
+            <div class="header-text">
+                <h1>Auto PT Timing Summary Report</h1>
+                <p>Design: {self.design_info.top_hier} | Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+                <p>Workarea: {self.workarea_abs}</p>
+                <p>Total Work Areas: {len(timing_data)} | Timing Groups: {len(all_groups)}</p>
             </div>
-        <h1>Auto PT Timing Summary Report - {self.design_info.top_hier}</h1>
         </div>
         
-        <div class="info">
-            <h3>Report Information</h3>
-            <p><strong>Workarea:</strong> {self.workarea_abs}</p>
-            <p><strong>Generated:</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
-            <p><strong>Total Work Areas:</strong> {len(timing_data)}</p>
-            <p><strong>Timing Groups:</strong> {len(all_groups)}</p>
-        </div>
-        
-        <div class="info">
-            <h3>Available HTML Reports</h3>
-            <p>Click on any work area below to access its HTML reports:</p>
-            <ul>
-"""
-        
-        # Add links to all HTML reports
-        for work_data in timing_data:
-            if work_data.get("html_reports"):
-                html_content += f'                <li><strong>{work_data["work_dir"]}:</strong><br>\n'
-                for html_report in work_data["html_reports"]:
-                    # Use absolute path for HTML links to ensure they work from any location
-                    html_content += f'                    <a href="file://{html_report}" target="_blank">{os.path.basename(html_report)}</a><br>\n'
-                html_content += f'                </li>\n'
-        
-        html_content += """            </ul>
+        <!-- Logo Modal -->
+        <div id="logoModal" class="logo-modal" onclick="hideLogoModal()">
+            <span class="logo-modal-close">&times;</span>
+            <img class="logo-modal-content" src='data:image/png;base64,{logo_data}' alt='AVICE Logo'>
         </div>
         
         <h2>Dual-Scenario Timing Summary</h2>
+        <p class="info" style="background: #d1ecf1; padding: 15px; border-radius: 5px; border-left: 4px solid #17a2b8;">
+            <strong>Note:</strong> Click on work directory names in the table below to access individual HTML reports.
+        </p>
 """
         
         # Generate separate tables for Setup and Hold scenarios
@@ -4821,8 +9608,8 @@ class WorkareaReviewer:
             if scenario_name:
                 scenario_display = f"{scenario_title.split(' <')[0]} <span style='font-size:0.8em; color:#e0e0e0;'>({scenario_name})</span>"
             
-            # Setup starts expanded, Hold starts collapsed
-            is_expanded = "expanded" if scenario_type == "setup" else ""
+            # Both Setup and Hold start collapsed
+            is_expanded = ""  # Start collapsed
             section_id = f"section-{scenario_type}"
             
             html_content += f"""
@@ -5058,7 +9845,56 @@ class WorkareaReviewer:
                 icon.classList.add('expanded');
             }}
         }}
+        
+        function showLogoModal() {{
+            document.getElementById('logoModal').classList.add('active');
+        }}
+        
+        function hideLogoModal() {{
+            document.getElementById('logoModal').classList.remove('active');
+        }}
+        
+        // Allow ESC key to close modal
+        document.addEventListener('keydown', function(event) {{
+            if (event.key === 'Escape') {{
+                hideLogoModal();
+            }}
+        }});
+        
+        // Back to top button functionality - wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {{
+            var backToTopBtn = document.getElementById('backToTopBtn');
+            if (backToTopBtn) {{
+                window.addEventListener('scroll', function() {{
+                    if (window.pageYOffset > 300) {{
+                        backToTopBtn.style.display = 'block';
+                    }} else {{
+                        backToTopBtn.style.display = 'none';
+                    }}
+                }});
+                
+                backToTopBtn.addEventListener('click', function() {{
+                    window.scrollTo(0, 0);
+                }});
+            }}
+        }});
     </script>
+    
+    <button id="backToTopBtn" style="display: none; position: fixed; bottom: 30px; right: 30px; 
+            z-index: 99; border: none; outline: none; background-color: #667eea; color: white; 
+            cursor: pointer; padding: 15px 20px; border-radius: 50px; font-size: 16px; 
+            font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease;"
+            onmouseover="this.style.backgroundColor='#5568d3'; this.style.transform='scale(1.1)';"
+            onmouseout="this.style.backgroundColor='#667eea'; this.style.transform='scale(1)';">
+        ↑ Top
+    </button>
+    
+    <!-- Copyright Footer -->
+    <div class="footer">
+        <p><strong>AVICE PT Signoff Timing Summary</strong></p>
+        <p>Copyright (c) 2025 Alon Vice (avice)</p>
+        <p>Contact: avice@nvidia.com</p>
+    </div>
 </body>
 </html>"""
         
@@ -5082,7 +9918,7 @@ class WorkareaReviewer:
             
             if html_filename:
                 print(f"\n  {Color.CYAN}PT Timing Summary (Dual-Scenario):{Color.RESET}")
-                print(f"    Open with: firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+                print(f"    Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{os.path.basename(html_filename)}{Color.RESET} &")
                 
                 # Show brief summary
                 print(f"\n  {Color.CYAN}Work Areas Summary:{Color.RESET}")
@@ -5242,8 +10078,63 @@ class WorkareaReviewer:
         """Run physical verification analysis"""
         self.print_header(FlowStage.PHYSICAL_VERIFICATION)
         
+        # Check if PV was run by looking for PV flow directory and files
+        pv_flow_dir = os.path.join(self.workarea, "pv_flow")
+        pv_was_run = os.path.exists(pv_flow_dir)
+        
+        if not pv_was_run:
+            print(f"{Color.YELLOW}Physical Verification (PV) flow was not run in this workarea{Color.RESET}")
+            
+            # Add NOT_RUN summary to master dashboard
+            self._add_section_summary(
+                section_name="Physical Verification (PV)",
+                section_id="pv",
+                stage=FlowStage.PHYSICAL_VERIFICATION,
+                status="NOT_RUN",
+                key_metrics={},
+                html_file="",
+                priority=2,
+                issues=["PV flow was not executed"],
+                icon="[PV]"
+            )
+            return
+        
         # Show PV flow timestamps at the beginning
-        self._show_pv_flow_timestamps()
+        timeline_result = self._show_pv_flow_timestamps()
+        
+        # Initialize violation counts and data structures
+        lvs_violations = 0
+        drc_violations = 0
+        antenna_violations = 0
+        
+        # Data structures for HTML report
+        lvs_data = {}
+        drc_data = {'total_violations': 0, 'violations': [], 'file_path': ''}
+        antenna_data = {'total_violations': 0, 'file_path': ''}
+        pv_flow_data = {}
+        timeline_data = {}
+        
+        # Parse timeline data
+        if timeline_result and timeline_result[0]:
+            start_time, end_time = timeline_result
+            if end_time != "RUNNING":
+                # Calculate duration
+                try:
+                    from datetime import datetime
+                    start_dt = datetime.strptime(start_time, "%Y/%m/%d %I:%M:%S%p")
+                    end_dt = datetime.strptime(end_time.split(' (')[0] if ' (' in end_time else end_time, "%Y/%m/%d %I:%M:%S%p")
+                    duration_sec = int((end_dt - start_dt).total_seconds())
+                    if duration_sec >= 3600:
+                        duration_str = f"{duration_sec//3600}h {(duration_sec%3600)//60}m {duration_sec%60}s"
+                    elif duration_sec >= 60:
+                        duration_str = f"{(duration_sec%3600)//60}m {duration_sec%60}s"
+                    else:
+                        duration_str = f"{duration_sec}s"
+                    timeline_data = {'start': start_time, 'end': end_time, 'duration': duration_str}
+                except:
+                    timeline_data = {'start': start_time, 'end': end_time, 'duration': 'N/A'}
+            else:
+                timeline_data = {'start': start_time, 'end': 'Running', 'duration': 'In progress'}
         
         # LVS errors
         lvs_pattern = f"pv_flow/drc_dir/{self.design_info.top_hier}/lvs_icv_ipo*/{self.design_info.top_hier}_ipo*_fill.LVS_ERRORS"
@@ -5252,6 +10143,9 @@ class WorkareaReviewer:
         if lvs_files:
             self.print_file_info(lvs_files[0], "LVS Errors")
             violations = self.lvs_parser.parse_lvs_errors(lvs_files[0])
+            lvs_violations = violations['failed_equivalence_points']
+            lvs_data = violations.copy()
+            lvs_data['file_path'] = os.path.abspath(lvs_files[0])
             
             # Display detailed LVS violation information
             status_color = Color.RED if violations['status'] == 'FAIL' else Color.GREEN
@@ -5303,7 +10197,12 @@ class WorkareaReviewer:
         
         if drc_files:
             self.print_file_info(drc_files[0], "DRC Errors")
-            self._analyze_drc_errors(drc_files[0])
+            drc_violations, drc_violations_list = self._analyze_drc_errors_with_data(drc_files[0])
+            drc_data = {
+                'total_violations': drc_violations,
+                'violations': drc_violations_list,
+                'file_path': os.path.abspath(drc_files[0])
+            }
         
         # Antenna errors
         antenna_pattern = f"pv_flow/drc_dir/{self.design_info.top_hier}/drc_icv_antenna_ipo*/{self.design_info.top_hier}_ipo*_fill.LAYOUT_ERRORS"
@@ -5311,25 +10210,68 @@ class WorkareaReviewer:
         
         if antenna_files:
             self.print_file_info(antenna_files[0], "Antenna Errors")
-            self._analyze_antenna_errors(antenna_files[0])
+            antenna_violations = self._analyze_antenna_errors(antenna_files[0])
+            antenna_data = {
+                'total_violations': antenna_violations,
+                'file_path': os.path.abspath(antenna_files[0])
+            }
         else:
             print("  No antenna error report found")
         
         # PV Flow Analysis
-        self._analyze_pv_flow()
+        pv_flow_data = self._analyze_pv_flow_with_data()
+        
+        # Generate HTML report
+        pv_html_path = self._generate_pv_html_report(lvs_data, drc_data, antenna_data, pv_flow_data, timeline_data)
+        
+        if pv_html_path:
+            html_filename = os.path.basename(pv_html_path)
+            print(f"\n  {Color.CYAN}Physical Verification HTML Report:{Color.RESET}")
+            print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+        
+        # Determine status based on violation counts
+        # Thresholds: LVS > 5, DRC > 100, Antenna > 10 → FAIL
+        #             All = 0 → PASS
+        #             Otherwise → WARN
+        status = "PASS"
+        issues = []
+        
+        # Check if any violation type exceeds FAIL threshold
+        if lvs_violations > 5 or drc_violations > 100 or antenna_violations > 10:
+            status = "FAIL"
+            if lvs_violations > 5:
+                issues.append(f"LVS failed equivalence points: {lvs_violations} (threshold: ≤5)")
+            if drc_violations > 100:
+                issues.append(f"DRC violations: {drc_violations} (threshold: ≤100)")
+            if antenna_violations > 10:
+                issues.append(f"Antenna violations: {antenna_violations} (threshold: ≤10)")
+        # Check if any violation type > 0 but within FAIL threshold (WARN)
+        elif lvs_violations > 0 or drc_violations > 0 or antenna_violations > 0:
+            status = "WARN"
+            if lvs_violations > 0:
+                issues.append(f"LVS failed equivalence points: {lvs_violations} (threshold: ≤5)")
+            if drc_violations > 0:
+                issues.append(f"DRC violations: {drc_violations} (threshold: ≤100)")
+            if antenna_violations > 0:
+                issues.append(f"Antenna violations: {antenna_violations} (threshold: ≤10)")
+        
+        # Prepare key metrics
+        key_metrics = {
+            "LVS Failures": str(lvs_violations),
+            "DRC Violations": str(drc_violations),
+            "Antenna Violations": str(antenna_violations)
+        }
         
         # Add section summary for master dashboard
         self._add_section_summary(
             section_name="Physical Verification (PV)",
             section_id="pv",
             stage=FlowStage.PHYSICAL_VERIFICATION,
-            status="PASS",
-            key_metrics={
-                "Design": self.design_info.top_hier
-            },
-            html_file="",
+            status=status,
+            key_metrics=key_metrics,
+            html_file=pv_html_path if pv_html_path else "",
             priority=2,
-            issues=[],
+            issues=issues,
             icon="[PV]"
         )
     
@@ -5454,6 +10396,97 @@ class WorkareaReviewer:
             self._parse_pv_flow_status(prc_status_files[0])
         else:
             print(f"\n{Color.YELLOW}No PV flow status files found{Color.RESET}")
+    
+    def _analyze_pv_flow_with_data(self):
+        """Wrapper for _analyze_pv_flow that returns structured data for HTML generation"""
+        prc_pattern = f"pv_flow/nv_flow/pv_{self.design_info.top_hier}.prc"
+        prc_status_pattern = f"pv_flow/nv_flow/pv_{self.design_info.top_hier}.prc.status"
+        
+        prc_files = self.file_utils.find_files(prc_pattern, self.workarea)
+        prc_status_files = self.file_utils.find_files(prc_status_pattern, self.workarea)
+        
+        pv_flow_data = {}
+        
+        if prc_status_files:
+            try:
+                with open(prc_status_files[0], 'r') as f:
+                    content = f.read()
+                
+                # Extract flow steps
+                steps = []
+                lines = content.split('\n')
+                
+                for line in lines:
+                    if line.strip() and not line.startswith('#') and '    ' in line:
+                        parts = line.split()
+                        if len(parts) >= 6 and parts[3] in ['DONE', 'FAILED', 'RUNNING', 'UNLAUNCHED']:
+                            block = parts[0]
+                            experiment = parts[1]
+                            step = parts[2]
+                            status = parts[3]
+                            duration = parts[4]
+                            
+                            # Convert duration to readable format
+                            if duration.isdigit() and int(duration) > 0:
+                                duration_sec = int(duration)
+                                if duration_sec >= 3600:
+                                    duration_str = f"{duration_sec//3600}h {(duration_sec%3600)//60}m {duration_sec%60}s"
+                                elif duration_sec >= 60:
+                                    duration_str = f"{(duration_sec%3600)//60}m {duration_sec%60}s"
+                                else:
+                                    duration_str = f"{duration_sec}s"
+                            else:
+                                duration_str = duration
+                            
+                            steps.append({
+                                'block': block,
+                                'experiment': experiment,
+                                'step': step,
+                                'status': status,
+                                'duration': duration_str,
+                                'duration_sec': int(duration) if duration.isdigit() else 0
+                            })
+                
+                # Group by experiment
+                experiments = {}
+                for step in steps:
+                    exp_key = f"{step['block']}/{step['experiment']}"
+                    if exp_key not in experiments:
+                        experiments[exp_key] = []
+                    experiments[exp_key].append(step)
+                
+                # Process each experiment
+                for exp_name, exp_steps in experiments.items():
+                    total_runtime = sum(step['duration_sec'] for step in exp_steps if step['status'] == 'DONE')
+                    done_steps = [s for s in exp_steps if s['status'] == 'DONE']
+                    unlaunched_steps = [s for s in exp_steps if s['status'] == 'UNLAUNCHED']
+                    
+                    # Format total runtime
+                    if total_runtime >= 3600:
+                        total_str = f"{total_runtime//3600}h {(total_runtime%3600)//60}m {total_runtime%60}s"
+                    elif total_runtime >= 60:
+                        total_str = f"{(total_runtime%3600)//60}m {total_runtime%60}s"
+                    else:
+                        total_str = f"{total_runtime}s"
+                    
+                    # Get key steps
+                    key_steps = [(s['step'], s['duration']) for s in done_steps 
+                                 if s['step'] in ['temp_run_lvs', 'temp_run_drc', 'temp_run_ant', 'drc_lvs', 'ant']]
+                    
+                    pv_flow_data[exp_name] = {
+                        'completed': len(done_steps),
+                        'unlaunched': len(unlaunched_steps),
+                        'total_runtime': total_str,
+                        'key_steps': key_steps
+                    }
+                    
+            except Exception as e:
+                print(f"  Error extracting PV flow data: {e}")
+        
+        # Call regular function to print output
+        self._analyze_pv_flow()
+        
+        return pv_flow_data
     
     def _parse_pv_flow_status(self, status_file: str):
         """Parse PV flow status file and display runtime information"""
@@ -5632,7 +10665,7 @@ class WorkareaReviewer:
             # Check if CLEAN or ERRORS
             if "LAYOUT ERRORS RESULTS: CLEAN" in content:
                 print(f"  {Color.GREEN}Status: CLEAN - No DRC violations{Color.RESET}")
-                return
+                return 0
             elif "LAYOUT ERRORS RESULTS: ERRORS" in content:
                 print(f"  {Color.RED}Status: ERRORS - DRC violations found{Color.RESET}")
             
@@ -5642,13 +10675,19 @@ class WorkareaReviewer:
             
             # Find all violation lines in ERROR SUMMARY
             # Pattern to match rule violations that may span multiple lines
-            violation_pattern = r'([A-Z0-9._]+)\s*:\s*\([^)]+\).*?(\d+)\s+violations?\s+found\.'
-            matches = re.findall(violation_pattern, content, re.DOTALL)
+            # Format: RULE_NAME : description text ... X violations found.
+            violation_pattern = r'^\s*([A-Z0-9._]+)\s*:\s*(.*?)(\d+)\s+violations?\s+found\.'
+            matches = re.findall(violation_pattern, content, re.MULTILINE | re.DOTALL)
             
-            for rule, count in matches:
+            for rule, description, count in matches:
                 count_int = int(count)
                 if count_int > 0:  # Only include non-zero violations
-                    violations.append((rule, count_int))
+                    # Clean up description: remove extra whitespace and newlines
+                    desc_clean = ' '.join(description.split())
+                    # Truncate if too long
+                    if len(desc_clean) > 60:
+                        desc_clean = desc_clean[:57] + "..."
+                    violations.append((rule, desc_clean, count_int))
                     total_violations += count_int
             
             if violations:
@@ -5656,33 +10695,108 @@ class WorkareaReviewer:
                 print(f"  {Color.CYAN}Violation breakdown:{Color.RESET}")
                 
                 # Sort by violation count (descending)
-                violations.sort(key=lambda x: x[1], reverse=True)
+                violations.sort(key=lambda x: x[2], reverse=True)
                 
                 # Create table format
-                print(f"    {'Rule':<20} {'Count':<8} {'Percentage':<10}")
-                print(f"    {'-'*20} {'-'*8} {'-'*10}")
+                print(f"    {'Rule':<20} {'Count':<8} {'Description':<60}")
+                print(f"    {'-'*20} {'-'*8} {'-'*60}")
                 
-                for rule, count in violations:
-                    percentage = f"{(count/total_violations)*100:.1f}%"
-                    print(f"    {rule:<20} {count:<8} {percentage:<10}")
+                for rule, description, count in violations:
+                    print(f"    {rule:<20} {count:<8} {description:<60}")
             else:
-                # Fallback to simple counting
-                matches = self.file_utils.grep_file(r".*violation.*found.*", drc_file)
-                total_violations = 0
-                for match in matches:
-                    numbers = re.findall(r'\d+', match)
-                    if numbers:
-                        total_violations += int(numbers[0])
-                print(f"  Total DRC violations: {total_violations}")
+                # Fallback: Try alternate parsing methods
+                print(f"  {Color.YELLOW}Warning: Could not parse DRC violation details with standard pattern{Color.RESET}")
+                
+                # Try to find ERROR SUMMARY section and extract lines
+                summary_match = re.search(r'ERROR SUMMARY.*?(?=\n\n|\Z)', content, re.DOTALL)
+                if summary_match:
+                    summary_text = summary_match.group(0)
+                    # Look for lines with "violation" in ERROR SUMMARY
+                    violation_lines = [line.strip() for line in summary_text.split('\n') 
+                                      if 'violation' in line.lower() and line.strip()]
+                    
+                    if violation_lines:
+                        print(f"  {Color.CYAN}DRC Violations Found:{Color.RESET}")
+                        total_violations = 0
+                        for line in violation_lines:
+                            print(f"    {line}")
+                            # Try to extract count from line
+                            numbers = re.findall(r'(\d+)\s+violations?\s+found', line, re.IGNORECASE)
+                            if numbers:
+                                total_violations += int(numbers[0])
+                        print(f"  {Color.RED}Total DRC violations: {total_violations}{Color.RESET}")
+                    else:
+                        # Last resort: simple counting
+                        matches = self.file_utils.grep_file(r".*violation.*found.*", drc_file)
+                        total_violations = 0
+                        for match in matches:
+                            numbers = re.findall(r'\d+', match)
+                            if numbers:
+                                total_violations += int(numbers[0])
+                        print(f"  Total DRC violations: {total_violations}")
+                        print(f"  {Color.CYAN}Note: See full details in DRC file{Color.RESET}")
+                else:
+                    # No ERROR SUMMARY found, show sample content
+                    print(f"  {Color.CYAN}Sample from DRC file (first 10 lines with 'violation'):{Color.RESET}")
+                    violation_sample = [line for line in content.split('\n') if 'violation' in line.lower()][:10]
+                    for line in violation_sample:
+                        print(f"    {line.strip()}")
+                    print(f"  {Color.YELLOW}Please check the full DRC file for details{Color.RESET}")
+            
+            # Return total violation count
+            return total_violations
                 
         except Exception as e:
             print(f"  Error analyzing DRC file: {e}")
+            return 0
+    
+    def _analyze_drc_errors_with_data(self, drc_file: str):
+        """Wrapper for _analyze_drc_errors that returns both count and violations list for HTML generation"""
+        try:
+            with open(drc_file, 'r') as f:
+                content = f.read()
+            
+            violations = []
+            total_violations = 0
+            
+            # Check if CLEAN or ERRORS
+            if "LAYOUT ERRORS RESULTS: CLEAN" in content:
+                # Call regular function to print output
+                self._analyze_drc_errors(drc_file)
+                return 0, []
+            
+            # Extract violation details
+            violation_pattern = r'^\s*([A-Z0-9._]+)\s*:\s*(.*?)(\d+)\s+violations?\s+found\.'
+            matches = re.findall(violation_pattern, content, re.MULTILINE | re.DOTALL)
+            
+            for rule, description, count in matches:
+                count_int = int(count)
+                if count_int > 0:
+                    desc_clean = ' '.join(description.split())
+                    if len(desc_clean) > 60:
+                        desc_clean = desc_clean[:57] + "..."
+                    violations.append((rule, desc_clean, count_int))
+                    total_violations += count_int
+            
+            # Sort by violation count (descending)
+            violations.sort(key=lambda x: x[2], reverse=True)
+            
+            # Call regular function to print output
+            self._analyze_drc_errors(drc_file)
+            
+            return total_violations, violations
+                
+        except Exception as e:
+            print(f"  Error analyzing DRC file: {e}")
+            return 0, []
     
     def _analyze_antenna_errors(self, antenna_file: str):
         """Analyze antenna errors file and provide detailed information"""
         try:
             with open(antenna_file, 'r') as f:
                 content = f.read()
+            
+            total_violations = 0
             
             # Extract LAYOUT ERRORS RESULTS
             matches = self.file_utils.grep_file(r"LAYOUT ERRORS RESULTS.*", antenna_file)
@@ -5691,11 +10805,12 @@ class WorkareaReviewer:
                 if "CLEAN" in match.upper():
                     print(f"  {Color.GREEN}Status: {match.strip()}{Color.RESET}")
                     print(f"  {Color.GREEN}No antenna violations found{Color.RESET}")
+                    return 0
                 else:
                     print(f"  {Color.RED}Status: {match.strip()}{Color.RESET}")
             
             
-            # If there are errors, extract error summary
+            # If there are errors, extract error summary and count violations
             if "LAYOUT ERRORS RESULTS: ERRORS" in content:
                 result = self.file_utils.run_command(f"sed -n '/ERROR SUMMARY/,/ERROR DETAILS/p' {antenna_file} | sed -e '/^$/d' -e '/ERROR DETAILS/d'")
                 if result.strip():
@@ -5703,19 +10818,39 @@ class WorkareaReviewer:
                     for line in result.strip().split('\n'):
                         if line.strip():
                             print(f"    {line}")
+                            # Try to extract violation count from lines
+                            numbers = re.findall(r'(\d+)\s+violations?\s+found', line, re.IGNORECASE)
+                            if numbers:
+                                total_violations += int(numbers[0])
+                
+                # If no violations counted from summary, try overall pattern
+                if total_violations == 0:
+                    violation_pattern = r'(\d+)\s+violations?\s+found'
+                    matches = re.findall(violation_pattern, content, re.IGNORECASE)
+                    for count in matches:
+                        total_violations += int(count)
+                
+                if total_violations > 0:
+                    print(f"  {Color.RED}Total Antenna violations: {total_violations}{Color.RESET}")
+            
+            return total_violations
                             
         except Exception as e:
             print(f"  Error analyzing antenna file: {e}")
+            return 0
     
     def _analyze_gl_check_errors(self, waived_file, non_waived_file):
         """Analyze GL Check error files and show waived vs non-waived counts per checker"""
         try:
             # Parse waived errors
             waived_checkers = {}
+            waived_lines_total = 0
             if os.path.exists(waived_file):
                 try:
                     with open(waived_file, 'r') as f:
-                        for line in f:
+                        lines = f.readlines()
+                        waived_lines_total = len(lines)
+                        for line in lines:
                             # Match pattern: -E-[code](checkerName)
                             match = re.match(r'-E-\[(\d+)\]\((\w+)\)', line)
                             if match:
@@ -5728,10 +10863,13 @@ class WorkareaReviewer:
             
             # Parse non-waived errors
             non_waived_checkers = {}
+            non_waived_lines_total = 0
             if os.path.exists(non_waived_file):
                 try:
                     with open(non_waived_file, 'r') as f:
-                        for line in f:
+                        lines = f.readlines()
+                        non_waived_lines_total = len(lines)
+                        for line in lines:
                             # Match pattern: -E-[code](checkerName)
                             match = re.match(r'-E-\[(\d+)\]\((\w+)\)', line)
                             if match:
@@ -5745,9 +10883,30 @@ class WorkareaReviewer:
             # Combine all checkers
             all_checkers = set(waived_checkers.keys()) | set(non_waived_checkers.keys())
             
+            # If we couldn't parse any checkers but files have content, show raw counts
+            if not all_checkers and (waived_lines_total > 0 or non_waived_lines_total > 0):
+                print(f"\n  {Color.YELLOW}Warning: Could not parse checker format from error files{Color.RESET}")
+                print(f"  {Color.CYAN}GL Check Error Summary (Raw):{Color.RESET}")
+                if waived_lines_total > 0:
+                    print(f"    {Color.GREEN}Waived Errors: {waived_lines_total} lines{Color.RESET}")
+                if non_waived_lines_total > 0:
+                    print(f"    {Color.RED}Non-Waived Errors: {non_waived_lines_total} lines{Color.RESET}")
+                print(f"\n  {Color.CYAN}Error file format sample (first 3 lines from non-waived):{Color.RESET}")
+                if os.path.exists(non_waived_file):
+                    with open(non_waived_file, 'r') as f:
+                        for i, line in enumerate(f):
+                            if i >= 3:
+                                break
+                            print(f"    {line.rstrip()}")
+                print(f"\n  Waived Errors File: {waived_file}")
+                print(f"  Non-Waived Errors File: {non_waived_file}")
+                # Return raw line counts
+                total = waived_lines_total + non_waived_lines_total
+                return total, waived_lines_total, non_waived_lines_total
+            
             if not all_checkers:
                 print("  No GL Check errors found")
-                return
+                return 0, 0, 0
             
             # Calculate totals
             total_waived = sum(waived_checkers.values())
@@ -5789,15 +10948,27 @@ class WorkareaReviewer:
             # Print file paths
             print(f"\n  Waived Errors File: {waived_file}")
             print(f"  Non-Waived Errors File: {non_waived_file}")
+            
+            # Return totals for status determination
+            return total_errors, total_waived, total_non_waived
                     
         except Exception as e:
             print(f"  Error analyzing GL Check errors: {e}")
+            return 0, 0, 0
     
     def _generate_gl_check_html_content(self, waived_checkers, non_waived_checkers, non_waived_errors_detail,
                                         sorted_checkers, total_errors, total_waived, total_non_waived,
                                         allowed_clktree_cells, dont_use_cells, key_reports, main_logs, timestamped_dirs,
                                         waived_file, non_waived_file):
         """Generate the HTML content for GL Check report"""
+        
+        # Read and encode logo
+        import base64
+        logo_data = ""
+        logo_path = os.path.join(os.path.dirname(__file__), "images/avice_logo.png")
+        if os.path.exists(logo_path):
+            with open(logo_path, "rb") as logo_file:
+                logo_data = base64.b64encode(logo_file.read()).decode('utf-8')
         
         # Build checker rows HTML
         checker_rows = []
@@ -5840,17 +11011,24 @@ class WorkareaReviewer:
         else:
             clktree_cells_html = "<div class='no-data'>No allowed clock tree cells found</div>"
         
-        # Build dont_use cells HTML
+        # Build dont_use cells HTML - limit initial display to 50 cells
         dont_use_cells_html = ""
+        dont_use_cells_more_html = ""
         if dont_use_cells:
-            for cell in dont_use_cells:
+            # Show first 50 cells
+            for cell in dont_use_cells[:50]:
                 dont_use_cells_html += f"<div class='cell-item'>{cell}</div>"
+            # Hide remaining cells
+            if len(dont_use_cells) > 50:
+                for cell in dont_use_cells[50:]:
+                    dont_use_cells_more_html += f"<div class='cell-item'>{cell}</div>"
         else:
             dont_use_cells_html = "<div class='no-data'>No dont_use cells found</div>"
         
         # Build reports HTML
         reports_html = ""
         if key_reports:
+            reports_html = "<div class='reports-container'>"
             for name, filepath in key_reports:
                 reports_html += f"""
                     <div class='report-item'>
@@ -5858,12 +11036,14 @@ class WorkareaReviewer:
                         <button class='btn-log' onclick='window.open("file://{filepath}", "_blank")' title='Open {filepath}'>Open Log</button>
                     </div>
                 """
+            reports_html += "</div>"
         else:
             reports_html = "<div class='no-data'>No reports found</div>"
         
         # Build logs HTML
         logs_html = ""
         if main_logs:
+            logs_html = "<div class='logs-container'>"
             for name, filepath in main_logs:
                 logs_html += f"""
                     <div class='report-item'>
@@ -5871,15 +11051,18 @@ class WorkareaReviewer:
                         <button class='btn-log' onclick='window.open("file://{filepath}", "_blank")' title='Open {filepath}'>Open Log</button>
                     </div>
                 """
+            logs_html += "</div>"
         else:
             logs_html = "<div class='no-data'>No logs found</div>"
         
         # Build run history HTML
         run_history_html = ""
         if timestamped_dirs:
+            run_history_html = "<div class='run-history-container'>"
             for run_dir in reversed(timestamped_dirs):  # Most recent first
                 formatted_date = run_dir.replace('_', '/', 2).replace('_', ' ', 1).replace('_', ':', 1).replace('_', ':', 1)
                 run_history_html += f"<div class='run-item'>{formatted_date}</div>"
+            run_history_html += "</div>"
         else:
             run_history_html = "<div class='no-data'>No run history found</div>"
         
@@ -5918,62 +11101,140 @@ class WorkareaReviewer:
         }}
         
         .header {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: white;
             padding: 30px;
-            text-align: center;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 20px;
+            align-items: center;
         }}
         
-        .header h1 {{
+        .logo {{
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            background: white;
+            padding: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }}
+        
+        .logo:hover {{
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }}
+        
+        .header-text h1 {{
             font-size: 2.5em;
-            margin-bottom: 10px;
+            margin: 0 0 10px 0;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }}
         
-        .header .workarea-path {{
+        .header-text .workarea-path {{
             font-size: 0.9em;
             opacity: 0.9;
-            margin-top: 10px;
+            margin-top: 5px;
+        }}
+        
+        .logo-modal {{
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+        }}
+        
+        .logo-modal.active {{
+            display: flex;
+        }}
+        
+        .logo-modal-content {{
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+        }}
+        
+        .logo-modal-close {{
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }}
+        
+        .logo-modal-close:hover {{
+            color: #bbb;
         }}
         
         .summary {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            padding: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 20px;
             background: #f8f9fa;
         }}
         
         .summary-card {{
+            flex: 1 1 calc(20% - 12px);
+            min-width: 160px;
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 12px 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             text-align: center;
             transition: transform 0.3s;
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }}
+        
+        @media (max-width: 899px) {{
+            .summary-card {{
+                flex: 1 1 calc(33.333% - 12px);
+            }}
+        }}
+        
+        @media (max-width: 599px) {{
+            .summary-card {{
+                flex: 1 1 calc(50% - 12px);
+            }}
         }}
         
         .summary-card:hover {{
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
         }}
         
         .summary-card .label {{
-            font-size: 0.9em;
+            font-size: 0.75em;
             color: #666;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
         }}
         
         .summary-card .value {{
-            font-size: 2.5em;
+            font-size: 2em;
             font-weight: bold;
+            line-height: 1;
         }}
         
         .summary-card .status {{
-            font-size: 2em;
+            font-size: 1.6em;
             font-weight: bold;
-            padding: 10px;
+            padding: 6px;
             border-radius: 5px;
+            line-height: 1;
         }}
         
         .pass-text {{
@@ -5985,11 +11246,11 @@ class WorkareaReviewer:
         }}
         
         .content {{
-            padding: 30px;
+            padding: 20px;
         }}
         
         .section {{
-            margin-bottom: 40px;
+            margin-bottom: 15px;
         }}
         
         .section-header {{
@@ -6109,12 +11370,12 @@ class WorkareaReviewer:
         .cell-item {{
             display: inline-block;
             background: white;
-            padding: 8px 15px;
-            margin: 5px;
+            padding: 6px 12px;
+            margin: 4px;
             border-radius: 5px;
             border: 1px solid #ddd;
             font-family: 'Courier New', monospace;
-            font-size: 0.9em;
+            font-size: 0.85em;
             transition: all 0.3s;
         }}
         
@@ -6125,16 +11386,28 @@ class WorkareaReviewer:
             transform: scale(1.05);
         }}
         
+        .reports-container, .logs-container {{
+            column-count: 2;
+            column-gap: 15px;
+        }}
+        
+        @media (max-width: 900px) {{
+            .reports-container, .logs-container {{
+                column-count: 1;
+            }}
+        }}
+        
         .report-item {{
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 15px;
+            padding: 10px 12px;
             background: white;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             border-radius: 5px;
             border-left: 4px solid #667eea;
             transition: all 0.3s;
+            break-inside: avoid;
         }}
         
         .report-item:hover {{
@@ -6144,15 +11417,35 @@ class WorkareaReviewer:
         
         .report-name {{
             font-weight: 500;
+            font-size: 0.9em;
+        }}
+        
+        .run-history-container {{
+            column-count: 3;
+            column-gap: 15px;
+        }}
+        
+        @media (max-width: 1200px) {{
+            .run-history-container {{
+                column-count: 2;
+            }}
+        }}
+        
+        @media (max-width: 768px) {{
+            .run-history-container {{
+                column-count: 1;
+            }}
         }}
         
         .run-item {{
-            padding: 10px 15px;
+            padding: 8px 12px;
             background: white;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             border-radius: 5px;
             border-left: 4px solid #28a745;
             font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            break-inside: avoid;
         }}
         
         .btn-expand, .btn-log {{
@@ -6237,17 +11530,155 @@ class WorkareaReviewer:
             margin-bottom: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }}
+        
+        /* Back to Top Button */
+        .back-to-top {{
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5em;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }}
+        
+        .back-to-top:hover {{
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+        }}
+        
+        .back-to-top.visible {{
+            display: flex;
+        }}
+        
+        /* Quick Navigation */
+        .quick-nav {{
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background: white;
+            border-radius: 10px;
+            padding: 15px 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 999;
+            max-height: 80vh;
+            overflow-y: auto;
+        }}
+        
+        .quick-nav-item {{
+            display: block;
+            padding: 8px 12px;
+            margin: 3px 0;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.85em;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }}
+        
+        .quick-nav-item:hover {{
+            background: #667eea;
+            color: white;
+        }}
+        
+        .quick-nav-toggle {{
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 6px;
+            border-radius: 8px 0 0 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 998;
+            transition: all 0.3s;
+        }}
+        
+        .quick-nav-toggle:hover {{
+            padding-right: 10px;
+        }}
+        
+        /* Sticky Summary Mode */
+        .summary.sticky {{
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            margin-bottom: 0;
+            border-radius: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }}
+        
+        /* Compact mode for sections */
+        .section-content {{
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }}
+        
+        @media (max-width: 768px) {{
+            .quick-nav, .quick-nav-toggle {{
+                display: none;
+            }}
+        }}
+        
+        /* Copyright Footer */
+        .footer {{
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 10px;
+            font-size: 14px;
+        }}
+        
+        .footer p {{
+            margin: 5px 0;
+        }}
+        
+        .footer strong {{
+            color: #00ff00;
+        }}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>GL Check Analysis Report</h1>
-            <div class="workarea-path">Workarea: {os.path.abspath(self.workarea)}</div>
-            <div class="workarea-path">Design: {self.design_info.top_hier}</div>
+            <img class='logo' src='data:image/png;base64,{logo_data}' alt='AVICE Logo' onclick="showLogoModal()" title="Click to enlarge">
+            <div class="header-text">
+                <h1>GL Check Analysis Report</h1>
+                <div class="workarea-path">Workarea: {os.path.abspath(self.workarea)}</div>
+                <div class="workarea-path">Design: {self.design_info.top_hier}</div>
+            </div>
         </div>
         
-        <div class="summary">
+        <!-- Logo Modal -->
+        <div id="logoModal" class="logo-modal" onclick="hideLogoModal()">
+            <span class="logo-modal-close">&times;</span>
+            <img class="logo-modal-content" src='data:image/png;base64,{logo_data}' alt='AVICE Logo'>
+        </div>
+        
+        <div class="summary" id="summary">
             <div class="summary-card">
                 <div class="label">Overall Status</div>
                 <div class="status {status_class}">{overall_status}</div>
@@ -6272,7 +11703,7 @@ class WorkareaReviewer:
         
         <div class="content">
             <!-- Error Analysis Section -->
-            <div class="section">
+            <div class="section" id="error-analysis">
                 <div class="section-header" onclick="toggleSection(this)">
                     <h2>Error Analysis by Checker</h2>
                     <span class="toggle-icon">▼</span>
@@ -6281,9 +11712,9 @@ class WorkareaReviewer:
                     <input type="text" class="search-box" id="checkerSearch" placeholder="Search checkers..." oninput="filterCheckers()" onkeyup="filterCheckers()">
                     
                     <div class="filter-buttons">
-                        <button class="filter-btn active" onclick="filterByStatus('all')">All Checkers</button>
-                        <button class="filter-btn" onclick="filterByStatus('fail')">With Non-Waived Only</button>
-                        <button class="filter-btn" onclick="filterByStatus('pass')">Fully Waived Only</button>
+                        <button class="filter-btn active" onclick="filterByStatus('all', this)">All Checkers</button>
+                        <button class="filter-btn" onclick="filterByStatus('fail', this)">With Non-Waived Only</button>
+                        <button class="filter-btn" onclick="filterByStatus('pass', this)">Fully Waived Only</button>
                     </div>
                     
                     <table id="checkersTable">
@@ -6304,12 +11735,12 @@ class WorkareaReviewer:
             </div>
             
             <!-- Allowed Clock Tree Cells Section -->
-            <div class="section">
-                <div class="section-header" onclick="toggleSection(this)">
+            <div class="section" id="clock-cells">
+                <div class="section-header collapsed" onclick="toggleSection(this)">
                     <h2>Allowed Clock Tree Cells ({len(allowed_clktree_cells)} cells)</h2>
                     <span class="toggle-icon">▼</span>
                 </div>
-                <div class="section-content">
+                <div class="section-content collapsed">
                     <input type="text" class="search-box" id="cellSearch" placeholder="Search cells..." oninput="filterCells()" onkeyup="filterCells()">
                     <div id="cellsContainer">
                         {clktree_cells_html}
@@ -6318,59 +11749,61 @@ class WorkareaReviewer:
             </div>
             
             <!-- Don't Use Cells Section -->
-            <div class="section">
-                <div class="section-header" onclick="toggleSection(this)">
+            <div class="section" id="dont-use">
+                <div class="section-header collapsed" onclick="toggleSection(this)">
                     <h2>Don't Use Cells ({len(dont_use_cells)} cells)</h2>
                     <span class="toggle-icon">▼</span>
                 </div>
-                <div class="section-content">
+                <div class="section-content collapsed">
                     <input type="text" class="search-box" id="dontUseCellSearch" placeholder="Search dont_use cells..." oninput="filterDontUseCells()" onkeyup="filterDontUseCells()">
                     <div id="dontUseCellsContainer">
                         {dont_use_cells_html}
+                        {'<div id="dontUseCellsMore" style="display:none;">' + dont_use_cells_more_html + '</div>' if dont_use_cells_more_html else ''}
                     </div>
+                    {f'<button class="btn-show-more" onclick="toggleDontUseCells(this)" style="margin-top: 15px; width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.3s;">Show {len(dont_use_cells) - 50} More Cells</button>' if len(dont_use_cells) > 50 else ''}
                 </div>
             </div>
             
             <!-- Key Reports Section -->
-            <div class="section">
-                <div class="section-header" onclick="toggleSection(this)">
+            <div class="section" id="reports">
+                <div class="section-header collapsed" onclick="toggleSection(this)">
                     <h2>Key Reports ({len(key_reports)} reports)</h2>
                     <span class="toggle-icon">▼</span>
                 </div>
-                <div class="section-content">
+                <div class="section-content collapsed">
                     {reports_html}
                 </div>
             </div>
             
             <!-- Main Logs Section -->
-            <div class="section">
-                <div class="section-header" onclick="toggleSection(this)">
+            <div class="section" id="logs">
+                <div class="section-header collapsed" onclick="toggleSection(this)">
                     <h2>Main Logs ({len(main_logs)} logs)</h2>
                     <span class="toggle-icon">▼</span>
                 </div>
-                <div class="section-content">
+                <div class="section-content collapsed">
                     {logs_html}
                 </div>
             </div>
             
             <!-- Run History Section -->
-            <div class="section">
-                <div class="section-header" onclick="toggleSection(this)">
+            <div class="section" id="history">
+                <div class="section-header collapsed" onclick="toggleSection(this)">
                     <h2>Run History ({len(timestamped_dirs)} runs)</h2>
                     <span class="toggle-icon">▼</span>
                 </div>
-                <div class="section-content">
+                <div class="section-content collapsed">
                     {run_history_html}
                 </div>
             </div>
             
             <!-- File Paths Section -->
-            <div class="section">
-                <div class="section-header" onclick="toggleSection(this)">
+            <div class="section" id="files">
+                <div class="section-header collapsed" onclick="toggleSection(this)">
                     <h2>Source Files</h2>
                     <span class="toggle-icon">▼</span>
                 </div>
-                <div class="section-content">
+                <div class="section-content collapsed">
                     <div class="report-item">
                         <span class="report-name">Waived Errors File</span>
                         <button class="btn-log" onclick='window.open("file://{waived_file}", "_blank")'>Open Log</button>
@@ -6382,6 +11815,24 @@ class WorkareaReviewer:
                 </div>
             </div>
         </div>
+    </div>
+    
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop" onclick="scrollToTop()" title="Back to Top">&#8593;</button>
+    
+    <!-- Quick Navigation Toggle -->
+    <button class="quick-nav-toggle" id="quickNavToggle" onclick="toggleQuickNav()">MENU</button>
+    
+    <!-- Quick Navigation Menu -->
+    <div class="quick-nav" id="quickNav" style="display: none;">
+        <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('summary')">Summary</a>
+        <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('error-analysis')">Error Analysis</a>
+        <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('clock-cells')">Clock Cells</a>
+        <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('dont-use')">Don't Use</a>
+        <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('reports')">Reports</a>
+        <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('logs')">Logs</a>
+        <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('history')">History</a>
+        <a href="javascript:void(0)" class="quick-nav-item" onclick="scrollToSection('files')">Files</a>
     </div>
     
     <script>
@@ -6456,7 +11907,7 @@ class WorkareaReviewer:
             }});
         }}
         
-        function filterByStatus(status) {{
+        function filterByStatus(status, button) {{
             currentFilter = status;
             
             // Update button states
@@ -6464,7 +11915,7 @@ class WorkareaReviewer:
             Array.prototype.slice.call(buttons).forEach(function(btn) {{
                 btn.classList.remove('active');
             }});
-            event.target.classList.add('active');
+            button.classList.add('active');
             
             filterCheckers();
         }}
@@ -6529,7 +11980,107 @@ class WorkareaReviewer:
                 cell.style.display = cellText.includes(searchTerm) ? 'inline-block' : 'none';
             }});
         }}
+        
+        function toggleDontUseCells(btn) {{
+            const moreSection = document.getElementById('dontUseCellsMore');
+            if (moreSection) {{
+                if (moreSection.style.display === 'none') {{
+                    moreSection.style.display = 'block';
+                    btn.textContent = 'Show Less';
+                }} else {{
+                    moreSection.style.display = 'none';
+                    btn.textContent = 'Show {len(dont_use_cells) - 50} More Cells';
+                }}
+            }}
+        }}
+        
+        // Back to Top functionality
+        function scrollToTop() {{
+            window.scrollTo({{
+                top: 0,
+                behavior: 'smooth'
+            }});
+        }}
+        
+        // Show/hide back to top button based on scroll position
+        window.addEventListener('scroll', function() {{
+            var backToTopBtn = document.getElementById('backToTop');
+            if (window.pageYOffset > 300) {{
+                backToTopBtn.classList.add('visible');
+            }} else {{
+                backToTopBtn.classList.remove('visible');
+            }}
+        }});
+        
+        // Quick Navigation functions
+        function toggleQuickNav() {{
+            const quickNav = document.getElementById('quickNav');
+            const quickNavToggle = document.getElementById('quickNavToggle');
+            
+            if (quickNav.style.display === 'none') {{
+                quickNav.style.display = 'block';
+                quickNavToggle.style.display = 'none';
+            }} else {{
+                quickNav.style.display = 'none';
+                quickNavToggle.style.display = 'block';
+            }}
+        }}
+        
+        function scrollToSection(sectionId) {{
+            const section = document.getElementById(sectionId);
+            if (section) {{
+                section.scrollIntoView({{
+                    behavior: 'smooth',
+                    block: 'start'
+                }});
+                
+                // If section is collapsed, expand it
+                const sectionHeader = section.querySelector('.section-header');
+                if (sectionHeader && sectionHeader.classList.contains('collapsed')) {{
+                    toggleSection(sectionHeader);
+                }}
+            }}
+            
+            // Close quick nav after selection
+            toggleQuickNav();
+            return false;
+        }}
+        
+        // Close quick nav when clicking outside
+        document.addEventListener('click', function(event) {{
+            const quickNav = document.getElementById('quickNav');
+            const quickNavToggle = document.getElementById('quickNavToggle');
+            
+            if (quickNav && quickNav.style.display === 'block' &&
+                !quickNav.contains(event.target) && 
+                !quickNavToggle.contains(event.target)) {{
+                toggleQuickNav();
+            }}
+        }});
+        
+        // Logo modal functions
+        function showLogoModal() {{
+            document.getElementById('logoModal').classList.add('active');
+        }}
+        
+        function hideLogoModal() {{
+            document.getElementById('logoModal').classList.remove('active');
+        }}
+        
+        // Allow ESC key to close logo modal
+        document.addEventListener('keydown', function(event) {{
+            if (event.key === 'Escape') {{
+                hideLogoModal();
+            }}
+        }});
     </script>
+    
+    <!-- Copyright Footer -->
+    <div class="footer">
+        <p><strong>AVICE GL Check Analysis Report</strong></p>
+        <p>Copyright (c) 2025 Alon Vice (avice)</p>
+        <p>Contact: avice@nvidia.com</p>
+    </div>
 </body>
 </html>
         """
@@ -6654,7 +12205,7 @@ class WorkareaReviewer:
             
             # Generate HTML
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            html_filename = f"avice_gl_check_report_{self.design_info.top_hier}_{timestamp}.html"
+            html_filename = f"{self.design_info.top_hier}_{os.environ.get('USER', 'avice')}_gl_check_report_{timestamp}.html"
             html_path = os.path.join(os.getcwd(), html_filename)
             
             html_content = self._generate_gl_check_html_content(
@@ -6667,7 +12218,7 @@ class WorkareaReviewer:
             with open(html_path, 'w') as f:
                 f.write(html_content)
             
-            print(f"\n  Open with: firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+            print(f"\n  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
             
             return os.path.abspath(html_path)
             
@@ -6676,6 +12227,729 @@ class WorkareaReviewer:
             import traceback
             traceback.print_exc()
             return ""
+    
+    def _generate_pv_html_report(self, lvs_data, drc_data, antenna_data, pv_flow_data, timeline_data):
+        """Generate comprehensive HTML report for Physical Verification"""
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            username = os.environ.get('USER', 'avice')
+            html_filename = f"{self.design_info.top_hier}_{username}_pv_report_{timestamp}.html"
+            html_path = os.path.abspath(html_filename)
+            
+            # Determine overall status based on violations
+            lvs_violations = lvs_data.get('failed_equivalence_points', 0)
+            drc_violations = drc_data.get('total_violations', 0)
+            antenna_violations = antenna_data.get('total_violations', 0)
+            
+            overall_status = "PASS"
+            if lvs_violations > 5 or drc_violations > 100 or antenna_violations > 10:
+                overall_status = "FAIL"
+            elif lvs_violations > 0 or drc_violations > 0 or antenna_violations > 0:
+                overall_status = "WARN"
+            
+            status_color = "#28a745" if overall_status == "PASS" else "#ffc107" if overall_status == "WARN" else "#dc3545"
+            
+            # Generate HTML content
+            html_content = self._generate_pv_html_content(
+                lvs_data, drc_data, antenna_data, pv_flow_data, timeline_data,
+                overall_status, status_color, html_filename
+            )
+            
+            # Write HTML file
+            with open(html_path, 'w') as f:
+                f.write(html_content)
+            
+            return html_path
+            
+        except Exception as e:
+            print(f"  Error generating PV HTML report: {e}")
+            import traceback
+            traceback.print_exc()
+            return ""
+    
+    def _generate_pv_html_content(self, lvs_data, drc_data, antenna_data, pv_flow_data, timeline_data,
+                                   overall_status, status_color, html_filename):
+        """Generate HTML content for PV report"""
+        
+        # Load and encode logo
+        logo_data = ""
+        logo_path = os.path.join(os.path.dirname(__file__), "images", "avice_logo.png")
+        try:
+            with open(logo_path, 'rb') as f:
+                import base64
+                logo_data = base64.b64encode(f.read()).decode('utf-8')
+        except:
+            pass  # If logo not found, continue without it
+        
+        # Extract data
+        lvs_violations = lvs_data.get('failed_equivalence_points', 0)
+        drc_violations = drc_data.get('total_violations', 0)
+        antenna_violations = antenna_data.get('total_violations', 0)
+        
+        # Timeline HTML
+        timeline_html = ""
+        if timeline_data:
+            start_time = timeline_data.get('start', 'N/A')
+            end_time = timeline_data.get('end', 'N/A')
+            duration = timeline_data.get('duration', 'N/A')
+            timeline_html = f"""
+        <div class="timeline-section">
+            <h3>PV Flow Timeline</h3>
+            <div class="timeline-info">
+                <div><strong>Started:</strong> {start_time}</div>
+                <div><strong>Finished:</strong> {end_time}</div>
+                <div><strong>Duration:</strong> {duration}</div>
+            </div>
+        </div>
+"""
+        
+        # LVS section HTML
+        lvs_status_class = "status-pass" if lvs_violations == 0 else "status-fail"
+        lvs_html = f"""
+        <div class="section {lvs_status_class}">
+            <div class="section-header" onclick="toggleSection('lvs-section')">
+                <h2>LVS Results</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content" id="lvs-section">
+                <table>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                    </tr>
+                    <tr>
+                        <td>Status</td>
+                        <td class="{'pass-text' if lvs_data.get('status') != 'FAIL' else 'fail-text'}">{lvs_data.get('status', 'UNKNOWN')}</td>
+                    </tr>
+                    <tr>
+                        <td>Failed Equivalence Points</td>
+                        <td class="num-cell {'fail-text' if lvs_violations > 0 else 'pass-text'}">{lvs_violations}</td>
+                    </tr>
+                    <tr>
+                        <td>Successful Equivalence Points</td>
+                        <td class="num-cell">{lvs_data.get('successful_equivalence_points', 0)}</td>
+                    </tr>
+                    <tr>
+                        <td>First Priority Errors</td>
+                        <td class="num-cell">{lvs_data.get('first_priority_errors', 0)}</td>
+                    </tr>
+                    <tr>
+                        <td>Second Priority Errors</td>
+                        <td class="num-cell">{lvs_data.get('second_priority_errors', 0)}</td>
+                    </tr>
+                </table>
+                
+                {'<h3>Unmatched Items</h3>' if lvs_violations > 0 else ''}
+                {'<table>' if lvs_violations > 0 else ''}
+"""
+        
+        if lvs_violations > 0:
+            unmatched_items = [
+                ('Schematic Instances', lvs_data.get('unmatched_schematic_instances', 0)),
+                ('Schematic Nets', lvs_data.get('unmatched_schematic_nets', 0)),
+                ('Layout Instances', lvs_data.get('unmatched_layout_instances', 0)),
+                ('Layout Nets', lvs_data.get('unmatched_layout_nets', 0)),
+                ('Schematic Ports', lvs_data.get('unmatched_schematic_ports', 0)),
+                ('Layout Ports', lvs_data.get('unmatched_layout_ports', 0))
+            ]
+            
+            for item_name, count in unmatched_items:
+                if count > 0:
+                    lvs_html += f"""
+                    <tr>
+                        <td>{item_name}</td>
+                        <td class="num-cell fail-text">{count}</td>
+                    </tr>
+"""
+            lvs_html += """
+                </table>
+"""
+        
+        lvs_html += f"""
+                <h3>Matched Items</h3>
+                <table>
+                    <tr>
+                        <td>Instances</td>
+                        <td class="num-cell">{lvs_data.get('matched_instances', 0):,}</td>
+                    </tr>
+                    <tr>
+                        <td>Nets</td>
+                        <td class="num-cell">{lvs_data.get('matched_nets', 0):,}</td>
+                    </tr>
+                    <tr>
+                        <td>Ports</td>
+                        <td class="num-cell">{lvs_data.get('matched_ports', 0):,}</td>
+                    </tr>
+                </table>
+                
+                {'<p><strong>File:</strong> <a href="file://' + lvs_data.get('file_path', '') + '" target="_blank">' + os.path.basename(lvs_data.get('file_path', '')) + '</a></p>' if lvs_data.get('file_path') else ''}
+            </div>
+        </div>
+"""
+        
+        # DRC section HTML
+        drc_status_class = "status-pass" if drc_violations == 0 else "status-fail"
+        drc_violations_list = drc_data.get('violations', [])
+        
+        drc_html = f"""
+        <div class="section {drc_status_class}">
+            <div class="section-header" onclick="toggleSection('drc-section')">
+                <h2>DRC Results</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content" id="drc-section">
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <div class="label">Status</div>
+                        <div class="status {'pass-text' if drc_violations == 0 else 'fail-text'}">
+                            {'CLEAN' if drc_violations == 0 else 'ERRORS'}
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="label">Total Violations</div>
+                        <div class="value {'fail-text' if drc_violations > 0 else 'pass-text'}">{drc_violations}</div>
+                    </div>
+                </div>
+                
+                {'<h3>Violation Breakdown</h3>' if drc_violations > 0 else ''}
+                {'<table><thead><tr><th>Rule</th><th>Count</th><th>Description</th></tr></thead><tbody>' if drc_violations > 0 else ''}
+"""
+        
+        for rule, desc, count in drc_violations_list:
+            drc_html += f"""
+                <tr>
+                    <td><strong>{rule}</strong></td>
+                    <td class="num-cell fail-text">{count}</td>
+                    <td>{desc}</td>
+                </tr>
+"""
+        
+        if drc_violations > 0:
+            drc_html += """
+                </tbody></table>
+"""
+        
+        drc_html += f"""
+                {'<p><strong>File:</strong> <a href="file://' + drc_data.get('file_path', '') + '" target="_blank">' + os.path.basename(drc_data.get('file_path', '')) + '</a></p>' if drc_data.get('file_path') else ''}
+            </div>
+        </div>
+"""
+        
+        # Antenna section HTML
+        antenna_status_class = "status-pass" if antenna_violations == 0 else "status-fail"
+        
+        antenna_html = f"""
+        <div class="section {antenna_status_class}">
+            <div class="section-header" onclick="toggleSection('antenna-section')">
+                <h2>Antenna Results</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content" id="antenna-section">
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <div class="label">Status</div>
+                        <div class="status {'pass-text' if antenna_violations == 0 else 'fail-text'}">
+                            {'CLEAN' if antenna_violations == 0 else 'ERRORS'}
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="label">Total Violations</div>
+                        <div class="value {'fail-text' if antenna_violations > 0 else 'pass-text'}">{antenna_violations}</div>
+                    </div>
+                </div>
+                {'<p><strong>File:</strong> <a href="file://' + antenna_data.get('file_path', '') + '" target="_blank">' + os.path.basename(antenna_data.get('file_path', '')) + '</a></p>' if antenna_data.get('file_path') else ''}
+            </div>
+        </div>
+"""
+        
+        # PV Flow section HTML
+        pv_flow_html = ""
+        if pv_flow_data:
+            pv_flow_html = """
+        <div class="section">
+            <div class="section-header" onclick="toggleSection('pv-flow-section')">
+                <h2>PV Flow Analysis</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content" id="pv-flow-section">
+"""
+            
+            for exp_name, exp_data in pv_flow_data.items():
+                completed_steps = exp_data.get('completed', 0)
+                unlaunched_steps = exp_data.get('unlaunched', 0)
+                total_runtime = exp_data.get('total_runtime', '0s')
+                key_steps = exp_data.get('key_steps', [])
+                
+                pv_flow_html += f"""
+                <h3>{exp_name}</h3>
+                <div class="flow-summary">
+                    <p><strong>Completed:</strong> {completed_steps} steps (Total runtime: {total_runtime})</p>
+                    {f'<p><strong>Unlaunched:</strong> {unlaunched_steps} steps</p>' if unlaunched_steps > 0 else ''}
+                </div>
+                
+                {'<h4>Key Step Runtimes:</h4>' if key_steps else ''}
+                {'<table><thead><tr><th>Step</th><th>Runtime</th></tr></thead><tbody>' if key_steps else ''}
+"""
+                
+                for step_name, step_runtime in key_steps:
+                    pv_flow_html += f"""
+                    <tr>
+                        <td>{step_name}</td>
+                        <td class="num-cell">{step_runtime}</td>
+                    </tr>
+"""
+                
+                if key_steps:
+                    pv_flow_html += """
+                </tbody></table>
+"""
+            
+            pv_flow_html += """
+            </div>
+        </div>
+"""
+        
+        # Generate full HTML
+        html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Physical Verification Report - {self.design_info.top_hier}</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }}
+        
+        .container {{
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }}
+        
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }}
+        
+        .header-content {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }}
+        
+        .logo {{
+            max-width: 120px;
+            height: auto;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }}
+        
+        .logo:hover {{
+            transform: scale(1.05);
+        }}
+        
+        .header-text {{
+            flex: 1;
+            min-width: 300px;
+        }}
+        
+        .header h1 {{
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }}
+        
+        .header .subtitle {{
+            font-size: 1.2em;
+            opacity: 0.9;
+        }}
+        
+        .header .design-info {{
+            margin-top: 15px;
+            font-size: 1em;
+            opacity: 0.8;
+        }}
+        
+        /* Logo Modal */
+        .logo-modal {{
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.9);
+            cursor: pointer;
+        }}
+        
+        .logo-modal-content {{
+            margin: auto;
+            display: block;
+            width: 80%;
+            max-width: 700px;
+            position: relative;
+            top: 50%;
+            transform: translateY(-50%);
+        }}
+        
+        .logo-modal-close {{
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+        }}
+        
+        .logo-modal-close:hover,
+        .logo-modal-close:focus {{
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }}
+        
+        .summary-cards {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 20px;
+            background: #f8f9fa;
+            margin-bottom: 20px;
+        }}
+        
+        .summary-card {{
+            flex: 1 1 calc(25% - 12px);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s;
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }}
+        
+        .summary-card:hover {{
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }}
+        
+        .summary-card .label {{
+            font-size: 0.75em;
+            color: #666;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }}
+        
+        .summary-card .value {{
+            font-size: 2em;
+            font-weight: bold;
+            line-height: 1;
+        }}
+        
+        .summary-card .status {{
+            font-size: 1.6em;
+            font-weight: bold;
+            padding: 6px;
+            border-radius: 5px;
+            line-height: 1;
+        }}
+        
+        .pass-text {{
+            color: #28a745;
+        }}
+        
+        .fail-text {{
+            color: #dc3545;
+        }}
+        
+        .content {{
+            padding: 20px;
+        }}
+        
+        .section {{
+            margin-bottom: 15px;
+        }}
+        
+        .section-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }}
+        
+        .section-header:hover {{
+            transform: translateX(5px);
+        }}
+        
+        .section-header h2 {{
+            font-size: 1.5em;
+        }}
+        
+        .section-header .toggle-icon {{
+            font-size: 1.2em;
+            transition: transform 0.3s;
+        }}
+        
+        .section-header.collapsed .toggle-icon {{
+            transform: rotate(-90deg);
+        }}
+        
+        .section-content {{
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }}
+        
+        .section-content.collapsed {{
+            display: none;
+        }}
+        
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }}
+        
+        th {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }}
+        
+        td {{
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }}
+        
+        tr:hover {{
+            background: #f0f0f0;
+        }}
+        
+        .num-cell {{
+            text-align: right;
+            font-weight: 600;
+        }}
+        
+        .status-pass {{
+            border-left: 4px solid #28a745;
+        }}
+        
+        .status-fail {{
+            border-left: 4px solid #dc3545;
+        }}
+        
+        .timeline-section {{
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }}
+        
+        .timeline-info {{
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }}
+        
+        .timeline-info div {{
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }}
+        
+        .flow-summary {{
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }}
+        
+        h3 {{
+            color: #667eea;
+            margin-bottom: 10px;
+            margin-top: 15px;
+        }}
+        
+        h4 {{
+            color: #764ba2;
+            margin-bottom: 10px;
+            margin-top: 10px;
+        }}
+        
+        a {{
+            color: #667eea;
+            text-decoration: none;
+        }}
+        
+        a:hover {{
+            text-decoration: underline;
+        }}
+        
+        .footer {{
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }}
+    </style>
+</head>
+<body>
+    <!-- Logo Modal -->
+    <div id="logoModal" class="logo-modal" onclick="hideLogoModal()">
+        <span class="logo-modal-close">&times;</span>
+        <img class="logo-modal-content" id="logoModalImg">
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                {f'<img class="logo" src="data:image/png;base64,{logo_data}" alt="AVICE Logo" onclick="showLogoModal()" title="Click to enlarge">' if logo_data else ''}
+                <div class="header-text">
+                    <h1>🔍 Physical Verification Report</h1>
+                    <div class="subtitle">Comprehensive PV Analysis</div>
+                    <div class="design-info">
+                        Design: {self.design_info.top_hier} | IPO: {self.design_info.ipo}<br>
+                        Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="label">Overall Status</div>
+                <div class="status" style="color: {status_color};">{overall_status}</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">LVS Failures</div>
+                <div class="value {'fail-text' if lvs_violations > 0 else 'pass-text'}">{lvs_violations}</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">DRC Violations</div>
+                <div class="value {'fail-text' if drc_violations > 0 else 'pass-text'}">{drc_violations}</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">Antenna Violations</div>
+                <div class="value {'fail-text' if antenna_violations > 0 else 'pass-text'}">{antenna_violations}</div>
+            </div>
+        </div>
+        
+        {timeline_html}
+        
+        <div class="content">
+            {lvs_html}
+            {drc_html}
+            {antenna_html}
+            {pv_flow_html}
+        </div>
+        
+        <div class="footer">
+            <p>Report generated by <strong>avice_wa_review.py</strong></p>
+            <p>For questions or issues, contact: avice@nvidia.com</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">Alon Vice Tools © 2025</p>
+        </div>
+    </div>
+    
+    <script>
+        function toggleSection(sectionId) {{
+            const content = document.getElementById(sectionId);
+            const header = content.previousElementSibling;
+            
+            content.classList.toggle('collapsed');
+            header.classList.toggle('collapsed');
+        }}
+        
+        // Back to top button functionality - wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {{
+            var backToTopBtn = document.getElementById('backToTopBtn');
+            if (backToTopBtn) {{
+                window.addEventListener('scroll', function() {{
+                    if (window.pageYOffset > 300) {{
+                        backToTopBtn.style.display = 'block';
+                    }} else {{
+                        backToTopBtn.style.display = 'none';
+                    }}
+                }});
+                
+                backToTopBtn.addEventListener('click', function() {{
+                    window.scrollTo(0, 0);
+                }});
+            }}
+        }});
+        
+        // Logo modal functions
+        function showLogoModal() {{
+            const modal = document.getElementById('logoModal');
+            const modalImg = document.getElementById('logoModalImg');
+            const logo = document.querySelector('.logo');
+            if (modal && modalImg && logo) {{
+                modal.style.display = 'block';
+                modalImg.src = logo.src;
+            }}
+        }}
+        
+        function hideLogoModal() {{
+            const modal = document.getElementById('logoModal');
+            if (modal) {{
+                modal.style.display = 'none';
+            }}
+        }}
+    </script>
+    
+    <button id="backToTopBtn" style="display: none; position: fixed; bottom: 30px; right: 30px; 
+            z-index: 9999; border: none; outline: none; background-color: #667eea; color: white; 
+            cursor: pointer; padding: 15px 20px; border-radius: 50px; font-size: 16px; 
+            font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease;"
+            onmouseover="this.style.backgroundColor='#5568d3'; this.style.transform='scale(1.1)';"
+            onmouseout="this.style.backgroundColor='#667eea'; this.style.transform='scale(1)';">
+        ↑ Top
+    </button>
+</body>
+</html>
+"""
+        
+        return html
     
     def run_gl_check(self):
         """Run GL check analysis"""
@@ -6715,8 +12989,12 @@ class WorkareaReviewer:
         non_waived_file = os.path.abspath(os.path.join(gl_check_dir, "gl-check.all.err"))
         
         gl_check_html_path = ""
+        total_errors = 0
+        total_waived = 0
+        total_non_waived = 0
+        
         if os.path.exists(waived_file) or os.path.exists(non_waived_file):
-            self._analyze_gl_check_errors(waived_file, non_waived_file)
+            total_errors, total_waived, total_non_waived = self._analyze_gl_check_errors(waived_file, non_waived_file)
             # Generate HTML report
             gl_check_html_path = self._generate_gl_check_html_report(gl_check_dir, waived_file, non_waived_file, timestamped_dirs if 'timestamped_dirs' in locals() else [])
         else:
@@ -6765,18 +13043,35 @@ class WorkareaReviewer:
             else:
                 print("  Didn't run GL checks")
         
+        # Determine status based on non-waived violations (waived are accepted issues)
+        # Thresholds: FAIL >= 50, WARN 0 < violations < 50, PASS = 0
+        status = "PASS"
+        issues = []
+        
+        if total_non_waived >= 50:
+            status = "FAIL"
+            issues.append(f"Non-waived violations: {total_non_waived} (threshold: <50)")
+        elif total_non_waived > 0:
+            status = "WARN"
+            issues.append(f"Non-waived violations: {total_non_waived} (threshold: <50)")
+        
+        # Prepare key metrics
+        key_metrics = {
+            "Total Violations": str(total_errors),
+            "Waived": str(total_waived),
+            "Non-Waived": str(total_non_waived)
+        }
+        
         # Add section summary for master dashboard
         self._add_section_summary(
             section_name="GL Checks",
             section_id="gl-check",
             stage=FlowStage.GL_CHECK,
-            status="PASS",
-            key_metrics={
-                "Design": self.design_info.top_hier
-            },
+            status=status,
+            key_metrics=key_metrics,
             html_file=gl_check_html_path if gl_check_html_path else "",
             priority=3,
-            issues=[],
+            issues=issues,
             icon="[GL]"
         )
     
@@ -7459,8 +13754,10 @@ class WorkareaReviewer:
         print(f"\n{Color.CYAN}Generating Master Dashboard...{Color.RESET}")
         try:
             dashboard_path = self.master_dashboard.generate_html()
-            print(f"{Color.GREEN}[OK] Master Dashboard generated: file://{dashboard_path}{Color.RESET}")
-            print(f"{Color.CYAN}     Open this file in your browser to view the integrated review dashboard{Color.RESET}")
+            dashboard_filename = os.path.basename(dashboard_path)
+            print(f"{Color.GREEN}[OK] Master Dashboard generated: {dashboard_filename}{Color.RESET}")
+            print(f"{Color.CYAN}     Open with recommended browser:{Color.RESET}")
+            print(f"     /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{dashboard_filename}{Color.RESET} &")
         except Exception as e:
             print(f"{Color.RED}[ERROR] Failed to generate Master Dashboard: {e}{Color.RESET}")
         
@@ -7829,10 +14126,25 @@ class WorkareaReviewer:
         if os.path.exists(eco_prc_status):
             self.print_file_info(eco_prc_status, "NV Gate ECO Status")
             try:
+                # Check if NV Gate ECO is currently running
+                running_check = self.file_utils.run_command(f"grep -E '^{self.design_info.top_hier}.*RUN' {eco_prc_status}")
+                is_running = bool(running_check.strip())
+                
                 # Extract NV Gate ECO runtime for completed steps
                 result = self.file_utils.run_command(f"grep -E '^{self.design_info.top_hier}.*DONE' {eco_prc_status} | awk '{{sum += $5}} END {{print sum}}'")
                 if result.strip() and result.strip().isdigit():
                     total_runtime_seconds = int(result.strip())
+                    
+                    # If running, add the elapsed time of running step
+                    if is_running:
+                        running_lines = running_check.strip().split('\n')
+                        for line in running_lines:
+                            parts = line.split()
+                            if len(parts) >= 5 and parts[3] == 'RUN':
+                                running_duration = int(parts[4])
+                                total_runtime_seconds += running_duration
+                                break
+                    
                     total_runtime_hours = total_runtime_seconds / 3600
                     total_runtime_days = total_runtime_hours / 24
                     
@@ -7841,42 +14153,74 @@ class WorkareaReviewer:
                     else:
                         runtime_str = f"{total_runtime_hours:.2f} hours"
                     
+                    # Add "(running)" indicator if flow is still active
+                    if is_running:
+                        runtime_str += " (running)"
+                    
                     runtime_data['NV Gate ECO'] = runtime_str
                     # Extract NV Gate ECO timestamps from log file names in status file
+                    # Note: All log files have the same timestamp (flow start time), so we calculate end time
                     try:
                         eco_lines = self.file_utils.run_command(f"grep '{self.design_info.top_hier}.*DONE' {eco_prc_status}")
                         if eco_lines.strip():
                             lines = eco_lines.strip().split('\n')
                             if lines:
-                                # Extract timestamps from log file names
+                                # Extract start timestamp from first log file name
                                 first_line = lines[0]
-                                last_line = lines[-1]
                                 
                                 # Look for timestamp patterns in log file names (format: YYYYMMDDHHMMSS)
                                 first_match = re.search(r'(\d{8})(\d{6})', first_line)
-                                last_match = re.search(r'(\d{8})(\d{6})', last_line)
                                 
-                                if first_match and last_match:
+                                if first_match:
                                     try:
                                         first_date = first_match.group(1)  # YYYYMMDD
                                         first_time = first_match.group(2)  # HHMMSS
-                                        last_date = last_match.group(1)
-                                        last_time = last_match.group(2)
                                         
-                                        # Parse timestamps
-                                        start_datetime = f"{first_date[:4]}-{first_date[4:6]}-{first_date[6:8]} {first_time[:2]}:{first_time[2:4]}:{first_time[4:6]}"
-                                        end_datetime = f"{last_date[:4]}-{last_date[4:6]}-{last_date[6:8]} {last_time[:2]}:{last_time[2:4]}:{last_time[4:6]}"
+                                        # Parse start timestamp
+                                        start_datetime_str = f"{first_date[:4]}-{first_date[4:6]}-{first_date[6:8]} {first_time[:2]}:{first_time[2:4]}:{first_time[4:6]}"
+                                        start_time_struct = time.strptime(start_datetime_str, "%Y-%m-%d %H:%M:%S")
+                                        start_epoch = time.mktime(start_time_struct)
                                         
-                                        start_time = time.strptime(start_datetime, "%Y-%m-%d %H:%M:%S")
-                                        end_time = time.strptime(end_datetime, "%Y-%m-%d %H:%M:%S")
+                                        # Calculate end time by adding total runtime seconds
+                                        # For running flows, end time is "now"
+                                        if is_running:
+                                            end_str = "running"
+                                            start_str = time.strftime("%m/%d %H:%M", start_time_struct)
+                                        else:
+                                            end_epoch = start_epoch + total_runtime_seconds
+                                            end_time_struct = time.localtime(end_epoch)
+                                            start_str = time.strftime("%m/%d %H:%M", start_time_struct)
+                                            end_str = time.strftime("%m/%d %H:%M", end_time_struct)
                                         
-                                        start_str = time.strftime("%m/%d %H:%M", start_time)
-                                        end_str = time.strftime("%m/%d %H:%M", end_time)
                                         runtime_timestamps['NV Gate ECO'] = (start_str, end_str)
                                     except Exception:
                                         pass
                     except Exception:
                         pass
+                elif is_running:
+                    # No completed steps yet, but flow is running
+                    # Get elapsed time of running step
+                    running_lines = running_check.strip().split('\n')
+                    for line in running_lines:
+                        parts = line.split()
+                        if len(parts) >= 5 and parts[3] == 'RUN':
+                            running_duration = int(parts[4])
+                            runtime_hours = running_duration / 3600
+                            runtime_data['NV Gate ECO'] = f"{runtime_hours:.2f} hours (running)"
+                            
+                            # Try to extract start timestamp
+                            timestamp_match = re.search(r'(\d{8})(\d{6})', line)
+                            if timestamp_match:
+                                first_date = timestamp_match.group(1)
+                                first_time = timestamp_match.group(2)
+                                try:
+                                    start_datetime_str = f"{first_date[:4]}-{first_date[4:6]}-{first_date[6:8]} {first_time[:2]}:{first_time[2:4]}:{first_time[4:6]}"
+                                    start_time_struct = time.strptime(start_datetime_str, "%Y-%m-%d %H:%M:%S")
+                                    start_str = time.strftime("%m/%d %H:%M", start_time_struct)
+                                    runtime_timestamps['NV Gate ECO'] = (start_str, "running")
+                                except:
+                                    pass
+                            break
                 else:
                     print("  No completed NV Gate ECO steps found")
             except Exception as e:
@@ -7922,12 +14266,30 @@ class WorkareaReviewer:
             if pnr_runtimes:
                 total_runtime_str = list(pnr_runtimes.values())[0] if pnr_runtimes else "N/A"
         
+        # Check for currently running flows
+        status = "PASS"
+        issues = []
+        running_flows = []
+        
+        for stage_name, runtime_str in runtime_data.items():
+            if "(running)" in runtime_str:
+                running_flows.append(stage_name)
+        
+        # Also check PnR runtimes for running status
+        for ipo, runtime_str in pnr_runtimes.items():
+            if "(running)" in runtime_str:
+                running_flows.append(f"PnR ({ipo})")
+        
+        if running_flows:
+            status = "WARN"
+            issues.append(f"Currently running: {', '.join(running_flows)}")
+        
         # Add section summary for master dashboard
         self._add_section_summary(
             section_name="Runtime Analysis",
             section_id="runtime",
             stage=FlowStage.RUNTIME,
-            status="PASS",
+            status=status,
             key_metrics={
                 "PnR Runtime": total_runtime_str,
                 "Stages": str(len(runtime_data)),
@@ -7935,7 +14297,7 @@ class WorkareaReviewer:
             },
             html_file=runtime_html_path,
             priority=3,
-            issues=[],
+            issues=issues,
             icon="[Runtime]"
         )
 
@@ -8059,6 +14421,26 @@ class WorkareaReviewer:
             
             for formal_type, formal_log in formal_logs:
                 if os.path.exists(formal_log):
+                    # Check if formal crashed
+                    crash_check = self.file_utils.run_command(
+                        f"tail -100 {formal_log} | grep -E 'stopped at line.*due to error|Error: Unknown name:.*FM-036|Error: The current design is not set.*FM-008' | head -1"
+                    )
+                    completion_check = self.file_utils.run_command(
+                        f"grep -E 'Verification SUCCEEDED|Verification FAILED|Verification UNRESOLVED' {formal_log} | tail -1"
+                    )
+                    
+                    if crash_check.strip() and not completion_check.strip():
+                        # Formal crashed - still extract runtime but mark as crashed
+                        runtime_seconds = 0
+                        result = self.file_utils.run_command(f"grep 'Elapsed time:' {formal_log} | tail -n1 | sed 's/.*Elapsed time: \\([0-9]*\\) seconds.*/\\1/'")
+                        if result.strip() and result.strip().isdigit():
+                            runtime_seconds = int(result.strip())
+                            runtime_hours = runtime_seconds / 3600
+                            formal_runtimes[formal_type] = f"{runtime_hours:.2f} hours (CRASHED)"
+                        else:
+                            formal_runtimes[formal_type] = "CRASHED"
+                        continue
+                    
                     # Check if formal is currently running
                     file_mtime = os.path.getmtime(formal_log)
                     current_time = time.time()
@@ -8070,11 +14452,8 @@ class WorkareaReviewer:
                         check_result = self.file_utils.run_command(
                             f"tail -100 {formal_log} | grep -E 'Status:.*Building verification models|Status:.*Verifying|Status:.*Checking designs|Matching in progress' | tail -1"
                         )
-                        completion_result = self.file_utils.run_command(
-                            f"grep -E 'Verification SUCCEEDED|Verification FAILED' {formal_log} | tail -1"
-                        )
                         
-                        if check_result.strip() and not completion_result.strip():
+                        if check_result.strip() and not completion_check.strip():
                             is_running = True
                     
                     if is_running:
@@ -8449,7 +14828,24 @@ class WorkareaReviewer:
             
             # Print data rows (now sorted by start time)
             for category, stage, runtime, start, end in table_data_sorted:
-                print(f"  {category:<{category_width}} {stage:<{stage_width}} {runtime:<{runtime_width}} {start:<{start_width}} {end:<{end_width}}")
+                # Determine color based on status
+                row_color = ""
+                reset_color = ""
+                
+                # Check for CRASHED status (formal verification crashes)
+                if "CRASHED" in runtime.upper() or "CRASHED" in str(end).upper():
+                    row_color = Color.RED
+                    reset_color = Color.RESET
+                # Check for RUNNING status
+                elif end == "RUNNING" or "RUNNING" in str(end).upper():
+                    row_color = Color.YELLOW
+                    reset_color = Color.RESET
+                
+                # Print with color if applicable
+                if row_color:
+                    print(f"  {row_color}{category:<{category_width}} {stage:<{stage_width}} {runtime:<{runtime_width}} {start:<{start_width}} {end:<{end_width}}{reset_color}")
+                else:
+                    print(f"  {category:<{category_width}} {stage:<{stage_width}} {runtime:<{runtime_width}} {start:<{start_width}} {end:<{end_width}}")
         else:
             print("  No runtime data available")
     
@@ -8532,14 +14928,14 @@ class WorkareaReviewer:
             
             # Save HTML file
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            html_filename = f"{os.environ.get('USER', 'avice')}_runtime_report_{self.design_info.top_hier}_{timestamp}.html"
+            html_filename = f"{self.design_info.top_hier}_{os.environ.get('USER', 'avice')}_runtime_report_{timestamp}.html"
             html_path = os.path.join(os.getcwd(), html_filename)
             
             with open(html_path, 'w', encoding='utf-8') as f:
                 f.write(html_content)
             
             print(f"\n  {Color.CYAN}Runtime HTML Report:{Color.RESET}")
-            print(f"  Open with: firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+            print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
             
             return os.path.abspath(html_path)
             
@@ -8647,17 +15043,29 @@ class WorkareaReviewer:
             color: #333;
         }}
         .header {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: white;
-            padding: 20px;
-            border-radius: 10px;
+            padding: 30px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 20px;
+            align-items: center;
+            border-radius: 15px;
             margin-bottom: 20px;
-            text-align: center;
+        }}
+        .header-text h1 {{
+            font-size: 28px;
+            margin: 0 0 8px 0;
+        }}
+        .header-text p {{
+            opacity: 0.9;
+            font-size: 14px;
+            margin: 4px 0;
         }}
         .badge {{
             display: inline-block;
             padding: 5px 12px;
-            margin: 5px;
+            margin: 5px 5px 5px 0;
             border-radius: 15px;
             font-size: 12px;
             font-weight: bold;
@@ -8671,48 +15079,93 @@ class WorkareaReviewer:
             color: #fff;
         }}
         .logo {{
-            height: 60px;
-            margin-bottom: 10px;
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            background: white;
+            padding: 10px;
             cursor: pointer;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }}
         .logo:hover {{
             transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
         }}
         .logo-modal {{
             display: none;
             position: fixed;
-            z-index: 1000;
+            z-index: 9999;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.8);
-            cursor: pointer;
+            background-color: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+        }}
+        .logo-modal.active {{
+            display: flex;
         }}
         .logo-modal-content {{
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
             max-width: 90%;
             max-height: 90%;
-        }}
-        .logo-modal img {{
-            width: 100%;
-            height: auto;
             border-radius: 10px;
         }}
+        .logo-modal-close {{
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }}
+        .logo-modal-close:hover {{
+            color: #bbb;
+        }}
         .container {{
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }}
+        
+        /* Enhanced Grid Layout for Summary Cards */
+        .summary-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }}
+        .summary-card {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+        }}
+        .summary-card:hover {{
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+        }}
+        .summary-card-value {{
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }}
+        .summary-card-label {{
+            font-size: 1.1em;
+            opacity: 0.9;
+        }}
+        
         .section {{
             background: white;
             margin: 20px 0;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
         }}
         .section h2 {{
             color: #667eea;
@@ -8741,15 +15194,24 @@ class WorkareaReviewer:
         .category-construction {{ color: #28a745; font-weight: bold; }}
         .category-signoff {{ color: #007bff; font-weight: bold; }}
         .category-eco {{ color: #dc3545; font-weight: bold; }}
+        /* Enhanced Grid Layout for PnR Details */
         .pnr-details {{
             margin: 20px 0;
+            display: grid;
+            gap: 20px;
         }}
         .ipo-section {{
-            margin: 20px 0;
-            padding: 15px;
+            margin: 0;
+            padding: 20px;
             background-color: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease;
+        }}
+        .ipo-section:hover {{
+            transform: translateX(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.12);
         }}
         .ipo-title {{
             font-size: 18px;
@@ -8855,16 +15317,43 @@ class WorkareaReviewer:
         .toast.show {{
             opacity: 1;
         }}
+        
+        /* Copyright Footer */
+        .footer {{
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 10px;
+            font-size: 14px;
+        }}
+        
+        .footer p {{
+            margin: 5px 0;
+        }}
+        
+        .footer strong {{
+            color: #00ff00;
+        }}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <img src="data:image/png;base64,{logo_data}" alt="AVICE Logo" class="logo" onclick="showLogoModal()">
-            <h1>Runtime Analysis Report</h1>
-            <p>Design: {self.design_info.top_hier} | Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-            <p>Workarea: {self.workarea_abs}</p>
-            <div>{badges_html}</div>
+            <img class='logo' src='data:image/png;base64,{logo_data}' alt='AVICE Logo' onclick="showLogoModal()" title="Click to enlarge">
+            <div class="header-text">
+                <h1>Runtime Analysis Report</h1>
+                <p>Design: {self.design_info.top_hier} | Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                <p>Workarea: {self.workarea_abs}</p>
+                <div>{badges_html}</div>
+            </div>
+        </div>
+        
+        <!-- Logo Modal -->
+        <div id="logoModal" class="logo-modal" onclick="hideLogoModal()">
+            <span class="logo-modal-close">&times;</span>
+            <img class="logo-modal-content" src='data:image/png;base64,{logo_data}' alt='AVICE Logo'>
         </div>
         
         <div class="section">
@@ -9184,7 +15673,57 @@ class WorkareaReviewer:
                 toast.classList.remove('show');
             }}, 3000);
         }}
+        
+        // Logo modal functions
+        function showLogoModal() {{
+            document.getElementById('logoModal').classList.add('active');
+        }}
+        
+        function hideLogoModal() {{
+            document.getElementById('logoModal').classList.remove('active');
+        }}
+        
+        // Allow ESC key to close logo modal
+        document.addEventListener('keydown', function(event) {{
+            if (event.key === 'Escape') {{
+                hideLogoModal();
+            }}
+        }});
+        
+        // Back to top button functionality - wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {{
+            var backToTopBtn = document.getElementById('backToTopBtn');
+            if (backToTopBtn) {{
+                window.addEventListener('scroll', function() {{
+                    if (window.pageYOffset > 300) {{
+                        backToTopBtn.style.display = 'block';
+                    }} else {{
+                        backToTopBtn.style.display = 'none';
+                    }}
+                }});
+                
+                backToTopBtn.addEventListener('click', function() {{
+                    window.scrollTo(0, 0);
+                }});
+            }}
+        }});
     </script>
+    
+    <button id="backToTopBtn" style="display: none; position: fixed; bottom: 30px; right: 30px; 
+            z-index: 99; border: none; outline: none; background-color: #667eea; color: white; 
+            cursor: pointer; padding: 15px 20px; border-radius: 50px; font-size: 16px; 
+            font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease;"
+            onmouseover="this.style.backgroundColor='#5568d3'; this.style.transform='scale(1.1)';"
+            onmouseout="this.style.backgroundColor='#667eea'; this.style.transform='scale(1)';">
+        ↑ Top
+    </button>
+    
+    <!-- Copyright Footer -->
+    <div class="footer">
+        <p><strong>AVICE Runtime Analysis Report</strong></p>
+        <p>Copyright (c) 2025 Alon Vice (avice)</p>
+        <p>Contact: avice@nvidia.com</p>
+    </div>
 </body>
 </html>"""
         
@@ -9211,37 +15750,82 @@ class WorkareaReviewer:
 def main():
     """Main function"""
     parser = argparse.ArgumentParser(
-        description="Avice Workarea Review Tool - Comprehensive analysis of design workareas",
+        description="Avice Workarea Review Tool - Comprehensive ASIC/SoC design flow analysis",
         epilog="""
-Examples:
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea                    # Analyze workarea with auto-detected IPO
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea ipo1000            # Analyze workarea with specific IPO
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s setup runtime   # Run only setup and runtime sections
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s star            # Run only Star (Parasitic Extraction)
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s pt              # Run only PT (Signoff Timing)
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s star pt pv      # Run Star, PT, and PV sections
-  /home/avice/scripts/avice_wa_review_launcher.csh --help                               # Show this help message
-  /home/avice/scripts/avice_wa_review_launcher.csh --version                            # Show version information
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                          AVICE WORKAREA REVIEW TOOL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-The tool analyzes various aspects of the design flow including:
-  - Setup and Environment Information
-  - Runtime Analysis (DC and PnR)
-  - Synthesis Analysis (DC)
-  - Place & Route (PnR) Analysis
-  - Clock Analysis and Latency
-  - Formal Verification
-  - Parasitic Extraction (Star)
-  - Signoff Timing (PT)
-  - Physical Verification (LVS/DRC/Antenna)
-  - GL Checks
-  - ECO Analysis (PT-ECO and NV Gate ECO)
-  - Block Release Information
+BASIC EXAMPLES:
+  # Complete workarea analysis (all sections)
+  /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea
 
-Available sections: setup, runtime, synthesis, pnr, clock, formal, star, pt, pv, gl-check, eco, nv-gate-eco, block-release
-Short flag: -s (alias for --sections)
-All section names are case-insensitive
+  # Analyze specific IPO
+  /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea ipo1000
 
-For more information, visit: https://github.com/your-repo/avice-tools
+  # Analyze using unit name from agur release table (automatic workarea lookup)
+  /home/avice/scripts/avice_wa_review_launcher.csh --unit prt
+  /home/avice/scripts/avice_wa_review_launcher.csh --unit pmux --sections runtime pt
+
+  # Run only runtime and timing analysis (fast debug)
+  /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea -s runtime pt
+
+SELECTIVE SECTION ANALYSIS:
+  # Parasitic extraction and signoff timing only
+  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s star pt
+
+  # Setup, synthesis, and PnR sections
+  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s setup synthesis pnr
+
+  # Physical verification and GL checks
+  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s pv gl-check
+
+  # ECO analysis sections
+  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s eco nv-gate-eco
+
+ADDITIONAL OPTIONS:
+  # Run without logo for automation
+  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea --no-logo
+
+  # Display comprehensive documentation
+  /home/avice/scripts/avice_wa_review_launcher.csh --help-docs
+  /home/avice/scripts/avice_wa_review_launcher.csh --open-docs
+
+ANALYSIS SECTIONS (case-insensitive):
+  setup          Environment, BeFlow config, PRC configuration
+  runtime        DC, PnR, Star, PT, Formal, PV, GL Check runtimes
+  synthesis      QoR reports, floorplan dimensions, timing groups
+  pnr            Step sequence, routing data, timing histograms
+  clock          Clock tree analysis, DSR latency, clock gating
+  formal         Formal verification status, timestamp tracking
+  star           Parasitic extraction (SPEF) runtime and status
+  pt             Signoff timing, dual-scenario WNS/TNS/NVP, DSR skew
+  pv             Physical verification (LVS/DRC/Antenna) flow analysis
+  gl-check       Gate-level check error analysis and categorization
+  eco            PT-ECO analysis and dont_use cell checks
+  nv-gate-eco    NVIDIA Gate ECO command analysis and validation
+  block-release  Block release information and umake commands
+
+KEY FEATURES:
+  • Multi-IPO support with automatic detection
+  • Dual-scenario timing analysis (setup/hold)
+  • DSR Mux Clock Skew tracking across work directories
+  • Formal verification timestamp tracking vs design changes
+  • Interactive HTML reports with absolute paths (portable)
+  • Timeline visualizations for all flow stages
+  • ECO dont_use cell validation
+  • Runtime analysis with fast_dc detection
+
+OUTPUT:
+  Terminal: Compact, color-coded summaries with ASCII-only characters
+  HTML:     Comprehensive reports in current working directory with:
+            - Clickable log file links (absolute paths)
+            - Interactive tables and expandable sections
+            - Timeline visualizations and flow tracking
+            - Professional CSS styling and mobile-responsive layout
+
+For questions or support, contact: avice@nvidia.com
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -9269,6 +15853,8 @@ For more information, visit: https://github.com/your-repo/avice-tools
                        help="Disable logo display (useful for automated scripts)")
     parser.add_argument("--skip-validation", action="store_true",
                        help="Skip workarea validation (use with caution)")
+    parser.add_argument("--unit", "-u", type=str,
+                       help="Unit name from agur release table (e.g., prt, pmux). Automatically looks up released workarea path from AGUR_UNITS_TABLE.txt")
     parser.add_argument("--sections", "-s", nargs="+", 
                        type=str.lower,
                        metavar="SECTION",
@@ -9298,9 +15884,69 @@ For more information, visit: https://github.com/your-repo/avice-tools
             doc_gen.generate_pdf_docs()
         return
     
+    # Handle --unit flag: look up workarea from release table
+    if args.unit:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        release_tracking_dir = os.path.join(script_dir, "agur_release_tracking")
+        table_file = os.path.join(release_tracking_dir, "AGUR_UNITS_TABLE.txt")
+        update_checker = os.path.join(release_tracking_dir, "check_and_update_agur_table.sh")
+        
+        # Auto-check and update table if needed
+        if os.path.exists(update_checker) and os.access(update_checker, os.X_OK):
+            try:
+                # Run the checker quietly to auto-update if needed
+                result = subprocess.run([update_checker, "--quiet"], 
+                                      capture_output=True, 
+                                      timeout=60)
+                # Return code 2 means first-time setup completed
+                if result.returncode == 2:
+                    print(f"{Color.CYAN}[INFO] First-time setup: Generated AGUR units table{Color.RESET}")
+                elif result.returncode == 1:
+                    print(f"{Color.YELLOW}[WARN] Failed to auto-update release table{Color.RESET}")
+                # Return code 0 means table is up-to-date or successfully updated
+            except subprocess.TimeoutExpired:
+                print(f"{Color.YELLOW}[WARN] Table update check timed out{Color.RESET}")
+            except Exception as e:
+                print(f"{Color.YELLOW}[WARN] Could not check for table updates: {e}{Color.RESET}")
+        
+        if not os.path.exists(table_file):
+            print(f"{Color.RED}[ERROR] AGUR_UNITS_TABLE.txt not found at: {table_file}{Color.RESET}")
+            print(f"{Color.YELLOW}[HINT] Run: cd agur_release_tracking && ./extract_agur_releases.sh{Color.RESET}")
+            sys.exit(1)
+        
+        # Look up unit in table
+        workarea_found = False
+        try:
+            with open(table_file, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#'):
+                        parts = [p.strip() for p in line.split('|')]
+                        if len(parts) >= 3 and parts[0].lower() == args.unit.lower():
+                            args.workarea = parts[2]  # Third column is the workarea path
+                            workarea_found = True
+                            print(f"{Color.CYAN}[INFO] Unit '{args.unit}' found in release table{Color.RESET}")
+                            print(f"{Color.CYAN}[INFO] Using workarea: {args.workarea}{Color.RESET}")
+                            break
+            
+            if not workarea_found:
+                print(f"{Color.RED}[ERROR] Unit '{args.unit}' not found in AGUR_UNITS_TABLE.txt{Color.RESET}")
+                print(f"{Color.YELLOW}[HINT] Available units:{Color.RESET}")
+                with open(table_file, 'r') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith('#'):
+                            parts = [p.strip() for p in line.split('|')]
+                            if len(parts) >= 1:
+                                print(f"  - {parts[0]}")
+                sys.exit(1)
+        except Exception as e:
+            print(f"{Color.RED}[ERROR] Failed to read release table: {e}{Color.RESET}")
+            sys.exit(1)
+    
     # Check if workarea is provided
     if not args.workarea:
-        parser.error("workarea is required")
+        parser.error("workarea is required (or use --unit to specify a unit name)")
     
     if not os.path.isdir(args.workarea):
         print(f"{Color.RED}Error: Workarea directory '{args.workarea}' does not exist{Color.RESET}")
@@ -9308,6 +15954,9 @@ For more information, visit: https://github.com/your-repo/avice-tools
     
     try:
         reviewer = WorkareaReviewer(args.workarea, args.ipo, show_logo=not args.no_logo, skip_validation=args.skip_validation)
+        
+        # Cleanup old HTML files from previous runs to avoid confusion
+        reviewer._cleanup_old_html_files()
         
         # Handle selective section running
         if args.sections:

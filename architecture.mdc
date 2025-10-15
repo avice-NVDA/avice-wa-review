@@ -274,13 +274,100 @@ This applies to all print statements, logging, and console output throughout the
    - Document any path-related issues found during testing
    - **Test HTML portability**: Copy HTML to different locations and verify all links work
 
-4. HTML Report Organization (for development/testing):
-   - DO NOT change the HTML generation paths in the code (they should remain in current working directory)
-   - When testing the script, move generated HTML files to `/home/avice/scripts/html/` directory for organization
+4. **HTML Report Organization - REQUIRED for Development/Testing**:
+   - **CRITICAL**: DO NOT change the HTML generation paths in the code (they should remain in current working directory)
+   - **REQUIRED AFTER TESTING**: Move all generated HTML files to `html/` directory for organization
+   - Location: `/home/avice/scripts/avice_wa_review/html/`
    - This keeps test artifacts organized without changing user-facing behavior
-   - Example: `mv *.html html/` after running tests from `/home/avice/scripts/`
+   - **Why this matters**:
+     * Users generate HTML reports in their own working directories (correct behavior)
+     * Developers testing in the project directory create HTML files that clutter the repository
+     * The `html/` folder is gitignored and keeps the project directory clean
+   - **Procedure after each testing session**:
+     ```bash
+     cd /home/avice/scripts/avice_wa_review
+     mv *.html html/  # Move all HTML files to html folder
+     ```
+   - **DO THIS EVERY TIME** you finish testing to keep the project organized
 
 # Workarea Review Project Specific Rules
+
+## HTML/CSS Rendering Compatibility
+
+**Environment Information:**
+- Firefox Version: **143.0.4** (December 2024 release) - **UPGRADED October 2025**
+- Previous Version: 118.0.1 (2023 release)
+- Display Server: Remote X11 session
+- Display Notes: "Broadway display type not supported" and "[GFX1-]: glxtest: libEGL missing methods" warnings are **benign** - software rendering mode works perfectly
+
+**CSS Feature Support:**
+
+1. **Flexbox Layout: ✓ FULLY SUPPORTED**
+   - Works perfectly in all tested scenarios
+   - Use for responsive layouts, summary cards, grids
+   - Excellent browser compatibility (supported since 2012)
+   - Recommended for simple multi-column layouts
+
+2. **CSS Grid Layout: ✓ FULLY SUPPORTED** 🎉
+   - ✅ **NOW WORKS with Firefox 143.0.4!** (verified October 11, 2025)
+   - Full support for `display: grid`, `grid-template-columns`, `grid-template-areas`
+   - Grid spanning (`grid-column`, `grid-row`) works correctly
+   - Complex grid layouts render properly
+   - Use for advanced dashboard layouts, complex table structures
+
+3. **Recommended CSS Patterns:**
+   ```css
+   /* ✅ GOOD - Flexbox for simple responsive layouts */
+   .container {
+       display: flex;
+       flex-wrap: wrap;
+       gap: 12px;
+   }
+   
+   .item {
+       flex: 1 1 calc(20% - 12px);  /* 5 columns */
+       min-width: 160px;
+   }
+   
+   /* ✅ GOOD - CSS Grid for complex layouts (NOW AVAILABLE!) */
+   .container {
+       display: grid;
+       grid-template-columns: repeat(5, 1fr);
+       gap: 12px;
+   }
+   
+   /* ✅ GOOD - Advanced Grid with spanning */
+   .dashboard {
+       display: grid;
+       grid-template-columns: 2fr 1fr;
+       grid-template-areas: 
+           "header header"
+           "main sidebar"
+           "footer footer";
+   }
+   ```
+
+4. **Testing Requirements:**
+   - Always test HTML layouts in Firefox 143.0.4 on the target system
+   - Both Flexbox and Grid are now available - choose based on use case
+   - Remote display server limitations resolved with Firefox 143 upgrade
+   - Test file available: `test_css_grid.html` for verification
+
+5. **Known Working CSS Features:**
+   - ✅ Flexbox (display: flex)
+   - ✅ **CSS Grid (display: grid)** - NEW!
+   - ✅ CSS transitions and animations
+   - ✅ Media queries
+   - ✅ Box model (padding, margin, border)
+   - ✅ Positioning (absolute, relative, fixed)
+   - ✅ Transforms (scale, translate)
+   - ✅ Box shadows and gradients
+   - ✅ Complex grid layouts with spanning
+
+6. **Layout Method Selection Guide:**
+   - **Use Flexbox** for: Simple rows/columns, responsive wrapping, alignment
+   - **Use Grid** for: Complex 2D layouts, dashboard grids, table-like structures, precise positioning
+   - **Both work perfectly** - choose based on your specific layout needs
 
 ## HTML Report Standards
 
@@ -302,11 +389,143 @@ This applies to all print statements, logging, and console output throughout the
      * Fast DC detection indicators
      * RTL stage indicators
 
-2. ALWAYS generate HTML reports with timestamps in filenames:
-   - Format: `avice_[report_type]_[design]_[ipo]_{timestamp}.html`
-   - Example: `avice_pnr_data_fth_ipo1000_20250930_150418.html`
+2. **CRITICAL: Copyright Footer - ALWAYS Include in ALL HTML Reports**
+   - **Every HTML report MUST include the professional copyright footer**
+   - Footer must be added BEFORE closing `</body>` tag
+   - Use consistent styling across all reports
+   
+   **Required Footer CSS** (add before `</style>`):
+   ```css
+   /* Copyright Footer */
+   .footer {{
+       background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+       color: white;
+       text-align: center;
+       padding: 20px;
+       margin-top: 40px;
+       border-radius: 10px;
+       font-size: 14px;
+   }}
+   
+   .footer p {{
+       margin: 5px 0;
+   }}
+   
+   .footer strong {{
+       color: #00ff00;
+   }}
+   ```
+   
+   **Required Footer HTML** (add before `</body>`):
+   ```html
+   <!-- Copyright Footer -->
+   <div class="footer">
+       <p><strong>AVICE [Report Name] Report</strong></p>
+       <p>Copyright (c) 2025 Alon Vice (avice)</p>
+       <p>Contact: avice@nvidia.com</p>
+   </div>
+   ```
+   
+   **Examples of Report Names**:
+   - AVICE P&R Comprehensive Report
+   - AVICE DC Comprehensive Report
+   - AVICE PT Signoff Timing Summary
+   - AVICE GL Check Analysis Report
+   - AVICE Runtime Analysis Report
+   - AVICE Star Parasitic Extraction Report
+   - AVICE Timing Histogram Report
+   - AVICE Image Debug Report
+   
+   **When Creating New HTML Reports**:
+   - Add footer CSS to the `<style>` section
+   - Add footer HTML before closing `</body>` tag
+   - Customize the report name in `<strong>` tag
+   - This applies to ALL HTML reports - no exceptions
 
-3. HTML report features:
+2.5. **CRITICAL: Back to Top Button - ALWAYS Include in ALL HTML Reports**
+   
+   Every HTML report MUST include a floating "Back to Top" button that:
+   - Appears when user scrolls down 300px or more
+   - Fixed at bottom-right corner (30px from bottom and right)
+   - Smooth scrolls to top when clicked
+   - Has hover effect with scale and color change
+   - Uses consistent styling with purple/indigo theme (#667eea)
+   
+   **Required Button HTML** (add before `</body>` tag):
+   ```html
+   <button id="backToTopBtn" style="display: none; position: fixed; bottom: 30px; right: 30px; 
+           z-index: 99; border: none; outline: none; background-color: #667eea; color: white; 
+           cursor: pointer; padding: 15px 20px; border-radius: 50px; font-size: 16px; 
+           font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease;"
+           onmouseover="this.style.backgroundColor='#5568d3'; this.style.transform='scale(1.1)';"
+           onmouseout="this.style.backgroundColor='#667eea'; this.style.transform='scale(1)';">
+       ↑ Top
+   </button>
+   ```
+   
+   **Required JavaScript** (add in `<script>` section before closing):
+   ```javascript
+   // Back to top button functionality
+   const backToTopBtn = document.getElementById('backToTopBtn');
+   if (backToTopBtn) {
+       window.addEventListener('scroll', function() {
+           if (window.pageYOffset > 300) {
+               backToTopBtn.style.display = 'block';
+           } else {
+               backToTopBtn.style.display = 'none';
+           }
+       });
+       
+       backToTopBtn.addEventListener('click', function() {
+           window.scrollTo({ top: 0, behavior: 'smooth' });
+       });
+   }
+   ```
+   
+   **Placement Order** (before `</body>`):
+   1. Close `</script>` tag
+   2. Add back-to-top button HTML
+   3. Add copyright footer div
+   4. Close `</body>` tag
+   
+   **HTML Reports That Include This**:
+   - Master Dashboard
+   - PnR Comprehensive Report  
+   - DC (Synthesis) Comprehensive Report
+   - Timing Histogram Report
+   - Star Parasitic Extraction Report
+   - PT Signoff Timing Summary
+   - GL Check Analysis Report (has existing button, keep it)
+   - PV (Physical Verification) Report
+   - Runtime Analysis Report
+   - Image Debug Report
+   
+   **Implementation Note**: This button provides better UX for long reports with extensive data tables and sections.
+
+3. ALWAYS generate HTML reports with timestamps in filenames:
+   - Format: `{USER}_[report_type]_[design]_[ipo]_{timestamp}.html`
+   - Example: `avice_pnr_data_fth_ipo1000_20250930_150418.html`
+   - **CRITICAL**: NEVER hardcode "avice" in HTML filenames - always use `os.environ.get('USER', 'avice')`
+   
+4. **HTML Filename Username Handling**:
+   ```python
+   # ✅ CORRECT - Use environment variable for username
+   html_filename = f"{os.environ.get('USER', 'avice')}_runtime_report_{design}_{timestamp}.html"
+   html_filename = f"{os.environ.get('USER', 'avice')}_MASTER_dashboard_{design}_{date}.html"
+   html_filename = f"{os.environ.get('USER', 'avice')}_DC_comprehensive_{design}_{timestamp}.html"
+   
+   # ❌ WRONG - Hardcoded username breaks cross-user usage
+   html_filename = f"avice_runtime_report_{design}_{timestamp}.html"
+   ```
+   
+   **Why this matters**:
+   - Reports generated by different users should have their username in filename
+   - Master dashboard links to section HTMLs must use relative paths (just filename)
+   - When user "brachas" generates reports, files should be named "brachas_*", not "avice_*"
+   - Enables multiple users to generate reports in shared directories without conflicts
+   - The 'avice' fallback is only used if $USER environment variable is not set
+
+5. HTML report features:
    - Professional CSS styling with gradients and modern design
    - Responsive layout for desktop and mobile
    - Clickable links to log files and reports
@@ -316,20 +535,20 @@ This applies to all print statements, logging, and console output throughout the
    - Interactive elements (modals, tooltips, expandable sections)
    - Comprehensive data beyond what's shown in terminal
 
-4. HTML report types:
+6. HTML report types:
    - Runtime Report: `avice_runtime_report_[design]_{timestamp}.html`
    - PnR Data Report: `avice_pnr_data_[design]_[ipo]_{timestamp}.html`
    - Image Debug Report: `avice_image_debug_report_[design]_{timestamp}.html`
    - Documentation Manual: `avice_wa_review_manual_{timestamp}.html`
 
-5. Log file viewing integration:
+7. Log file viewing integration:
    - All log file links in HTML reports use the custom tablog viewer: `/home/scratch.avice_vlsi/tablog/tablog`
    - Clicking "View in tablog" button copies the tablog command to clipboard
    - Users can paste the command in their terminal to open logs with tablog
    - Alternative raw file link (📄) provided for direct file access
    - Toast notifications confirm successful copy to clipboard
 
-6. **CRITICAL: HTML Report Portability - Absolute Paths Required**
+8. **CRITICAL: HTML Report Portability - Absolute Paths Required**
    - **ALWAYS use absolute paths for ALL file links in HTML reports**
    - HTML reports must work from any location where users open them
    - Users frequently copy HTML files to their home directories, shared locations, or different mount points
@@ -485,16 +704,25 @@ This applies to all print statements, logging, and console output throughout the
    - Workarea database: `workareas.txt`
    - Architecture rules: `architecture.mdc`
    - Cleanup script: `cleanup_test_reports.sh`
+   - **Test HTML reports**: `html/` directory (gitignored)
+   - **AGUR tracking**: `agur_release_tracking/` directory
 
-3. Test-generated HTML file management:
-   - HTML reports generated during testing accumulate quickly
-   - Use `.gitignore` to prevent tracking test HTML files (pattern: `avice_*.html`)
-   - Run `cleanup_test_reports.sh` periodically to remove old test reports
+3. **Test-generated HTML file management - REQUIRED WORKFLOW**:
+   - **HTML reports generated during testing MUST be moved to `html/` folder after testing**
+   - **Procedure after each testing session**:
+     ```bash
+     cd /home/avice/scripts/avice_wa_review
+     mv *.html html/  # Move all test HTML files to html folder
+     ```
+   - The `html/` directory is gitignored to prevent tracking test artifacts
+   - Use `cleanup_test_reports.sh` periodically to clean old test reports from `html/` folder
    - Default cleanup: files older than 1 day
    - Custom cleanup: `./cleanup_test_reports.sh N` (N = days to keep)
-   - Keep project directory clean by removing test files after development sessions
-   - User-generated reports (from actual workarea analysis) are saved in current working directory
-   - Only test/development HTML files in the project directory need cleanup
+   - **Important distinctions**:
+     * User-generated reports: Saved in user's own working directory (correct behavior)
+     * Developer test reports: Generated in project directory, MUST be moved to `html/` folder
+     * This keeps the project directory clean and repository organized
+   - **ALWAYS move HTMLs to html/ after finishing your testing session**
 
 ## Testing and Validation Standards
 
