@@ -15859,11 +15859,11 @@ For questions or support, contact: avice@nvidia.com
     parser.add_argument("--sections", "-s", nargs="+", 
                        type=str.lower,
                        metavar="SECTION",
-                       choices=["setup", "runtime", "synthesis", "pnr", 
+                       choices=["setup", "runtime", "synthesis", "syn", "dc", "pnr", 
                                "clock", "formal", "star", "pt", "pv", 
                                "gl-check", "eco", "nv-gate-eco", 
                                "block-release"],
-                       help="Run only specific analysis sections (case-insensitive). Choices: setup, runtime, synthesis, pnr, clock, formal, star, pt, pv, gl-check, eco, nv-gate-eco, block-release")
+                       help="Run only specific analysis sections (case-insensitive). Choices: setup, runtime, synthesis (syn/dc), pnr, clock, formal, star, pt, pv, gl-check, eco, nv-gate-eco, block-release. Aliases: syn/dc=synthesis")
     parser.add_argument("--output", "-o", 
                        help="Output file to save results (optional)")
     parser.add_argument("--format", choices=["text", "json"], default="text",
