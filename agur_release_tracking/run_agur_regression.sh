@@ -838,9 +838,9 @@ for i in "${!UNITS[@]}"; do
     
     # Check if workarea exists
     if [ ! -d "$workarea" ]; then
-        echo -e "${RED}[ERROR]${NC} Workarea does not exist"
-        ANALYSIS_STATUS+=("ERROR")
-        ANALYSIS_DETAILS+=("Workarea not found")
+        echo -e "${RED}[MISSING]${NC} Workarea does not exist"
+        ANALYSIS_STATUS+=("MISSING")
+        ANALYSIS_DETAILS+=("Workarea path not found or deleted")
         ANALYSIS_RUNTIMES+=("N/A")
         continue
     fi
@@ -897,7 +897,7 @@ for i in "${!UNITS[@]}"; do
             PASSED)
                 status_color="${GREEN}"
                 ;;
-            FAILED|CRASHED|ERROR)
+            FAILED|CRASHED|ERROR|MISSING)
                 status_color="${RED}"
                 ;;
             *)
@@ -942,6 +942,8 @@ done
     [[ "$not_found_count" == "0" ]] && not_found_count=0
     no_data_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "NO_DATA")
     [[ "$no_data_count" == "0" ]] && no_data_count=0
+    missing_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "MISSING")
+    [[ "$missing_count" == "0" ]] && missing_count=0
     
     # Store statistics for this regression type
     REGRESSION_RESULTS["${REGRESSION_TYPE}_passed_count"]=$passed_count
@@ -954,6 +956,7 @@ done
     REGRESSION_RESULTS["${REGRESSION_TYPE}_running_count"]=$running_count
     REGRESSION_RESULTS["${REGRESSION_TYPE}_not_found_count"]=$not_found_count
     REGRESSION_RESULTS["${REGRESSION_TYPE}_no_data_count"]=$no_data_count
+    REGRESSION_RESULTS["${REGRESSION_TYPE}_missing_count"]=$missing_count
     
     # Clean up temporary arrays
     unset ANALYSIS_STATUS
@@ -995,6 +998,7 @@ if [ ${#REGRESSION_TYPES[@]} -eq 1 ]; then
     running_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_running_count"]}
     not_found_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_not_found_count"]}
     no_data_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_no_data_count"]}
+    missing_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_missing_count"]}
     
     # Restore unit results
     declare -a ANALYSIS_STATUS
@@ -1609,6 +1613,15 @@ HTML_STATS_NODATA
 echo "                <div class=\"stat-value stat-unresolved\">$no_data_count</div>" >> "$HTML_FILE"
 echo "                <div class=\"stat-label\">$(( no_data_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
 
+cat >> "$HTML_FILE" << 'HTML_STATS_MISSING'
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">🚫 Missing</div>
+HTML_STATS_MISSING
+
+echo "                <div class=\"stat-value stat-failed\">$missing_count</div>" >> "$HTML_FILE"
+echo "                <div class=\"stat-label\">$(( missing_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
+
 cat >> "$HTML_FILE" << 'HTML_CONTENT_START'
             </div>
         </div>
@@ -1700,6 +1713,10 @@ CHIPLET_SECTION
             NO_DATA)
                 status_class="status-notfound"
                 status_text="📊 NO DATA"
+                ;;
+            MISSING)
+                status_class="status-failed"
+                status_text="🚫 MISSING"
                 ;;
             *)
                 status_class="status-notfound"
@@ -2518,6 +2535,11 @@ TAB_UNRESOLVED
                     <div class="stat-value stat-unresolved">$no_data_count</div>
                     <div class="stat-label">$(( no_data_count * 100 / TOTAL_UNITS ))%</div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-label">🚫 Missing</div>
+                    <div class="stat-value stat-failed">$missing_count</div>
+                    <div class="stat-label">$(( missing_count * 100 / TOTAL_UNITS ))%</div>
+                </div>
             </div>
             
             <div class="content">
@@ -2609,6 +2631,10 @@ CHIPLET_SECTION
                     NO_DATA)
                         status_class="status-notfound"
                         status_text="📊 NO DATA"
+                        ;;
+                    MISSING)
+                        status_class="status-failed"
+                        status_text="🚫 MISSING"
                         ;;
                     *)
                         status_class="status-notfound"
@@ -2892,6 +2918,7 @@ echo -e "  - ${YELLOW}Running: $running_count${NC}"
 echo -e "  - ${YELLOW}Errors: $error_count${NC}"
 echo -e "  - ${YELLOW}Not Run: $not_found_count${NC}"
 echo -e "  - ${YELLOW}No Data: $no_data_count${NC}"
+echo -e "  - ${RED}Missing WA: $missing_count${NC}"
 echo ""
 echo "Output File:"
 echo "  - HTML Dashboard: $HTML_FILE"
