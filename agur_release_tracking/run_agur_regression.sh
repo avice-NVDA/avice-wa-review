@@ -142,6 +142,133 @@ print_section() {
 # Regression Type Functions
 #===============================================================================
 
+#===============================================================================
+# Parser Functions - Extract results from avice_wa_review.py output
+#===============================================================================
+
+# Parse formal verification output
+# Args: $1 = output file path
+# Returns: Sets ANALYSIS_STATUS, ANALYSIS_DETAILS, ANALYSIS_RUNTIMES (via echo)
+parse_formal_output() {
+    local output_file="$1"
+    local status=""
+    local details=""
+    local runtime="N/A"
+    
+    # Extract formal verification results
+    local formal_section=$(grep -A 100 "Formal Verification" "$output_file")
+    
+    if [ -z "$formal_section" ]; then
+        echo "NOT_FOUND|No formal flow detected|N/A"
+        return
+    elif echo "$formal_section" | grep -q "No formal verification logs found"; then
+        echo "NOT_FOUND|No formal flow detected|N/A"
+        return
+    fi
+    
+    # Extract status for each formal flow
+    local rtl_vs_pnr_status=""
+    local rtl_vs_pnr_bbox_status=""
+    local rtl_vs_syn_status=""
+    local rtl_vs_syn_bbox_status=""
+    
+    while IFS= read -r line; do
+        if [[ "$line" == *"rtl_vs_pnr_fm/log/rtl_vs_pnr_fm.log"* ]]; then
+            read -r status_line
+            rtl_vs_pnr_status=$(echo "$status_line" | grep -oP "(SUCCEEDED|FAILED|CRASHED|RUNNING|UNRESOLVED)" | head -1)
+        elif [[ "$line" == *"rtl_vs_pnr_bbox_fm/log/rtl_vs_pnr_bbox_fm.log"* ]]; then
+            read -r status_line
+            rtl_vs_pnr_bbox_status=$(echo "$status_line" | grep -oP "(SUCCEEDED|FAILED|CRASHED|RUNNING|UNRESOLVED)" | head -1)
+        elif [[ "$line" == *"rtl_vs_syn_fm/log/rtl_vs_syn_fm.log"* ]]; then
+            read -r status_line
+            rtl_vs_syn_status=$(echo "$status_line" | grep -oP "(SUCCEEDED|FAILED|CRASHED|RUNNING|UNRESOLVED)" | head -1)
+        elif [[ "$line" == *"rtl_vs_syn_bbox_fm/log/rtl_vs_syn_bbox_fm.log"* ]]; then
+            read -r status_line
+            rtl_vs_syn_bbox_status=$(echo "$status_line" | grep -oP "(SUCCEEDED|FAILED|CRASHED|RUNNING|UNRESOLVED)" | head -1)
+        fi
+    done <<< "$formal_section"
+    
+    # Determine overall status (prioritize PNR flows over SYN flows)
+    local overall_status="UNKNOWN"
+    
+    # Check for crashes (highest priority)
+    if [[ "$rtl_vs_pnr_status" == "CRASHED" ]] || [[ "$rtl_vs_pnr_bbox_status" == "CRASHED" ]] || \
+       [[ "$rtl_vs_syn_status" == "CRASHED" ]] || [[ "$rtl_vs_syn_bbox_status" == "CRASHED" ]]; then
+        overall_status="CRASHED"
+    # Check for failures
+    elif [[ "$rtl_vs_pnr_status" == "FAILED" ]] || [[ "$rtl_vs_pnr_bbox_status" == "FAILED" ]] || \
+         [[ "$rtl_vs_syn_status" == "FAILED" ]] || [[ "$rtl_vs_syn_bbox_status" == "FAILED" ]]; then
+        overall_status="FAILED"
+    # Check for running
+    elif [[ "$rtl_vs_pnr_status" == "RUNNING" ]] || [[ "$rtl_vs_pnr_bbox_status" == "RUNNING" ]] || \
+         [[ "$rtl_vs_syn_status" == "RUNNING" ]] || [[ "$rtl_vs_syn_bbox_status" == "RUNNING" ]]; then
+        overall_status="RUNNING"
+    # Check for unresolved
+    elif [[ "$rtl_vs_pnr_status" == "UNRESOLVED" ]] || [[ "$rtl_vs_pnr_bbox_status" == "UNRESOLVED" ]] || \
+         [[ "$rtl_vs_syn_status" == "UNRESOLVED" ]] || [[ "$rtl_vs_syn_bbox_status" == "UNRESOLVED" ]]; then
+        overall_status="UNRESOLVED"
+    # All succeeded (PNR flows are most important)
+    elif [[ "$rtl_vs_pnr_status" == "SUCCEEDED" ]] && [[ "$rtl_vs_pnr_bbox_status" == "SUCCEEDED" ]]; then
+        overall_status="PASSED"
+    # At least PNR flows exist and passed (even if SYN failed)
+    elif [[ "$rtl_vs_pnr_status" == "SUCCEEDED" ]] || [[ "$rtl_vs_pnr_bbox_status" == "SUCCEEDED" ]]; then
+        overall_status="PARTIAL_PASS"
+    fi
+    
+    # Extract runtime
+    runtime=$(echo "$formal_section" | grep "Runtime:" | head -1 | grep -oP "Runtime: \K[0-9.]+ (hours|minutes)")
+    [ -z "$runtime" ] && runtime="N/A"
+    
+    # Build details string
+    details=""
+    [ -n "$rtl_vs_pnr_bbox_status" ] && details="${details}rtl_vs_pnr_bbox: $rtl_vs_pnr_bbox_status, "
+    [ -n "$rtl_vs_pnr_status" ] && details="${details}rtl_vs_pnr: $rtl_vs_pnr_status, "
+    [ -n "$rtl_vs_syn_status" ] && details="${details}rtl_vs_syn: $rtl_vs_syn_status, "
+    [ -n "$rtl_vs_syn_bbox_status" ] && details="${details}rtl_vs_syn_bbox: $rtl_vs_syn_bbox_status"
+    details=${details%, }  # Remove trailing comma and space
+    
+    # If no formal flows were found at all, mark as NOT_FOUND
+    if [ -z "$details" ]; then
+        overall_status="NOT_FOUND"
+        details="No formal flow logs detected"
+    fi
+    
+    # Return pipe-delimited string: status|details|runtime
+    echo "${overall_status}|${details}|${runtime}"
+}
+
+# Parse timing (PT) output
+# Args: $1 = output file path
+# Returns: status|details|runtime
+parse_timing_output() {
+    local output_file="$1"
+    echo "NOT_IMPLEMENTED|Timing parser not yet implemented|N/A"
+}
+
+# Parse PV (Physical Verification) output
+# Args: $1 = output file path
+# Returns: status|details|runtime
+parse_pv_output() {
+    local output_file="$1"
+    echo "NOT_IMPLEMENTED|PV parser not yet implemented|N/A"
+}
+
+# Parse clock tree analysis output
+# Args: $1 = output file path
+# Returns: status|details|runtime
+parse_clock_output() {
+    local output_file="$1"
+    echo "NOT_IMPLEMENTED|Clock parser not yet implemented|N/A"
+}
+
+# Parse block release output
+# Args: $1 = output file path
+# Returns: status|details|runtime
+parse_release_output() {
+    local output_file="$1"
+    echo "NOT_IMPLEMENTED|Release parser not yet implemented|N/A"
+}
+
 # Get section flag for avice_wa_review.py based on regression type
 get_analysis_section() {
     case "$REGRESSION_TYPE" in
@@ -355,111 +482,61 @@ for i in "${!UNITS[@]}"; do
     "$PYTHON_BIN" "$AVICE_SCRIPT" "$workarea" -s "$ANALYSIS_SECTION" --no-logo > "$OUTPUT_FILE" 2>&1
     EXIT_CODE=$?
     
-    # Parse output for formal status
+    # Parse output based on regression type
     if [ $EXIT_CODE -ne 0 ]; then
         echo -e "${RED}[ERROR]${NC} Analysis failed (exit code: $EXIT_CODE)"
         ANALYSIS_STATUS+=("ERROR")
         ANALYSIS_DETAILS+=("Script execution failed")
         ANALYSIS_RUNTIMES+=("N/A")
     else
-        # Extract formal verification results
-        formal_section=$(grep -A 100 "Formal Verification" "$OUTPUT_FILE")
+        # Call appropriate parser function based on regression type
+        local parse_result=""
+        case "$REGRESSION_TYPE" in
+            formal)
+                parse_result=$(parse_formal_output "$OUTPUT_FILE")
+                ;;
+            timing)
+                parse_result=$(parse_timing_output "$OUTPUT_FILE")
+                ;;
+            pv)
+                parse_result=$(parse_pv_output "$OUTPUT_FILE")
+                ;;
+            clock)
+                parse_result=$(parse_clock_output "$OUTPUT_FILE")
+                ;;
+            release)
+                parse_result=$(parse_release_output "$OUTPUT_FILE")
+                ;;
+            *)
+                parse_result="ERROR|Unknown regression type|N/A"
+                ;;
+        esac
         
-        if [ -z "$formal_section" ]; then
-            echo -e "${YELLOW}[WARN]${NC} No formal verification section found"
-            ANALYSIS_STATUS+=("NOT_FOUND")
-            ANALYSIS_DETAILS+=("No formal flow detected")
-            ANALYSIS_RUNTIMES+=("N/A")
-        elif echo "$formal_section" | grep -q "No formal verification logs found"; then
-            echo -e "${YELLOW}[INFO]${NC} No formal flows in this workarea"
-            ANALYSIS_STATUS+=("NOT_FOUND")
-            ANALYSIS_DETAILS+=("No formal flow detected")
-            ANALYSIS_RUNTIMES+=("N/A")
-        else
-            # Extract status for each formal flow (looking for rtl_vs_pnr flows)
-            # Parse the formal section line by line to extract statuses
-            rtl_vs_pnr_status=""
-            rtl_vs_pnr_bbox_status=""
-            rtl_vs_syn_status=""
-            rtl_vs_syn_bbox_status=""
-            
-            while IFS= read -r line; do
-                if [[ "$line" == *"rtl_vs_pnr_fm/log/rtl_vs_pnr_fm.log"* ]]; then
-                    # Next line should have status
-                    read -r status_line
-                    rtl_vs_pnr_status=$(echo "$status_line" | grep -oP "(SUCCEEDED|FAILED|CRASHED|RUNNING|UNRESOLVED)" | head -1)
-                elif [[ "$line" == *"rtl_vs_pnr_bbox_fm/log/rtl_vs_pnr_bbox_fm.log"* ]]; then
-                    read -r status_line
-                    rtl_vs_pnr_bbox_status=$(echo "$status_line" | grep -oP "(SUCCEEDED|FAILED|CRASHED|RUNNING|UNRESOLVED)" | head -1)
-                elif [[ "$line" == *"rtl_vs_syn_fm/log/rtl_vs_syn_fm.log"* ]]; then
-                    read -r status_line
-                    rtl_vs_syn_status=$(echo "$status_line" | grep -oP "(SUCCEEDED|FAILED|CRASHED|RUNNING|UNRESOLVED)" | head -1)
-                elif [[ "$line" == *"rtl_vs_syn_bbox_fm/log/rtl_vs_syn_bbox_fm.log"* ]]; then
-                    read -r status_line
-                    rtl_vs_syn_bbox_status=$(echo "$status_line" | grep -oP "(SUCCEEDED|FAILED|CRASHED|RUNNING|UNRESOLVED)" | head -1)
-                fi
-            done <<< "$formal_section"
-            
-            # Determine overall status (prioritize PNR flows over SYN flows)
-            overall_status="UNKNOWN"
-            status_color="${YELLOW}"
-            
-            # Check for crashes (highest priority)
-            if [[ "$rtl_vs_pnr_status" == "CRASHED" ]] || [[ "$rtl_vs_pnr_bbox_status" == "CRASHED" ]] || \
-               [[ "$rtl_vs_syn_status" == "CRASHED" ]] || [[ "$rtl_vs_syn_bbox_status" == "CRASHED" ]]; then
-                overall_status="CRASHED"
-                status_color="${RED}"
-            # Check for failures
-            elif [[ "$rtl_vs_pnr_status" == "FAILED" ]] || [[ "$rtl_vs_pnr_bbox_status" == "FAILED" ]] || \
-                 [[ "$rtl_vs_syn_status" == "FAILED" ]] || [[ "$rtl_vs_syn_bbox_status" == "FAILED" ]]; then
-                overall_status="FAILED"
-                status_color="${RED}"
-            # Check for running
-            elif [[ "$rtl_vs_pnr_status" == "RUNNING" ]] || [[ "$rtl_vs_pnr_bbox_status" == "RUNNING" ]] || \
-                 [[ "$rtl_vs_syn_status" == "RUNNING" ]] || [[ "$rtl_vs_syn_bbox_status" == "RUNNING" ]]; then
-                overall_status="RUNNING"
-                status_color="${YELLOW}"
-            # Check for unresolved
-            elif [[ "$rtl_vs_pnr_status" == "UNRESOLVED" ]] || [[ "$rtl_vs_pnr_bbox_status" == "UNRESOLVED" ]] || \
-                 [[ "$rtl_vs_syn_status" == "UNRESOLVED" ]] || [[ "$rtl_vs_syn_bbox_status" == "UNRESOLVED" ]]; then
-                overall_status="UNRESOLVED"
-                status_color="${YELLOW}"
-            # All succeeded (PNR flows are most important)
-            elif [[ "$rtl_vs_pnr_status" == "SUCCEEDED" ]] && [[ "$rtl_vs_pnr_bbox_status" == "SUCCEEDED" ]]; then
-                overall_status="PASSED"
+        # Parse the pipe-delimited result: status|details|runtime
+        IFS='|' read -r overall_status details runtime <<< "$parse_result"
+        
+        # Add to arrays
+        ANALYSIS_STATUS+=("$overall_status")
+        ANALYSIS_DETAILS+=("$details")
+        ANALYSIS_RUNTIMES+=("$runtime")
+        
+        # Determine status color for console output
+        local status_color="${YELLOW}"
+        case "$overall_status" in
+            PASSED)
                 status_color="${GREEN}"
-            # At least PNR flows exist and passed (even if SYN failed)
-            elif [[ "$rtl_vs_pnr_status" == "SUCCEEDED" ]] || [[ "$rtl_vs_pnr_bbox_status" == "SUCCEEDED" ]]; then
-                overall_status="PARTIAL_PASS"
+                ;;
+            FAILED|CRASHED|ERROR)
+                status_color="${RED}"
+                ;;
+            *)
                 status_color="${YELLOW}"
-            fi
-            
-            # Extract runtime (get first runtime found)
-            runtime=$(echo "$formal_section" | grep "Runtime:" | head -1 | grep -oP "Runtime: \K[0-9.]+ (hours|minutes)")
-            [ -z "$runtime" ] && runtime="N/A"
-            
-            # Build details string
-            details=""
-            [ -n "$rtl_vs_pnr_bbox_status" ] && details="${details}rtl_vs_pnr_bbox: $rtl_vs_pnr_bbox_status, "
-            [ -n "$rtl_vs_pnr_status" ] && details="${details}rtl_vs_pnr: $rtl_vs_pnr_status, "
-            [ -n "$rtl_vs_syn_status" ] && details="${details}rtl_vs_syn: $rtl_vs_syn_status, "
-            [ -n "$rtl_vs_syn_bbox_status" ] && details="${details}rtl_vs_syn_bbox: $rtl_vs_syn_bbox_status"
-            details=${details%, }  # Remove trailing comma and space
-            
-            # If no formal flows were found at all, mark as NOT_FOUND
-            if [ -z "$details" ]; then
-                overall_status="NOT_FOUND"
-                details="No formal flow logs detected"
-            fi
-            
-            ANALYSIS_STATUS+=("$overall_status")
-            ANALYSIS_DETAILS+=("$details")
-            ANALYSIS_RUNTIMES+=("$runtime")
-            
-            echo -e "${status_color}Status: $overall_status${NC}"
-            echo "Details: $details"
-            echo "Runtime: $runtime"
-        fi
+                ;;
+        esac
+        
+        echo -e "${status_color}Status: $overall_status${NC}"
+        echo "Details: $details"
+        echo "Runtime: $runtime"
     fi
 done
 
