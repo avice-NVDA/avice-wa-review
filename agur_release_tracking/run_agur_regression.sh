@@ -47,7 +47,7 @@ AVICE_SCRIPT="/home/avice/scripts/avice_wa_review/avice_wa_review.py"
 PYTHON_BIN="/home/utils/Python/builds/3.11.9-20250715/bin/python3"
 
 # Regression configuration
-REGRESSION_TYPE=""  # formal, timing, pv, clock, release
+REGRESSION_TYPES=()  # Array to store multiple regression types: formal, timing, pv, clock, release
 
 # Output files (generated in user's current working directory)
 TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
@@ -70,13 +70,14 @@ NC='\033[0m' # No Color
 
 show_help() {
     cat << EOF
-Usage: $0 -t TYPE [options]
+Usage: $0 -t TYPE[,TYPE2,...] [options]
 
 Run various analysis regressions on all released AGUR units.
 
 Required Options:
   -t, --type TYPE          Regression type (REQUIRED)
                            Options: formal, timing, pv, clock, release
+                           Multiple types: comma-separated or multiple -t flags
 
 Optional Filters:
   -c, --chiplet CHIPLET    Filter by chiplet (e.g., CPORT)
@@ -85,11 +86,11 @@ Optional Filters:
 
 Examples:
   $0 -t formal             # Run formal regression on all units
+  $0 -t formal,pv          # Run formal AND PV regressions (multi-tab HTML)
+  $0 -t formal -t pv       # Same as above (multiple -t flags)
   $0 -t formal -c CPORT    # Run formal on CPORT units only
   $0 -t timing -u prt      # Run timing regression on prt unit only
-  $0 -t pv                 # Run PV regression on all units
-  $0 -t clock              # Run clock analysis on all units
-  $0 -t release            # Run block release check on all units
+  $0 -t pv,formal,timing   # Run 3 regressions in one dashboard
 
 Regression Types:
   formal    - Formal verification status (RTL vs PNR/Synthesis)
@@ -99,7 +100,8 @@ Regression Types:
   release   - Block release status and completeness
 
 Output Files (generated in current directory):
-  agur_<type>_regression_dashboard_YYYYMMDD_HHMMSS.html  (HTML dashboard)
+  Single type:    agur_<type>_regression_dashboard_YYYYMMDD_HHMMSS.html
+  Multiple types: agur_multi_regression_dashboard_YYYYMMDD_HHMMSS.html
 
 EOF
     exit 0
@@ -634,7 +636,11 @@ get_regression_name() {
 while [[ $# -gt 0 ]]; do
     case $1 in
         -t|--type)
-            REGRESSION_TYPE="$2"
+            # Support comma-separated types: -t formal,pv
+            IFS=',' read -ra TYPES <<< "$2"
+            for type in "${TYPES[@]}"; do
+                REGRESSION_TYPES+=("$type")
+            done
             shift 2
             ;;
         -c|--chiplet)
@@ -655,27 +661,34 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Validate regression type
-if [ -z "$REGRESSION_TYPE" ]; then
+# Validate regression types
+if [ ${#REGRESSION_TYPES[@]} -eq 0 ]; then
     echo -e "${RED}[ERROR]${NC} Regression type (-t) is required"
     echo ""
     show_help
 fi
 
-case "$REGRESSION_TYPE" in
-    formal|timing|pv|clock|release)
-        # Valid regression type
-        ;;
-    *)
-        echo -e "${RED}[ERROR]${NC} Invalid regression type: $REGRESSION_TYPE"
-        echo "Valid types: formal, timing, pv, clock, release"
-        echo ""
-        show_help
-        ;;
-esac
+# Validate each regression type
+for type in "${REGRESSION_TYPES[@]}"; do
+    case "$type" in
+        formal|timing|pv|clock|release)
+            # Valid regression type
+            ;;
+        *)
+            echo -e "${RED}[ERROR]${NC} Invalid regression type: $type"
+            echo "Valid types: formal, timing, pv, clock, release"
+            echo ""
+            show_help
+            ;;
+    esac
+done
 
-# Set HTML output filename based on regression type
-HTML_FILE="agur_${REGRESSION_TYPE}_regression_dashboard_${TIMESTAMP}.html"
+# Set HTML output filename based on number of regression types
+if [ ${#REGRESSION_TYPES[@]} -eq 1 ]; then
+    HTML_FILE="agur_${REGRESSION_TYPES[0]}_regression_dashboard_${TIMESTAMP}.html"
+else
+    HTML_FILE="agur_multi_regression_dashboard_${TIMESTAMP}.html"
+fi
 
 #===============================================================================
 # Main Script
@@ -752,18 +765,25 @@ if [ -n "$FILTER_UNIT" ]; then
 fi
 echo ""
 
-# Arrays to store results (generic for all regression types)
-declare -a ANALYSIS_STATUS
-declare -a ANALYSIS_DETAILS
-declare -a ANALYSIS_RUNTIMES
+# Arrays to store results per regression type
+# Structure: REGRESSION_RESULTS[type_unitidx_field] = value
+declare -A REGRESSION_RESULTS
 
-# Get analysis section name
-ANALYSIS_SECTION=$(get_analysis_section)
-REGRESSION_NAME=$(get_regression_name)
+# Run analysis for each regression type
+for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
+    
+    # Arrays to store results for this regression type
+    declare -a ANALYSIS_STATUS
+    declare -a ANALYSIS_DETAILS
+    declare -a ANALYSIS_RUNTIMES
 
-# Run analysis on each unit
-print_section "Running $REGRESSION_NAME Analysis"
-echo ""
+    # Get analysis section name for this regression type
+    ANALYSIS_SECTION=$(get_analysis_section)
+    REGRESSION_NAME=$(get_regression_name)
+
+    # Run analysis on each unit
+    print_section "Running $REGRESSION_NAME Analysis"
+    echo ""
 
 for i in "${!UNITS[@]}"; do
     unit="${UNITS[$i]}"
@@ -853,25 +873,54 @@ for i in "${!UNITS[@]}"; do
     fi
 done
 
-# Calculate statistics for HTML dashboard
-passed_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "^PASSED$")
-[[ "$passed_count" == "0" ]] && passed_count=0
-warn_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "^WARN$")
-[[ "$warn_count" == "0" ]] && warn_count=0
-partial_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "PARTIAL_PASS")
-[[ "$partial_count" == "0" ]] && partial_count=0
-unresolved_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "UNRESOLVED")
-[[ "$unresolved_count" == "0" ]] && unresolved_count=0
-failed_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "FAILED")
-[[ "$failed_count" == "0" ]] && failed_count=0
-crashed_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "CRASHED")
-[[ "$crashed_count" == "0" ]] && crashed_count=0
-error_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "ERROR")
-[[ "$error_count" == "0" ]] && error_count=0
-running_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "RUNNING")
-[[ "$running_count" == "0" ]] && running_count=0
-not_found_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "NOT_FOUND")
-[[ "$not_found_count" == "0" ]] && not_found_count=0
+    # Store results for this regression type
+    for i in "${!UNITS[@]}"; do
+        REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_status"]="${ANALYSIS_STATUS[$i]}"
+        REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_details"]="${ANALYSIS_DETAILS[$i]}"
+        REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_runtime"]="${ANALYSIS_RUNTIMES[$i]}"
+    done
+    
+    # Calculate statistics for this regression type
+    passed_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "^PASSED$")
+    [[ "$passed_count" == "0" ]] && passed_count=0
+    warn_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "^WARN$")
+    [[ "$warn_count" == "0" ]] && warn_count=0
+    partial_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "PARTIAL_PASS")
+    [[ "$partial_count" == "0" ]] && partial_count=0
+    unresolved_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "UNRESOLVED")
+    [[ "$unresolved_count" == "0" ]] && unresolved_count=0
+    failed_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "FAILED")
+    [[ "$failed_count" == "0" ]] && failed_count=0
+    crashed_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "CRASHED")
+    [[ "$crashed_count" == "0" ]] && crashed_count=0
+    error_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "ERROR")
+    [[ "$error_count" == "0" ]] && error_count=0
+    running_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "RUNNING")
+    [[ "$running_count" == "0" ]] && running_count=0
+    not_found_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "NOT_FOUND")
+    [[ "$not_found_count" == "0" ]] && not_found_count=0
+    
+    # Store statistics for this regression type
+    REGRESSION_RESULTS["${REGRESSION_TYPE}_passed_count"]=$passed_count
+    REGRESSION_RESULTS["${REGRESSION_TYPE}_warn_count"]=$warn_count
+    REGRESSION_RESULTS["${REGRESSION_TYPE}_partial_count"]=$partial_count
+    REGRESSION_RESULTS["${REGRESSION_TYPE}_unresolved_count"]=$unresolved_count
+    REGRESSION_RESULTS["${REGRESSION_TYPE}_failed_count"]=$failed_count
+    REGRESSION_RESULTS["${REGRESSION_TYPE}_crashed_count"]=$crashed_count
+    REGRESSION_RESULTS["${REGRESSION_TYPE}_error_count"]=$error_count
+    REGRESSION_RESULTS["${REGRESSION_TYPE}_running_count"]=$running_count
+    REGRESSION_RESULTS["${REGRESSION_TYPE}_not_found_count"]=$not_found_count
+    
+    # Clean up temporary arrays
+    unset ANALYSIS_STATUS
+    unset ANALYSIS_DETAILS
+    unset ANALYSIS_RUNTIMES
+    
+    echo ""
+    echo -e "${GREEN}✓ Completed $REGRESSION_NAME analysis${NC}"
+    echo ""
+
+done  # End of regression types loop
 
 #===============================================================================
 # Generate HTML Dashboard
@@ -885,6 +934,32 @@ LOGO_PATH="/home/avice/scripts/avice_wa_review/images/avice_logo.png"
 if [ -f "$LOGO_PATH" ]; then
     LOGO_DATA=$(base64 -w 0 "$LOGO_PATH")
 fi
+
+# Check if single or multi-regression
+if [ ${#REGRESSION_TYPES[@]} -eq 1 ]; then
+    # Single regression - use existing HTML generation
+    REGRESSION_TYPE="${REGRESSION_TYPES[0]}"
+    
+    # Restore statistics for single regression
+    passed_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_passed_count"]}
+    warn_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_warn_count"]}
+    partial_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_partial_count"]}
+    unresolved_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_unresolved_count"]}
+    failed_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_failed_count"]}
+    crashed_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_crashed_count"]}
+    error_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_error_count"]}
+    running_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_running_count"]}
+    not_found_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_not_found_count"]}
+    
+    # Restore unit results
+    declare -a ANALYSIS_STATUS
+    declare -a ANALYSIS_DETAILS
+    declare -a ANALYSIS_RUNTIMES
+    for i in "${!UNITS[@]}"; do
+        ANALYSIS_STATUS+=("${REGRESSION_RESULTS[${REGRESSION_TYPE}_${i}_status]}")
+        ANALYSIS_DETAILS+=("${REGRESSION_RESULTS[${REGRESSION_TYPE}_${i}_details]}")
+        ANALYSIS_RUNTIMES+=("${REGRESSION_RESULTS[${REGRESSION_TYPE}_${i}_runtime]}")
+    done
 
 # Generate HTML with embedded CSS and JavaScript
 # Generate dynamic title based on regression type
@@ -1831,6 +1906,343 @@ cat >> "$HTML_FILE" << 'HTML_END'
 HTML_END
 
 echo "HTML dashboard generated: $HTML_FILE"
+
+else
+    # Multi-regression - generate tabbed HTML dashboard
+    # Generate HTML header
+    cat > "$HTML_FILE" << 'MULTI_HTML_START'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGUR Multi-Regression Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            overflow-x: auto;
+        }
+        
+        .tab-button {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px 20px;
+            background: #e9ecef;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab-button:hover {
+            background: #dee2e6;
+        }
+        
+        .tab-button.active {
+            background: white;
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+        
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Status Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        /* Unit Cards */
+        .unit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .unit-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .unit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f3f5;
+        }
+        
+        .unit-name {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .status-passed { background: #d4edda; color: #155724; }
+        .status-warn { background: #fff3cd; color: #856404; }
+        .status-failed { background: #f8d7da; color: #721c24; }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 0.9em;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #6c757d;
+        }
+        
+        .footer {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 AGUR Multi-Regression Dashboard</h1>
+MULTI_HTML_START
+
+    # Add generation info
+    cat >> "$HTML_FILE" << MULTI_META
+            <div class="subtitle">Generated: $(date '+%Y-%m-%d %H:%M:%S')</div>
+            <div class="subtitle">Regression Types: ${REGRESSION_TYPES[*]}</div>
+MULTI_META
+
+    if [ -n "$FILTER_CHIPLET" ]; then
+        echo "            <div class=\"subtitle\">Filter: Chiplet = $FILTER_CHIPLET</div>" >> "$HTML_FILE"
+    fi
+    
+    cat >> "$HTML_FILE" << 'MULTI_TABS_START'
+        </div>
+        
+        <div class="tab-nav">
+MULTI_TABS_START
+
+    # Generate tab buttons
+    for idx in "${!REGRESSION_TYPES[@]}"; do
+        regression_type="${REGRESSION_TYPES[$idx]}"
+        active_class=""
+        [ $idx -eq 0 ] && active_class=" active"
+        
+        # Get regression name for tab
+        case "$regression_type" in
+            formal) tab_name="🔍 Formal" ;;
+            timing) tab_name="⏱️ Timing" ;;
+            pv) tab_name="✓ PV" ;;
+            clock) tab_name="🕒 Clock" ;;
+            release) tab_name="📦 Release" ;;
+            *) tab_name="$regression_type" ;;
+        esac
+        
+        echo "            <button class=\"tab-button$active_class\" onclick=\"openTab('$regression_type')\">$tab_name</button>" >> "$HTML_FILE"
+    done
+    
+    echo "        </div>" >> "$HTML_FILE"
+    
+    # Generate tab content for each regression type
+    for idx in "${!REGRESSION_TYPES[@]}"; do
+        regression_type="${REGRESSION_TYPES[$idx]}"
+        active_class=""
+        [ $idx -eq 0 ] && active_class=" active"
+        
+        # Get statistics for this regression
+        passed=${REGRESSION_RESULTS["${regression_type}_passed_count"]}
+        warn=${REGRESSION_RESULTS["${regression_type}_warn_count"]}
+        failed=${REGRESSION_RESULTS["${regression_type}_failed_count"]}
+        
+        cat >> "$HTML_FILE" << TAB_CONTENT_START
+        <div id="$regression_type" class="tab-content$active_class">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Units</div>
+                    <div class="stat-value">$TOTAL_UNITS</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">✅ Passed</div>
+                    <div class="stat-value" style="color: #28a745;">$passed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">⚠️ Warnings</div>
+                    <div class="stat-value" style="color: #ffc107;">$warn</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">❌ Failed</div>
+                    <div class="stat-value" style="color: #dc3545;">$failed</div>
+                </div>
+            </div>
+            
+            <div class="unit-grid">
+TAB_CONTENT_START
+
+        # Generate unit cards for this regression type
+        for i in "${!UNITS[@]}"; do
+            unit="${UNITS[$i]}"
+            status="${REGRESSION_RESULTS[${regression_type}_${i}_status]}"
+            details="${REGRESSION_RESULTS[${regression_type}_${i}_details]}"
+            runtime="${REGRESSION_RESULTS[${regression_type}_${i}_runtime]}"
+            
+            # Determine status class
+            status_class="status-warn"
+            status_text="⚠️ $status"
+            case "$status" in
+                PASSED) status_class="status-passed"; status_text="✅ PASSED" ;;
+                WARN) status_class="status-warn"; status_text="⚠️ WARN" ;;
+                FAILED) status_class="status-failed"; status_text="❌ FAILED" ;;
+            esac
+            
+            cat >> "$HTML_FILE" << UNIT_CARD
+                <div class="unit-card">
+                    <div class="unit-header">
+                        <div class="unit-name">$unit</div>
+                        <div class="status-badge $status_class">$status_text</div>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Details:</span>
+                        <span>$details</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Runtime:</span>
+                        <span>$runtime</span>
+                    </div>
+                </div>
+UNIT_CARD
+        done
+        
+        cat >> "$HTML_FILE" << 'TAB_CONTENT_END'
+            </div>
+        </div>
+TAB_CONTENT_END
+    done
+    
+    # Close HTML
+    cat >> "$HTML_FILE" << 'MULTI_HTML_END'
+        
+        <div class="footer">
+            <p><strong>AVICE Multi-Regression Dashboard</strong></p>
+            <p>Copyright (c) 2025 Alon Vice (avice)</p>
+            <p>Contact: avice@nvidia.com</p>
+        </div>
+    </div>
+    
+    <script>
+        function openTab(tabName) {
+            // Hide all tab content
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            // Remove active class from all buttons
+            const tabButtons = document.getElementsByClassName('tab-button');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
+            }
+            
+            // Show selected tab and mark button as active
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
+MULTI_HTML_END
+
+    echo "Multi-regression HTML dashboard generated: $HTML_FILE"
+
+fi  # End of single/multi-regression conditional
+
+# For multi-regression, generate summary message
+if [ ${#REGRESSION_TYPES[@]} -gt 1 ]; then
+    REGRESSION_NAME="Multi-Type (${REGRESSION_TYPES[*]})"
+fi
 
 # Cleanup temp directory
 rm -rf "$TEMP_DIR"
