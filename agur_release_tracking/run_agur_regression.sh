@@ -70,22 +70,27 @@ NC='\033[0m' # No Color
 
 show_help() {
     cat << EOF
-Usage: $0 -t TYPE[,TYPE2,...] [options]
+Usage: $0 [-t TYPE[,TYPE2,...]] [options]
 
 Run various analysis regressions on all released AGUR units.
+If no -t option is specified, runs ALL regression types (formal, timing, pv, clock, release).
 
-Required Options:
-  -t, --type TYPE          Regression type (REQUIRED)
+Options:
+  -t, --type TYPE          Regression type (optional - defaults to ALL types)
                            Options: formal, timing, pv, clock, release
                            Multiple types: comma-separated or multiple -t flags
+                           If omitted: runs all 5 regression types
 
-Optional Filters:
+Filters:
   -c, --chiplet CHIPLET    Filter by chiplet (e.g., CPORT)
                            Multiple chiplets: comma-separated or multiple -c flags
   -u, --unit UNIT          Run for specific unit only
   -h, --help               Show this help message
 
 Examples:
+  $0                       # Run ALL 5 regression types on all units (default)
+  $0 -c CPORT              # Run ALL types on CPORT units only
+  $0 -u fdb                # Run ALL types on fdb unit only
   $0 -t formal             # Run formal regression on all units
   $0 -t formal,pv          # Run formal AND PV regressions (multi-tab HTML)
   $0 -t formal -t pv       # Same as above (multiple -t flags)
@@ -684,11 +689,11 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Validate regression types
+# Default to all regression types if none specified
 if [ ${#REGRESSION_TYPES[@]} -eq 0 ]; then
-    echo -e "${RED}[ERROR]${NC} Regression type (-t) is required"
+    echo -e "${CYAN}No regression type specified - running ALL types${NC}"
+    REGRESSION_TYPES=("formal" "timing" "pv" "clock" "release")
     echo ""
-    show_help
 fi
 
 # Validate each regression type
