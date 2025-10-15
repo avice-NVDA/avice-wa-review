@@ -12240,13 +12240,14 @@ class WorkareaReviewer:
                     if line_stripped.startswith('-E-'):
                         error_count += 1
                     
-                    # Stop collecting description when we hit logs or end time
-                    if line_stripped.startswith(('-I-', '-E-', '-W-', 'End Time:', 'End time:')):
+                    # Stop collecting description when we hit logs (but NOT End Time - need to get Elapsed Time first)
+                    if line_stripped.startswith(('-I-', '-E-', '-W-')):
                         break
                     
-                    # Collect description lines (skip empty lines at start)
-                    if line_stripped or description_lines:
-                        description_lines.append(line_stripped)
+                    # Collect description lines (skip empty lines at start, and skip time stamps)
+                    if not line_stripped.startswith(('End Time:', 'End time:', 'Elapsed Time:', 'Elapsed time:')):
+                        if line_stripped or description_lines:
+                            description_lines.append(line_stripped)
                 
                 # Clean up description
                 description = '\n'.join(description_lines).strip()
