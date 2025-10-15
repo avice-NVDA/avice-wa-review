@@ -11803,7 +11803,7 @@ class WorkareaReviewer:
                             </div>
 """
         
-        html += """
+        html += f"""
                         </div>
                     </div>
                 </div>
@@ -11837,7 +11837,7 @@ class WorkareaReviewer:
                             </div>
 """
         
-        html += """
+        html += f"""
                         </div>
                     </div>
                 </div>
