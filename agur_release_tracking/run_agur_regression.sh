@@ -1594,7 +1594,7 @@ echo "                <div class=\"stat-label\">$(( crashed_count * 100 / TOTAL_
 cat >> "$HTML_FILE" << 'HTML_STATS_NOTFOUND'
             </div>
             <div class="stat-card">
-                <div class="stat-label">❓ Not Found</div>
+                <div class="stat-label">⏸️ Not Run</div>
 HTML_STATS_NOTFOUND
 
 echo "                <div class=\"stat-value stat-unresolved\">$not_found_count</div>" >> "$HTML_FILE"
@@ -1695,7 +1695,7 @@ CHIPLET_SECTION
                 ;;
             NOT_FOUND)
                 status_class="status-notfound"
-                status_text="❓ NOT FOUND"
+                status_text="⏸️ NOT RUN"
                 ;;
             NO_DATA)
                 status_class="status-notfound"
@@ -2509,7 +2509,7 @@ TAB_UNRESOLVED
                     <div class="stat-label">$(( crashed_count * 100 / TOTAL_UNITS ))%</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">❓ Not Found</div>
+                    <div class="stat-label">⏸️ Not Run</div>
                     <div class="stat-value stat-unresolved">$not_found_count</div>
                     <div class="stat-label">$(( not_found_count * 100 / TOTAL_UNITS ))%</div>
                 </div>
@@ -2604,7 +2604,7 @@ CHIPLET_SECTION
                         ;;
                     NOT_FOUND)
                         status_class="status-notfound"
-                        status_text="❓ NOT FOUND"
+                        status_text="⏸️ NOT RUN"
                         ;;
                     NO_DATA)
                         status_class="status-notfound"
@@ -2890,7 +2890,7 @@ echo -e "  - ${RED}Failed: $failed_count${NC}"
 echo -e "  - ${RED}Crashed: $crashed_count${NC}"
 echo -e "  - ${YELLOW}Running: $running_count${NC}"
 echo -e "  - ${YELLOW}Errors: $error_count${NC}"
-echo -e "  - ${YELLOW}Not Found: $not_found_count${NC}"
+echo -e "  - ${YELLOW}Not Run: $not_found_count${NC}"
 echo -e "  - ${YELLOW}No Data: $no_data_count${NC}"
 echo ""
 echo "Output File:"
