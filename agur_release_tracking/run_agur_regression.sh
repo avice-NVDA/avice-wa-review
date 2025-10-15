@@ -1592,19 +1592,78 @@ CHIPLET_SECTION
                             </div>
 UNIT_CARD
         
-        # Parse and display formal flows
-        if [ "$details" != "No formal flows found" ] && [ "$details" != "No formal flow detected" ]; then
-            cat >> "$HTML_FILE" << FLOWS_START
+        # Display details based on regression type
+        if [ "$REGRESSION_TYPE" = "pv" ]; then
+            # For PV: Display metrics differently with overall status
+            if [ "$details" != "No PV data available" ] && [ "$details" != "No PV analysis found" ]; then
+                # Extract overall status from details (MINOR/CRITICAL/ALL CLEAN)
+                overall_pv_status=$(echo "$details" | grep -oP '\((MINOR|CRITICAL|ALL CLEAN)\)' | tr -d '()')
+                
+                cat >> "$HTML_FILE" << PV_START
+                            <div class="formal-flows">
+                                <div class="flow-title">PV Metrics:</div>
+PV_START
+                
+                # Parse PV metrics: "DRC: X, LVS: Y, Antenna: Z (STATUS)"
+                IFS=',' read -ra metrics <<< "$details"
+                for metric_info in "${metrics[@]}"; do
+                    metric_info=$(echo "$metric_info" | xargs)  # trim whitespace
+                    # Remove the status label from the last metric
+                    metric_info=$(echo "$metric_info" | sed 's/ (MINOR)//' | sed 's/ (CRITICAL)//' | sed 's/ (ALL CLEAN)//')
+                    metric_name=$(echo "$metric_info" | cut -d':' -f1 | xargs)
+                    metric_value=$(echo "$metric_info" | cut -d':' -f2 | xargs)
+                    
+                    cat >> "$HTML_FILE" << PV_METRIC
+                                <div class="flow-item">
+                                    <span>$metric_name</span>
+                                    <span>❔ $metric_value</span>
+                                </div>
+PV_METRIC
+                done
+                
+                # Add overall status as a separate item
+                if [ -n "$overall_pv_status" ]; then
+                    pv_status_icon="❔"
+                    pv_status_class=""
+                    case "$overall_pv_status" in
+                        "ALL CLEAN")
+                            pv_status_icon="✅"
+                            pv_status_class="flow-succeeded"
+                            ;;
+                        "MINOR")
+                            pv_status_icon="⚠️"
+                            pv_status_class="flow-unresolved"
+                            ;;
+                        "CRITICAL")
+                            pv_status_icon="❌"
+                            pv_status_class="flow-failed"
+                            ;;
+                    esac
+                    
+                    cat >> "$HTML_FILE" << PV_STATUS
+                                <div class="flow-item $pv_status_class" style="border-top: 1px solid #ddd; margin-top: 5px; padding-top: 5px;">
+                                    <span><strong>Overall</strong></span>
+                                    <span>$pv_status_icon $overall_pv_status</span>
+                                </div>
+PV_STATUS
+                fi
+                
+                echo "                            </div>" >> "$HTML_FILE"
+            fi
+        else
+            # For other regression types (formal, timing, etc): Display as flows
+            if [ "$details" != "No formal flows found" ] && [ "$details" != "No formal flow detected" ]; then
+                cat >> "$HTML_FILE" << FLOWS_START
                             <div class="formal-flows">
                                 <div class="flow-title">Formal Flows:</div>
 FLOWS_START
-            
-            # Parse details string (format: "flow1: STATUS, flow2: STATUS, ...")
-            IFS=',' read -ra flows <<< "$details"
-            for flow_info in "${flows[@]}"; do
-                flow_info=$(echo "$flow_info" | xargs)  # trim whitespace
-                flow_name=$(echo "$flow_info" | cut -d':' -f1 | xargs)
-                flow_status=$(echo "$flow_info" | cut -d':' -f2 | xargs)
+                
+                # Parse details string (format: "flow1: STATUS, flow2: STATUS, ...")
+                IFS=',' read -ra flows <<< "$details"
+                for flow_info in "${flows[@]}"; do
+                    flow_info=$(echo "$flow_info" | xargs)  # trim whitespace
+                    flow_name=$(echo "$flow_info" | cut -d':' -f1 | xargs)
+                    flow_status=$(echo "$flow_info" | cut -d':' -f2 | xargs)
                 
                 # Determine flow status class
                 case "$flow_status" in
@@ -1643,6 +1702,7 @@ FLOW_ITEM
             done
             
             echo "                            </div>" >> "$HTML_FILE"
+            fi
         fi
         
         echo "                        </div>" >> "$HTML_FILE"
