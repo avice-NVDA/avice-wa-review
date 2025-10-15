@@ -1908,8 +1908,10 @@ HTML_END
 echo "HTML dashboard generated: $HTML_FILE"
 
 else
-    # Multi-regression - generate tabbed HTML dashboard
-    # Generate HTML header
+    # Multi-regression - generate tabbed HTML dashboard with full styling
+    # This uses the same professional styling as single regression but with tabs
+    
+    # Start HTML with full CSS from single regression
     cat > "$HTML_FILE" << 'MULTI_HTML_START'
 <!DOCTYPE html>
 <html lang="en">
@@ -1948,37 +1950,41 @@ else
         }
         
         .header h1 {
+            font-size: 2.5em;
             margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         
-        .subtitle {
+        .header .subtitle {
+            font-size: 1.2em;
             opacity: 0.9;
-            font-size: 14px;
         }
         
         /* Tab Navigation */
         .tab-nav {
             display: flex;
             background: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
+            border-bottom: 3px solid #dee2e6;
             overflow-x: auto;
         }
         
         .tab-button {
             flex: 1;
             min-width: 150px;
-            padding: 15px 20px;
+            padding: 18px 25px;
             background: #e9ecef;
             border: none;
             cursor: pointer;
             font-size: 16px;
             font-weight: bold;
             transition: all 0.3s;
-            border-bottom: 3px solid transparent;
+            border-bottom: 4px solid transparent;
+            color: #495057;
         }
         
         .tab-button:hover {
             background: #dee2e6;
+            transform: translateY(-2px);
         }
         
         .tab-button.active {
@@ -1990,52 +1996,113 @@ else
         /* Tab Content */
         .tab-content {
             display: none;
-            padding: 30px;
         }
         
         .tab-content.active {
             display: block;
         }
         
-        /* Status Cards */
+        /* Stats Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
         }
         
         .stat-card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
             text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
         }
         
         .stat-value {
-            font-size: 32px;
+            font-size: 2.5em;
             font-weight: bold;
-            margin: 10px 0;
+            margin: 15px 0;
         }
         
         .stat-label {
             color: #6c757d;
-            font-size: 14px;
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
-        /* Unit Cards */
-        .unit-grid {
+        .stat-passed { color: #28a745; }
+        .stat-failed { color: #dc3545; }
+        .stat-unresolved { color: #ffc107; }
+        .stat-crashed { color: #6c1a1a; }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .chiplet-section {
+            margin-bottom: 40px;
+        }
+        
+        .chiplet-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chiplet-header:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .chiplet-header .toggle {
+            font-size: 0.8em;
+        }
+        
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+        }
+        
+        .collapsible-content.active {
+            max-height: 50000px;
+        }
+        
+        .units-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 20px;
+            padding: 10px;
         }
         
         .unit-card {
             background: white;
-            border: 1px solid #dee2e6;
+            border: 2px solid #e0e0e0;
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .unit-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.2);
+            transform: translateY(-3px);
         }
         
         .unit-header {
@@ -2043,13 +2110,14 @@ else
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f1f3f5;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
         }
         
         .unit-name {
-            font-size: 24px;
+            font-size: 1.4em;
             font-weight: bold;
+            color: #333;
         }
         
         .status-badge {
@@ -2057,11 +2125,53 @@ else
             border-radius: 20px;
             font-weight: bold;
             font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
-        .status-passed { background: #d4edda; color: #155724; }
-        .status-warn { background: #fff3cd; color: #856404; }
-        .status-failed { background: #f8d7da; color: #721c24; }
+        .status-passed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-partial {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-unresolved {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-crashed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-running {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-notfound {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .unit-info {
+            margin: 10px 0;
+        }
         
         .info-row {
             display: flex;
@@ -2070,9 +2180,96 @@ else
             font-size: 0.9em;
         }
         
+        .workarea-row {
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .workarea-path {
+            flex: 1;
+            font-family: monospace;
+            font-size: 0.85em;
+            color: #555;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s;
+        }
+        
+        .copy-btn:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+        
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+        
         .info-label {
             font-weight: 600;
-            color: #6c757d;
+            color: #666;
+        }
+        
+        .info-value {
+            color: #333;
+        }
+        
+        /* Formal Flows / PV Metrics */
+        .formal-flows {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #f0f0f0;
+        }
+        
+        .flow-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+        
+        .flow-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        
+        .flow-succeeded {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .flow-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .flow-unresolved {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .flow-crashed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .flow-running {
+            background: #d1ecf1;
+            color: #0c5460;
         }
         
         .footer {
@@ -2082,6 +2279,46 @@ else
             padding: 20px;
             margin-top: 40px;
         }
+        
+        .footer p {
+            margin: 5px 0;
+        }
+        
+        .footer strong {
+            color: #00ff00;
+        }
+        
+        /* Toast Notification */
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #28a745;
+            color: white;
+            text-align: center;
+            border-radius: 10px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            right: 30px;
+            bottom: 30px;
+            font-size: 17px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+        
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;}
+            to {bottom: 30px; opacity: 1;}
+        }
+        
+        @keyframes fadeout {
+            from {bottom: 30px; opacity: 1;}
+            to {bottom: 0; opacity: 0;}
+        }
     </style>
 </head>
 <body>
@@ -2090,7 +2327,7 @@ else
             <h1>🔬 AGUR Multi-Regression Dashboard</h1>
 MULTI_HTML_START
 
-    # Add generation info
+    # Add generation info and filter
     cat >> "$HTML_FILE" << MULTI_META
             <div class="subtitle">Generated: $(date '+%Y-%m-%d %H:%M:%S')</div>
             <div class="subtitle">Regression Types: ${REGRESSION_TYPES[*]}</div>
@@ -2100,6 +2337,7 @@ MULTI_META
         echo "            <div class=\"subtitle\">Filter: Chiplet = $FILTER_CHIPLET</div>" >> "$HTML_FILE"
     fi
     
+    # Add tab navigation
     cat >> "$HTML_FILE" << 'MULTI_TABS_START'
         </div>
         
@@ -2129,17 +2367,23 @@ MULTI_TABS_START
     
     # Generate tab content for each regression type
     for idx in "${!REGRESSION_TYPES[@]}"; do
-        regression_type="${REGRESSION_TYPES[$idx]}"
+        REGRESSION_TYPE="${REGRESSION_TYPES[$idx]}"
         active_class=""
         [ $idx -eq 0 ] && active_class=" active"
         
         # Get statistics for this regression
-        passed=${REGRESSION_RESULTS["${regression_type}_passed_count"]}
-        warn=${REGRESSION_RESULTS["${regression_type}_warn_count"]}
-        failed=${REGRESSION_RESULTS["${regression_type}_failed_count"]}
+        passed_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_passed_count"]}
+        warn_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_warn_count"]}
+        partial_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_partial_count"]}
+        unresolved_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_unresolved_count"]}
+        failed_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_failed_count"]}
+        crashed_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_crashed_count"]}
+        error_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_error_count"]}
+        running_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_running_count"]}
+        not_found_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_not_found_count"]}
         
         cat >> "$HTML_FILE" << TAB_CONTENT_START
-        <div id="$regression_type" class="tab-content$active_class">
+        <div id="$REGRESSION_TYPE" class="tab-content$active_class">
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-label">Total Units</div>
@@ -2147,54 +2391,281 @@ MULTI_TABS_START
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">✅ Passed</div>
-                    <div class="stat-value" style="color: #28a745;">$passed</div>
+                    <div class="stat-value stat-passed">$passed_count</div>
+                    <div class="stat-label">$(( passed_count * 100 / TOTAL_UNITS ))%</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">⚠️ Warnings</div>
-                    <div class="stat-value" style="color: #ffc107;">$warn</div>
+                    <div class="stat-value stat-unresolved">$warn_count</div>
+                    <div class="stat-label">$(( warn_count * 100 / TOTAL_UNITS ))%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">⚠️ Unresolved</div>
+                    <div class="stat-value stat-unresolved">$unresolved_count</div>
+                    <div class="stat-label">$(( unresolved_count * 100 / TOTAL_UNITS ))%</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-label">❌ Failed</div>
-                    <div class="stat-value" style="color: #dc3545;">$failed</div>
+                    <div class="stat-value stat-failed">$failed_count</div>
+                    <div class="stat-label">$(( failed_count * 100 / TOTAL_UNITS ))%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">💥 Crashed</div>
+                    <div class="stat-value stat-crashed">$crashed_count</div>
+                    <div class="stat-label">$(( crashed_count * 100 / TOTAL_UNITS ))%</div>
                 </div>
             </div>
             
-            <div class="unit-grid">
+            <div class="content">
 TAB_CONTENT_START
 
-        # Generate unit cards for this regression type
+        # Group units by chiplet
+        declare -A chiplet_units_tab
         for i in "${!UNITS[@]}"; do
             unit="${UNITS[$i]}"
-            status="${REGRESSION_RESULTS[${regression_type}_${i}_status]}"
-            details="${REGRESSION_RESULTS[${regression_type}_${i}_details]}"
-            runtime="${REGRESSION_RESULTS[${regression_type}_${i}_runtime]}"
+            chiplet="${CHIPLETS[$i]}"
             
-            # Determine status class
-            status_class="status-warn"
-            status_text="⚠️ $status"
-            case "$status" in
-                PASSED) status_class="status-passed"; status_text="✅ PASSED" ;;
-                WARN) status_class="status-warn"; status_text="⚠️ WARN" ;;
-                FAILED) status_class="status-failed"; status_text="❌ FAILED" ;;
-            esac
+            if [ -z "${chiplet_units_tab[$chiplet]}" ]; then
+                chiplet_units_tab[$chiplet]="$i"
+            else
+                chiplet_units_tab[$chiplet]="${chiplet_units_tab[$chiplet]},$i"
+            fi
+        done
+        
+        # Generate HTML for each chiplet in this tab
+        for chiplet in "${!chiplet_units_tab[@]}"; do
+            unit_indices="${chiplet_units_tab[$chiplet]}"
             
-            cat >> "$HTML_FILE" << UNIT_CARD
-                <div class="unit-card">
-                    <div class="unit-header">
-                        <div class="unit-name">$unit</div>
-                        <div class="status-badge $status_class">$status_text</div>
+            # Count units in this chiplet
+            IFS=',' read -ra indices <<< "$unit_indices"
+            chiplet_unit_count=${#indices[@]}
+            
+            cat >> "$HTML_FILE" << CHIPLET_SECTION
+                <div class="chiplet-section">
+                    <div class="chiplet-header" onclick="toggleChiplet('${REGRESSION_TYPE}_$chiplet')">
+                        <span>$chiplet Chiplet ($chiplet_unit_count units)</span>
+                        <span class="toggle" id="toggle-${REGRESSION_TYPE}_$chiplet">▼</span>
                     </div>
-                    <div class="info-row">
-                        <span class="info-label">Details:</span>
-                        <span>$details</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Runtime:</span>
-                        <span>$runtime</span>
+                    <div class="collapsible-content active" id="content-${REGRESSION_TYPE}_$chiplet">
+                        <div class="units-grid">
+CHIPLET_SECTION
+            
+            # Add units for this chiplet
+            for idx in "${indices[@]}"; do
+                unit="${UNITS[$idx]}"
+                chiplet="${CHIPLETS[$idx]}"
+                workarea="${WORKAREAS[$idx]}"
+                rtl_tag="${RTL_TAGS[$idx]}"
+                release_date="${RELEASE_DATES[$idx]}"
+                release_user="${RELEASE_USERS[$idx]}"
+                
+                # Get results for this unit in this regression type
+                status="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_status]}"
+                details="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_details]}"
+                runtime="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_runtime]}"
+                
+                # Determine status class and text
+                case "$status" in
+                    PASSED)
+                        status_class="status-passed"
+                        status_text="✅ PASSED"
+                        ;;
+                    WARN)
+                        status_class="status-unresolved"
+                        status_text="⚠️ WARN"
+                        ;;
+                    PARTIAL_PASS)
+                        status_class="status-partial"
+                        status_text="⚠️ PARTIAL"
+                        ;;
+                    UNRESOLVED)
+                        status_class="status-unresolved"
+                        status_text="⚠️ UNRESOLVED"
+                        ;;
+                    FAILED)
+                        status_class="status-failed"
+                        status_text="❌ FAILED"
+                        ;;
+                    CRASHED)
+                        status_class="status-crashed"
+                        status_text="💥 CRASHED"
+                        ;;
+                    RUNNING)
+                        status_class="status-running"
+                        status_text="🔄 RUNNING"
+                        ;;
+                    ERROR)
+                        status_class="status-error"
+                        status_text="⚠️ ERROR"
+                        ;;
+                    NOT_FOUND)
+                        status_class="status-notfound"
+                        status_text="❓ NOT FOUND"
+                        ;;
+                    *)
+                        status_class="status-notfound"
+                        status_text="❔ UNKNOWN"
+                        ;;
+                esac
+                
+                cat >> "$HTML_FILE" << UNIT_CARD
+                            <div class="unit-card">
+                                <div class="unit-header">
+                                    <div class="unit-name">$unit</div>
+                                    <div class="status-badge $status_class">$status_text</div>
+                                </div>
+                                <div class="unit-info">
+                                    <div class="info-row">
+                                        <span class="info-label">Released By:</span>
+                                        <span class="info-value">$release_user</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Release Date:</span>
+                                        <span class="info-value">$release_date</span>
+                                    </div>
+                                    <div class="info-row workarea-row">
+                                        <span class="info-label">RTL Tag:</span>
+                                        <span class="info-value workarea-path" id="rtl-${REGRESSION_TYPE}-$unit">$rtl_tag</span>
+                                        <button class="copy-btn" onclick="copyToClipboard('rtl-${REGRESSION_TYPE}-$unit', this)" title="Copy RTL tag">
+                                            📋 Copy
+                                        </button>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Runtime:</span>
+                                        <span class="info-value">$runtime</span>
+                                    </div>
+                                    <div class="info-row workarea-row">
+                                        <span class="info-label">Workarea:</span>
+                                        <span class="info-value workarea-path" id="wa-${REGRESSION_TYPE}-$unit">$workarea</span>
+                                        <button class="copy-btn" onclick="copyToClipboard('wa-${REGRESSION_TYPE}-$unit', this)" title="Copy workarea path">
+                                            📋 Copy
+                                        </button>
+                                    </div>
+                                </div>
+UNIT_CARD
+                
+                # Display details based on regression type
+                if [ "$REGRESSION_TYPE" = "pv" ]; then
+                    # For PV: Display metrics
+                    if [ "$details" != "No PV data available" ] && [ "$details" != "No PV analysis found" ]; then
+                        overall_pv_status=$(echo "$details" | grep -oP '\((MINOR|CRITICAL|ALL CLEAN)\)' | tr -d '()')
+                        
+                        cat >> "$HTML_FILE" << PV_START
+                                <div class="formal-flows">
+                                    <div class="flow-title">PV Metrics:</div>
+PV_START
+                        
+                        # Parse PV metrics
+                        IFS=',' read -ra metrics <<< "$details"
+                        for metric_info in "${metrics[@]}"; do
+                            metric_info=$(echo "$metric_info" | xargs)
+                            metric_info=$(echo "$metric_info" | sed 's/ (MINOR)//' | sed 's/ (CRITICAL)//' | sed 's/ (ALL CLEAN)//')
+                            metric_name=$(echo "$metric_info" | cut -d':' -f1 | xargs)
+                            metric_value=$(echo "$metric_info" | cut -d':' -f2 | xargs)
+                            
+                            cat >> "$HTML_FILE" << PV_METRIC
+                                    <div class="flow-item">
+                                        <span>$metric_name</span>
+                                        <span>❔ $metric_value</span>
+                                    </div>
+PV_METRIC
+                        done
+                        
+                        # Add overall status
+                        if [ -n "$overall_pv_status" ]; then
+                            pv_status_icon="❔"
+                            pv_status_class=""
+                            case "$overall_pv_status" in
+                                "ALL CLEAN")
+                                    pv_status_icon="✅"
+                                    pv_status_class="flow-succeeded"
+                                    ;;
+                                "MINOR")
+                                    pv_status_icon="⚠️"
+                                    pv_status_class="flow-unresolved"
+                                    ;;
+                                "CRITICAL")
+                                    pv_status_icon="❌"
+                                    pv_status_class="flow-failed"
+                                    ;;
+                            esac
+                            
+                            cat >> "$HTML_FILE" << PV_STATUS
+                                    <div class="flow-item $pv_status_class" style="border-top: 1px solid #ddd; margin-top: 5px; padding-top: 5px;">
+                                        <span><strong>Overall</strong></span>
+                                        <span>$pv_status_icon $overall_pv_status</span>
+                                    </div>
+PV_STATUS
+                        fi
+                        
+                        echo "                                </div>" >> "$HTML_FILE"
+                    fi
+                else
+                    # For other types: Display as flows
+                    if [ "$details" != "No formal flows found" ] && [ "$details" != "No formal flow detected" ]; then
+                        cat >> "$HTML_FILE" << FLOWS_START
+                                <div class="formal-flows">
+                                    <div class="flow-title">Formal Flows:</div>
+FLOWS_START
+                        
+                        # Parse details string
+                        IFS=',' read -ra flows <<< "$details"
+                        for flow_info in "${flows[@]}"; do
+                            flow_info=$(echo "$flow_info" | xargs)
+                            flow_name=$(echo "$flow_info" | cut -d':' -f1 | xargs)
+                            flow_status=$(echo "$flow_info" | cut -d':' -f2 | xargs)
+                            
+                            # Determine flow status class
+                            case "$flow_status" in
+                                SUCCEEDED)
+                                    flow_class="flow-succeeded"
+                                    flow_icon="✅"
+                                    ;;
+                                FAILED)
+                                    flow_class="flow-failed"
+                                    flow_icon="❌"
+                                    ;;
+                                UNRESOLVED)
+                                    flow_class="flow-unresolved"
+                                    flow_icon="⚠️"
+                                    ;;
+                                CRASHED)
+                                    flow_class="flow-crashed"
+                                    flow_icon="💥"
+                                    ;;
+                                RUNNING)
+                                    flow_class="flow-running"
+                                    flow_icon="🔄"
+                                    ;;
+                                *)
+                                    flow_class=""
+                                    flow_icon="❔"
+                                    ;;
+                            esac
+                            
+                            cat >> "$HTML_FILE" << FLOW_ITEM
+                                    <div class="flow-item $flow_class">
+                                        <span>$flow_name</span>
+                                        <span>$flow_icon $flow_status</span>
+                                    </div>
+FLOW_ITEM
+                        done
+                        
+                        echo "                                </div>" >> "$HTML_FILE"
+                    fi
+                fi
+                
+                echo "                            </div>" >> "$HTML_FILE"
+            done
+            
+            cat >> "$HTML_FILE" << CHIPLET_END
+                        </div>
                     </div>
                 </div>
-UNIT_CARD
+CHIPLET_END
         done
+        
+        unset chiplet_units_tab
         
         cat >> "$HTML_FILE" << 'TAB_CONTENT_END'
             </div>
@@ -2202,7 +2673,7 @@ UNIT_CARD
 TAB_CONTENT_END
     done
     
-    # Close HTML
+    # Close HTML with footer and JavaScript
     cat >> "$HTML_FILE" << 'MULTI_HTML_END'
         
         <div class="footer">
@@ -2212,23 +2683,59 @@ TAB_CONTENT_END
         </div>
     </div>
     
+    <div id="toast" class="toast">Copied to clipboard!</div>
+    
     <script>
+        // Tab switching
         function openTab(tabName) {
-            // Hide all tab content
             const tabContents = document.getElementsByClassName('tab-content');
             for (let i = 0; i < tabContents.length; i++) {
                 tabContents[i].classList.remove('active');
             }
             
-            // Remove active class from all buttons
             const tabButtons = document.getElementsByClassName('tab-button');
             for (let i = 0; i < tabButtons.length; i++) {
                 tabButtons[i].classList.remove('active');
             }
             
-            // Show selected tab and mark button as active
             document.getElementById(tabName).classList.add('active');
             event.target.classList.add('active');
+        }
+        
+        // Toggle chiplet sections
+        function toggleChiplet(chipletId) {
+            const content = document.getElementById('content-' + chipletId);
+            const toggle = document.getElementById('toggle-' + chipletId);
+            
+            if (content.classList.contains('active')) {
+                content.classList.remove('active');
+                toggle.textContent = '▶';
+            } else {
+                content.classList.add('active');
+                toggle.textContent = '▼';
+            }
+        }
+        
+        // Copy to clipboard
+        function copyToClipboard(elementId, button) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            
+            navigator.clipboard.writeText(text).then(function() {
+                showToast();
+                button.textContent = '✓ Copied';
+                setTimeout(function() {
+                    button.textContent = '📋 Copy';
+                }, 2000);
+            });
+        }
+        
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 3000);
         }
     </script>
 </body>
