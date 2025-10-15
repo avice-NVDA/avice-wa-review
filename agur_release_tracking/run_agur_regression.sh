@@ -248,8 +248,8 @@ parse_timing_output() {
     local details=""
     local runtime="N/A"
     
-    # Extract PT Signoff Timing section
-    local timing_section=$(grep -A 200 "PT Signoff Timing Analysis" "$output_file")
+    # Extract PT Signoff Timing section - match actual output format
+    local timing_section=$(grep -A 200 "Signoff Timing (PT)\|PT Timing Summary" "$output_file")
     
     if [ -z "$timing_section" ]; then
         echo "NOT_FOUND|No PT timing analysis found|N/A"
@@ -262,18 +262,14 @@ parse_timing_output() {
         return
     fi
     
-    # Extract key timing metrics
-    local wns=$(echo "$timing_section" | grep -i "Worst Negative Slack (WNS)" | grep -oP "[-+]?[0-9]*\.?[0-9]+" | head -1)
-    local tns=$(echo "$timing_section" | grep -i "Total Negative Slack (TNS)" | grep -oP "[-+]?[0-9]*\.?[0-9]+" | head -1)
-    local nvp=$(echo "$timing_section" | grep -i "Number of Violating Paths" | grep -oP "[0-9]+" | head -1)
+    # Strip ANSI color codes from the section (format: [32m text [0m)
+    timing_section=$(echo "$timing_section" | sed 's/\x1b\[[0-9;]*m//g')
     
-    # Alternative patterns for WNS/TNS extraction
-    if [ -z "$wns" ]; then
-        wns=$(echo "$timing_section" | grep -i "WNS:" | grep -oP "WNS:\s*\K[-+]?[0-9]*\.?[0-9]+" | head -1)
-    fi
-    if [ -z "$tns" ]; then
-        tns=$(echo "$timing_section" | grep -i "TNS:" | grep -oP "TNS:\s*\K[-+]?[0-9]*\.?[0-9]+" | head -1)
-    fi
+    # Extract key timing metrics - match actual format with units (ns)
+    # Format: "      WNS:   0.000 ns" or "      WNS:  -1.234 ns"
+    local wns=$(echo "$timing_section" | grep -i "WNS:" | grep -oP "WNS:\s*\K[-+]?[0-9]*\.?[0-9]+" | head -1)
+    local tns=$(echo "$timing_section" | grep -i "TNS:" | grep -oP "TNS:\s*\K[-+]?[0-9]*\.?[0-9]+" | head -1)
+    local nvp=$(echo "$timing_section" | grep -i "NVP:" | grep -oP "NVP:\s*\K[0-9]+" | head -1)
     
     # Set defaults if extraction failed
     [ -z "$wns" ] && wns="N/A"
@@ -292,19 +288,20 @@ parse_timing_output() {
         
         if [ "$wns_check" = "PASS" ]; then
             overall_status="PASSED"
-            details="WNS: ${wns}ps, TNS: ${tns}ps"
+            details="WNS: ${wns}ns, TNS: ${tns}ns"
             [ "$nvp" != "N/A" ] && details="${details}, Violating Paths: ${nvp}"
         else
-            # Check severity of violation
+            # Check severity of violation (in nanoseconds)
             local wns_abs=$(echo "$wns" | tr -d '-')
-            local is_critical=$(echo "$wns_abs 50" | awk '{if ($1 > $2) print "YES"; else print "NO"}')
+            # Critical if WNS < -0.05ns (50ps)
+            local is_critical=$(echo "$wns_abs 0.05" | awk '{if ($1 > $2) print "YES"; else print "NO"}')
             
             if [ "$is_critical" = "YES" ]; then
                 overall_status="FAILED"
             else
                 overall_status="WARN"
             fi
-            details="WNS: ${wns}ps (VIOLATION), TNS: ${tns}ps"
+            details="WNS: ${wns}ns (VIOLATION), TNS: ${tns}ns"
             [ "$nvp" != "N/A" ] && details="${details}, Violating Paths: ${nvp}"
         fi
     else
