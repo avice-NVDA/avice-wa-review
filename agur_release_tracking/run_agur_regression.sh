@@ -856,6 +856,8 @@ done
 # Calculate statistics for HTML dashboard
 passed_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "^PASSED$")
 [[ "$passed_count" == "0" ]] && passed_count=0
+warn_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "^WARN$")
+[[ "$warn_count" == "0" ]] && warn_count=0
 partial_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "PARTIAL_PASS")
 [[ "$partial_count" == "0" ]] && partial_count=0
 unresolved_count=$(printf '%s\n' "${ANALYSIS_STATUS[@]}" | grep -c "UNRESOLVED")
@@ -1424,6 +1426,15 @@ HTML_STATS
 echo "                <div class=\"stat-value stat-passed\">$passed_count</div>" >> "$HTML_FILE"
 echo "                <div class=\"stat-label\">$(( passed_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
 
+cat >> "$HTML_FILE" << 'HTML_STATS_WARN'
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">⚠️ Warnings</div>
+HTML_STATS_WARN
+
+echo "                <div class=\"stat-value stat-unresolved\">$warn_count</div>" >> "$HTML_FILE"
+echo "                <div class=\"stat-label\">$(( warn_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
+
 cat >> "$HTML_FILE" << 'HTML_STATS2'
             </div>
             <div class="stat-card">
@@ -1506,6 +1517,10 @@ CHIPLET_SECTION
             PASSED)
                 status_class="status-passed"
                 status_text="✅ PASSED"
+                ;;
+            WARN)
+                status_class="status-unresolved"
+                status_text="⚠️ WARN"
                 ;;
             PARTIAL_PASS)
                 status_class="status-partial"
@@ -1772,6 +1787,7 @@ echo ""
 echo "Results Summary:"
 echo "  - Total Units: $TOTAL_UNITS"
 echo -e "  - ${GREEN}Passed: $passed_count${NC}"
+echo -e "  - ${YELLOW}Warnings: $warn_count${NC}"
 echo -e "  - ${YELLOW}Partial Pass: $partial_count${NC}"
 echo -e "  - ${YELLOW}Unresolved: $unresolved_count${NC}"
 echo -e "  - ${RED}Failed: $failed_count${NC}"
