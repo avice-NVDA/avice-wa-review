@@ -242,7 +242,80 @@ parse_formal_output() {
 # Returns: status|details|runtime
 parse_timing_output() {
     local output_file="$1"
-    echo "NOT_IMPLEMENTED|Timing parser not yet implemented|N/A"
+    local status=""
+    local details=""
+    local runtime="N/A"
+    
+    # Extract PT Signoff Timing section
+    local timing_section=$(grep -A 200 "PT Signoff Timing Analysis" "$output_file")
+    
+    if [ -z "$timing_section" ]; then
+        echo "NOT_FOUND|No PT timing analysis found|N/A"
+        return
+    fi
+    
+    # Check for "No PT signoff timing" message
+    if echo "$timing_section" | grep -q "No PT signoff timing"; then
+        echo "NOT_FOUND|No PT timing analysis found|N/A"
+        return
+    fi
+    
+    # Extract key timing metrics
+    local wns=$(echo "$timing_section" | grep -i "Worst Negative Slack (WNS)" | grep -oP "[-+]?[0-9]*\.?[0-9]+" | head -1)
+    local tns=$(echo "$timing_section" | grep -i "Total Negative Slack (TNS)" | grep -oP "[-+]?[0-9]*\.?[0-9]+" | head -1)
+    local nvp=$(echo "$timing_section" | grep -i "Number of Violating Paths" | grep -oP "[0-9]+" | head -1)
+    
+    # Alternative patterns for WNS/TNS extraction
+    if [ -z "$wns" ]; then
+        wns=$(echo "$timing_section" | grep -i "WNS:" | grep -oP "WNS:\s*\K[-+]?[0-9]*\.?[0-9]+" | head -1)
+    fi
+    if [ -z "$tns" ]; then
+        tns=$(echo "$timing_section" | grep -i "TNS:" | grep -oP "TNS:\s*\K[-+]?[0-9]*\.?[0-9]+" | head -1)
+    fi
+    
+    # Set defaults if extraction failed
+    [ -z "$wns" ] && wns="N/A"
+    [ -z "$tns" ] && tns="N/A"
+    [ -z "$nvp" ] && nvp="N/A"
+    
+    # Determine overall timing status
+    local overall_status="UNKNOWN"
+    
+    if [ "$wns" = "N/A" ] && [ "$tns" = "N/A" ]; then
+        overall_status="NO_DATA"
+        details="No timing data available"
+    elif [ "$wns" != "N/A" ]; then
+        # Convert WNS to float for comparison (bash doesn't handle floats well, use awk)
+        local wns_check=$(echo "$wns 0" | awk '{if ($1 >= $2) print "PASS"; else print "FAIL"}')
+        
+        if [ "$wns_check" = "PASS" ]; then
+            overall_status="PASSED"
+            details="WNS: ${wns}ps, TNS: ${tns}ps"
+            [ "$nvp" != "N/A" ] && details="${details}, Violating Paths: ${nvp}"
+        else
+            # Check severity of violation
+            local wns_abs=$(echo "$wns" | tr -d '-')
+            local is_critical=$(echo "$wns_abs 50" | awk '{if ($1 > $2) print "YES"; else print "NO"}')
+            
+            if [ "$is_critical" = "YES" ]; then
+                overall_status="FAILED"
+            else
+                overall_status="WARN"
+            fi
+            details="WNS: ${wns}ps (VIOLATION), TNS: ${tns}ps"
+            [ "$nvp" != "N/A" ] && details="${details}, Violating Paths: ${nvp}"
+        fi
+    else
+        overall_status="UNKNOWN"
+        details="Unable to determine timing status"
+    fi
+    
+    # Extract runtime if available
+    runtime=$(echo "$timing_section" | grep -i "Runtime:" | head -1 | grep -oP "Runtime:\s*\K[0-9.]+ (hours|minutes|seconds)")
+    [ -z "$runtime" ] && runtime="N/A"
+    
+    # Return pipe-delimited string
+    echo "${overall_status}|${details}|${runtime}"
 }
 
 # Parse PV (Physical Verification) output
@@ -250,7 +323,86 @@ parse_timing_output() {
 # Returns: status|details|runtime
 parse_pv_output() {
     local output_file="$1"
-    echo "NOT_IMPLEMENTED|PV parser not yet implemented|N/A"
+    local status=""
+    local details=""
+    local runtime="N/A"
+    
+    # Extract Physical Verification section
+    local pv_section=$(grep -A 200 "Physical Verification" "$output_file")
+    
+    if [ -z "$pv_section" ]; then
+        echo "NOT_FOUND|No PV analysis found|N/A"
+        return
+    fi
+    
+    # Check for "No physical verification" message
+    if echo "$pv_section" | grep -q "No physical verification"; then
+        echo "NOT_FOUND|No PV analysis found|N/A"
+        return
+    fi
+    
+    # Extract PV metrics - try multiple patterns
+    local drc_violations=$(echo "$pv_section" | grep -i "DRC.*violations\?" | grep -oP "[0-9]+" | head -1)
+    local lvs_violations=$(echo "$pv_section" | grep -i "LVS.*violations\?" | grep -oP "[0-9]+" | head -1)
+    local antenna_violations=$(echo "$pv_section" | grep -i "Antenna.*violations\?" | grep -oP "[0-9]+" | head -1)
+    
+    # Alternative patterns
+    if [ -z "$drc_violations" ]; then
+        drc_violations=$(echo "$pv_section" | grep -i "DRC:" | grep -oP "DRC:\s*\K[0-9]+" | head -1)
+    fi
+    if [ -z "$lvs_violations" ]; then
+        lvs_violations=$(echo "$pv_section" | grep -i "LVS:" | grep -oP "LVS:\s*\K[0-9]+" | head -1)
+    fi
+    if [ -z "$antenna_violations" ]; then
+        antenna_violations=$(echo "$pv_section" | grep -i "Antenna:" | grep -oP "Antenna:\s*\K[0-9]+" | head -1)
+    fi
+    
+    # Set defaults if extraction failed
+    [ -z "$drc_violations" ] && drc_violations="N/A"
+    [ -z "$lvs_violations" ] && lvs_violations="N/A"
+    [ -z "$antenna_violations" ] && antenna_violations="N/A"
+    
+    # Determine overall PV status
+    local overall_status="UNKNOWN"
+    
+    if [ "$drc_violations" = "N/A" ] && [ "$lvs_violations" = "N/A" ] && [ "$antenna_violations" = "N/A" ]; then
+        overall_status="NO_DATA"
+        details="No PV data available"
+    else
+        # Convert to numbers for comparison (use 0 if N/A)
+        local drc_num=${drc_violations}
+        local lvs_num=${lvs_violations}
+        local ant_num=${antenna_violations}
+        
+        [ "$drc_num" = "N/A" ] && drc_num=0
+        [ "$lvs_num" = "N/A" ] && lvs_num=0
+        [ "$ant_num" = "N/A" ] && ant_num=0
+        
+        # Calculate total violations
+        local total_violations=$((drc_num + lvs_num + ant_num))
+        
+        if [ $total_violations -eq 0 ]; then
+            overall_status="PASSED"
+            details="DRC: ${drc_violations}, LVS: ${lvs_violations}, Antenna: ${antenna_violations} (ALL CLEAN)"
+        else
+            # Determine severity
+            # Critical: LVS > 5 OR DRC > 100 OR Antenna > 10
+            if [ $lvs_num -gt 5 ] || [ $drc_num -gt 100 ] || [ $ant_num -gt 10 ]; then
+                overall_status="FAILED"
+                details="DRC: ${drc_violations}, LVS: ${lvs_violations}, Antenna: ${antenna_violations} (CRITICAL)"
+            else
+                overall_status="WARN"
+                details="DRC: ${drc_violations}, LVS: ${lvs_violations}, Antenna: ${antenna_violations} (MINOR)"
+            fi
+        fi
+    fi
+    
+    # Extract runtime if available
+    runtime=$(echo "$pv_section" | grep -i "Runtime:" | head -1 | grep -oP "Runtime:\s*\K[0-9.]+ (hours|minutes|seconds)")
+    [ -z "$runtime" ] && runtime="N/A"
+    
+    # Return pipe-delimited string
+    echo "${overall_status}|${details}|${runtime}"
 }
 
 # Parse clock tree analysis output
@@ -258,7 +410,79 @@ parse_pv_output() {
 # Returns: status|details|runtime
 parse_clock_output() {
     local output_file="$1"
-    echo "NOT_IMPLEMENTED|Clock parser not yet implemented|N/A"
+    local status=""
+    local details=""
+    local runtime="N/A"
+    
+    # Extract Clock Tree Analysis section
+    local clock_section=$(grep -A 200 "Clock Tree Analysis\|Clock Analysis" "$output_file")
+    
+    if [ -z "$clock_section" ]; then
+        echo "NOT_FOUND|No clock tree analysis found|N/A"
+        return
+    fi
+    
+    # Check for "No clock" message
+    if echo "$clock_section" | grep -q "No clock.*analysis\|No clock.*data"; then
+        echo "NOT_FOUND|No clock tree analysis found|N/A"
+        return
+    fi
+    
+    # Extract clock metrics - try multiple patterns
+    local max_latency=$(echo "$clock_section" | grep -i "Maximum.*latency\|Max.*latency" | grep -oP "[0-9]*\.?[0-9]+" | head -1)
+    local clock_skew=$(echo "$clock_section" | grep -i "Clock skew\|Skew" | grep -oP "[0-9]*\.?[0-9]+" | head -1)
+    local insertion_delay=$(echo "$clock_section" | grep -i "Insertion delay" | grep -oP "[0-9]*\.?[0-9]+" | head -1)
+    
+    # Alternative patterns
+    if [ -z "$max_latency" ]; then
+        max_latency=$(echo "$clock_section" | grep -i "Latency:" | grep -oP "Latency:\s*\K[0-9]*\.?[0-9]+" | head -1)
+    fi
+    if [ -z "$clock_skew" ]; then
+        clock_skew=$(echo "$clock_section" | grep -i "Skew:" | grep -oP "Skew:\s*\K[0-9]*\.?[0-9]+" | head -1)
+    fi
+    
+    # Set defaults if extraction failed
+    [ -z "$max_latency" ] && max_latency="N/A"
+    [ -z "$clock_skew" ] && clock_skew="N/A"
+    [ -z "$insertion_delay" ] && insertion_delay="N/A"
+    
+    # Determine overall clock status
+    local overall_status="UNKNOWN"
+    
+    if [ "$max_latency" = "N/A" ] && [ "$clock_skew" = "N/A" ]; then
+        overall_status="NO_DATA"
+        details="No clock data available"
+    elif [ "$max_latency" != "N/A" ]; then
+        # Evaluate clock quality based on latency (thresholds in ps)
+        # PASSED: latency <= 550ps
+        # WARN: 550ps < latency < 580ps
+        # FAILED: latency >= 580ps
+        
+        local lat_check=$(echo "$max_latency 550" | awk '{if ($1 <= $2) print "PASS"; else if ($1 < 580) print "WARN"; else print "FAIL"}')
+        
+        if [ "$lat_check" = "PASS" ]; then
+            overall_status="PASSED"
+            details="Max Latency: ${max_latency}ps, Skew: ${clock_skew}ps"
+        elif [ "$lat_check" = "WARN" ]; then
+            overall_status="WARN"
+            details="Max Latency: ${max_latency}ps (HIGH), Skew: ${clock_skew}ps"
+        else
+            overall_status="FAILED"
+            details="Max Latency: ${max_latency}ps (CRITICAL), Skew: ${clock_skew}ps"
+        fi
+        
+        [ "$insertion_delay" != "N/A" ] && details="${details}, Insertion: ${insertion_delay}ps"
+    else
+        overall_status="UNKNOWN"
+        details="Unable to determine clock status"
+    fi
+    
+    # Extract runtime if available
+    runtime=$(echo "$clock_section" | grep -i "Runtime:" | head -1 | grep -oP "Runtime:\s*\K[0-9.]+ (hours|minutes|seconds)")
+    [ -z "$runtime" ] && runtime="N/A"
+    
+    # Return pipe-delimited string
+    echo "${overall_status}|${details}|${runtime}"
 }
 
 # Parse block release output
@@ -266,7 +490,91 @@ parse_clock_output() {
 # Returns: status|details|runtime
 parse_release_output() {
     local output_file="$1"
-    echo "NOT_IMPLEMENTED|Release parser not yet implemented|N/A"
+    local status=""
+    local details=""
+    local runtime="N/A"
+    
+    # Extract Block Release section
+    local release_section=$(grep -A 200 "Block Release\|Release Status\|Release Check" "$output_file")
+    
+    if [ -z "$release_section" ]; then
+        echo "NOT_FOUND|No block release information found|N/A"
+        return
+    fi
+    
+    # Check for "No release" message
+    if echo "$release_section" | grep -q "No release.*found\|No block release"; then
+        echo "NOT_FOUND|No block release found|N/A"
+        return
+    fi
+    
+    # Extract release information - try multiple patterns
+    local release_type=$(echo "$release_section" | grep -i "Release type\|Type:" | head -1)
+    local release_date=$(echo "$release_section" | grep -i "Release date\|Date:" | head -1)
+    local release_complete=$(echo "$release_section" | grep -i "Completeness\|Complete:" | head -1)
+    
+    # Check for specific release flags
+    local has_sta=$(echo "$release_section" | grep -i "STA.*release\|Sta:.*True" | head -1)
+    local has_fcl=$(echo "$release_section" | grep -i "FCL.*release\|Fcl:.*True" | head -1)
+    local has_pnr=$(echo "$release_section" | grep -i "PNR.*release\|Pnr:.*True" | head -1)
+    
+    # Count release types
+    local release_count=0
+    [ -n "$has_sta" ] && release_count=$((release_count + 1))
+    [ -n "$has_fcl" ] && release_count=$((release_count + 1))
+    [ -n "$has_pnr" ] && release_count=$((release_count + 1))
+    
+    # Determine overall release status
+    local overall_status="UNKNOWN"
+    
+    if [ -z "$release_type" ] && [ -z "$release_date" ]; then
+        overall_status="NO_DATA"
+        details="No release data available"
+    elif [ $release_count -gt 0 ]; then
+        # Build release types string
+        local types=""
+        [ -n "$has_sta" ] && types="${types}STA, "
+        [ -n "$has_fcl" ] && types="${types}FCL, "
+        [ -n "$has_pnr" ] && types="${types}PNR, "
+        types=${types%, }  # Remove trailing comma
+        
+        # Check if release is complete (all 3 types present)
+        if [ $release_count -ge 3 ]; then
+            overall_status="PASSED"
+            details="Complete release: ${types}"
+        elif [ $release_count -eq 2 ]; then
+            overall_status="PARTIAL_PASS"
+            details="Partial release: ${types}"
+        else
+            overall_status="WARN"
+            details="Minimal release: ${types}"
+        fi
+        
+        # Add date if found
+        if [ -n "$release_date" ]; then
+            local date_str=$(echo "$release_date" | grep -oP "[0-9]{4}[/-][0-9]{1,2}[/-][0-9]{1,2}" | head -1)
+            [ -n "$date_str" ] && details="${details} (${date_str})"
+        fi
+    else
+        # No clear release types found, try to determine from content
+        if echo "$release_section" | grep -qi "complete\|success"; then
+            overall_status="PASSED"
+            details="Release found and appears complete"
+        elif echo "$release_section" | grep -qi "incomplete\|partial"; then
+            overall_status="WARN"
+            details="Release found but may be incomplete"
+        else
+            overall_status="UNKNOWN"
+            details="Release status unclear"
+        fi
+    fi
+    
+    # Extract runtime if available
+    runtime=$(echo "$release_section" | grep -i "Runtime:" | head -1 | grep -oP "Runtime:\s*\K[0-9.]+ (hours|minutes|seconds)")
+    [ -z "$runtime" ] && runtime="N/A"
+    
+    # Return pipe-delimited string
+    echo "${overall_status}|${details}|${runtime}"
 }
 
 # Get section flag for avice_wa_review.py based on regression type
