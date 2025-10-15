@@ -11078,14 +11078,13 @@ class WorkareaReviewer:
                                 <tr class="rules-row" data-checker="{checker_name.lower()}" data-desc="{description.lower()}">
                                     <td style="font-weight: 600; color: #667eea;">{checker_name}</td>
                                     <td style="font-size: 13px; line-height: 1.4;" title="{description}">{desc_display}</td>
-                                    <td style="text-align: center; color: #555;">{elapsed_time}</td>
                                     <td style="text-align: center; {error_style}">{error_count}</td>
                                 </tr>
 """
         else:
             checker_rules_html = """
                                 <tr>
-                                    <td colspan="4" style="text-align: center; color: #999; padding: 40px;">
+                                    <td colspan="3" style="text-align: center; color: #999; padding: 40px;">
                                         No checker rules available. gl-check.log may not be present or could not be parsed.
                                     </td>
                                 </tr>
@@ -11795,9 +11794,8 @@ class WorkareaReviewer:
                         <table class="error-table" id="rulesTable">
                             <thead style="position: sticky; top: 0; background: white; z-index: 10;">
                                 <tr>
-                                    <th style="width: 25%;">Checker Name</th>
-                                    <th style="width: 55%;">Description / Rule</th>
-                                    <th style="width: 10%; text-align: center;">Runtime</th>
+                                    <th style="width: 30%;">Checker Name</th>
+                                    <th style="width: 60%;">Description / Rule</th>
                                     <th style="width: 10%; text-align: center;">Errors</th>
                                 </tr>
                             </thead>
