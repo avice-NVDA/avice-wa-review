@@ -591,7 +591,7 @@ get_analysis_section() {
             echo "formal"
             ;;
         timing)
-            echo "timing"
+            echo "pt"
             ;;
         pv)
             echo "pv"
@@ -1625,6 +1625,10 @@ CHIPLET_SECTION
                 status_class="status-notfound"
                 status_text="❓ NOT FOUND"
                 ;;
+            NO_DATA)
+                status_class="status-notfound"
+                status_text="📊 NO DATA"
+                ;;
             *)
                 status_class="status-notfound"
                 status_text="❔ UNKNOWN"
@@ -2501,6 +2505,10 @@ CHIPLET_SECTION
                     NOT_FOUND)
                         status_class="status-notfound"
                         status_text="❓ NOT FOUND"
+                        ;;
+                    NO_DATA)
+                        status_class="status-notfound"
+                        status_text="📊 NO DATA"
                         ;;
                     *)
                         status_class="status-notfound"
