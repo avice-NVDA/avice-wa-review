@@ -1,7 +1,8 @@
 # AGUR Release Tracking System
 
 ## Overview
-This directory contains all files for the AGUR project block release tracking system - a standalone utility for tracking and managing unit releases across all chiplets.
+
+This directory contains the AGUR project block release tracking system - a standalone utility for tracking and managing unit releases across all chiplets. This system provides automated extraction and documentation of block releases for the agur project, monitoring the central release area and maintaining up-to-date information about all unit releases, their source workareas, and release types.
 
 ## Directory Structure
 
@@ -192,6 +193,69 @@ This tracking system integrates with `avice_wa_review.py` via the `--unit` flag:
 - Just run `./extract_agur_releases.sh`
 - New units with `last_sta_rel` symlinks automatically detected
 
+## Block Release Area Structure
+
+### Base Directory
+```
+/home/agur_backend_blockRelease/block/
+├── prt/                           # Unit: Port
+│   ├── last_sta_rel -> {...}      # Latest STA release (symlink)
+│   ├── fcl_release -> {...}       # Latest FCL release (symlink)
+│   ├── prev_last_sta_rel -> {...} # Previous STA release (symlink)
+│   └── prt_rbv_2025_09_03_...     # Actual release directory
+│       ├── logs/
+│       │   └── block_release.log  # Release metadata (KEY FILE)
+│       ├── spef/                  # SPEF files (if Sta=True)
+│       ├── sdc/                   # SDC files (if Sta=True)
+│       ├── netlist/               # Netlist files
+│       ├── DBs/                   # Database files (if Fcl=True)
+│       └── pv_flow/               # PV files
+├── pmux/                          # Unit: Port Multiplexer
+├── fdb/                           # Unit: Feedback
+├── fth/                           # Unit: FTH
+└── lnd/                           # Unit: LND
+```
+
+### Release Types
+
+| Flag | Command | Description | Files Included |
+|------|---------|-------------|----------------|
+| **Sta** | `-s` | Static Timing Analysis | SPEF, SDC, netlists |
+| **Fcl** | `-l` | Functional/Layout | Database, IOs, OASIS |
+| **Pnr** | (TBD) | Place & Route | PnR databases |
+| **FE_DCT** | `-fe_dct` | Front End DCT | FE DCT files |
+| **DC** | (TBD) | Design Compiler | Synthesis files |
+| **Full** | `-f` | Full Release | All files |
+
+### Symbolic Links Explained
+
+The block release system uses three key symbolic links per unit:
+
+1. **`last_sta_rel`** - Points to the most recent STA release
+   - Updated when user runs block release with `-s` flag
+   - Previous link is moved to `prev_last_sta_rel`
+
+2. **`fcl_release`** - Points to the most recent FCL release
+   - Updated when user runs block release with `-l` flag
+   - Can point to same directory as `last_sta_rel` (combined release)
+
+3. **`prev_last_sta_rel`** - Points to the previous STA release
+   - Maintained for rollback purposes
+   - Useful for comparing releases
+
+### Log File Format
+
+The `logs/block_release.log` file contains all metadata:
+
+```
+-I- [2025/10/08 10:14:33] USER: ykatzav
+-I- [2025/10/08 10:14:33] Release prt from prt_rbv_2025_09_03_...
+-I- [2025/10/08 10:14:33]        Sta: True
+-I- [2025/10/08 10:14:33]        Fcl: True
+-I- [2025/10/08 10:14:33]        Pnr: False
+-I- [2025/10/08 10:14:38] db_source /home/scratch.ykatzav_vlsi/agur/prt/...
+```
+
 ## Troubleshooting
 
 **Table out of date?**
@@ -215,6 +279,17 @@ ls -l /home/agur_backend_blockRelease/block/<unit>/last_sta_rel
 - Check script is executable: `ls -l check_and_update_agur_table.sh`
 - Check permissions on release area
 - Run manual update to see errors: `./check_and_update_agur_table.sh --force`
+
+**Workarea path not accessible?**
+Possible causes:
+- User storage may have been cleaned up
+- Path format changed
+- Permissions issue
+
+Solution: Verify path exists:
+```bash
+ls -ld /home/scratch.{user}_vlsi/agur/{unit}/{workarea}
+```
 
 ## Architecture
 

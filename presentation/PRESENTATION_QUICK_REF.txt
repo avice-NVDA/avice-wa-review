@@ -1,0 +1,133 @@
+================================================================================
+AVICE WORKAREA REVIEW TOOL - QUICK REFERENCE CARD
+Agur Team Presentation - October 16, 2025
+================================================================================
+
+DEMO WORKAREA PATH:
+/home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap
+
+DEMO COMMANDS (Copy-Paste Ready):
+================================================================================
+
+# Setup
+cd /home/avice/scripts/avice_wa_review
+export DEMO_WA="/home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap"
+
+# Demo 1: Show help
+/home/avice/scripts/avice_wa_review_launcher.csh --help | head -50
+
+# Demo 2: Quick analysis (runtime + PT)
+/home/avice/scripts/avice_wa_review_launcher.csh $DEMO_WA -s runtime pt
+
+# Demo 3: Open HTML report
+/home/utils/firefox-118.0.1/firefox avice_runtime_report_*.html &
+
+# Demo 4: Show formal bug
+/home/avice/scripts/avice_wa_review_launcher.csh $DEMO_WA -s formal
+
+# Cleanup
+mv *.html html/
+
+================================================================================
+KEY TALKING POINTS
+================================================================================
+
+ADVANTAGES (Slide 7):
+- One command replaces 30+ manual checks
+- Instant status overview
+- Professional HTML reports with clickable links
+- Portable and easy to use
+
+DISADVANTAGES (Slide 8):
+!! EMPHASIZE THIS POINT !!
+- Users lose connection to workarea directory structure
+- Forget file locations (gl-check.all.err, PrimeTime reports)
+- Can't troubleshoot when tool has bugs
+- New team members should learn structure FIRST, tool SECOND
+
+KNOWN BUGS (Slide 9):
+!! BE TRANSPARENT !!
+- Bug #1: Formal status shows "SUCCEEDED" but real status is "INCONCLUSIVE"
+  * Root cause: Parsing checks for absence of "FAILED", not actual success
+  * Workaround: Always manually verify formal status in critical releases
+  * Fix in progress
+
+BEST PRACTICES (Slide 10):
+- Use tool for quick checks and reports
+- Navigate directories manually for deep debugging
+- ALWAYS verify formal status manually for releases
+- Keep your manual skills sharp!
+
+================================================================================
+TIMING (24 min core + 6 min Q&A = 30 min total)
+================================================================================
+
+1-3 min:   Introduction & Problem Statement
+4-8 min:   Overview & How to Use
+9-16 min:  Live Demo (2 parts)
+17-19 min: Advantages
+20-22 min: Disadvantages [IMPORTANT]
+23-24 min: Known Bugs [HONEST]
+25-26 min: Best Practices
+27-29 min: Examples & Summary
+30+ min:   Q&A
+
+================================================================================
+EXPECTED QUESTIONS & ANSWERS
+================================================================================
+
+Q: How do I install it?
+A: No installation needed! Just run:
+   /home/avice/scripts/avice_wa_review_launcher.csh <workarea>
+
+Q: Can I use it on any workarea?
+A: Yes, works on any standard Agur/ASIC workarea structure
+
+Q: Will you fix the formal bug?
+A: Yes, fix is in progress. Improving parsing logic to check actual success.
+
+Q: Should new designers use this?
+A: Learn directory structure FIRST, then use tool for quick checks.
+
+Q: Can I run only specific sections?
+A: Yes! Use -s flag:
+   /home/avice/scripts/avice_wa_review_launcher.csh $wa -s runtime pt pv
+
+Q: How long does it take to run?
+A: Full analysis: 30-60 seconds
+   Selective sections: 5-10 seconds
+
+Q: Where are HTML reports saved?
+A: In your current working directory (portable!)
+
+Q: Can I share HTML reports?
+A: Yes! Copy anywhere, all links use absolute paths
+
+================================================================================
+IF SOMETHING GOES WRONG
+================================================================================
+
+Backup Workarea:
+/home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10
+
+Firefox Alternative:
+/home/utils/firefox-118.0.1/firefox
+
+If Demo Fails:
+- Show pre-generated HTML report from html/ folder
+- Walk through terminal output screenshots
+- Focus on advantages/disadvantages discussion
+
+================================================================================
+CLOSING STATEMENT
+================================================================================
+
+"Use the tool smartly:
+ - Quick checks and professional reports: YES
+ - Deep debugging and learning: Manual navigation
+ - Critical formal verification: ALWAYS double-check manually
+ 
+The tool is your assistant, not your replacement. Keep your skills sharp!"
+
+================================================================================
+

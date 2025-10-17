@@ -70,6 +70,12 @@ This applies to all print statements, logging, and console output throughout the
 4. Check file existence before operations
 5. Handle gzipped files (.gz) appropriately
 6. Use proper encoding (utf-8) for file operations
+7. **CRITICAL: Always filter out symlinks when searching directories to avoid duplicates**
+   - Common issue: `umake_log/latest_dir` is a symlink to the most recent log directory
+   - Problem: Without filtering, the same log appears twice (once via symlink, once via real path)
+   - Solution: Use `os.path.realpath()` to resolve symlinks, then track processed real paths in a set
+   - Example affected patterns: `umake_log/*/*.log`, `signoff_flow/*/work_*`, etc.
+   - Always check if a path is a symlink before processing multiple file results
 
 # Error Handling Best Practices
 
@@ -127,6 +133,35 @@ This applies to all print statements, logging, and console output throughout the
    - Error listings (Error Type, Count, Description)
    - Parameter comparisons (Parameter, Value, Status)
    - Any structured data with 3+ columns of information
+
+5. **Histogram and Multi-Table Output**:
+   - For timing histograms with 3+ tables, print only the most useful table to terminal
+   - Table 2 (Sub-Category Breakdown) provides best balance of detail vs. brevity
+   - Extract all tables for HTML reports (unlimited detail allowed)
+   - Example: PnR timing histograms - Terminal shows Table 2, HTML shows all 3 tables
+   - Reduces console output by ~70% while maintaining HTML completeness
+   - Philosophy: Terminal = scannable summary, HTML = comprehensive deep-dive
+
+## Runtime Display Standards
+
+1. **Color-Coded Runtime Values** (for HTML reports):
+   - Green: < 2 hours (excellent performance)
+   - Yellow: 2-5 hours (acceptable)
+   - Red: > 5 hours (needs optimization)
+   - Apply to both individual stages and total runtime
+   
+2. **Stage Highlighting**:
+   - Highlight maximum runtime stage in bold/colored background
+   - Show percentage of total runtime for context
+   - Help identify bottlenecks quickly in visual reports
+   - Example: "postroute: 3.5h (45% of total)" in bold/red
+   
+3. **Timestamp Display Requirements**:
+   - Always show start/end timestamps for all stages (format: MM/DD HH:MM)
+   - Calculate elapsed time accurately (hours:minutes:seconds)
+   - Detect RUNNING flows: show "RUNNING" status with elapsed time from start
+   - For completed stages: show full timeline (start → end → duration)
+   - Annotate inferred completion times when using output file timestamps
 
 # Performance Considerations
 
@@ -295,8 +330,9 @@ This applies to all print statements, logging, and console output throughout the
 ## HTML/CSS Rendering Compatibility
 
 **Environment Information:**
-- Firefox Version: **143.0.4** (December 2024 release) - **UPGRADED October 2025**
-- Previous Version: 118.0.1 (2023 release)
+- Firefox Version: **118.0.1** (Recommended - stable and compatible)
+- Location: `/home/utils/firefox-118.0.1/firefox`
+- Note: Firefox 143.0.4 has GLIBC compatibility issues
 - Display Server: Remote X11 session
 - Display Notes: "Broadway display type not supported" and "[GFX1-]: glxtest: libEGL missing methods" warnings are **benign** - software rendering mode works perfectly
 
@@ -309,7 +345,7 @@ This applies to all print statements, logging, and console output throughout the
    - Recommended for simple multi-column layouts
 
 2. **CSS Grid Layout: ✓ FULLY SUPPORTED** 🎉
-   - ✅ **NOW WORKS with Firefox 143.0.4!** (verified October 11, 2025)
+   - ✅ **Works with Firefox 118+ and all modern browsers**
    - Full support for `display: grid`, `grid-template-columns`, `grid-template-areas`
    - Grid spanning (`grid-column`, `grid-row`) works correctly
    - Complex grid layouts render properly
@@ -348,9 +384,9 @@ This applies to all print statements, logging, and console output throughout the
    ```
 
 4. **Testing Requirements:**
-   - Always test HTML layouts in Firefox 143.0.4 on the target system
-   - Both Flexbox and Grid are now available - choose based on use case
-   - Remote display server limitations resolved with Firefox 143 upgrade
+   - Always test HTML layouts in Firefox 118+ or any modern browser
+   - Use: `/home/utils/firefox-118.0.1/firefox` for reliable testing
+   - Both Flexbox and Grid are fully supported - choose based on use case
    - Test file available: `test_css_grid.html` for verification
 
 5. **Known Working CSS Features:**
@@ -596,6 +632,77 @@ This applies to all print statements, logging, and console output throughout the
    
    **Impact**: HTML reports are truly portable and work from any location for all users
 
+## Master Dashboard Standards
+
+1. **Unified Dashboard Requirements**:
+   - Single-page overview integrating all workarea analysis sections
+   - Expandable/collapsible section cards with status badges
+   - Smart defaults: FAIL/WARN sections expanded, PASS sections collapsed by default
+   - Overall health aggregation from all section statuses
+   - Quick navigation with attention-required section highlighting problem areas
+   - Generated in current working directory (like all HTML reports)
+   
+2. **Section Card Format**:
+   - Index number corresponding to analysis flow (matches terminal output)
+   - Status badge (PASS/WARN/FAIL/NOT_RUN) with color coding
+   - Key metrics display (2-3 most important values per section)
+   - Issues list (up to 3 critical items shown in card)
+   - Timestamp of analysis
+   - "View Details" button linking to detailed HTML report (absolute path)
+   
+3. **Status Logic Standards**:
+   - **PASS** (Green #27ae60): Section completed successfully, no issues detected
+   - **WARN** (Orange #f39c12): Attention recommended, non-critical issues found
+   - **FAIL** (Red #e74c3c): Critical issues found requiring immediate action
+   - **NOT_RUN** (Gray #95a5a6): Section not executed or no data available
+   
+4. **Intelligent Section Status Rules**:
+   - **Setup**: Always PASS (basic info extraction)
+   - **Runtime**: Always PASS (informational only)
+   - **Synthesis**: Always PASS (basic compilation)
+   - **PnR**: FAIL if utilization >95%, WARN if >85% or timing violations
+   - **Clock**: FAIL if max latency >=580ps, WARN if >550ps
+   - **Formal**: FAIL if any flow FAILED, WARN if UNRESOLVED/RUNNING
+   - **Star**: FAIL if shorts >0, WARN if SPEF files <6 (missing corners)
+   - **PT**: FAIL if WNS <-0.050ns or TNS <-10.0ns, WARN if WNS <0 or TNS <0
+   - **PV**: FAIL if LVS >5 or DRC >100 or Antenna >10, WARN if any violations >0
+   - **GL Check**: FAIL if non-waived >=50, WARN if non-waived >0
+   - **ECO**: Basic summary, shows PT-ECO loop count
+   - **NV Gate ECO**: Basic summary, shows design info
+   - **Block Release**: Basic summary, shows design info
+   
+5. **Dashboard Visual Features**:
+   - Purple gradient header matching PT report styling
+   - Responsive grid layout (3 columns desktop → 1 column mobile)
+   - Smooth hover effects and transitions
+   - Professional shadows and rounded corners
+   - Embedded base64 logo for portability
+   - Back-to-top button for long dashboards
+   - Copyright footer with contact info
+   
+6. **Dashboard Interactive Elements**:
+   - Click card header to expand/collapse
+   - Rotating arrow icon (▼/▶) shows expand state
+   - Quick action buttons:
+     * "Open All Failed/Warning Sections" - batch open problem areas
+     * "Open All Sections" - open all detail reports
+     * "Print Dashboard" - print-friendly format
+   - Search functionality (future enhancement)
+   - Filter by status (future enhancement)
+   
+7. **Dashboard File Naming**:
+   - Format: `{USER}_MASTER_dashboard_{design}_{date}.html`
+   - Example: `avice_MASTER_dashboard_prt_20251017.html`
+   - Date format: YYYYMMDD (no time component for daily uniqueness)
+   - Always use $USER environment variable for username
+   
+8. **Integration with Section HTMLs**:
+   - Master dashboard links to detailed section HTML reports
+   - Links use relative paths (just filename) since all HTMLs in same directory
+   - Each section HTML has absolute paths for its internal file links
+   - Master dashboard shows summary, section HTMLs show comprehensive detail
+   - Maintain separation: Dashboard = overview, Section HTMLs = deep-dive
+
 ## Command Line Interface Standards
 
 1. ALWAYS use absolute paths in help text and examples:
@@ -705,7 +812,8 @@ This applies to all print statements, logging, and console output throughout the
    - Architecture rules: `architecture.mdc`
    - Cleanup script: `cleanup_test_reports.sh`
    - **Test HTML reports**: `html/` directory (gitignored)
-   - **AGUR tracking**: `agur_release_tracking/` directory
+   - **Presentation materials**: `presentation/` directory (for avice_wa_review demos and training)
+   - **AGUR tracking**: `agur_release_tracking/` directory (SEPARATE UTILITY - see below)
 
 3. **Test-generated HTML file management - REQUIRED WORKFLOW**:
    - **HTML reports generated during testing MUST be moved to `html/` folder after testing**
@@ -723,6 +831,161 @@ This applies to all print statements, logging, and console output throughout the
      * Developer test reports: Generated in project directory, MUST be moved to `html/` folder
      * This keeps the project directory clean and repository organized
    - **ALWAYS move HTMLs to html/ after finishing your testing session**
+
+## Utility Separation and Architecture
+
+### CRITICAL: Two Independent Utilities
+
+This project repository contains TWO SEPARATE, INDEPENDENT utilities:
+
+1. **avice_wa_review** (Primary Workarea Analysis Tool)
+   - **Purpose**: Analyze a SINGLE workarea and extract comprehensive metrics
+   - **Location**: Root directory (`/home/avice/scripts/avice_wa_review/`)
+   - **Usage**: `/home/avice/scripts/avice_wa_review_launcher.csh <workarea>`
+   - **Standalone**: Works completely independently
+   - **Output**: Terminal reports + HTML reports for one workarea
+
+2. **AGUR_RELEASE_TRACKING** (Regression Testing Framework)
+   - **Purpose**: Track AGUR releases and run BATCH regression testing on multiple units
+   - **Location**: `agur_release_tracking/` subdirectory
+   - **Usage**: `./run_agur_regression.sh -t formal -c CPORT`
+   - **Standalone**: Works completely independently
+   - **Output**: Aggregate dashboards for multiple units + CSV exports
+
+### Architectural Relationship
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  AGUR_RELEASE_TRACKING (Regression Framework)            │
+│  Location: agur_release_tracking/                        │
+│                                                           │
+│  - Tracks 57 design units across 5 chiplets              │
+│  - Runs batch regression testing (formal, timing, etc.)  │
+│  - Generates interactive dashboards                      │
+│  - Manages release metadata extraction                   │
+│                                                           │
+│  USES ↓ (as an external tool)                            │
+└──────────────────────────────────────────────────────────┘
+           │
+           │ Calls via subprocess
+           │ /home/avice/scripts/avice_wa_review_launcher.csh <workarea>
+           │
+           ↓
+┌──────────────────────────────────────────────────────────┐
+│  avice_wa_review (Single Workarea Analyzer)              │
+│  Location: Root directory                                │
+│                                                           │
+│  - Analyzes ONE workarea at a time                       │
+│  - Extracts metrics (timing, runtime, formal, PV, etc.)  │
+│  - Generates HTML reports for that workarea              │
+│  - Returns status via terminal output                    │
+│                                                           │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Independence Principles
+
+**CRITICAL RULE: Their development should NOT affect each other**
+
+1. **Separate Development Cycles**
+   - Changes to `avice_wa_review` must NOT break `AGUR_RELEASE_TRACKING`
+   - Changes to `AGUR_RELEASE_TRACKING` must NOT affect `avice_wa_review`
+   - Each utility has its own documentation, tests, and maintenance
+
+2. **AGUR Uses avice_wa_review as a Tool (NOT a Library)**
+   - AGUR calls `avice_wa_review_launcher.csh` as an external command
+   - AGUR parses terminal output or reads HTML reports
+   - AGUR does NOT import avice_wa_review Python modules
+   - AGUR does NOT modify avice_wa_review code
+   - Communication is via: subprocess calls + file output parsing
+
+3. **Interface Contract**
+   - `avice_wa_review` provides a stable command-line interface
+   - `avice_wa_review` generates predictable HTML report formats
+   - `avice_wa_review` returns consistent exit codes
+   - AGUR depends ONLY on these external interfaces, not internal implementation
+
+4. **Testing Isolation**
+   - Test `avice_wa_review` on individual workareas
+   - Test `AGUR_RELEASE_TRACKING` with multiple units
+   - Each utility has its own test suite
+   - Breaking changes in one should not cascade to the other
+
+### File Organization
+
+```
+/home/avice/scripts/avice_wa_review/
+├── avice_wa_review.py              # Main analysis tool
+├── avice_wa_review_launcher.csh    # Tool launcher
+├── architecture.mdc                # Shared architecture rules
+├── README_avice_wa_review.md       # Tool documentation
+├── presentation/                   # Tool presentation materials
+│   ├── AGUR_PRESENTATION_SLIDES.html
+│   ├── PRESENTATION_README.md
+│   └── ...
+├── sections/                       # Tool analysis sections
+├── html/                          # Tool test outputs (gitignored)
+│
+└── agur_release_tracking/         # SEPARATE UTILITY
+    ├── run_agur_regression.sh     # Regression framework
+    ├── README_AGUR_TRACKING.md    # Framework documentation
+    ├── sections/                  # Framework-specific code
+    └── ...                        # Framework files
+```
+
+### When to Modify Each Utility
+
+**Modify avice_wa_review when:**
+- Adding new workarea analysis features (e.g., new timing metrics)
+- Improving HTML report generation for single workareas
+- Fixing bugs in metric extraction
+- Enhancing terminal output formatting
+- Adding new flow stages (synthesis, PnR, PT, etc.)
+
+**Modify AGUR_RELEASE_TRACKING when:**
+- Adding new regression types (formal, timing, etc.)
+- Improving batch processing logic
+- Enhancing dashboard generation
+- Adding new chiplet/unit support
+- Improving parallel execution
+- Changing release metadata extraction
+
+### Example Usage Patterns
+
+**avice_wa_review (Direct Usage)**
+```bash
+# Analyze one workarea - get detailed report
+/home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea
+```
+
+**AGUR_RELEASE_TRACKING (Batch Usage)**
+```bash
+# Run formal regression on all CPORT units (calls avice_wa_review 5 times)
+cd agur_release_tracking
+./run_agur_regression.sh -t formal -c CPORT -j auto
+
+# Internally, this runs:
+# /home/avice/scripts/avice_wa_review_launcher.csh /path/to/prt_workarea -s formal
+# /home/avice/scripts/avice_wa_review_launcher.csh /path/to/pmux_workarea -s formal
+# /home/avice/scripts/avice_wa_review_launcher.csh /path/to/fdb_workarea -s formal
+# ... (and parses results into aggregate dashboard)
+```
+
+### Documentation Separation
+
+- **avice_wa_review documentation**: Root README, presentation/ folder
+- **AGUR_RELEASE_TRACKING documentation**: agur_release_tracking/README_AGUR_TRACKING.md
+- **Shared architecture rules**: This file (architecture.mdc)
+
+### Key Takeaway
+
+**AGUR_RELEASE_TRACKING is a CONSUMER of avice_wa_review capabilities, NOT part of its implementation.**
+
+Think of it like:
+- `avice_wa_review` = `grep` command (analyzes text)
+- `AGUR_RELEASE_TRACKING` = Script that calls `grep` 100 times (batch analysis)
+
+They are separate tools that happen to live in the same repository for convenience, but they remain architecturally independent.
 
 ## Testing and Validation Standards
 

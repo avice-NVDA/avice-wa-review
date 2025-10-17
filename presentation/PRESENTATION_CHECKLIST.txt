@@ -1,0 +1,342 @@
+================================================================================
+                    PRESENTATION DAY CHECKLIST
+                    Avice Workarea Review Tool
+                    Agur Project Weekly Meeting
+================================================================================
+
+PRESENTER: Alon Vice (avice)
+DATE: October 16, 2025
+DURATION: 25 minutes (core) + 5 minutes Q&A
+AUDIENCE: Agur physical designers
+
+================================================================================
+PRE-PRESENTATION SETUP (30 minutes before meeting)
+================================================================================
+
+[ ] 1. TEST DEMO WORKAREA ACCESS
+    cd /home/scratch.ykatzav_vlsi/agur/prt/
+    ls -ld prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap
+    
+    If not accessible, use backup:
+    /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10
+
+[ ] 2. CLEAN UP OLD HTML FILES
+    cd /home/avice/scripts/avice_wa_review
+    mv *.html html/ 2>/dev/null
+    
+[ ] 3. SET ENVIRONMENT VARIABLES
+    export DEMO_WA="/home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap"
+    export DEMO_WA_BACKUP="/home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10"
+
+[ ] 4. TEST DEMO COMMANDS (dry run)
+    # Quick test
+    /home/avice/scripts/avice_wa_review_launcher.csh $DEMO_WA -s setup
+    
+    # Full test (optional - to generate fresh HTML)
+    /home/avice/scripts/avice_wa_review_launcher.csh $DEMO_WA -s runtime pt
+    
+[ ] 5. VERIFY FIREFOX AVAILABILITY
+    /home/utils/firefox-118.0.1/firefox --version
+    # Should show: Mozilla Firefox 118.0.1
+    
+[ ] 6. OPEN PRESENTATION FILES IN BROWSER
+    /home/utils/firefox-118.0.1/firefox \
+      /home/avice/scripts/avice_wa_review/agur_release_tracking/AGUR_PRESENTATION_SLIDES.html &
+    
+    Test keyboard navigation (arrow keys, space bar)
+
+[ ] 7. PREPARE TERMINAL WINDOW
+    - Increase font size (for visibility)
+    - Clear history: clear
+    - Position on left side of screen
+    - Browser on right side for split screen
+
+[ ] 8. PRINT/OPEN REFERENCE DOCUMENTS
+    - PRESENTATION_QUICK_REF.txt (for quick lookups)
+    - PRESENTATION_QA_BACKUP.md (for Q&A)
+    - This checklist
+
+[ ] 9. PREPARE BACKUP PLAN
+    - Have pre-generated HTML ready in html/ folder
+    - Know backup workarea path
+    - Have slides ready in Firefox
+    
+[ ] 10. FINAL CHECKS
+     - Terminal font is readable
+     - Browser zoom level is appropriate
+     - All windows positioned correctly
+     - Presentation slides load properly
+     - Quick ref document is open
+
+================================================================================
+PRESENTATION MATERIALS CHECKLIST
+================================================================================
+
+[ ] AGUR_PRESENTATION_avice_wa_review.md
+    - Full presentation script (13 slides)
+    - Detailed talking points
+    - Demo commands
+    - Timing breakdown
+
+[ ] AGUR_PRESENTATION_SLIDES.html
+    - Interactive HTML slides
+    - Professional styling
+    - Keyboard navigation
+    - Ready to present
+
+[ ] PRESENTATION_QUICK_REF.txt
+    - One-page reference card
+    - Demo commands ready to copy-paste
+    - Key talking points
+    - Expected Q&A
+
+[ ] PRESENTATION_QA_BACKUP.md
+    - Detailed Q&A responses
+    - Troubleshooting tips
+    - Technical details
+    - Future roadmap
+
+[ ] This checklist (PRESENTATION_CHECKLIST.txt)
+
+================================================================================
+DURING PRESENTATION - FLOW
+================================================================================
+
+00:00-01:00  [ ] Slide 1: Title & Introduction
+             - Introduce yourself
+             - State the problem this tool solves
+
+01:00-03:00  [ ] Slide 2: Why This Tool?
+             - Pain points of manual checking
+             - Solution overview
+
+03:00-05:00  [ ] Slide 3: Tool Overview
+             - Show 13 sections
+             - Explain scope
+
+05:00-08:00  [ ] Slide 4: How to Use It
+             - Show basic commands
+             - Explain launcher vs direct Python
+
+08:00-13:00  [ ] Slide 5-6: LIVE DEMO
+             - Terminal demo (5 min)
+             - HTML report demo (3 min)
+             - Keep it moving!
+
+13:00-16:00  [ ] Slide 7: Advantages
+             - Emphasize time savings
+             - Comprehensive coverage
+             - Professional reports
+
+16:00-19:00  [ ] Slide 8: Disadvantages [CRITICAL]
+             - Directory structure knowledge loss
+             - File location amnesia
+             - Emphasize: Learn structure FIRST, tool SECOND
+
+19:00-22:00  [ ] Slide 9: Known Bugs [BE HONEST]
+             - Formal status bug
+             - Show real example
+             - Workaround and fix timeline
+
+22:00-24:00  [ ] Slide 10-11: Best Practices
+             - When to use tool
+             - When NOT to use tool
+             - Recommended workflow
+
+24:00-25:00  [ ] Slide 12-13: Examples & Summary
+             - Real-world use cases
+             - Key takeaways
+             - Call to action
+
+25:00+       [ ] Q&A Session
+             - Use PRESENTATION_QA_BACKUP.md for detailed answers
+             - Be transparent and honest
+             - Encourage feedback
+
+================================================================================
+DEMO COMMANDS - READY TO PASTE
+================================================================================
+
+# Setup
+cd /home/avice/scripts/avice_wa_review
+export DEMO_WA="/home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap"
+
+# Demo 1: Show help (brief)
+/home/avice/scripts/avice_wa_review_launcher.csh --help | head -30
+
+# Demo 2: Quick analysis (THIS IS THE MAIN DEMO)
+/home/avice/scripts/avice_wa_review_launcher.csh $DEMO_WA -s runtime pt formal
+
+# Demo 3: Open HTML
+/home/utils/firefox-118.0.1/firefox avice_runtime_report_*.html &
+
+# Demo 4: Show formal bug
+cd $DEMO_WA/formal_flow/
+ls -la
+cat */logs/*.log | grep -i "inconclusive\|proven" | head -20
+
+# Cleanup
+cd /home/avice/scripts/avice_wa_review
+mv *.html html/
+
+================================================================================
+KEY MESSAGES TO EMPHASIZE (write on whiteboard or repeat)
+================================================================================
+
+1. ONE COMMAND = COMPLETE ANALYSIS
+   (Saves 30+ minutes of manual checking)
+
+2. LEARN STRUCTURE FIRST, TOOL SECOND
+   (Don't lose touch with workarea organization)
+
+3. FORMAL STATUS: ALWAYS VERIFY MANUALLY
+   (Known bug - fix in progress)
+
+4. TOOL IS YOUR ASSISTANT, NOT REPLACEMENT
+   (Balance efficiency with manual expertise)
+
+5. FEEDBACK WELCOME
+   (Contact avice@nvidia.com for bugs/features)
+
+================================================================================
+IF SOMETHING GOES WRONG - BACKUP PLANS
+================================================================================
+
+SCENARIO 1: Demo workarea not accessible
+SOLUTION: Use backup workarea
+          export DEMO_WA="$DEMO_WA_BACKUP"
+          Re-run commands
+
+SCENARIO 2: Command hangs or errors
+SOLUTION: Ctrl+C to cancel
+          Show pre-generated HTML from html/ folder
+          Continue with slides
+
+SCENARIO 3: Firefox won't open
+SOLUTION: Use alternative: firefox (generic)
+          Or show HTML source in terminal: less *.html
+          Or skip to next slide and continue
+
+SCENARIO 4: Terminal output garbled
+SOLUTION: Run 'reset' command
+          Use --no-logo flag to simplify output
+          Reduce sections: -s setup only
+
+SCENARIO 5: Audience wants to see specific section
+SOLUTION: Run on-the-fly:
+          /home/avice/scripts/avice_wa_review_launcher.csh $DEMO_WA -s [section]
+          Examples: pv, gl-check, eco
+
+SCENARIO 6: Running out of time
+SOLUTION: Skip slides 11-12 (examples)
+          Go straight to summary (slide 13)
+          Open for Q&A
+
+SCENARIO 7: Too much time remaining
+SOLUTION: Show additional features:
+          - Master dashboard
+          - AGUR release tracking (backup slides)
+          - More detailed HTML features
+
+================================================================================
+POST-PRESENTATION TASKS
+================================================================================
+
+[ ] Send follow-up email with:
+    - Link to tool location
+    - Basic usage examples
+    - HTML slides (if requested)
+    - Contact info for questions
+
+[ ] Collect feedback:
+    - What features are most useful?
+    - What's missing?
+    - Any bugs discovered?
+
+[ ] Document issues raised:
+    - Add to bug tracker
+    - Prioritize feature requests
+
+[ ] Clean up demo files:
+    cd /home/avice/scripts/avice_wa_review
+    mv *.html html/
+
+[ ] Update documentation if needed:
+    - Based on questions asked
+    - Based on confusion points
+
+================================================================================
+CONFIDENCE BOOSTERS
+================================================================================
+
+YOU'VE GOT THIS! Remember:
+
+✓ You know this tool inside and out
+✓ You've tested the demo commands
+✓ You have backup plans for everything
+✓ The slides are professional and clear
+✓ You're being honest about limitations
+✓ The tool genuinely helps the team
+
+PRESENTATION TIPS:
+- Speak clearly and not too fast
+- Make eye contact with audience
+- Pause after key points
+- Ask "Any questions so far?" periodically
+- Show enthusiasm - you built something useful!
+- Be transparent about bugs (builds trust)
+- Encourage questions and feedback
+
+WORST CASE SCENARIO:
+If demo completely fails, you can still:
+- Walk through slides
+- Explain concepts verbally
+- Show HTML screenshots
+- Schedule follow-up demo
+
+The content is strong. The tool is useful. You'll do great!
+
+================================================================================
+TIMING REMINDERS
+================================================================================
+
+5 minutes in:   Should be at Slide 3 (Tool Overview)
+10 minutes in:  Should be starting Demo (Slide 5)
+15 minutes in:  Should be at Advantages (Slide 7)
+20 minutes in:  Should be at Best Practices (Slide 10)
+24 minutes in:  Should be at Summary (Slide 13)
+25+ minutes:    Q&A
+
+If running behind: Skip slides 11-12 (examples)
+If running ahead: Add more demo examples, show master dashboard
+
+================================================================================
+FINAL PRE-FLIGHT CHECK (2 minutes before start)
+================================================================================
+
+[ ] Terminal window visible and positioned
+[ ] Browser with slides ready
+[ ] DEMO_WA environment variable set
+[ ] Quick ref document visible
+[ ] Font sizes appropriate for audience
+[ ] Phone on silent
+[ ] Water bottle nearby
+[ ] Deep breath - YOU'VE GOT THIS!
+
+================================================================================
+
+Good luck with your presentation, Sir avice!
+
+The physical designers will appreciate:
+- Your honesty about limitations
+- The time-saving utility you've built
+- The professional HTML reports
+- Your transparency about bugs
+
+Remember: The goal is to help the team work more efficiently while
+maintaining their core skills. Balance is key.
+
+You've prepared thoroughly. Trust your preparation and enjoy presenting!
+
+================================================================================
+

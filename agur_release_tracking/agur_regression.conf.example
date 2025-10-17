@@ -1,0 +1,35 @@
+# AGUR Regression Configuration File
+# 
+# This configuration file allows customization of paths and settings
+# for the run_agur_regression.sh script.
+#
+# Usage: ./run_agur_regression.sh --config agur_regression.conf
+#
+# Lines starting with # are comments and will be ignored.
+# Format: KEY=VALUE (no spaces around =)
+
+# Python executable path
+# Default: /home/utils/Python/builds/3.11.9-20250715/bin/python3
+PYTHON_BIN=/home/utils/Python/builds/3.11.9-20250715/bin/python3
+
+# Avice workarea review script path
+# Default: /home/avice/scripts/avice_wa_review/avice_wa_review.py
+AVICE_SCRIPT=/home/avice/scripts/avice_wa_review/avice_wa_review.py
+
+# Units table file path
+# Default: $SCRIPT_DIR/AGUR_UNITS_TABLE.txt
+#UNITS_TABLE=/path/to/custom/AGUR_UNITS_TABLE.txt
+
+# Default number of parallel jobs
+# Default: 1 (sequential execution)
+# Set to higher value for parallel execution, or use -j option at runtime
+PARALLEL_JOBS=4
+
+# Maximum number of retries for failed analyses
+# Default: 2
+#MAX_RETRIES=2
+
+# Delay between retries (in seconds)
+# Default: 5
+#RETRY_DELAY=5
+

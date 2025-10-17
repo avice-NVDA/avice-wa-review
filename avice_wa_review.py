@@ -21,144 +21,196 @@ Description:
     covering the complete ASIC design flow from synthesis through signoff.
     It extracts, analyzes, and visualizes design metrics, timing data, runtime
     statistics, verification results, and generates interactive HTML reports.
-    
-    Key Features:
-    - Multi-IPO support with automatic IPO detection
-    - Selective section analysis for faster debugging
-    - Professional HTML reports with absolute paths for portability
-    - Runtime analysis with timeline tracking and flow detection
-    - Timing analysis with dual-scenario (setup/hold) extraction
-    - DSR Mux Clock Skew tracking across work directories
-    - ECO analysis with dont_use cell validation
-    - Formal verification timestamp tracking
-    - Physical verification (LVS/DRC/Antenna) flow analysis
-    - GL Check error categorization and analysis
-    - Cross-directory execution support
 
-Analysis Sections:
-    Setup           - Environment info, BeFlow config, PRC configuration
-    Runtime         - DC, PnR, Star, PT, Formal, PV, GL Check runtimes
-    Synthesis       - QoR reports, floorplan dimensions, timing groups
-    PnR             - Step sequence, routing data, timing histograms
-    Clock           - Clock tree analysis, DSR latency, clock gating
-    Formal          - Formal verification status, timestamp tracking
-    Star            - Parasitic extraction (SPEF) runtime and status
-    PT              - Signoff timing, dual-scenario WNS/TNS/NVP, DSR skew
-    PV              - Physical verification (LVS/DRC/Antenna) analysis
-    GL-Check        - Gate-level check error analysis and categorization
-    ECO             - PT-ECO and NV Gate ECO analysis, dont_use cell checks
-    NV-Gate-ECO     - NVIDIA Gate ECO command analysis and validation
-    Block-Release   - Block release information and umake commands
+===============================================================================
+                           KEY FEATURES
+===============================================================================
+  - Multi-IPO support with automatic IPO detection
+  - Selective section analysis for faster debugging (-s flag)
+  - Professional HTML reports with absolute paths for portability
+  - Runtime analysis with timeline tracking and flow detection
+  - Dual-scenario timing analysis (setup/hold) with DSR skew tracking
+  - ECO analysis with dont_use cell validation
+  - Formal verification timestamp tracking
+  - Physical verification (LVS/DRC/Antenna) flow analysis
+  - GL Check error categorization and analysis
+  - Cross-directory execution support
 
-Usage:
-    # Recommended: Use C-shell launcher (handles Python path automatically)
-    /home/avice/scripts/avice_wa_review_launcher.csh <workarea_path> [ipo_name] [options]
-    
-    # Direct Python invocation (requires correct Python version)
-    /home/utils/Python/builds/3.11.9-20250715/bin/python3 avice_wa_review.py <workarea_path> [ipo_name] [options]
-    
-    # Display help and examples
+===============================================================================
+                         ANALYSIS SECTIONS
+===============================================================================
+  Section         | Description
+  --------------- | --------------------------------------------------------
+  setup           | Environment, BeFlow config, PRC configuration
+  runtime         | Flow runtimes (DC, PnR, Star, PT, Formal, PV, GL Check)
+  synthesis       | QoR reports, floorplan dimensions, timing groups
+  pnr             | Step sequence, routing data, timing histograms
+  clock           | Clock tree analysis, DSR latency, clock gating
+  formal          | Formal verification status, timestamp tracking
+  star            | Parasitic extraction (SPEF) runtime and status
+  pt              | Signoff timing, dual-scenario WNS/TNS/NVP, DSR skew
+  pv              | Physical verification (LVS/DRC/Antenna) analysis
+  gl-check        | Gate-level check error analysis and categorization
+  eco             | PT-ECO and NV Gate ECO analysis
+  nv-gate-eco     | NVIDIA Gate ECO command analysis and validation
+  block-release   | Block release information and umake commands
+
+===============================================================================
+                            BASIC USAGE
+===============================================================================
+  RECOMMENDED (C-shell launcher - handles Python path automatically):
+    /home/avice/scripts/avice_wa_review_launcher.csh <workarea_path> [ipo_name]
+
+  DIRECT PYTHON (requires correct Python version):
+    /home/utils/Python/builds/3.11.9-20250715/bin/python3 avice_wa_review.py <workarea_path>
+
+  HELP:
     /home/avice/scripts/avice_wa_review_launcher.csh --help
 
-Arguments:
-    workarea_path         Path to the workarea directory to analyze (required unless --unit is used)
-    ipo_name              IPO name to analyze (optional, auto-detected if not specified)
-    
-Options:
-    -u, --unit UNIT       Unit name from agur release table (e.g., prt, pmux, fdb, fth, lnd)
-                          Automatically looks up released workarea path from AGUR_UNITS_TABLE.txt
-                          Use this instead of providing workarea_path
-    
+===============================================================================
+                            ARGUMENTS
+===============================================================================
+  POSITIONAL:
+    workarea_path         Path to workarea directory (required unless -u/--unit used)
+    ipo_name              IPO name to analyze (optional, auto-detected if omitted)
+
+===============================================================================
+                             OPTIONS
+===============================================================================
+  WORKAREA SELECTION:
+    -u, --unit UNIT       Use unit name from AGUR release table (e.g., prt, pmux)
+                          Automatically looks up workarea path
+                          Example: -u prt, -u pmux, -u fdb
+
+  SECTION SELECTION:
     -s, --sections SECTION [SECTION ...]
-                          Run only specific analysis sections (case-insensitive)
-                          Available: setup, runtime, synthesis, pnr, clock, formal, 
-                                    star, pt, pv, gl-check, eco, nv-gate-eco, block-release
-                          Aliases: 'syn'/'dc' = synthesis, 'star' = parasitic, 'pt' = timing
-    
-    --no-logo             Disable ASCII logo display (useful for automated scripts)
-    --skip-validation     Skip workarea validation checks (use with caution)
-    --verbose, -v         Enable verbose output with detailed information
-    --output, -o FILE     Save results to output file (not yet fully implemented)
-    --format FORMAT       Output format: text or json (default: text)
-    --version             Show version information and exit
-    
-Documentation Options:
+                          Run only specific sections (faster than full analysis)
+                          Available: setup, runtime, synthesis, pnr, clock, formal,
+                                     star, pt, pv, gl-check, eco, nv-gate-eco, block-release
+                          Aliases: syn/dc = synthesis, star = parasitic, pt = timing
+                          Example: -s runtime pt formal
+
+  DISPLAY OPTIONS:
+    --no-logo             Disable ASCII logo (useful for scripts/automation)
+    --show-size           Calculate workarea size (may be slow for large dirs)
+    -v, --verbose         Enable detailed verbose output
+
+  ADVANCED:
+    --skip-validation     Skip workarea validation (use with caution)
+    --version             Show version and exit
+
+  DOCUMENTATION:
     --help-docs           Display formatted documentation in terminal
-    --open-docs           Generate HTML documentation and open in browser
+    --open-docs           Generate HTML docs and open in browser
     --generate-pdf        Generate PDF documentation
-    --docs-section SECTION
-                          Specific documentation section: usage, examples, 
-                          troubleshooting, organization, or all (default: all)
+    --docs-section SEC    Show specific section: usage, examples, troubleshooting
 
-Prerequisites:
-    - Python 3.6 or higher (recommended: Python 3.11.9)
-    - Access to workarea directory with proper read permissions
-    - Unix/Linux environment with standard tools (grep, zcat)
-    - Design flow tools output files (DC, Innovus, PrimeTime, Star, etc.)
-    - Firefox browser for viewing HTML reports
+===============================================================================
+                          PREREQUISITES
+===============================================================================
+  - Python 3.6+ (recommended: Python 3.11.9)
+  - Read permissions to workarea directory
+  - Unix/Linux environment with standard tools (grep, zcat, du)
+  - Design flow output files (DC, Innovus, PrimeTime, Star, etc.)
+  - Firefox 118+ for viewing HTML reports (/home/utils/firefox-118.0.1/firefox)
 
-Output:
-    Terminal Output:
-    - Color-coded analysis results with ASCII characters only
-    - Compact summary tables for quick review
+===============================================================================
+                             OUTPUT
+===============================================================================
+  TERMINAL OUTPUT:
+    - Color-coded results with ASCII characters only (Unix-safe)
+    - Compact tables for quick scanning
     - Status indicators: [OK], [ERROR], [WARN], [SKIP]
-    - Minimal line count for easy scanning
-    
-    HTML Reports (generated in current working directory):
+    - Minimal line count for readability
+
+  HTML REPORTS (saved in current working directory):
+    - avice_MASTER_dashboard_<design>_<timestamp>.html
     - avice_runtime_report_<design>_<timestamp>.html
-    - avice_pnr_data_<design>_<ipo>_<timestamp>.html
-    - avice_timing_summary_<design>_<ipo>_<timestamp>.html
+    - avice_PnR_comprehensive_<design>_<ipo>_<timestamp>.html
+    - avice_DC_comprehensive_<design>_<timestamp>.html
+    - avice_PT_timing_summary_<design>_<timestamp>.html
     - avice_gl_check_<design>_<ipo>_<timestamp>.html
-    - avice_image_debug_report_<design>_<timestamp>.html
-    
-    HTML Features:
+
+  HTML FEATURES:
     - Comprehensive data beyond terminal output
-    - Clickable log file links with absolute paths
-    - Interactive tables with sorting and filtering
+    - Clickable log links with absolute paths (portable!)
+    - Interactive tables with sorting/filtering
     - Expandable/collapsible sections
     - Timeline visualizations
-    - Professional CSS styling with gradients
+    - Professional CSS styling
     - Mobile-responsive layout
-    - Portable across directories (uses absolute paths)
+    - Works from any directory (absolute paths)
 
-Examples:
-    # Complete workarea analysis (all sections)
-    /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea
-    
+===============================================================================
+                             EXAMPLES
+===============================================================================
+  BASIC ANALYSIS:
+    # Full analysis (all 13 sections)
+    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea
+
     # Analyze specific IPO
-    /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea ipo1000
-    
-    # Analyze using unit name from agur release table (automatic workarea lookup)
-    /home/avice/scripts/avice_wa_review_launcher.csh --unit prt
-    /home/avice/scripts/avice_wa_review_launcher.csh --unit pmux
-    
-    # Run only runtime and timing analysis (fast debug)
-    /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea -s runtime pt
-    
-    # Run only parasitic extraction and signoff timing sections
-    /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea -s star pt
-    
-    # Run setup, synthesis, and PnR sections
-    /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea -s setup synthesis pnr
-    
-    # Run with no logo for automation
-    /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea --no-logo
-    
-    # Display documentation
+    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea ipo1000
+
+  AGUR UNIT ANALYSIS (automatic workarea lookup):
+    /home/avice/scripts/avice_wa_review_launcher.csh -u prt
+    /home/avice/scripts/avice_wa_review_launcher.csh -u pmux
+    /home/avice/scripts/avice_wa_review_launcher.csh -u fdb
+
+  SELECTIVE SECTION ANALYSIS (faster):
+    # Quick timing check
+    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s runtime pt
+
+    # Pre-release check
+    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s formal pt pv gl-check
+
+    # Synthesis and PnR only
+    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s setup synthesis pnr
+
+  AUTOMATION:
+    # No logo for scripts
+    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea --no-logo
+
+    # With workarea size calculation
+    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea --show-size
+
+  DOCUMENTATION:
     /home/avice/scripts/avice_wa_review_launcher.csh --help-docs
     /home/avice/scripts/avice_wa_review_launcher.csh --open-docs
 
-Important Notes:
-    - This script outputs to Unix shells - always use ASCII characters
-      instead of Unicode symbols (→, ✓, ✗, ⚠, •) to ensure proper display
-    - Use ASCII equivalents: ->, [OK], [ERROR], [WARN], - instead
-    - HTML reports are generated in current working directory, not the workarea
-    - All file links in HTML use absolute paths for portability
-    - Test HTML portability by copying to different directories
-    - For tablog viewer integration, use the copy-to-clipboard feature in HTML
+===============================================================================
+                          IMPORTANT NOTES
+===============================================================================
+  [!] IPO Directory Handling:
+      - Tool auto-resolves if IPO from .prc file doesn't exist
+      - Users sometimes delete IPO dirs to save disk space
+      - Tool will scan for available IPOs and use first found
 
-Contact:
-    For questions, bug reports, or feature requests, contact: avice@nvidia.com
+  [!] Output Compatibility:
+      - Terminal output uses ASCII-only characters (Unix-safe)
+      - No Unicode symbols (no arrows, checkmarks, bullets)
+      - Use: ->, [OK], [ERROR], [WARN] instead
+
+  [!] HTML Reports:
+      - Generated in CURRENT working directory (not workarea)
+      - All file links use absolute paths (portable across dirs)
+      - Can copy HTML anywhere and links still work
+
+  [!] Performance:
+      - Use -s flag for selective analysis (much faster)
+      - --show-size may be slow for large workareas (use only when needed)
+      - Full analysis takes 30-60 seconds
+
+  [!] Known Issues:
+      - Formal status may show "SUCCEEDED" when actually "INCONCLUSIVE"
+      - Always manually verify formal logs for critical releases
+
+===============================================================================
+                            CONTACT
+===============================================================================
+  For questions, bug reports, or feature requests:
+    Email: avice@nvidia.com
+    Project: Avice Workarea Review Tool v2.0
+===============================================================================
 """
 
 import os
@@ -703,13 +755,13 @@ class MasterDashboard:
             background: white;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            padding: 25px;
+            padding: 20px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             border-left: 5px solid #667eea;
             position: relative;
             min-width: 0;
             max-width: 100%;
-            overflow: hidden;
+            overflow: visible;
         }}
         
         .section-card:hover {{
@@ -783,7 +835,8 @@ class MasterDashboard:
         }}
         
         .card-content.expanded {{
-            max-height: 1000px;
+            max-height: 2000px;
+            overflow: visible;
         }}
         
         .section-index {{
@@ -826,17 +879,21 @@ class MasterDashboard:
         /* Enhanced Grid Layout for Section Metrics */
         .section-metrics {{
             margin: 15px 0;
-            padding: 15px;
+            padding: 10px;
             background: #f8f9fa;
             border-radius: 8px;
             display: grid;
-            gap: 10px;
+            gap: 6px;
+            overflow: visible;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
         }}
         
         .metric-row {{
             display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 20px;
+            grid-template-columns: auto 1fr;
+            gap: 12px;
             align-items: center;
             padding: 8px 0;
             border-bottom: 1px solid #dee2e6;
@@ -850,11 +907,87 @@ class MasterDashboard:
             color: #7f8c8d;
             font-weight: 600;
             text-align: left;
+            min-width: 0;
         }}
         
         .metric-value {{
             color: #2c3e50;
             font-weight: bold;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            text-align: right;
+        }}
+        
+        /* Special styling for formal flow rows */
+        .formal-flow-row {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 2px;
+            border-bottom: 1px solid #dee2e6;
+            gap: 6px;
+            width: 100%;
+            box-sizing: border-box;
+        }}
+        
+        .formal-flow-row:last-child {{
+            border-bottom: none;
+        }}
+        
+        .formal-flow-row .metric-label {{
+            flex: 1 1 auto;
+            font-size: 0.85em;
+            color: #2c3e50;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }}
+        
+        .formal-flow-status {{
+            flex: 0 0 auto;
+            text-align: center;
+            font-weight: bold;
+            transition: transform 0.2s ease;
+            white-space: nowrap;
+            line-height: 1.2;
+        }}
+        
+        .formal-flow-status:hover {{
+            transform: scale(1.05);
+        }}
+        
+        /* Special styling for block release metric rows */
+        .release-metric-row {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 4px;
+            border-bottom: 1px solid #dee2e6;
+            gap: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }}
+        
+        .release-metric-row:last-child {{
+            border-bottom: none;
+        }}
+        
+        .release-metric-row .metric-label {{
+            flex: 0 0 auto;
+            font-size: 0.9em;
+            color: #2c3e50;
+            white-space: nowrap;
+        }}
+        
+        .release-metric-row .metric-value {{
+            flex: 1 1 auto;
+            font-size: 0.9em;
+            color: #34495e;
+            text-align: right;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }}
         
         .section-issues {{
@@ -1213,11 +1346,82 @@ class MasterDashboard:
     def _generate_section_card(self, section: SectionSummary, index: int) -> str:
         """Generate HTML for a single section card"""
         
-        # Generate metrics HTML
+        # Generate metrics HTML with special handling for formal verification and block release
         metrics_html = ""
         if section.key_metrics:
+            # Check if this is formal verification or block release section
+            is_formal = section.section_id == "formal"
+            is_block_release = section.section_id == "block-release"
+            
             for label, value in section.key_metrics.items():
-                metrics_html += f"""
+                # Special rendering for block release (skip Design for normal rendering)
+                if is_block_release and label != "Design":
+                    # Determine icon based on label
+                    icon = ""
+                    if label == "Total Attempts" or label == "Successful" or label == "Failed":
+                        icon = "📊"
+                    elif label == "Custom Links":
+                        icon = "🔗"
+                    elif label == "Latest Success":
+                        icon = "📅"
+                    elif label == "Release Name":
+                        icon = "📦"
+                    
+                    # Create a styled row for block release metrics with icons
+                    metrics_html += f"""
+                <div class="metric-row release-metric-row">
+                    <span class="metric-label"><strong>{icon} {label}</strong></span>
+                    <span class="metric-value">{value}</span>
+                </div>
+"""
+                # Special rendering for formal flows (skip Design and RTL Tag for special rendering)
+                elif is_formal and label not in ["Design", "RTL Tag"]:
+                    # Parse status from value string (e.g., "SUCCEEDED (0.5h)" or "UNRESOLVED (1.2h)")
+                    status_badge = ""
+                    status_color = "#95a5a6"  # default gray
+                    display_value = value
+                    
+                    # Shorten "hours" to "h" for more compact display
+                    display_value = display_value.replace(" hours", "h").replace(" hour", "h")
+                    
+                    if "SUCCEEDED" in value or "PASS" in value:
+                        status_badge = "PASS"
+                        status_color = "#27ae60"  # green
+                        # Make even more compact: show as checkmark + time
+                        display_value = f"✓ " + display_value.replace("SUCCEEDED ", "")
+                    elif "FAILED" in value or "CRASHED" in value:
+                        status_badge = "FAIL"
+                        status_color = "#e74c3c"  # red
+                        display_value = f"✗ " + display_value.replace("FAILED ", "").replace("CRASHED ", "")
+                    elif "UNRESOLVED" in value:
+                        status_badge = "UNRESOLVED"
+                        status_color = "#f39c12"  # orange
+                        display_value = f"⚠ " + display_value.replace("UNRESOLVED ", "")
+                    elif "RUNNING" in value:
+                        status_badge = "RUNNING"
+                        status_color = "#17a2b8"  # blue
+                        display_value = f"⏳ " + display_value.replace("RUNNING ", "")
+                    
+                    # Create a styled row for formal flows with status badge
+                    metrics_html += f"""
+                <div class="metric-row formal-flow-row">
+                    <span class="metric-label" title="{label}">{label}</span>
+                    <span class="formal-flow-status" style="background-color: {status_color}; color: white; padding: 3px 6px; border-radius: 8px; font-size: 0.75em; font-weight: bold;">{display_value}</span>
+                </div>
+"""
+                else:
+                    # Normal rendering for non-formal sections or Design/RTL Tag
+                    # Add title tooltip for long values and apply truncation for RTL Tag
+                    if is_formal and label == "RTL Tag":
+                        # Special handling for long RTL tags - truncate with ellipsis
+                        metrics_html += f"""
+                <div class="metric-row">
+                    <span class="metric-label">{label}:</span>
+                    <span class="metric-value" style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{value}">{value}</span>
+                </div>
+"""
+                    else:
+                        metrics_html += f"""
                 <div class="metric-row">
                     <span class="metric-label">{label}:</span>
                     <span class="metric-value">{value}</span>
@@ -1381,11 +1585,12 @@ class FileUtils:
 class WorkareaReviewer:
     """Main class for workarea review"""
     
-    def __init__(self, workarea: str, ipo: Optional[str] = None, show_logo: bool = True, skip_validation: bool = False):
+    def __init__(self, workarea: str, ipo: Optional[str] = None, show_logo: bool = True, skip_validation: bool = False, show_size: bool = False):
         self.workarea = workarea
         self.workarea_abs = os.path.abspath(workarea)  # Absolute path for display
         self.ipo = ipo
         self.show_logo = show_logo
+        self.show_size = show_size
         self.file_utils = FileUtils()
         self.lvs_parser = LVSViolationParser()
         
@@ -1861,7 +2066,7 @@ class WorkareaReviewer:
                         break
                 
                 if html_file and os.path.exists(html_file):
-                    print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{os.path.basename(html_file)}{Color.RESET} &")
+                    print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{os.path.basename(html_file)}{Color.RESET} &")
                     return os.path.abspath(html_file)
                 else:
                     print(f"  HTML report generated successfully")
@@ -1964,23 +2169,28 @@ class WorkareaReviewer:
                 print(f"\n  All values in nanoseconds (ns)")
                 print(f"  {Color.RED}Note: Max latency values > 550ps (0.55ns) are highlighted in red{Color.RESET}")
                 
-                # Return the maximum latency found across all clocks
+                # Build clock data dictionary for return
+                clock_dict = {}
                 max_latencies = []
                 for data in clock_data:
                     try:
-                        max_latencies.append(float(data['max_delay']))
+                        max_delay_ps = float(data['max_delay']) * 1000  # Convert ns to ps
+                        skew_ps = float(data['global_skew']) * 1000  # Convert ns to ps
+                        clock_dict[data['clock']] = (max_delay_ps, skew_ps)
+                        max_latencies.append(max_delay_ps)
                     except (ValueError, TypeError):
                         pass
+                
                 if max_latencies:
-                    return max(max_latencies) * 1000  # Convert to ps
+                    return max(max_latencies), clock_dict
             else:
                 print(f"  Scenario {target_scenario} not found in clock tree report")
             
-            return 0
+            return 0, {}
                 
         except (OSError, UnicodeDecodeError, gzip.BadGzipFile) as e:
             print(f"  Error reading clock file: {e}")
-            return 0
+            return 0, {}
     
     def _extract_pt_clock_latency(self, pt_clock_file: str):
         """Extract min and max total clock latency per clock from PT clock latency report"""
@@ -2041,21 +2251,26 @@ class WorkareaReviewer:
                 print(f"\n  All values in nanoseconds (ns)")
                 print(f"  {Color.RED}Note: Max latency values > 550ps (0.55ns) are highlighted in red{Color.RESET}")
                 
-                # Return the maximum latency found across all clocks
+                # Build clock data dictionary for return
+                clock_dict = {}
                 max_latencies = []
                 for clock, latencies in clock_latencies.items():
                     if latencies:
-                        max_latencies.append(max(latencies))
+                        max_latency = max(latencies)
+                        max_latency_ps = max_latency * 1000  # Convert ns to ps
+                        clock_dict[clock] = (max_latency_ps, 0.0)  # PT doesn't provide skew
+                        max_latencies.append(max_latency_ps)
+                
                 if max_latencies:
-                    return max(max_latencies) * 1000  # Convert to ps
+                    return max(max_latencies), clock_dict
             else:
                 print(f"  No clock latency data found in PT report")
             
-            return 0
+            return 0, {}
                 
         except (OSError, UnicodeDecodeError) as e:
             print(f"  Error reading PT clock file: {e}")
-            return 0
+            return 0, {}
     
     def _extract_formal_verification_status(self, log_file: str) -> tuple:
         """Extract verification status and runtime from formal verification log
@@ -2323,6 +2538,53 @@ class WorkareaReviewer:
         except Exception as e:
             return None  # Return None if extraction fails
     
+    def _resolve_ipo_directory(self, top_hier: str, expected_ipo: str) -> str:
+        """
+        Check if IPO directory exists and resolve to an available IPO if needed.
+        Users sometimes delete IPO directories to save disk space.
+        
+        Args:
+            top_hier: Top hierarchy name
+            expected_ipo: IPO name from .prc file (e.g., 'ipo1000')
+            
+        Returns:
+            Resolved IPO name (either expected or fallback)
+        """
+        pnr_base_path = os.path.join(self.workarea, f"pnr_flow/nv_flow/{top_hier}")
+        expected_ipo_path = os.path.join(pnr_base_path, expected_ipo)
+        
+        # Check if expected IPO directory exists
+        if os.path.isdir(expected_ipo_path):
+            return expected_ipo
+        
+        # IPO directory doesn't exist - warn and search for alternatives
+        print(f"  {Color.YELLOW}[WARN] IPO directory '{expected_ipo}' from .prc file not found{Color.RESET}")
+        print(f"    {Color.YELLOW}Note: Users sometimes delete IPO directories to save disk space{Color.RESET}")
+        
+        # Scan for available IPO directories
+        try:
+            if os.path.isdir(pnr_base_path):
+                available_ipos = []
+                for item in os.listdir(pnr_base_path):
+                    item_path = os.path.join(pnr_base_path, item)
+                    if os.path.isdir(item_path) and item.startswith('ipo'):
+                        available_ipos.append(item)
+                
+                if available_ipos:
+                    # Sort and use first available IPO
+                    available_ipos.sort()
+                    fallback_ipo = available_ipos[0]
+                    print(f"    {Color.CYAN}[INFO] Found available IPO directories: {', '.join(available_ipos)}{Color.RESET}")
+                    print(f"    {Color.GREEN}[OK] Using fallback IPO: {fallback_ipo}{Color.RESET}")
+                    return fallback_ipo
+                else:
+                    print(f"    {Color.RED}[ERROR] No IPO directories found in {pnr_base_path}{Color.RESET}")
+                    return expected_ipo  # Return original even though it doesn't exist
+        except Exception as e:
+            print(f"    {Color.RED}[ERROR] Failed to scan for IPO directories: {e}{Color.RESET}")
+        
+        return expected_ipo  # Return original as fallback
+    
     def _check_formal_vs_eco_timestamps(self, formal_end_time: float):
         """Check if ECO was run after formal verification (potential issue)"""
         try:
@@ -2487,7 +2749,7 @@ class WorkareaReviewer:
                 f.write(html_content)
             
             print(f"\n  {Color.CYAN}Full PnR Data Table:{Color.RESET}")
-            print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
             
         except Exception as e:
             print(f"  Error generating HTML table: {e}")
@@ -3365,43 +3627,147 @@ class WorkareaReviewer:
         except (OSError, UnicodeDecodeError) as e:
             print(f"    {Color.RED}Error reading BeFlow config: {e}{Color.RESET}")
     
+    def _check_disk_utilization(self):
+        """Check disk utilization for the workarea path and warn if >80%"""
+        try:
+            # Run df -h on the workarea path
+            result = self.file_utils.run_command(f"df -h {self.workarea}")
+            
+            if result:
+                lines = result.strip().split('\n')
+                if len(lines) >= 2:  # Header + data line
+                    # Parse the output
+                    # Typical format: Filesystem Size Used Avail Use% Mounted on
+                    parts = lines[1].split()
+                    if len(parts) >= 5:
+                        usage_str = parts[4]  # Use% column (e.g., "85%")
+                        usage_pct = int(usage_str.rstrip('%'))
+                        filesystem = parts[0]
+                        size = parts[1]
+                        used = parts[2]
+                        avail = parts[3]
+                        mount = parts[5] if len(parts) > 5 else parts[0]
+                        
+                        # Determine status based on threshold
+                        if usage_pct >= 80:
+                            status_color = Color.RED
+                            status_msg = "[WARN]"
+                        elif usage_pct >= 70:
+                            status_color = Color.YELLOW
+                            status_msg = "[INFO]"
+                        else:
+                            status_color = Color.GREEN
+                            status_msg = "[OK]"
+                        
+                        # Print disk usage information
+                        print(f"\n{Color.CYAN}Disk Utilization:{Color.RESET}")
+                        print(f"  Filesystem: {filesystem}")
+                        print(f"  Mount Point: {mount}")
+                        print(f"  Size: {size} | Used: {used} | Available: {avail}")
+                        print(f"  {status_color}Usage: {usage_pct}% {status_msg}{Color.RESET}")
+                        
+                        # Additional warning if critical
+                        if usage_pct >= 80:
+                            print(f"  {Color.RED}[WARN] Disk usage is high! Consider cleaning up old files.{Color.RESET}")
+                            if usage_pct >= 90:
+                                print(f"  {Color.RED}[CRITICAL] Disk almost full! This may cause flow failures.{Color.RESET}")
+                        
+                        return usage_pct
+        except Exception as e:
+            print(f"  {Color.YELLOW}[INFO] Could not check disk utilization: {e}{Color.RESET}")
+            return None
+    
     def run_setup_analysis(self):
         """Run setup analysis including environment and runtime information"""
         self.print_header(FlowStage.SETUP)
         
+        # Check disk utilization (at the beginning as requested)
+        disk_usage = self._check_disk_utilization()
+        
+        # Check actual IPO directories (may differ from .prc file)
+        pnr_base_path = os.path.join(self.workarea, f"pnr_flow/nv_flow/{self.design_info.top_hier}")
+        actual_ipos = []
+        if os.path.isdir(pnr_base_path):
+            try:
+                for item in os.listdir(pnr_base_path):
+                    item_path = os.path.join(pnr_base_path, item)
+                    if os.path.isdir(item_path) and item.startswith('ipo'):
+                        actual_ipos.append(item)
+                actual_ipos.sort()
+            except Exception:
+                pass
+        
         # Display design information
         print(f"UNIT: {self.design_info.top_hier}")
         print(f"TAG: {self.design_info.tag}")
-        print(f"IPO: {self.design_info.ipo} (Available IPOs: {', '.join(self.design_info.all_ipos)})")
+        
+        # Calculate and display workarea size (only if --show-size flag is used)
+        if self.show_size:
+            try:
+                result = subprocess.run(['du', '-sh', self.workarea], 
+                                      capture_output=True, text=True, timeout=180)
+                if result.returncode == 0 and result.stdout:
+                    size = result.stdout.strip().split()[0]
+                    print(f"WORKAREA SIZE: {size}")
+                else:
+                    print(f"WORKAREA SIZE: Unable to determine")
+            except subprocess.TimeoutExpired:
+                # For very large workareas (>500GB), du can take minutes
+                print(f"WORKAREA SIZE: Large workarea (calculation takes >3 min, skipped)")
+            except Exception as e:
+                print(f"WORKAREA SIZE: Unable to calculate")
+        
+        # Show IPO information with directory status
+        prc_ipo = self.design_info.ipo
+        ipo_dir_exists = prc_ipo in actual_ipos
+        
+        if ipo_dir_exists:
+            print(f"IPO: {prc_ipo} (Available IPOs: {', '.join(actual_ipos) if actual_ipos else 'None'})")
+        else:
+            # IPO from .prc doesn't exist as directory
+            print(f"IPO: {Color.YELLOW}{prc_ipo}{Color.RESET} (from .prc file)")
+            if actual_ipos:
+                print(f"  {Color.YELLOW}[WARN] IPO directory '{prc_ipo}' not found{Color.RESET}")
+                print(f"  {Color.CYAN}[INFO] Available IPO directories: {', '.join(actual_ipos)}{Color.RESET}")
+                print(f"  {Color.YELLOW}Note: Users sometimes delete IPO directories to save disk space{Color.RESET}")
+            else:
+                print(f"  {Color.RED}[ERROR] No IPO directories found{Color.RESET}")
         
         # Extract environment information
         self._extract_environment_info()
         
-        
+        # Use resolved IPO for file access (first available if .prc IPO doesn't exist)
+        access_ipo = actual_ipos[0] if (not ipo_dir_exists and actual_ipos) else prc_ipo
         
         # Design Definition
-        design_def_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/design_definition.tcl"
+        design_def_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{access_ipo}/design_definition.tcl"
         design_def_file = os.path.join(self.workarea, design_def_pattern)
         if self.file_utils.file_exists(design_def_file):
             self.print_file_info(design_def_file, "Design Definition")
         
         # PnR Configuration
-        pnr_config_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/pnr_config.tcl"
+        pnr_config_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{access_ipo}/pnr_config.tcl"
         pnr_config_file = os.path.join(self.workarea, pnr_config_pattern)
         if self.file_utils.file_exists(pnr_config_file):
             self.print_file_info(pnr_config_file, "PnR Configuration")
         
         # Add section summary for master dashboard
+        key_metrics = {
+            "Design": self.design_info.top_hier,
+            "Tag": self.design_info.tag,
+            "IPO": self.design_info.ipo
+        }
+        
+        # Add disk usage if available
+        if disk_usage is not None:
+            key_metrics["Disk Usage"] = f"{disk_usage}%"
+        
         self._add_section_summary(
             section_name="Setup",
             section_id="setup",
             stage=FlowStage.SETUP,
             status="PASS",
-            key_metrics={
-                "Design": self.design_info.top_hier,
-                "Tag": self.design_info.tag,
-                "IPO": self.design_info.ipo
-            },
+            key_metrics=key_metrics,
             html_file="",
             priority=4,
             issues=[],
@@ -3995,6 +4361,14 @@ class WorkareaReviewer:
         """Run comprehensive PnR (Place & Route) analysis"""
         self.print_header(FlowStage.PNR_ANALYSIS)
         
+        # Resolve IPO directory (may have been deleted to save disk space)
+        resolved_ipo = self._resolve_ipo_directory(self.design_info.top_hier, self.design_info.ipo)
+        if resolved_ipo != self.design_info.ipo:
+            # Update design_info with resolved IPO for this analysis
+            original_ipo = self.design_info.ipo
+            self.design_info.ipo = resolved_ipo
+            print(f"  {Color.CYAN}[INFO] IPO resolved: {original_ipo} -> {resolved_ipo}{Color.RESET}\n")
+        
         # PnR Status
         prc_status = os.path.join(self.workarea, f"pnr_flow/nv_flow/{self.design_info.top_hier}.prc.status")
         if self.file_utils.file_exists(prc_status):
@@ -4016,10 +4390,9 @@ class WorkareaReviewer:
         if self.print_file_info(runset_file, "PnR Runset"):
             self._extract_pnr_flow_variables(runset_file)
         
-        # BeFlow Configuration (use first available IPO)
-        first_ipo = self.design_info.all_ipos[0] if self.design_info.all_ipos else self.design_info.ipo
-        beflow_config = os.path.join(self.workarea, f"pnr_flow/nv_flow/{self.design_info.top_hier}/{first_ipo}/beflow_config.yaml")
-        if self.print_file_info(beflow_config, f"PnR BeFlow Configuration ({first_ipo})"):
+        # BeFlow Configuration (use resolved IPO from above)
+        beflow_config = os.path.join(self.workarea, f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/beflow_config.yaml")
+        if self.print_file_info(beflow_config, f"PnR BeFlow Configuration ({self.design_info.ipo})"):
             self._analyze_beflow_config(beflow_config)
         
         # Summary reports
@@ -4492,7 +4865,7 @@ class WorkareaReviewer:
                 f.write(html_content)
             
             print(f"  {Color.GREEN}[OK] Unified PnR HTML Report Generated{Color.RESET}")
-            print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
             
             return os.path.abspath(html_path)
             
@@ -5860,7 +6233,7 @@ class WorkareaReviewer:
                 f.write(html_content)
             
             print(f"  {Color.GREEN}[OK] Unified DC HTML Report Generated{Color.RESET}")
-            print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{os.path.basename(html_path)}{Color.RESET} &")
+            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{os.path.basename(html_path)}{Color.RESET} &")
             
             return html_path
             
@@ -6412,7 +6785,7 @@ class WorkareaReviewer:
                                 f.write(html_content)
                             
                             print(f"\n  {Color.CYAN}Timing Histogram HTML Report:{Color.RESET}")
-                            print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+                            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
                             return os.path.abspath(html_path)  # Return absolute path for master dashboard
                         
         except Exception as e:
@@ -6884,8 +7257,9 @@ class WorkareaReviewer:
         """Run clock analysis"""
         self.print_header(FlowStage.CLOCK_ANALYSIS)
         
-        # Initialize max latency
+        # Initialize max latency and combined clock data
         max_latency_ps = 0
+        combined_clock_data = {}  # Dictionary to store max latency per clock: {clock_name: (max_latency_ps, skew_ps)}
         
         # Innovus clock analysis
         clock_skew_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/SUMMARY/{self.design_info.top_hier}.{self.design_info.ipo}.postroute.clock_tree.skew_and_latency.from_clock_root_source.rpt*"
@@ -6893,8 +7267,11 @@ class WorkareaReviewer:
         
         if clock_files:
             self.print_file_info(clock_files[0], "Innovus Clock Analysis")
-            innovus_max_latency = self._extract_clock_tree_data(clock_files[0])
+            innovus_max_latency, innovus_clock_data = self._extract_clock_tree_data(clock_files[0])
             max_latency_ps = max(max_latency_ps, innovus_max_latency)
+            # Store Innovus clock data
+            for clock, data in innovus_clock_data.items():
+                combined_clock_data[clock] = data
         
         # PrimeTime clock analysis
         pt_clock_pattern = f"signoff_flow/auto_pt/last_work/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/{self.design_info.top_hier}_func.std_tt_0c_0p6v.setup.typical.clock_latency"
@@ -6902,8 +7279,23 @@ class WorkareaReviewer:
         
         if self.file_utils.file_exists(pt_clock_file):
             self.print_file_info(pt_clock_file, "PT Clock Analysis")
-            pt_max_latency = self._extract_pt_clock_latency(pt_clock_file)
+            pt_max_latency, pt_clock_data = self._extract_pt_clock_latency(pt_clock_file)
             max_latency_ps = max(max_latency_ps, pt_max_latency)
+            # Merge PT clock data, keeping the max latency per clock
+            for clock, (latency, skew) in pt_clock_data.items():
+                if clock in combined_clock_data:
+                    # Keep the maximum latency
+                    existing_latency, existing_skew = combined_clock_data[clock]
+                    if latency > existing_latency:
+                        combined_clock_data[clock] = (latency, skew if skew > 0 else existing_skew)
+                else:
+                    combined_clock_data[clock] = (latency, skew)
+        
+        # Print combined clock summary for regression parsing
+        if combined_clock_data:
+            print(f"\n  {Color.CYAN}Combined Clock Latency Summary (Max per clock):{Color.RESET}")
+            for clock, (max_latency, skew) in sorted(combined_clock_data.items()):
+                print(f"  Clock Detail: {clock}|{max_latency:.1f}|{skew:.1f}")
         
         # Determine status based on max latency
         # Thresholds: FAIL ≥ 580ps, WARN 550ps < latency < 580ps, PASS ≤ 550ps
@@ -7027,7 +7419,7 @@ class WorkareaReviewer:
             if html_path:
                 html_filename = os.path.basename(html_path)
                 print(f"\n  {Color.CYAN}Formal Verification HTML Report:{Color.RESET}")
-                print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+                print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
         
         # Add section summary for master dashboard
         self._add_section_summary(
@@ -8842,7 +9234,7 @@ class WorkareaReviewer:
                 f.write(html_content)
             
             print(f"\n{Color.CYAN}  Star Extraction HTML Report:{Color.RESET}")
-            print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
             
             return os.path.abspath(html_path)
             
@@ -9919,7 +10311,7 @@ class WorkareaReviewer:
             
             if html_filename:
                 print(f"\n  {Color.CYAN}PT Timing Summary (Dual-Scenario):{Color.RESET}")
-                print(f"    Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{os.path.basename(html_filename)}{Color.RESET} &")
+                print(f"    Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{os.path.basename(html_filename)}{Color.RESET} &")
                 
                 # Show brief summary
                 print(f"\n  {Color.CYAN}Work Areas Summary:{Color.RESET}")
@@ -10228,7 +10620,7 @@ class WorkareaReviewer:
         if pv_html_path:
             html_filename = os.path.basename(pv_html_path)
             print(f"\n  {Color.CYAN}Physical Verification HTML Report:{Color.RESET}")
-            print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
         
         # Determine status based on violation counts
         # Thresholds: LVS > 5, DRC > 100, Antenna > 10 → FAIL
@@ -12501,7 +12893,7 @@ class WorkareaReviewer:
             with open(html_path, 'w') as f:
                 f.write(html_content)
             
-            print(f"\n  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+            print(f"\n  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
             
             return os.path.abspath(html_path)
             
@@ -13730,44 +14122,1092 @@ class WorkareaReviewer:
     
     def _extract_block_release_info(self, release_log: str):
         """Extract block release information focusing on umake block_release commands"""
+        release_to_path = None
         try:
             # Use grep to extract only the line we need instead of reading entire file
             result = self.file_utils.run_command(f"grep 'Release to:' '{release_log}' | head -1")
             if result.strip():
-                release_to = result.strip().split('Release to:')[1].strip()
-                print(f"  Release to: {release_to}")
+                release_to_path = result.strip().split('Release to:')[1].strip()
+                print(f"  {Color.CYAN}Release to:{Color.RESET} {release_to_path}")
             
             # Extract umake block_release command lines from umake logs
-            self._extract_umake_block_release_commands()
+            release_data = self._extract_umake_block_release_commands()
+            
+            # Return both release data and release_to_path for central area check
+            return release_data, release_to_path
                 
         except Exception as e:
             print(f"  Error reading block release log: {e}")
+            return None, release_to_path
     
     def _extract_umake_block_release_commands(self):
-        """Extract umake -s block_release commands with dates from umake logs"""
+        """Extract comprehensive block release information from umake logs
+        
+        Returns: dict with release attempts, status, flags, and custom links
+        """
+        release_data = {
+            'attempts': [],
+            'overall_status': 'NOT_RUN',
+            'custom_links': [],  # List of link names
+            'custom_links_with_dates': {},  # Dict mapping link_name -> date
+            'automatic_links': [],
+            'total_attempts': 0,
+            'successful_attempts': 0,
+            'failed_attempts': 0
+        }
+        
         try:
-            # Use grep to find all umake block_release commands in one go
-            umake_pattern = os.path.join(self.workarea, "umake_log/2025*/*.log")
-            result = self.file_utils.run_command(f"grep -h 'Command line:.*-s block_release' {umake_pattern} 2>/dev/null | head -10")
+            # Search for "-s block_release" in umake logs (matches --step, --step_flags, etc.)
+            umake_pattern = os.path.join(self.workarea, "umake_log/*/*.log")
             
-            if result.strip():
-                print(f"  {Color.CYAN}Umake Block Release Commands:{Color.RESET}")
-                lines = result.strip().split('\n')
-                for line in lines:
-                    if line.strip():
-                        # Extract timestamp and command
-                        timestamp = "Unknown"
-                        if '[' in line and ']' in line:
-                            timestamp = line.split('[')[1].split(']')[0].strip()
-                        
-                        if 'Command line:' in line:
-                            cmd_line = line.split('Command line:')[1].strip()
-                            print(f"    [{timestamp}] {cmd_line}")
+            # Find all log files that contain block_release commands
+            result = self.file_utils.run_command(
+                f"grep -l 'Command line:.*-s block_release' {umake_pattern} 2>/dev/null"
+            )
+            
+            if not result.strip():
+                print(f"  {Color.YELLOW}No block release attempts found{Color.RESET}")
+                return release_data
+            
+            log_files = result.strip().split('\n')
+            
+            # IMPORTANT: Filter out symlinks (like latest_dir) to avoid duplicates
+            # Background: umake_log/latest_dir is a symlink pointing to the most recent log directory
+            # This causes duplicate entries if not filtered (e.g., same log appears twice with different paths)
+            # Solution: Use os.path.realpath() to resolve symlinks to their actual files, 
+            # then track which real paths we've already processed to eliminate duplicates
+            real_log_files = []
+            seen_real_paths = set()
+            for log_file in log_files:
+                # Resolve to real path to handle symlinks
+                real_path = os.path.realpath(log_file)
+                if real_path not in seen_real_paths:
+                    seen_real_paths.add(real_path)
+                    real_log_files.append(log_file)
+            
+            log_files = real_log_files
+            release_data['total_attempts'] = len(log_files)
+            
+            print(f"\n  {Color.CYAN}Block Release Attempts: {len(log_files)}{Color.RESET}")
+            print(f"  {'='*80}")
+            
+            # Known automatic links (generated automatically by umake)
+            automatic_link_names = [
+                'fcl_release', 'sta_release', 'pnr_release', 'dc_release',
+                'fe_dct_release', 'fe_dct_golden_release', 'full_release',
+                'last_sta_rel', 'last_fcl_rel', 'last_pnr_rel', 'last_dc_rel',
+                'release', 'last_release'
+            ]
+            
+            # Process each log file
+            for idx, log_file in enumerate(log_files, 1):
+                attempt = self._parse_release_log_file(log_file, automatic_link_names, idx)
+                if attempt:
+                    release_data['attempts'].append(attempt)
+                    
+                    # Count successful and failed attempts
+                    if attempt['status'] == 'SUCCESS':
+                        release_data['successful_attempts'] += 1
+                    elif attempt['status'] == 'FAILED':
+                        release_data['failed_attempts'] += 1
+                    
+                    # Collect custom links with their dates
+                    for link in attempt.get('custom_links', []):
+                        if link not in release_data['custom_links']:
+                            release_data['custom_links'].append(link)
+                        # Track first occurrence date for each custom link
+                        if link not in release_data['custom_links_with_dates']:
+                            release_data['custom_links_with_dates'][link] = attempt['date']
+                    
+                    # Collect automatic links
+                    for link in attempt.get('automatic_links', []):
+                        if link not in release_data['automatic_links']:
+                            release_data['automatic_links'].append(link)
+            
+            # Determine overall status based on all attempts
+            if release_data['successful_attempts'] > 0 and release_data['failed_attempts'] == 0:
+                # All attempts successful
+                release_data['overall_status'] = 'PASS'
+            elif release_data['successful_attempts'] > 0 and release_data['failed_attempts'] > 0:
+                # Mixed success and failure
+                release_data['overall_status'] = 'WARN'
+            elif release_data['failed_attempts'] > 0 and release_data['successful_attempts'] == 0:
+                # All attempts failed
+                release_data['overall_status'] = 'FAIL'
             else:
-                print("  No umake -s block_release commands found")
+                # No clear status
+                release_data['overall_status'] = 'NOT_RUN'
+            
+            # Print summary statistics for regression parsing
+            print(f"\n  {Color.CYAN}Release Attempts from Workarea{Color.RESET}")
+            print(f"  {Color.CYAN}---------------------------------------------{Color.RESET}")
+            print(f"  Total Attempts: {release_data['total_attempts']}")
+            print(f"  Successful: {release_data['successful_attempts']}")
+            print(f"  Failed: {release_data['failed_attempts']}")
+            if release_data['custom_links']:
+                # Sort custom links by date (oldest first) for display
+                sorted_links = sorted(
+                    release_data['custom_links'],
+                    key=lambda link: release_data['custom_links_with_dates'].get(link, ''),
+                    reverse=False
+                )
+                custom_links_str = ', '.join(sorted_links)
+                print(f"  Custom Links: {custom_links_str}")
+                # Print individual custom link details with dates for regression HTML parsing
+                for link in sorted_links:
+                    link_date = release_data['custom_links_with_dates'].get(link, 'Unknown')
+                    print(f"  Custom Link Detail: {link}|{link_date}")
+            # Get latest success date
+            successful_attempts = [a for a in release_data['attempts'] if a['status'] == 'SUCCESS']
+            if successful_attempts:
+                latest = successful_attempts[-1]
+                print(f"  Latest Success: {latest['date']}")
+            # Get release name from first attempt if available
+            if release_data['attempts']:
+                first_attempt = release_data['attempts'][0]
+                if 'release_name' in first_attempt.get('flags', {}):
+                    print(f"  Release Name: {first_attempt['flags']['release_name']}")
+            print()
+            
+            # Display custom links if found
+            if release_data['custom_links']:
+                print(f"\n  {Color.CYAN}Custom/Pre-defined Links Detected (from workarea logs):{Color.RESET}")
+                for link in release_data['custom_links']:
+                    link_date = release_data['custom_links_with_dates'].get(link, 'Unknown')
+                    print(f"    - {Color.GREEN}{link}{Color.RESET} ({link_date})")
+            
+            return release_data
                 
         except Exception as e:
-            print(f"  Error extracting umake block_release commands: {e}")
+            print(f"  {Color.RED}Error extracting block release commands: {e}{Color.RESET}")
+            return release_data
+    
+    def _generate_block_release_html_report(self, release_data: dict, release_to_path: str) -> str:
+        """Generate comprehensive HTML report for block release
+        
+        Args:
+            release_data: Dictionary with release attempts and custom links
+            release_to_path: Path to central release area
+            
+        Returns:
+            Path to generated HTML file
+        """
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            username = os.environ.get('USER', 'avice')
+            html_filename = f"{self.design_info.top_hier}_{username}_block_release_{timestamp}.html"
+            html_path = os.path.abspath(html_filename)
+            
+            # Read and encode logo as base64
+            logo_data = ""
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            logo_path = os.path.join(script_dir, "images/avice_logo.png")
+            if os.path.exists(logo_path):
+                with open(logo_path, "rb") as logo_file:
+                    import base64
+                    logo_data = base64.b64encode(logo_file.read()).decode('utf-8')
+            
+            # Get central area links
+            central_links = []
+            if release_to_path:
+                base_release_dir = os.path.dirname(release_to_path)
+                automatic_link_names = [
+                    'fcl_release', 'sta_release', 'pnr_release', 'dc_release',
+                    'fe_dct_release', 'fe_dct_golden_release', 'full_release',
+                    'last_sta_rel', 'last_fcl_rel', 'last_pnr_rel', 'last_dc_rel',
+                    'release', 'last_release'
+                ]
+                
+                if os.path.exists(base_release_dir):
+                    try:
+                        entries = os.listdir(base_release_dir)
+                        for entry in entries:
+                            entry_path = os.path.join(base_release_dir, entry)
+                            if os.path.islink(entry_path) and not entry.startswith('prev_'):
+                                is_automatic = any(auto_link in entry for auto_link in automatic_link_names)
+                                if not is_automatic:
+                                    try:
+                                        stat_info = os.lstat(entry_path)
+                                        link_date = datetime.fromtimestamp(stat_info.st_mtime).strftime('%Y-%m-%d')
+                                        link_time = datetime.fromtimestamp(stat_info.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+                                        target = os.readlink(entry_path)
+                                        target_basename = os.path.basename(target)
+                                        user = "Unknown"
+                                        try:
+                                            import pwd
+                                            user = pwd.getpwuid(stat_info.st_uid).pw_name
+                                        except:
+                                            if 'scratch.' in target:
+                                                user_match = re.search(r'scratch\.([^_/]+)', target)
+                                                if user_match:
+                                                    user = user_match.group(1)
+                                        central_links.append((entry, link_date, link_time, user, target_basename, os.path.abspath(target)))
+                                    except:
+                                        pass
+                        central_links.sort(key=lambda x: x[2])
+                    except:
+                        pass
+            
+            # Generate HTML content
+            html_content = self._generate_block_release_html_content(
+                release_data, release_to_path, central_links, logo_data
+            )
+            
+            with open(html_path, 'w', encoding='utf-8') as f:
+                f.write(html_content)
+            
+            return html_path
+            
+        except Exception as e:
+            print(f"  {Color.RED}Error generating block release HTML report: {e}{Color.RESET}")
+            return ""
+    
+    def _generate_block_release_html_content(self, release_data: dict, release_to_path: str, central_links: list, logo_data: str) -> str:
+        """Generate HTML content for block release report"""
+        
+        # Calculate statistics
+        total_attempts = release_data.get('total_attempts', 0)
+        success_count = release_data.get('successful_attempts', 0)
+        failed_count = release_data.get('failed_attempts', 0)
+        success_rate = (success_count / total_attempts * 100) if total_attempts > 0 else 0
+        
+        # Build attempts HTML
+        attempts_html = ""
+        for attempt in release_data.get('attempts', []):
+            status_class = "success" if attempt['status'] == 'SUCCESS' else ("failed" if attempt['status'] == 'FAILED' else "unknown")
+            status_icon = "✓" if attempt['status'] == 'SUCCESS' else ("✗" if attempt['status'] == 'FAILED' else "?")
+            
+            custom_links_html = ""
+            if attempt.get('custom_links'):
+                custom_links_html = f"<div class='custom-links'><strong>Custom Links:</strong> {', '.join(attempt['custom_links'])}</div>"
+            
+            failure_html = ""
+            if attempt.get('failure_reason'):
+                failure_html = f"<div class='failure-reason'><strong>Failure:</strong> {attempt['failure_reason']}</div>"
+            
+            flags_list = [f"{k}={v}" if v != True else k for k, v in attempt.get('flags', {}).items()]
+            flags_html = ", ".join(flags_list) if flags_list else "None"
+            
+            attempts_html += f"""
+            <div class="attempt-card {status_class}">
+                <div class="attempt-header">
+                    <span class="attempt-number">#{attempt['attempt_num']}</span>
+                    <span class="attempt-timestamp">{attempt['timestamp']}</span>
+                    <span class="attempt-user">User: {attempt['user']}</span>
+                    <span class="status-badge {status_class}">{status_icon} {attempt['status']}</span>
+                </div>
+                <div class="attempt-details">
+                    <div class="command-line"><strong>Command:</strong> <code>{attempt.get('command', 'N/A')}</code></div>
+                    <div class="flags-line"><strong>Flags:</strong> {flags_html}</div>
+                    {custom_links_html}
+                    {failure_html}
+                </div>
+            </div>
+            """
+        
+        # Build central links HTML
+        central_links_html = ""
+        if central_links:
+            for link_name, link_date, link_time, user, target_basename, target_full_path in central_links:
+                central_links_html += f"""
+                <tr>
+                    <td><strong>{link_name}</strong></td>
+                    <td>{link_date}</td>
+                    <td>{user}</td>
+                    <td><a href="file://{target_full_path}" class="path-link" title="{target_full_path}">{target_basename}</a></td>
+                </tr>
+                """
+        else:
+            central_links_html = "<tr><td colspan='4' class='no-data'>No custom links found in central release area</td></tr>"
+        
+        # Build timeline HTML
+        timeline_html = ""
+        all_events = []
+        for attempt in release_data.get('attempts', []):
+            all_events.append({
+                'date': attempt['date'],
+                'time': attempt['timestamp'],
+                'type': 'attempt',
+                'status': attempt['status'],
+                'user': attempt['user'],
+                'details': f"Release attempt #{attempt['attempt_num']}"
+            })
+        for link_name, link_date, link_time, user, target_basename, target_full_path in central_links:
+            all_events.append({
+                'date': link_date,
+                'time': link_time,
+                'type': 'link',
+                'status': 'SUCCESS',
+                'user': user,
+                'details': f"Custom link created: {link_name}"
+            })
+        
+        all_events.sort(key=lambda x: x['time'])
+        for event in all_events:
+            status_class = "success" if event['status'] == 'SUCCESS' else ("failed" if event['status'] == 'FAILED' else "unknown")
+            icon = "📦" if event['type'] == 'attempt' else "🔗"
+            timeline_html += f"""
+            <div class="timeline-event {status_class}">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                    <div class="timeline-time">{event['date']}</div>
+                    <div class="timeline-details">{icon} {event['details']} <span class="timeline-user">by {event['user']}</span></div>
+                </div>
+            </div>
+            """
+        
+        base_release_dir = os.path.dirname(release_to_path) if release_to_path else "N/A"
+        
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Release Report - {self.design_info.top_hier}</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #2c3e50;
+            padding: 20px;
+            line-height: 1.6;
+        }}
+        
+        .container {{
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }}
+        
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }}
+        
+        .logo {{
+            height: 120px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }}
+        
+        .logo:hover {{
+            transform: scale(1.05);
+        }}
+        
+        .header-text {{
+            text-align: center;
+        }}
+        
+        .header h1 {{
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }}
+        
+        .header-subtitle {{
+            font-size: 1.2em;
+            opacity: 0.9;
+        }}
+        
+        /* Logo Modal */
+        .logo-modal {{
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.9);
+        }}
+        
+        .logo-modal-content {{
+            margin: auto;
+            display: block;
+            width: 80%;
+            max-width: 700px;
+            animation: zoom 0.6s;
+        }}
+        
+        .logo-modal-close {{
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }}
+        
+        .logo-modal-close:hover,
+        .logo-modal-close:focus {{
+            color: #bbb;
+        }}
+        
+        @keyframes zoom {{
+            from {{transform: scale(0)}}
+            to {{transform: scale(1)}}
+        }}
+        
+        .stats-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }}
+        
+        .stat-card {{
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }}
+        
+        .stat-value {{
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }}
+        
+        .stat-label {{
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }}
+        
+        .stat-card.success .stat-value {{
+            color: #27ae60;
+        }}
+        
+        .stat-card.failed .stat-value {{
+            color: #e74c3c;
+        }}
+        
+        .content {{
+            padding: 40px;
+        }}
+        
+        .section {{
+            margin-bottom: 40px;
+        }}
+        
+        .section-title {{
+            font-size: 1.8em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }}
+        
+        .info-box {{
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }}
+        
+        .attempt-card {{
+            background: white;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }}
+        
+        .attempt-card:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }}
+        
+        .attempt-card.success {{
+            border-left: 5px solid #27ae60;
+        }}
+        
+        .attempt-card.failed {{
+            border-left: 5px solid #e74c3c;
+        }}
+        
+        .attempt-card.unknown {{
+            border-left: 5px solid #f39c12;
+        }}
+        
+        .attempt-header {{
+            background: #f8f9fa;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }}
+        
+        .attempt-number {{
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+        }}
+        
+        .attempt-timestamp {{
+            color: #7f8c8d;
+        }}
+        
+        .attempt-user {{
+            color: #34495e;
+            font-weight: 600;
+        }}
+        
+        .status-badge {{
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+            font-size: 0.9em;
+        }}
+        
+        .status-badge.success {{
+            background: #27ae60;
+        }}
+        
+        .status-badge.failed {{
+            background: #e74c3c;
+        }}
+        
+        .status-badge.unknown {{
+            background: #f39c12;
+        }}
+        
+        .attempt-details {{
+            padding: 20px;
+        }}
+        
+        .command-line {{
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }}
+        
+        .command-line code {{
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            word-break: break-all;
+        }}
+        
+        .flags-line {{
+            margin-bottom: 10px;
+            color: #34495e;
+        }}
+        
+        .custom-links {{
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f8f5;
+            border-radius: 5px;
+            color: #27ae60;
+        }}
+        
+        .failure-reason {{
+            margin-top: 10px;
+            padding: 10px;
+            background: #fadbd8;
+            border-radius: 5px;
+            color: #e74c3c;
+        }}
+        
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }}
+        
+        th {{
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }}
+        
+        td {{
+            padding: 12px 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }}
+        
+        tr:hover {{
+            background: #f8f9fa;
+        }}
+        
+        .no-data {{
+            text-align: center;
+            color: #95a5a6;
+            font-style: italic;
+        }}
+        
+        .path-link {{
+            color: #3498db;
+            text-decoration: none;
+            word-break: break-all;
+        }}
+        
+        .path-link:hover {{
+            text-decoration: underline;
+        }}
+        
+        .timeline {{
+            position: relative;
+            padding-left: 30px;
+        }}
+        
+        .timeline::before {{
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, #667eea, #764ba2);
+        }}
+        
+        .timeline-event {{
+            position: relative;
+            margin-bottom: 30px;
+            padding-left: 20px;
+        }}
+        
+        .timeline-marker {{
+            position: absolute;
+            left: -19px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #667eea;
+        }}
+        
+        .timeline-event.success .timeline-marker {{
+            border-color: #27ae60;
+            background: #27ae60;
+        }}
+        
+        .timeline-event.failed .timeline-marker {{
+            border-color: #e74c3c;
+            background: #e74c3c;
+        }}
+        
+        .timeline-content {{
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }}
+        
+        .timeline-time {{
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }}
+        
+        .timeline-details {{
+            color: #2c3e50;
+            font-weight: 500;
+        }}
+        
+        .timeline-user {{
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }}
+        
+        /* Copyright Footer */
+        .footer {{
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 10px;
+            font-size: 14px;
+        }}
+        
+        .footer p {{
+            margin: 5px 0;
+        }}
+        
+        .footer strong {{
+            color: #00ff00;
+        }}
+    </style>
+</head>
+<body>
+    <!-- Logo Modal -->
+    <div id="logoModal" class="logo-modal" onclick="closeLogoModal()">
+        <span class="logo-modal-close">&times;</span>
+        <img class="logo-modal-content" src='data:image/png;base64,{logo_data}' alt='AVICE Logo'>
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <img class='logo' src='data:image/png;base64,{logo_data}' alt='AVICE Logo' onclick="showLogoModal()" title="Click to enlarge">
+            <div class="header-text">
+                <h1>🚀 Block Release Report</h1>
+                <div class="header-subtitle">Design: {self.design_info.top_hier}</div>
+                <div class="header-subtitle">Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</div>
+            </div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{total_attempts}</div>
+                <div class="stat-label">Total Attempts</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-value">{success_count}</div>
+                <div class="stat-label">Successful</div>
+            </div>
+            <div class="stat-card failed">
+                <div class="stat-value">{failed_count}</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{success_rate:.0f}%</div>
+                <div class="stat-label">Success Rate</div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="info-box">
+                <strong>Central Release Area:</strong> {base_release_dir}
+            </div>
+            
+            <div class="section">
+                <h2 class="section-title">Release Attempts from Workarea</h2>
+                {attempts_html if attempts_html else '<p class="no-data">No release attempts found in workarea logs</p>'}
+            </div>
+            
+            <div class="section">
+                <h2 class="section-title">All Custom Links (Central Release Area)</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Link Name</th>
+                            <th>Date Created</th>
+                            <th>User</th>
+                            <th>Target Workarea</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {central_links_html}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="section">
+                <h2 class="section-title">Release Timeline</h2>
+                <div class="timeline">
+                    {timeline_html if timeline_html else '<p class="no-data">No timeline events available</p>'}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Copyright Footer -->
+        <div class="footer">
+            <p><strong>AVICE Block Release Report</strong></p>
+            <p>Copyright (c) 2025 Alon Vice (avice)</p>
+            <p>Contact: avice@nvidia.com</p>
+        </div>
+    </div>
+    
+    <!-- Back to Top Button -->
+    <button id="backToTopBtn" style="display: none; position: fixed; bottom: 30px; right: 30px; 
+            z-index: 99; border: none; outline: none; background-color: #667eea; color: white; 
+            cursor: pointer; padding: 15px 20px; border-radius: 50px; font-size: 16px; 
+            font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease;"
+            onmouseover="this.style.backgroundColor='#5568d3'; this.style.transform='scale(1.1)';"
+            onmouseout="this.style.backgroundColor='#667eea'; this.style.transform='scale(1)';">
+        ↑ Top
+    </button>
+    
+    <script>
+        // Logo modal functionality
+        function showLogoModal() {{
+            document.getElementById('logoModal').style.display = 'block';
+        }}
+        
+        function closeLogoModal() {{
+            document.getElementById('logoModal').style.display = 'none';
+        }}
+        
+        // Back to top button functionality
+        const backToTopBtn = document.getElementById('backToTopBtn');
+        if (backToTopBtn) {{
+            window.addEventListener('scroll', function() {{
+                if (window.pageYOffset > 300) {{
+                    backToTopBtn.style.display = 'block';
+                }} else {{
+                    backToTopBtn.style.display = 'none';
+                }}
+            }});
+            
+            backToTopBtn.addEventListener('click', function() {{
+                window.scrollTo({{ top: 0, behavior: 'smooth' }});
+            }});
+        }}
+    </script>
+</body>
+</html>
+"""
+        return html
+    
+    def _check_central_block_release_links(self, release_to_path: str, automatic_link_names: list):
+        """Check central block release area for all custom links with metadata
+        
+        Args:
+            release_to_path: Path from 'Release to:' line (e.g., /home/agur_backend_blockRelease/block/prt/...)
+            automatic_link_names: List of known automatic link names
+        """
+        try:
+            # Extract base path (e.g., /home/agur_backend_blockRelease/block/prt/)
+            if not release_to_path:
+                return
+            
+            # Get the parent directory (should be /home/agur_backend_blockRelease/block/<unit>/)
+            base_release_dir = os.path.dirname(release_to_path)
+            
+            if not os.path.exists(base_release_dir):
+                return
+            
+            print(f"\n  {Color.CYAN}All Custom Links in Central Release Area:{Color.RESET}")
+            print(f"  {Color.CYAN}Location: {base_release_dir}{Color.RESET}")
+            
+            # List all entries in the directory
+            try:
+                entries = os.listdir(base_release_dir)
+            except PermissionError:
+                print(f"    {Color.YELLOW}No permission to access central release area{Color.RESET}")
+                return
+            
+            custom_links_found = []
+            
+            # Check each entry
+            for entry in sorted(entries):
+                entry_path = os.path.join(base_release_dir, entry)
+                
+                # Check if it's a symlink
+                if os.path.islink(entry_path):
+                    # Skip prev_* links (backup/previous versions)
+                    if entry.startswith('prev_'):
+                        continue
+                    
+                    # Check if it's a custom link (not in automatic list)
+                    is_automatic = any(auto_link in entry for auto_link in automatic_link_names)
+                    
+                    if not is_automatic:
+                        # Get symlink metadata
+                        try:
+                            stat_info = os.lstat(entry_path)
+                            # Get modification time (when symlink was created)
+                            link_date = datetime.fromtimestamp(stat_info.st_mtime).strftime('%Y-%m-%d')
+                            link_time = datetime.fromtimestamp(stat_info.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+                            
+                            # Get target path
+                            target = os.readlink(entry_path)
+                            target_basename = os.path.basename(target)
+                            
+                            # Get the owner of the symlink (the user who created it)
+                            user = "Unknown"
+                            try:
+                                import pwd
+                                user = pwd.getpwuid(stat_info.st_uid).pw_name
+                            except:
+                                # Fallback: try to extract from target directory path
+                                if 'scratch.' in target:
+                                    user_match = re.search(r'scratch\.([^_/]+)', target)
+                                    if user_match:
+                                        user = user_match.group(1)
+                            
+                            custom_links_found.append((entry, link_date, link_time, user, target_basename))
+                        except Exception as e:
+                            custom_links_found.append((entry, 'Unknown', 'Unknown', 'Unknown', ''))
+            
+            if custom_links_found:
+                # Sort by date (oldest first)
+                custom_links_found.sort(key=lambda x: x[2])  # x[2] is link_time (full timestamp)
+                
+                # Display in a table format
+                print(f"    {'Link Name':<30} {'Date':<12} {'User':<15} {'Target'}")
+                print(f"    {'-'*30} {'-'*12} {'-'*15} {'-'*50}")
+                for link_name, link_date, link_time, user, target in custom_links_found:
+                    # Show full target name (no truncation)
+                    print(f"    {Color.GREEN}{link_name:<30}{Color.RESET} {link_date:<12} {user:<15} {target}")
+                
+                print(f"\n    {Color.CYAN}Total custom links found: {len(custom_links_found)}{Color.RESET}")
+            else:
+                print(f"    {Color.YELLOW}No custom links found in central release area{Color.RESET}")
+                
+        except Exception as e:
+            print(f"  {Color.YELLOW}Unable to check central block release area: {e}{Color.RESET}")
+    
+    def _parse_release_log_file(self, log_file: str, automatic_link_names: list, attempt_num: int) -> dict:
+        """Parse a single release log file to extract all relevant information
+        
+        Args:
+            log_file: Path to umake log file
+            automatic_link_names: List of known automatic link names
+            attempt_num: Sequential attempt number
+            
+        Returns:
+            dict with attempt details (timestamp, command, flags, status, links)
+        """
+        attempt = {
+            'log_file': log_file,
+            'attempt_num': attempt_num,
+            'timestamp': 'Unknown',
+            'date': 'Unknown',
+            'user': 'Unknown',
+            'command': '',
+            'flags': {},
+            'status': 'UNKNOWN',
+            'custom_links': [],
+            'automatic_links': [],
+            'failure_reason': None
+        }
+        
+        try:
+            # Extract timestamp and username from log filename (e.g., username.2025-10-08_15_32_33.umake.log)
+            filename = os.path.basename(log_file)
+            parts = filename.split('.')
+            if len(parts) >= 2:
+                attempt['user'] = parts[0]  # Username is the first part
+                attempt['timestamp'] = parts[1].replace('_', ' ')
+                attempt['date'] = parts[1].split('_')[0]  # Just the date part
+            
+            # Read the log file to extract command and status
+            with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+            
+            # Extract command line
+            cmd_match = re.search(r'Command line:\s*(.+?)(?:\n|$)', content)
+            if cmd_match:
+                attempt['command'] = cmd_match.group(1).strip()
+                attempt['flags'] = self._parse_release_flags(attempt['command'])
+            
+            # Check for failure
+            if 'Block release FAILED. Removing partial release data' in content:
+                attempt['status'] = 'FAILED'
+                # Try to extract failure reason
+                fail_match = re.search(r'Block release FAILED\.(.+?)(?:\n|$)', content)
+                if fail_match:
+                    attempt['failure_reason'] = fail_match.group(1).strip()
+            elif 'Block release completed successfully' in content or 'Block release finished' in content or 'Block release step completed' in content:
+                attempt['status'] = 'SUCCESS'
+            # If we found linking info, it likely succeeded even without explicit success message
+            elif content.count('{Linking') > 0:
+                attempt['status'] = 'SUCCESS'
+            
+            # Extract linking information (format: "-I- {Linking link_name to: /path}")
+            linking_pattern = r'\{Linking\s+(.+?)\s+to:'
+            for match in re.finditer(linking_pattern, content):
+                link_name = match.group(1).strip()
+                
+                # Determine if it's automatic or custom
+                if any(auto_link in link_name for auto_link in automatic_link_names):
+                    attempt['automatic_links'].append(link_name)
+                else:
+                    # Custom/pre-defined link
+                    attempt['custom_links'].append(link_name)
+            
+            # Display this attempt
+            status_color = Color.GREEN if attempt['status'] == 'SUCCESS' else (Color.RED if attempt['status'] == 'FAILED' else Color.YELLOW)
+            print(f"\n  {Color.CYAN}Attempt #{attempt_num}:{Color.RESET} {attempt['timestamp']} | User: {attempt['user']}")
+            print(f"    Status: {status_color}{attempt['status']}{Color.RESET}")
+            
+            # Show the actual command used
+            if attempt['command']:
+                print(f"    Command: {attempt['command']}")
+            
+            if attempt['flags']:
+                print(f"    Flags: {', '.join(f'{k}={v}' if v != True else k for k, v in attempt['flags'].items())}")
+            
+            if attempt['failure_reason']:
+                print(f"    {Color.RED}Failure: {attempt['failure_reason']}{Color.RESET}")
+            
+            if attempt['custom_links']:
+                print(f"    {Color.GREEN}Custom Links: {', '.join(attempt['custom_links'])}{Color.RESET}")
+            
+            return attempt
+            
+        except Exception as e:
+            print(f"  {Color.RED}Error parsing log {log_file}: {e}{Color.RESET}")
+            return None
+    
+    def _parse_release_flags(self, command: str) -> dict:
+        """Parse umake block_release command flags
+        
+        Args:
+            command: Command line string
+            
+        Returns:
+            dict mapping flag names to their values
+        """
+        flags = {}
+        
+        # Flag definitions with their long forms
+        flag_map = {
+            '-b': 'block', '--block': 'block',
+            '-r': 'release_name', '--rel_name': 'release_name',
+            '-c': 'copy_only', '--copy_only': 'copy_only',
+            '-n': 'no_clean', '--no_clean': 'no_clean',
+            '-a': 'run_text', '--run_text': 'run_text',
+            '-f': 'force', '--force': 'force',
+            '-l': 'fcl_release', '--fcl_release': 'fcl_release',
+            '-s': 'sta_release', '--sta_release': 'sta_release',
+            '-p': 'pnr_release', '--pnr_release': 'pnr_release',
+            '-z': 'full_release', '--full_release': 'full_release',
+            '-x': 'ndm', '--ndm': 'ndm',
+            '--dc_release': 'dc_release',
+            '--fe_dct_release': 'fe_dct_release',
+            '--preview': 'preview',
+            '--hs': 'hs_copy'
+        }
+        
+        # Simple flag parsing
+        parts = command.split()
+        i = 0
+        while i < len(parts):
+            part = parts[i]
+            
+            if part in flag_map:
+                flag_name = flag_map[part]
+                # Check if next part is a value (not another flag)
+                if i + 1 < len(parts) and not parts[i + 1].startswith('-'):
+                    flags[flag_name] = parts[i + 1]
+                    i += 2
+                else:
+                    flags[flag_name] = True
+                    i += 1
+            else:
+                i += 1
+        
+        return flags
     
     def run_nv_gate_eco(self):
         """Run NV Gate ECO analysis"""
@@ -13957,56 +15397,92 @@ class WorkareaReviewer:
         )
     
     def run_block_release(self):
-        """Run block release analysis"""
+        """Run comprehensive block release analysis"""
         self.print_header(FlowStage.BLOCK_RELEASE)
+        
+        # Initialize tracking variables
+        release_data = None
+        release_to_path = None
+        overall_status = "NOT_RUN"
+        key_metrics = {"Design": self.design_info.top_hier}
+        issues = []
         
         # Block release log
         release_log = os.path.join(self.workarea, "export/block_release/log/block_release.log")
         if self.file_utils.file_exists(release_log):
             self.print_file_info(release_log, "Block Release Log")
-            self._extract_block_release_info(release_log)
+            release_data, release_to_path = self._extract_block_release_info(release_log)
         else:
-            print("No release was done")
+            print(f"  {Color.YELLOW}No block_release.log found{Color.RESET}")
+            # Still try to extract from umake logs
+            release_data = self._extract_umake_block_release_commands()
         
-        # Umake logs - use grep for better performance
-        umake_pattern = os.path.join(self.workarea, "umake_log/2025*/*.log")
-        result = self.file_utils.run_command(f"grep -h 'block_release.*umake\\.py' {umake_pattern} 2>/dev/null | head -5")
-        if result.strip():
-            for line in result.strip().split('\n'):
-                if line.strip():
-                    print(f"  {line}")
+        # Process release data
+        if release_data:
+            overall_status = release_data.get('overall_status', 'NOT_RUN')
+            
+            # Build key metrics
+            key_metrics["Total Attempts"] = str(release_data['total_attempts'])
+            key_metrics["Successful"] = str(release_data['successful_attempts'])
+            key_metrics["Failed"] = str(release_data['failed_attempts'])
+            
+            if release_data['custom_links']:
+                # Sort custom links by date (oldest first)
+                sorted_links = sorted(
+                    release_data['custom_links'],
+                    key=lambda link: release_data['custom_links_with_dates'].get(link, ''),
+                    reverse=False
+                )
+                key_metrics["Custom Links"] = ', '.join(sorted_links[:3])
+                if len(sorted_links) > 3:
+                    key_metrics["Custom Links"] += f" (+{len(sorted_links) - 3} more)"
+            
+            # Get latest successful release info
+            successful_attempts = [a for a in release_data['attempts'] if a['status'] == 'SUCCESS']
+            if successful_attempts:
+                latest = successful_attempts[-1]
+                key_metrics["Latest Success"] = latest['date']
+                if latest['flags'].get('release_name'):
+                    key_metrics["Release Name"] = latest['flags']['release_name']
+            
+            # Track issues
+            if release_data['failed_attempts'] > 0:
+                issues.append(f"{release_data['failed_attempts']} failed release attempt(s)")
+            
+            # Add failure reasons
+            for attempt in release_data['attempts']:
+                if attempt['status'] == 'FAILED' and attempt.get('failure_reason'):
+                    issues.append(f"Failure: {attempt['failure_reason']}")
         
-        # Block release summary
-        summary_pattern = f"*block_release/reports/{self.design_info.top_hier}.summary"
-        summary_files = self.file_utils.find_files(summary_pattern, self.workarea)
-        if summary_files:
-            self.print_file_info(summary_files[0], "Block Release Summary")
-            try:
-                # Use grep to filter out 'False' lines instead of reading entire file
-                if summary_files[0].endswith('.gz'):
-                    result = self.file_utils.run_command(f"zcat '{summary_files[0]}' | grep -v 'False'")
-                else:
-                    result = self.file_utils.run_command(f"grep -v 'False' '{summary_files[0]}'")
-                
-                if result.strip():
-                    for line in result.strip().split('\n'):
-                        if line.strip():
-                            print(f"  {line}")
-            except Exception as e:
-                print(f"Unable to read Block Release Summary: {e}")
+        # Check central block release area for all custom links (if we have the path)
+        if release_to_path and release_data:
+            automatic_link_names = [
+                'fcl_release', 'sta_release', 'pnr_release', 'dc_release',
+                'fe_dct_release', 'fe_dct_golden_release', 'full_release',
+                'last_sta_rel', 'last_fcl_rel', 'last_pnr_rel', 'last_dc_rel',
+                'release', 'last_release'
+            ]
+            self._check_central_block_release_links(release_to_path, automatic_link_names)
+        
+        # Generate HTML report
+        html_path = ""
+        if release_data:
+            html_path = self._generate_block_release_html_report(release_data, release_to_path)
+            if html_path:
+                html_filename = os.path.basename(html_path)
+                print(f"\n  {Color.CYAN}Block Release HTML Report:{Color.RESET}")
+                print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
         
         # Add section summary for master dashboard
         self._add_section_summary(
             section_name="Block Release",
             section_id="block-release",
             stage=FlowStage.BLOCK_RELEASE,
-            status="PASS",
-            key_metrics={
-                "Design": self.design_info.top_hier
-            },
-            html_file="",
-            priority=4,
-            issues=[],
+            status=overall_status,
+            key_metrics=key_metrics,
+            html_file=html_path,
+            priority=1 if overall_status == "FAIL" else (3 if overall_status == "PASS" else 4),
+            issues=issues,
             icon="[Release]"
         )
     
@@ -14040,7 +15516,7 @@ class WorkareaReviewer:
             dashboard_filename = os.path.basename(dashboard_path)
             print(f"{Color.GREEN}[OK] Master Dashboard generated: {dashboard_filename}{Color.RESET}")
             print(f"{Color.CYAN}     Open with recommended browser:{Color.RESET}")
-            print(f"     /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{dashboard_filename}{Color.RESET} &")
+            print(f"     /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{dashboard_filename}{Color.RESET} &")
         except Exception as e:
             print(f"{Color.RED}[ERROR] Failed to generate Master Dashboard: {e}{Color.RESET}")
         
@@ -15218,7 +16694,7 @@ class WorkareaReviewer:
                 f.write(html_content)
             
             print(f"\n  {Color.CYAN}Runtime HTML Report:{Color.RESET}")
-            print(f"  Open with: /home/scratch.avice_vlsi/firefox-143.0.4/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
             
             return os.path.abspath(html_path)
             
@@ -16032,83 +17508,96 @@ class WorkareaReviewer:
 
 def main():
     """Main function"""
+    
+    # Color codes for help text
+    CYAN = '\033[36m'
+    GREEN = '\033[32m'
+    YELLOW = '\033[33m'
+    BOLD = '\033[1m'
+    RESET = '\033[0m'
+    
     parser = argparse.ArgumentParser(
         description="Avice Workarea Review Tool - Comprehensive ASIC/SoC design flow analysis",
-        epilog="""
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                          AVICE WORKAREA REVIEW TOOL
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        epilog=f"""
+{CYAN}===============================================================================
+                       AVICE WORKAREA REVIEW TOOL
+==============================================================================={RESET}
 
-BASIC EXAMPLES:
-  # Complete workarea analysis (all sections)
-  /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea
+{GREEN}{BOLD}BASIC EXAMPLES:{RESET}
+  # Complete workarea analysis (all 13 sections)
+  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea
 
   # Analyze specific IPO
-  /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea ipo1000
+  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea ipo1000
 
-  # Analyze using unit name from agur release table (automatic workarea lookup)
-  /home/avice/scripts/avice_wa_review_launcher.csh --unit prt
-  /home/avice/scripts/avice_wa_review_launcher.csh --unit pmux --sections runtime pt
+  # AGUR unit analysis (automatic workarea lookup)
+  /home/avice/scripts/avice_wa_review_launcher.csh -u prt
+  /home/avice/scripts/avice_wa_review_launcher.csh -u pmux -s runtime pt
 
-  # Run only runtime and timing analysis (fast debug)
-  /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.user/design/workarea -s runtime pt
+  # Quick timing check (fast)
+  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s runtime pt
 
-SELECTIVE SECTION ANALYSIS:
-  # Parasitic extraction and signoff timing only
+{GREEN}{BOLD}SELECTIVE SECTION ANALYSIS{RESET} (faster than full analysis):
+  # Parasitic extraction and signoff timing
   /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s star pt
 
-  # Setup, synthesis, and PnR sections
+  # Setup, synthesis, and PnR
   /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s setup synthesis pnr
 
-  # Physical verification and GL checks
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s pv gl-check
+  # Pre-release checks
+  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s formal pt pv gl-check
 
-  # ECO analysis sections
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s eco nv-gate-eco
-
-ADDITIONAL OPTIONS:
-  # Run without logo for automation
+{GREEN}{BOLD}AUTOMATION:{RESET}
+  # No logo for scripts
   /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea --no-logo
 
-  # Display comprehensive documentation
-  /home/avice/scripts/avice_wa_review_launcher.csh --help-docs
-  /home/avice/scripts/avice_wa_review_launcher.csh --open-docs
+  # With workarea size calculation
+  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea --show-size
 
-ANALYSIS SECTIONS (case-insensitive):
+  # Documentation
+  /home/avice/scripts/avice_wa_review_launcher.csh --help-docs
+
+{CYAN}-------------------------------------------------------------------------------
+AVAILABLE SECTIONS (use with -s flag):
+-------------------------------------------------------------------------------{RESET}
   setup          Environment, BeFlow config, PRC configuration
-  runtime        DC, PnR, Star, PT, Formal, PV, GL Check runtimes
-  synthesis      QoR reports, floorplan dimensions, timing groups
-  pnr            Step sequence, routing data, timing histograms
-  clock          Clock tree analysis, DSR latency, clock gating
+  runtime        Flow runtimes (DC, PnR, Star, PT, Formal, PV, GL Check)
+  synthesis      QoR reports, floorplan, timing groups (alias: syn, dc)
+  pnr            Place & route analysis, timing histograms
+  clock          Clock tree analysis, DSR latency
   formal         Formal verification status, timestamp tracking
-  star           Parasitic extraction (SPEF) runtime and status
-  pt             Signoff timing, dual-scenario WNS/TNS/NVP, DSR skew
-  pv             Physical verification (LVS/DRC/Antenna) flow analysis
-  gl-check       Gate-level check error analysis and categorization
+  star           Parasitic extraction (SPEF) status (alias: parasitic)
+  pt             Signoff timing, WNS/TNS/NVP, DSR skew (alias: timing)
+  pv             Physical verification (LVS/DRC/Antenna)
+  gl-check       Gate-level check error analysis
   eco            PT-ECO analysis and dont_use cell checks
-  nv-gate-eco    NVIDIA Gate ECO command analysis and validation
+  nv-gate-eco    NVIDIA Gate ECO command analysis
   block-release  Block release information and umake commands
 
+{CYAN}-------------------------------------------------------------------------------
 KEY FEATURES:
-  • Multi-IPO support with automatic detection
-  • Dual-scenario timing analysis (setup/hold)
-  • DSR Mux Clock Skew tracking across work directories
-  • Formal verification timestamp tracking vs design changes
-  • Interactive HTML reports with absolute paths (portable)
-  • Timeline visualizations for all flow stages
-  • ECO dont_use cell validation
-  • Runtime analysis with fast_dc detection
+-------------------------------------------------------------------------------{RESET}
+  - Multi-IPO support with automatic IPO detection and resolution
+  - Dual-scenario timing analysis (setup/hold) with DSR skew tracking
+  - Formal verification timestamp tracking vs design changes
+  - {BOLD}Interactive HTML reports with absolute paths (portable!){RESET}
+  - Timeline visualizations for all flow stages
+  - ECO dont_use cell validation
+  - Runtime analysis with fast_dc detection
+  - {YELLOW}IPO directory auto-resolution (handles deleted IPO dirs){RESET}
 
+{CYAN}-------------------------------------------------------------------------------
 OUTPUT:
-  Terminal: Compact, color-coded summaries with ASCII-only characters
-  HTML:     Comprehensive reports in current working directory with:
+-------------------------------------------------------------------------------{RESET}
+  {BOLD}TERMINAL:{RESET} Compact, color-coded summaries with ASCII-only characters
+  {BOLD}HTML:{RESET}     Comprehensive reports in current working directory:
             - Clickable log file links (absolute paths)
-            - Interactive tables and expandable sections
+            - Interactive tables with sorting/filtering
             - Timeline visualizations and flow tracking
-            - Professional CSS styling and mobile-responsive layout
+            - Professional CSS styling, mobile-responsive
 
-For questions or support, contact: avice@nvidia.com
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{GREEN}For questions, bug reports, or feature requests: avice@nvidia.com{RESET}
+{CYAN}==============================================================================={RESET}
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -16136,6 +17625,8 @@ For questions or support, contact: avice@nvidia.com
                        help="Disable logo display (useful for automated scripts)")
     parser.add_argument("--skip-validation", action="store_true",
                        help="Skip workarea validation (use with caution)")
+    parser.add_argument("--show-size", action="store_true",
+                       help="Calculate and display workarea total size (may be slow for large workareas)")
     parser.add_argument("--unit", "-u", type=str,
                        help="Unit name from agur release table (e.g., prt, pmux). Automatically looks up released workarea path from AGUR_UNITS_TABLE.txt")
     parser.add_argument("--sections", "-s", nargs="+", 
@@ -16236,7 +17727,7 @@ For questions or support, contact: avice@nvidia.com
         sys.exit(1)
     
     try:
-        reviewer = WorkareaReviewer(args.workarea, args.ipo, show_logo=not args.no_logo, skip_validation=args.skip_validation)
+        reviewer = WorkareaReviewer(args.workarea, args.ipo, show_logo=not args.no_logo, skip_validation=args.skip_validation, show_size=args.show_size)
         
         # Cleanup old HTML files from previous runs to avoid confusion
         reviewer._cleanup_old_html_files()
@@ -16273,6 +17764,17 @@ For questions or support, contact: avice@nvidia.com
                         print(f"Error running {section} section: {e}")
                 else:
                     print(f"Unknown section: {section}")
+            
+            # Generate Master Dashboard after running selected sections
+            print(f"\n{Color.CYAN}Generating Master Dashboard...{Color.RESET}")
+            try:
+                dashboard_path = reviewer.master_dashboard.generate_html()
+                dashboard_filename = os.path.basename(dashboard_path)
+                print(f"{Color.GREEN}[OK] Master Dashboard generated: {dashboard_filename}{Color.RESET}")
+                print(f"{Color.CYAN}     Open with recommended browser:{Color.RESET}")
+                print(f"     /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{dashboard_filename}{Color.RESET} &")
+            except Exception as e:
+                print(f"{Color.RED}[ERROR] Failed to generate Master Dashboard: {e}{Color.RESET}")
         else:
             # Run complete review
             reviewer.run_complete_review()

@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Avice Workarea Review Tool - Agur Presentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            overflow: hidden;
+        }
+        
+        .slide-container {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            padding: 60px;
+            position: relative;
+        }
+        
+        .slide-container.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        h1 {
+            font-size: 64px;
+            margin-bottom: 30px;
+            color: #00ff00;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        h2 {
+            font-size: 48px;
+            margin-bottom: 25px;
+            color: #4fc3f7;
+        }
+        
+        h3 {
+            font-size: 36px;
+            margin: 20px 0 15px 0;
+            color: #ffd700;
+        }
+        
+        p, li {
+            font-size: 28px;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+        
+        ul {
+            margin-left: 50px;
+        }
+        
+        .code-block {
+            background: rgba(0,0,0,0.4);
+            border-left: 5px solid #00ff00;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 22px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        
+        .highlight {
+            color: #00ff00;
+            font-weight: bold;
+        }
+        
+        .warning {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        
+        .success {
+            color: #51cf66;
+            font-weight: bold;
+        }
+        
+        .slide-number {
+            position: absolute;
+            bottom: 20px;
+            right: 40px;
+            font-size: 24px;
+            color: rgba(255,255,255,0.6);
+        }
+        
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 25px;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.4);
+            transform: scale(1.05);
+        }
+        
+        .bullet-point {
+            margin: 15px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+        
+        .bullet-point::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #00ff00;
+            font-weight: bold;
+        }
+        
+        .section-divider {
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #00ff00, transparent);
+            margin: 30px 0;
+        }
+        
+        table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+            font-size: 24px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        th {
+            background: rgba(0,255,0,0.2);
+            color: #00ff00;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Title -->
+<div class="slide-container active" id="slide1">
+    <h1>Avice Workarea Review Tool</h1>
+    <h2>Comprehensive ASIC Workarea Analysis</h2>
+    <br><br>
+    <p style="font-size: 36px;">Alon Vice (avice)</p>
+    <p style="font-size: 32px;">Agur Project Weekly Meeting</p>
+    <p style="font-size: 28px;">October 16, 2025</p>
+    <div class="slide-number">1 / 13</div>
+</div>
+
+<!-- Slide 2: Why This Tool? -->
+<div class="slide-container" id="slide2">
+    <h2>Why This Tool?</h2>
+    <div class="section-divider"></div>
+    
+    <h3 class="warning">The Problem</h3>
+    <div class="bullet-point">Manual navigation through complex directory structures</div>
+    <div class="bullet-point">Checking multiple log files across different locations</div>
+    <div class="bullet-point">Manually parsing timing reports, runtime logs</div>
+    <div class="bullet-point">Time-consuming and error-prone</div>
+    
+    <br>
+    <h3 class="success">The Solution</h3>
+    <div class="bullet-point"><span class="highlight">ONE COMMAND</span> - complete workarea analysis</div>
+    <div class="bullet-point"><span class="highlight">AUTOMATED</span> extraction of all key metrics</div>
+    <div class="bullet-point"><span class="highlight">HTML REPORTS</span> with clickable links</div>
+    <div class="bullet-point"><span class="highlight">QUICK STATUS</span> without deep diving</div>
+    
+    <div class="slide-number">2 / 13</div>
+</div>
+
+<!-- Slide 3: Tool Overview -->
+<div class="slide-container" id="slide3">
+    <h2>What It Analyzes - 13 Sections</h2>
+    <div class="section-divider"></div>
+    
+    <table>
+        <tr>
+            <td>1. Setup</td>
+            <td>2. Synthesis (DC)</td>
+            <td>3. Place & Route</td>
+        </tr>
+        <tr>
+            <td>4. Clock Analysis</td>
+            <td>5. Formal Verification</td>
+            <td>6. Parasitic Extraction</td>
+        </tr>
+        <tr>
+            <td>7. Signoff Timing (PT)</td>
+            <td>8. Physical Verification</td>
+            <td>9. GL Check</td>
+        </tr>
+        <tr>
+            <td>10. ECO Analysis</td>
+            <td>11. NV Gate ECO</td>
+            <td>12. Runtime</td>
+        </tr>
+        <tr>
+            <td colspan="3" style="text-align: center; color: #00ff00;">13. Block Release</td>
+        </tr>
+    </table>
+    
+    <div class="slide-number">3 / 13</div>
+</div>
+
+<!-- Slide 4: How to Use -->
+<div class="slide-container" id="slide4">
+    <h2>How to Use It - Basic Commands</h2>
+    <div class="section-divider"></div>
+    
+    <div class="code-block">
+# Basic review - all sections
+/home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea
+
+# Specific IPO
+/home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea ipo1000
+
+# Selective sections (faster!)
+/home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s runtime pt formal
+
+# Available sections:
+# setup, runtime, synthesis, pnr, clock, formal, star, pt, 
+# pv, gl-check, eco, nv-gate-eco, block-release
+    </div>
+    
+    <div class="slide-number">4 / 13</div>
+</div>
+
+<!-- Slide 5: Live Demo -->
+<div class="slide-container" id="slide5">
+    <h2>LIVE DEMO - Part 1</h2>
+    <div class="section-divider"></div>
+    
+    <h3>Demo Commands</h3>
+    <div class="code-block">
+# Full analysis
+/home/avice/scripts/avice_wa_review_launcher.csh \
+  /home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_...
+
+# Quick check (runtime + PT + formal)
+/home/avice/scripts/avice_wa_review_launcher.csh \
+  /home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_... \
+  -s runtime pt formal
+    </div>
+    
+    <h3>What to Show</h3>
+    <div class="bullet-point">Terminal output - color-coded sections</div>
+    <div class="bullet-point">Key metrics - timing, runtime, formal status</div>
+    <div class="bullet-point">HTML generation - automatic reports</div>
+    
+    <div class="slide-number">5 / 13</div>
+</div>
+
+<!-- Slide 6: HTML Reports -->
+<div class="slide-container" id="slide6">
+    <h2>LIVE DEMO - Part 2: HTML Reports</h2>
+    <div class="section-divider"></div>
+    
+    <div class="code-block">
+# Open Master Dashboard
+/home/utils/firefox-118.0.1/firefox avice_MASTER_dashboard_*.html
+
+# Individual reports
+/home/utils/firefox-118.0.1/firefox avice_runtime_report_*.html
+/home/utils/firefox-118.0.1/firefox avice_PT_timing_summary_*.html
+    </div>
+    
+    <h3>HTML Features to Demonstrate</h3>
+    <div class="bullet-point">Clickable links to log files</div>
+    <div class="bullet-point">Tablog integration for log viewing</div>
+    <div class="bullet-point">Expandable sections in master dashboard</div>
+    <div class="bullet-point">Detailed tables with color coding</div>
+    <div class="bullet-point">Portable - works from any location</div>
+    
+    <div class="slide-number">6 / 13</div>
+</div>
+
+<!-- Slide 7: Advantages -->
+<div class="slide-container" id="slide7">
+    <h2 class="success">Advantages</h2>
+    <div class="section-divider"></div>
+    
+    <h3>1. Time Savings</h3>
+    <div class="bullet-point">One command replaces <span class="highlight">30+ manual checks</span></div>
+    <div class="bullet-point">Instant status overview</div>
+    
+    <h3>2. Comprehensive Coverage</h3>
+    <div class="bullet-point">All flow stages in one report</div>
+    <div class="bullet-point">Catches issues you might miss</div>
+    
+    <h3>3. Professional Reports</h3>
+    <div class="bullet-point">Share with team members</div>
+    <div class="bullet-point">Complete audit trail</div>
+    
+    <h3>4. Easy & Portable</h3>
+    <div class="bullet-point">Works from any directory</div>
+    <div class="bullet-point">No setup required</div>
+    
+    <div class="slide-number">7 / 13</div>
+</div>
+
+<!-- Slide 8: Disadvantages -->
+<div class="slide-container" id="slide8">
+    <h2 class="warning">DISADVANTAGES - IMPORTANT!</h2>
+    <div class="section-divider"></div>
+    
+    <h3>1. Directory Structure Knowledge Loss</h3>
+    <p style="font-size: 32px; color: #ff6b6b; margin: 20px 0;">
+        <strong>THE BIG RISK:</strong> Designers become too dependent and lose familiarity with workarea structure
+    </p>
+    
+    <div class="bullet-point">Don't know where to find <code style="color: #ffd700;">gl-check.all.err</code> manually</div>
+    <div class="bullet-point">Forget the difference between <code style="color: #ffd700;">signoff_flow/</code> and <code style="color: #ffd700;">pnr_flow/</code></div>
+    <div class="bullet-point">Can't troubleshoot when tool has bugs</div>
+    
+    <br>
+    <h3 class="success">Recommendation</h3>
+    <div class="bullet-point">Use tool for <span class="highlight">quick reviews</span> and <span class="highlight">sharing reports</span></div>
+    <div class="bullet-point">Still navigate directories manually for <span class="highlight">deep debugging</span></div>
+    <div class="bullet-point">New team members: <span class="highlight">Learn structure FIRST</span>, tool SECOND</div>
+    
+    <div class="slide-number">8 / 13</div>
+</div>
+
+<!-- Slide 9: Known Bugs -->
+<div class="slide-container" id="slide9">
+    <h2 class="warning">Known Bugs</h2>
+    <div class="section-divider"></div>
+    
+    <h3>Bug #1: Formal Status Misreporting</h3>
+    <p style="font-size: 28px; margin: 15px 0;"><strong>Issue:</strong> Tool shows "SUCCEEDED" but real status is "INCONCLUSIVE"</p>
+    
+    <div class="code-block">
+Tool Output:  <span style="color: #51cf66;">[OK] Formal verification SUCCEEDED</span>
+Real Status:  <span style="color: #ff6b6b;">INCONCLUSIVE - need to check manually</span>
+    </div>
+    
+    <p style="font-size: 26px; margin: 15px 0;">
+        <strong>Root Cause:</strong> Parsing logic checks for absence of "FAILED", not actual success indicators
+    </p>
+    
+    <h3 class="success">Workaround</h3>
+    <div class="bullet-point">Always <span class="highlight">manually verify formal status</span> in critical releases</div>
+    <div class="bullet-point">Check formal log directly: <code style="color: #ffd700;">formal_flow/*/logs/*.log</code></div>
+    <div class="bullet-point">Look for "All points proven" (real success)</div>
+    <div class="bullet-point"><span class="success">Fix in progress</span> - will improve parsing</div>
+    
+    <div class="slide-number">9 / 13</div>
+</div>
+
+<!-- Slide 10: Best Practices -->
+<div class="slide-container" id="slide10">
+    <h2 class="success">Best Practices</h2>
+    <div class="section-divider"></div>
+    
+    <h3>Recommended Workflow</h3>
+    
+    <div style="background: rgba(0,255,0,0.1); padding: 20px; border-radius: 10px; margin: 15px 0;">
+        <p style="font-size: 26px;"><strong>1. Initial Check</strong> - Use tool for quick status</p>
+        <p style="font-size: 24px; margin-left: 30px;">Quick overview of runtime, timing, formal, PV</p>
+    </div>
+    
+    <div style="background: rgba(255,255,0,0.1); padding: 20px; border-radius: 10px; margin: 15px 0;">
+        <p style="font-size: 26px;"><strong>2. Deep Dive</strong> - Navigate directories manually for debugging</p>
+        <p style="font-size: 24px; margin-left: 30px;">When you need to understand root cause</p>
+    </div>
+    
+    <div style="background: rgba(0,255,255,0.1); padding: 20px; border-radius: 10px; margin: 15px 0;">
+        <p style="font-size: 26px;"><strong>3. Sharing Results</strong> - Generate HTML report</p>
+        <p style="font-size: 24px; margin-left: 30px;">Professional reports for team communication</p>
+    </div>
+    
+    <div style="background: rgba(255,100,100,0.2); padding: 20px; border-radius: 10px; margin: 15px 0;">
+        <p style="font-size: 26px;"><strong>4. Critical Releases</strong> - Always verify formal manually</p>
+        <p style="font-size: 24px; margin-left: 30px;">Don't rely on tool for formal verification</p>
+    </div>
+    
+    <div class="slide-number">10 / 13</div>
+</div>
+
+<!-- Slide 11: When NOT to Use -->
+<div class="slide-container" id="slide11">
+    <h2>When NOT to Use the Tool</h2>
+    <div class="section-divider"></div>
+    
+    <div style="font-size: 32px; line-height: 2;">
+        <div class="bullet-point"><span class="warning">Deep debugging sessions</span> - use manual navigation</div>
+        <br>
+        <div class="bullet-point"><span class="warning">Learning a new design</span> - explore directories first</div>
+        <br>
+        <div class="bullet-point"><span class="warning">Critical formal verification</span> - always double-check logs</div>
+        <br>
+        <div class="bullet-point"><span class="warning">When tool reports seem wrong</span> - trust your instincts</div>
+    </div>
+    
+    <br><br>
+    <p style="font-size: 36px; text-align: center; color: #00ff00;">
+        <strong>The tool is your ASSISTANT, not your REPLACEMENT</strong>
+    </p>
+    
+    <div class="slide-number">11 / 13</div>
+</div>
+
+<!-- Slide 12: Real-World Examples -->
+<div class="slide-container" id="slide12">
+    <h2>Real-World Examples</h2>
+    <div class="section-divider"></div>
+    
+    <h3>Example 1: Quick Status Before Release</h3>
+    <div class="code-block">
+/home/avice/scripts/avice_wa_review_launcher.csh $workarea \
+  -s formal pt pv gl-check
+# Check: Formal SUCCEEDED, PT timing passing, PV clean
+    </div>
+    
+    <h3>Example 2: Debug Long Runtime</h3>
+    <div class="code-block">
+/home/avice/scripts/avice_wa_review_launcher.csh $workarea -s runtime
+# Shows: postroute stage is taking 12.3 hours (investigate!)
+    </div>
+    
+    <h3>Example 3: Compare Two Workareas</h3>
+    <div class="code-block">
+# Generate reports for both, compare side-by-side
+/home/avice/scripts/avice_wa_review_launcher.csh $wa1 -s pt
+/home/avice/scripts/avice_wa_review_launcher.csh $wa2 -s pt
+    </div>
+    
+    <div class="slide-number">12 / 13</div>
+</div>
+
+<!-- Slide 13: Summary -->
+<div class="slide-container" id="slide13">
+    <h2>Summary</h2>
+    <div class="section-divider"></div>
+    
+    <h3 class="success">Use the Tool For:</h3>
+    <div class="bullet-point">Quick status checks</div>
+    <div class="bullet-point">Generating reports for team</div>
+    <div class="bullet-point">First-pass analysis</div>
+    <div class="bullet-point">Runtime analysis</div>
+    
+    <br>
+    <h3 class="warning">Don't Forget:</h3>
+    <div class="bullet-point">Learn directory structure first</div>
+    <div class="bullet-point">Verify formal status manually</div>
+    <div class="bullet-point">Navigate directories for deep debugging</div>
+    <div class="bullet-point">Keep your manual skills sharp!</div>
+    
+    <br><br>
+    <p style="font-size: 48px; text-align: center; color: #00ff00;">
+        <strong>Questions?</strong>
+    </p>
+    
+    <div class="slide-number">13 / 13</div>
+</div>
+
+<!-- Navigation -->
+<div class="navigation">
+    <button class="nav-btn" onclick="prevSlide()">← Previous</button>
+    <button class="nav-btn" onclick="nextSlide()">Next →</button>
+</div>
+
+<script>
+let currentSlide = 1;
+const totalSlides = 13;
+
+function showSlide(n) {
+    document.querySelectorAll('.slide-container').forEach(slide => {
+        slide.classList.remove('active');
+    });
+    
+    if (n > totalSlides) currentSlide = 1;
+    if (n < 1) currentSlide = totalSlides;
+    
+    document.getElementById('slide' + currentSlide).classList.add('active');
+}
+
+function nextSlide() {
+    currentSlide++;
+    showSlide(currentSlide);
+}
+
+function prevSlide() {
+    currentSlide--;
+    showSlide(currentSlide);
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'ArrowRight' || event.key === ' ') {
+        nextSlide();
+    } else if (event.key === 'ArrowLeft') {
+        prevSlide();
+    } else if (event.key === 'Home') {
+        currentSlide = 1;
+        showSlide(currentSlide);
+    } else if (event.key === 'End') {
+        currentSlide = totalSlides;
+        showSlide(currentSlide);
+    }
+});
+
+// Initialize
+showSlide(currentSlide);
+</script>
+
+</body>
+</html>
+

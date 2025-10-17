@@ -57,11 +57,22 @@ TEMP_DIR="/tmp/agur_regression_$$"
 FILTER_CHIPLETS=()  # Array to store multiple chiplets: CPORT, CFAN, etc.
 FILTER_UNIT=""
 
+# Execution options
+PARALLEL_JOBS=1           # Number of parallel jobs (default: sequential)
+DRY_RUN=0                 # Dry-run mode (preview only)
+VERBOSE=0                 # Verbose/debug mode
+RESUME_FILE=""            # Resume from previous run
+CONFIG_FILE=""            # Optional configuration file
+MAX_RETRIES=2             # Number of retries for failed analyses
+RETRY_DELAY=5             # Delay in seconds between retries
+
 # Colors for terminal output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
 NC='\033[0m' # No Color
 
 #===============================================================================
@@ -85,20 +96,36 @@ Filters:
   -c, --chiplet CHIPLET    Filter by chiplet (e.g., CPORT)
                            Multiple chiplets: comma-separated or multiple -c flags
   -u, --unit UNIT          Run for specific unit only
+
+Execution Control:
+  -j, --jobs N             Run N analyses in parallel (default: 1, sequential)
+                           Use -j auto to auto-detect CPU cores
+  --dry-run                Preview what will be executed without running
+  -v, --verbose            Enable verbose/debug output
+  --resume FILE            Resume from a previous interrupted run
+  --config FILE            Load configuration from file
+
+Other:
   -h, --help               Show this help message
 
 Examples:
-  $0                       # Run ALL 5 regression types on all units (default)
-  $0 -c CPORT              # Run ALL types on CPORT units only
-  $0 -u fdb                # Run ALL types on fdb unit only
-  $0 -t formal             # Run formal regression on all units
-  $0 -t formal,pv          # Run formal AND PV regressions (multi-tab HTML)
-  $0 -t formal -t pv       # Same as above (multiple -t flags)
-  $0 -t formal -c CPORT    # Run formal on CPORT units only
-  $0 -t formal -c CPORT,CFAN  # Run formal on CPORT and CFAN units
-  $0 -t formal -c CPORT -c CFAN  # Same as above (multiple -c flags)
-  $0 -t timing -u prt      # Run timing regression on prt unit only
-  $0 -t pv,formal,timing   # Run 3 regressions in one dashboard
+  $0                               # Run ALL 5 regression types on all units (sequential)
+  $0 -j 4                          # Run with 4 parallel jobs
+  $0 -j auto                       # Auto-detect CPU cores for parallelism
+  $0 --dry-run                     # Preview what will be executed
+  $0 -v                            # Run with verbose output
+  $0 -c CPORT                      # Run ALL types on CPORT units only
+  $0 -u fdb                        # Run ALL types on fdb unit only
+  $0 -t formal                     # Run formal regression on all units
+  $0 -t formal -j 8                # Run formal with 8 parallel jobs
+  $0 -t formal,pv                  # Run formal AND PV regressions (multi-tab HTML)
+  $0 -t formal -t pv               # Same as above (multiple -t flags)
+  $0 -t formal -c CPORT            # Run formal on CPORT units only
+  $0 -t formal -c CPORT,CFAN       # Run formal on CPORT and CFAN units
+  $0 -t formal -c CPORT -c CFAN    # Same as above (multiple -c flags)
+  $0 -t timing -u prt              # Run timing regression on prt unit only
+  $0 -t pv,formal,timing           # Run 3 regressions in one dashboard
+  $0 --resume .agur_regression_state.txt  # Resume from previous run
 
 Regression Types:
   formal    - Formal verification status (RTL vs PNR/Synthesis)
@@ -110,6 +137,12 @@ Regression Types:
 Output Files (generated in current directory):
   Single type:    agur_<type>_regression_dashboard_YYYYMMDD_HHMMSS.html
   Multiple types: agur_multi_regression_dashboard_YYYYMMDD_HHMMSS.html
+  State file:     .agur_regression_state_YYYYMMDD_HHMMSS.txt (for resume)
+
+Performance Tips:
+  - Use -j auto for optimal parallelism based on your CPU
+  - Parallel execution significantly speeds up large regressions
+  - Use --dry-run first to preview the execution plan
 
 EOF
     exit 0
@@ -148,6 +181,231 @@ print_section() {
     echo -e "${CYAN}--- $1 ---${NC}"
 }
 
+# Verbose logging function
+log_verbose() {
+    if [ $VERBOSE -eq 1 ]; then
+        echo -e "${BLUE}[VERBOSE]${NC} $1"
+    fi
+}
+
+# Debug logging function
+log_debug() {
+    if [ $VERBOSE -eq 1 ]; then
+        echo -e "${MAGENTA}[DEBUG]${NC} $(date '+%H:%M:%S') - $1"
+    fi
+}
+
+# Progress tracking function
+# Args: current, total, unit_name
+show_progress() {
+    local current=$1
+    local total=$2
+    local unit_name=$3
+    local percentage=$((current * 100 / total))
+    local completed_bars=$((percentage / 2))
+    local remaining_bars=$((50 - completed_bars))
+    
+    # Build progress bar
+    local bar="["
+    for ((i=0; i<completed_bars; i++)); do bar+="="; done
+    [ $completed_bars -gt 0 ] && bar+=">"
+    for ((i=0; i<remaining_bars-1; i++)); do bar+=" "; done
+    bar+="]"
+    
+    # Calculate ETA (if more than one unit processed)
+    local eta_str=""
+    if [ $current -gt 0 ]; then
+        local elapsed=$((SECONDS - START_TIME))
+        local avg_time=$((elapsed / current))
+        local remaining=$((total - current))
+        local eta=$((avg_time * remaining))
+        
+        local eta_min=$((eta / 60))
+        local eta_sec=$((eta % 60))
+        eta_str=" - ETA: ${eta_min}m ${eta_sec}s"
+    fi
+    
+    echo -ne "\r${CYAN}Progress:${NC} $bar ${percentage}% (${current}/${total}) - ${unit_name}${eta_str}     "
+}
+
+# Load configuration from file
+load_config() {
+    local config_file="$1"
+    if [ ! -f "$config_file" ]; then
+        echo -e "${RED}[ERROR]${NC} Configuration file not found: $config_file"
+        exit 1
+    fi
+    
+    log_verbose "Loading configuration from: $config_file"
+    
+    while IFS='=' read -r key value; do
+        # Skip comments and empty lines
+        [[ "$key" =~ ^#.*$ ]] && continue
+        [[ -z "$key" ]] && continue
+        
+        # Trim whitespace
+        key=$(echo "$key" | xargs)
+        value=$(echo "$value" | xargs)
+        
+        case "$key" in
+            PYTHON_BIN)
+                PYTHON_BIN="$value"
+                log_verbose "  Python binary: $PYTHON_BIN"
+                ;;
+            AVICE_SCRIPT)
+                AVICE_SCRIPT="$value"
+                log_verbose "  Avice script: $AVICE_SCRIPT"
+                ;;
+            UNITS_TABLE)
+                UNITS_TABLE="$value"
+                log_verbose "  Units table: $UNITS_TABLE"
+                ;;
+            PARALLEL_JOBS)
+                PARALLEL_JOBS="$value"
+                log_verbose "  Parallel jobs: $PARALLEL_JOBS"
+                ;;
+        esac
+    done < "$config_file"
+}
+
+# Save state for resume capability
+save_state() {
+    local state_file="$1"
+    local regression_type="$2"
+    local unit_index="$3"
+    local unit_name="$4"
+    
+    echo "${regression_type}|${unit_index}|${unit_name}|$(date '+%Y-%m-%d %H:%M:%S')" >> "$state_file"
+    log_debug "State saved: $unit_name ($unit_index)"
+}
+
+# Check if unit was already processed (for resume)
+is_unit_processed() {
+    local state_file="$1"
+    local regression_type="$2"
+    local unit_index="$3"
+    
+    if [ ! -f "$state_file" ]; then
+        return 1  # Not processed
+    fi
+    
+    if grep -q "^${regression_type}|${unit_index}|" "$state_file"; then
+        return 0  # Already processed
+    else
+        return 1  # Not processed
+    fi
+}
+
+# Run analysis for a single unit (can be called in parallel)
+# Args: unit_index, unit_name, chiplet, workarea, regression_type, analysis_section, temp_dir, state_file
+run_unit_analysis() {
+    local unit_idx="$1"
+    local unit="$2"
+    local chiplet="$3"
+    local workarea="$4"
+    local regression_type="$5"
+    local analysis_section="$6"
+    local temp_dir="$7"
+    local state_file="$8"
+    
+    local output_file="$temp_dir/${unit}_${regression_type}_output.txt"
+    local result_file="$temp_dir/${unit}_${regression_type}_result.txt"
+    local retry_count=0
+    local success=0
+    
+    log_debug "Starting analysis for unit: $unit (index: $unit_idx)"
+    
+    # Check if workarea exists
+    if [ ! -d "$workarea" ]; then
+        echo "MISSING|Workarea path not found or deleted|N/A" > "$result_file"
+        log_debug "Unit $unit: Workarea missing"
+        save_state "$state_file" "$regression_type" "$unit_idx" "$unit"
+        return
+    fi
+    
+    # Retry loop for robustness
+    while [ $retry_count -le $MAX_RETRIES ] && [ $success -eq 0 ]; do
+        if [ $retry_count -gt 0 ]; then
+            log_verbose "Retry attempt $retry_count/$MAX_RETRIES for unit: $unit"
+            sleep $RETRY_DELAY
+        fi
+        
+        # Run analysis with timeout protection (30 minutes max)
+        log_debug "Executing avice_wa_review.py for $unit (attempt $((retry_count+1)))"
+        
+        # Use timeout if available
+        if command -v timeout &> /dev/null; then
+            timeout 1800 "$PYTHON_BIN" "$AVICE_SCRIPT" "$workarea" -s "$analysis_section" --no-logo > "$output_file" 2>&1
+            local exit_code=$?
+            
+            if [ $exit_code -eq 124 ]; then
+                log_verbose "Unit $unit: Analysis timed out after 30 minutes"
+                ((retry_count++))
+                continue
+            fi
+        else
+            "$PYTHON_BIN" "$AVICE_SCRIPT" "$workarea" -s "$analysis_section" --no-logo > "$output_file" 2>&1
+            local exit_code=$?
+        fi
+        
+        # Parse output based on regression type
+        if [ $exit_code -ne 0 ]; then
+            log_debug "Unit $unit: Analysis failed with exit code $exit_code (attempt $((retry_count+1)))"
+            
+            # Check if it's a transient error (e.g., file system issues)
+            if [ $exit_code -eq 1 ] && [ $retry_count -lt $MAX_RETRIES ]; then
+                ((retry_count++))
+                continue
+            fi
+            
+            echo "ERROR|Script execution failed (exit code: $exit_code) after $((retry_count+1)) attempts|N/A" > "$result_file"
+            success=1  # Exit retry loop
+        else
+            # Call appropriate parser function based on regression type
+            local parse_result=""
+            case "$regression_type" in
+                formal)
+                    parse_result=$(parse_formal_output "$output_file")
+                    ;;
+                timing)
+                    parse_result=$(parse_timing_output "$output_file")
+                    ;;
+                pv)
+                    parse_result=$(parse_pv_output "$output_file")
+                    ;;
+                clock)
+                    parse_result=$(parse_clock_output "$output_file")
+                    ;;
+                release)
+                    parse_result=$(parse_release_output "$output_file")
+                    ;;
+                *)
+                    parse_result="ERROR|Unknown regression type|N/A"
+                    ;;
+            esac
+            
+            echo "$parse_result" > "$result_file"
+            log_debug "Unit $unit: Analysis complete (attempt $((retry_count+1)))"
+            success=1  # Exit retry loop
+        fi
+    done
+    
+    # Save state
+    save_state "$state_file" "$regression_type" "$unit_idx" "$unit"
+}
+
+# Export functions and variables for parallel execution
+export -f run_unit_analysis
+export -f parse_formal_output
+export -f parse_timing_output
+export -f parse_pv_output
+export -f parse_clock_output
+export -f parse_release_output
+export -f save_state
+export -f log_debug
+export -f log_verbose
+export PYTHON_BIN AVICE_SCRIPT VERBOSE BLUE MAGENTA NC MAX_RETRIES RETRY_DELAY
+
 #===============================================================================
 # Regression Type Functions
 #===============================================================================
@@ -176,27 +434,63 @@ parse_formal_output() {
         return
     fi
     
-    # Extract status for each formal flow
+    # Extract status and runtime for each formal flow
     local rtl_vs_pnr_status=""
     local rtl_vs_pnr_bbox_status=""
     local rtl_vs_syn_status=""
     local rtl_vs_syn_bbox_status=""
+    local rtl_vs_pnr_runtime=""
+    local rtl_vs_pnr_bbox_runtime=""
+    local rtl_vs_syn_runtime=""
+    local rtl_vs_syn_bbox_runtime=""
     
+    # Convert formal section to array for easier processing
+    local formal_lines=()
     while IFS= read -r line; do
-        if [[ "$line" == *"rtl_vs_pnr_fm/log/rtl_vs_pnr_fm.log"* ]]; then
-            read -r status_line
-            rtl_vs_pnr_status=$(echo "$status_line" | grep -oP "(SUCCEEDED|FAILED|CRASHED|RUNNING|UNRESOLVED)" | head -1)
-        elif [[ "$line" == *"rtl_vs_pnr_bbox_fm/log/rtl_vs_pnr_bbox_fm.log"* ]]; then
-            read -r status_line
-            rtl_vs_pnr_bbox_status=$(echo "$status_line" | grep -oP "(SUCCEEDED|FAILED|CRASHED|RUNNING|UNRESOLVED)" | head -1)
-        elif [[ "$line" == *"rtl_vs_syn_fm/log/rtl_vs_syn_fm.log"* ]]; then
-            read -r status_line
-            rtl_vs_syn_status=$(echo "$status_line" | grep -oP "(SUCCEEDED|FAILED|CRASHED|RUNNING|UNRESOLVED)" | head -1)
-        elif [[ "$line" == *"rtl_vs_syn_bbox_fm/log/rtl_vs_syn_bbox_fm.log"* ]]; then
-            read -r status_line
-            rtl_vs_syn_bbox_status=$(echo "$status_line" | grep -oP "(SUCCEEDED|FAILED|CRASHED|RUNNING|UNRESOLVED)" | head -1)
-        fi
+        formal_lines+=("$line")
     done <<< "$formal_section"
+    
+    # Process array line by line
+    local current_flow=""
+    for i in "${!formal_lines[@]}"; do
+        line="${formal_lines[$i]}"
+        
+        # Detect which flow this is - look for "Formal Log:" prefix
+        if [[ "$line" == *"Formal Log:"* ]] && [[ "$line" == *"rtl_vs_pnr_bbox_fm/log/rtl_vs_pnr_bbox_fm.log"* ]]; then
+            current_flow="rtl_vs_pnr_bbox"
+        elif [[ "$line" == *"Formal Log:"* ]] && [[ "$line" == *"rtl_vs_pnr_fm/log/rtl_vs_pnr_fm.log"* ]]; then
+            current_flow="rtl_vs_pnr"
+        elif [[ "$line" == *"Formal Log:"* ]] && [[ "$line" == *"rtl_vs_syn_fm/log/rtl_vs_syn_fm.log"* ]]; then
+            current_flow="rtl_vs_syn"
+        elif [[ "$line" == *"Formal Log:"* ]] && [[ "$line" == *"rtl_vs_syn_bbox_fm/log/rtl_vs_syn_bbox_fm.log"* ]]; then
+            current_flow="rtl_vs_syn_bbox"
+        fi
+        
+        # If we have a current flow, check for Status and Runtime
+        if [ -n "$current_flow" ]; then
+            # Extract status - handle ANSI color codes
+            if [[ "$line" =~ Status:[[:space:]]*.*?(SUCCEEDED|FAILED|CRASHED|RUNNING|UNRESOLVED) ]]; then
+                case "$current_flow" in
+                    rtl_vs_pnr) rtl_vs_pnr_status="${BASH_REMATCH[1]}" ;;
+                    rtl_vs_pnr_bbox) rtl_vs_pnr_bbox_status="${BASH_REMATCH[1]}" ;;
+                    rtl_vs_syn) rtl_vs_syn_status="${BASH_REMATCH[1]}" ;;
+                    rtl_vs_syn_bbox) rtl_vs_syn_bbox_status="${BASH_REMATCH[1]}" ;;
+                esac
+            fi
+            
+            # Extract runtime
+            if [[ "$line" =~ Runtime:[[:space:]]*([0-9.]+[[:space:]]*(hours?|minutes?)) ]]; then
+                case "$current_flow" in
+                    rtl_vs_pnr) rtl_vs_pnr_runtime="${BASH_REMATCH[1]}" ;;
+                    rtl_vs_pnr_bbox) rtl_vs_pnr_bbox_runtime="${BASH_REMATCH[1]}" ;;
+                    rtl_vs_syn) rtl_vs_syn_runtime="${BASH_REMATCH[1]}" ;;
+                    rtl_vs_syn_bbox) rtl_vs_syn_bbox_runtime="${BASH_REMATCH[1]}" ;;
+                esac
+                # After runtime, reset current_flow for next flow
+                current_flow=""
+            fi
+        fi
+    done
     
     # Determine overall status (prioritize PNR flows over SYN flows)
     local overall_status="UNKNOWN"
@@ -225,16 +519,36 @@ parse_formal_output() {
         overall_status="PARTIAL_PASS"
     fi
     
-    # Extract runtime
-    runtime=$(echo "$formal_section" | grep "Runtime:" | head -1 | grep -oP "Runtime: \K[0-9.]+ (hours|minutes)")
-    [ -z "$runtime" ] && runtime="N/A"
+    # Calculate max runtime for overall display
+    runtime="N/A"
+    for rt in "$rtl_vs_pnr_bbox_runtime" "$rtl_vs_pnr_runtime" "$rtl_vs_syn_runtime" "$rtl_vs_syn_bbox_runtime"; do
+        if [ -n "$rt" ]; then
+            runtime="$rt"
+            break
+        fi
+    done
     
-    # Build details string
+    # Build details string with status and runtime for each flow
     details=""
-    [ -n "$rtl_vs_pnr_bbox_status" ] && details="${details}rtl_vs_pnr_bbox: $rtl_vs_pnr_bbox_status, "
-    [ -n "$rtl_vs_pnr_status" ] && details="${details}rtl_vs_pnr: $rtl_vs_pnr_status, "
-    [ -n "$rtl_vs_syn_status" ] && details="${details}rtl_vs_syn: $rtl_vs_syn_status, "
-    [ -n "$rtl_vs_syn_bbox_status" ] && details="${details}rtl_vs_syn_bbox: $rtl_vs_syn_bbox_status"
+    if [ -n "$rtl_vs_pnr_bbox_status" ]; then
+        details="${details}rtl_vs_pnr_bbox: $rtl_vs_pnr_bbox_status"
+        [ -n "$rtl_vs_pnr_bbox_runtime" ] && details="${details} ($rtl_vs_pnr_bbox_runtime)"
+        details="${details}, "
+    fi
+    if [ -n "$rtl_vs_pnr_status" ]; then
+        details="${details}rtl_vs_pnr: $rtl_vs_pnr_status"
+        [ -n "$rtl_vs_pnr_runtime" ] && details="${details} ($rtl_vs_pnr_runtime)"
+        details="${details}, "
+    fi
+    if [ -n "$rtl_vs_syn_status" ]; then
+        details="${details}rtl_vs_syn: $rtl_vs_syn_status"
+        [ -n "$rtl_vs_syn_runtime" ] && details="${details} ($rtl_vs_syn_runtime)"
+        details="${details}, "
+    fi
+    if [ -n "$rtl_vs_syn_bbox_status" ]; then
+        details="${details}rtl_vs_syn_bbox: $rtl_vs_syn_bbox_status"
+        [ -n "$rtl_vs_syn_bbox_runtime" ] && details="${details} ($rtl_vs_syn_bbox_runtime)"
+    fi
     details=${details%, }  # Remove trailing comma and space
     
     # If no formal flows were found at all, mark as NOT_FOUND
@@ -459,53 +773,69 @@ parse_clock_output() {
         return
     fi
     
-    # Extract clock metrics - try multiple patterns
-    local max_latency=$(echo "$clock_section" | grep -i "Maximum.*latency\|Max.*latency" | grep -oP "[0-9]*\.?[0-9]+" | head -1)
-    local clock_skew=$(echo "$clock_section" | grep -i "Clock skew\|Skew" | grep -oP "[0-9]*\.?[0-9]+" | head -1)
-    local insertion_delay=$(echo "$clock_section" | grep -i "Insertion delay" | grep -oP "[0-9]*\.?[0-9]+" | head -1)
+    # Extract per-clock details from "Clock Detail:" lines
+    # Format: "Clock Detail: CLOCK_NAME|MAX_LATENCY_PS|SKEW_PS"
+    local clock_details=$(grep "Clock Detail:" "$output_file" 2>/dev/null | sed 's/.*Clock Detail:[[:space:]]*//' | sed 's/\x1b\[[0-9;]*m//g')
     
-    # Alternative patterns
-    if [ -z "$max_latency" ]; then
-        max_latency=$(echo "$clock_section" | grep -i "Latency:" | grep -oP "Latency:\s*\K[0-9]*\.?[0-9]+" | head -1)
-    fi
-    if [ -z "$clock_skew" ]; then
-        clock_skew=$(echo "$clock_section" | grep -i "Skew:" | grep -oP "Skew:\s*\K[0-9]*\.?[0-9]+" | head -1)
-    fi
-    
-    # Set defaults if extraction failed
-    [ -z "$max_latency" ] && max_latency="N/A"
-    [ -z "$clock_skew" ] && clock_skew="N/A"
-    [ -z "$insertion_delay" ] && insertion_delay="N/A"
-    
-    # Determine overall clock status
-    local overall_status="UNKNOWN"
-    
-    if [ "$max_latency" = "N/A" ] && [ "$clock_skew" = "N/A" ]; then
-        overall_status="NO_DATA"
-        details="No clock data available"
-    elif [ "$max_latency" != "N/A" ]; then
-        # Evaluate clock quality based on latency (thresholds in ps)
-        # PASSED: latency <= 550ps
-        # WARN: 550ps < latency < 580ps
-        # FAILED: latency >= 580ps
+    if [ -z "$clock_details" ]; then
+        # Fallback to old extraction method
+        local max_latency=$(echo "$clock_section" | grep -i "Maximum.*latency\|Max.*latency" | grep -oP "[0-9]*\.?[0-9]+" | head -1)
+        local clock_skew=$(echo "$clock_section" | grep -i "Clock skew\|Skew" | grep -oP "[0-9]*\.?[0-9]+" | head -1)
         
-        local lat_check=$(echo "$max_latency 550" | awk '{if ($1 <= $2) print "PASS"; else if ($1 < 580) print "WARN"; else print "FAIL"}')
+        [ -z "$max_latency" ] && max_latency="N/A"
+        [ -z "$clock_skew" ] && clock_skew="N/A"
         
-        if [ "$lat_check" = "PASS" ]; then
-            overall_status="PASSED"
-            details="Max Latency: ${max_latency}ps, Skew: ${clock_skew}ps"
-        elif [ "$lat_check" = "WARN" ]; then
-            overall_status="WARN"
-            details="Max Latency: ${max_latency}ps (HIGH), Skew: ${clock_skew}ps"
+        if [ "$max_latency" = "N/A" ]; then
+            overall_status="NO_DATA"
+            details="No clock data available"
         else
-            overall_status="FAILED"
-            details="Max Latency: ${max_latency}ps (CRITICAL), Skew: ${clock_skew}ps"
+            local lat_check=$(echo "$max_latency 550" | awk '{if ($1 <= $2) print "PASS"; else if ($1 < 580) print "WARN"; else print "FAIL"}')
+            
+            if [ "$lat_check" = "PASS" ]; then
+                overall_status="PASSED"
+                details="Max Latency: ${max_latency}ps"
+            elif [ "$lat_check" = "WARN" ]; then
+                overall_status="WARN"
+                details="Max Latency: ${max_latency}ps (HIGH)"
+            else
+                overall_status="FAILED"
+                details="Max Latency: ${max_latency}ps (CRITICAL)"
+            fi
         fi
-        
-        [ "$insertion_delay" != "N/A" ] && details="${details}, Insertion: ${insertion_delay}ps"
     else
-        overall_status="UNKNOWN"
-        details="Unable to determine clock status"
+        # Process per-clock details
+        local overall_status="PASSED"
+        local max_latency_overall=0
+        local num_clocks=0
+        local clocks_list=""
+        
+        while IFS='|' read -r clock_name max_latency skew; do
+            ((num_clocks++))
+            # Track max latency across all clocks for status determination
+            max_lat_int=$(echo "$max_latency" | awk '{print int($1)}')
+            if [ $max_lat_int -gt $max_latency_overall ]; then
+                max_latency_overall=$max_lat_int
+            fi
+            
+            # Build details with clock count
+            if [ $num_clocks -eq 1 ]; then
+                clocks_list="$clock_name"
+            else
+                clocks_list="$clocks_list, $clock_name"
+            fi
+        done <<< "$clock_details"
+        
+        # Determine overall status based on max latency
+        if [ $max_latency_overall -ge 580 ]; then
+            overall_status="FAILED"
+            details="$num_clocks clocks: Max ${max_latency_overall}ps (CRITICAL)"
+        elif [ $max_latency_overall -gt 550 ]; then
+            overall_status="WARN"
+            details="$num_clocks clocks: Max ${max_latency_overall}ps (HIGH)"
+        else
+            overall_status="PASSED"
+            details="$num_clocks clocks: Max ${max_latency_overall}ps"
+        fi
     fi
     
     # Extract runtime if available
@@ -525,83 +855,94 @@ parse_release_output() {
     local details=""
     local runtime="N/A"
     
-    # Extract Block Release section
-    local release_section=$(grep -A 200 "Block Release\|Release Status\|Release Check" "$output_file")
+    # Extract Block Release section - using new comprehensive output format
+    local release_section=$(grep -A 300 "Block Release\|Release Attempts from Workarea" "$output_file")
     
     if [ -z "$release_section" ]; then
         echo "NOT_FOUND|No block release information found|N/A"
         return
     fi
     
-    # Check for "No release" message
-    if echo "$release_section" | grep -q "No release.*found\|No block release"; then
-        echo "NOT_FOUND|No block release found|N/A"
+    # Check for "No block release attempts found" message
+    if echo "$release_section" | grep -q "No block release attempts found"; then
+        echo "NOT_FOUND|No block release attempts found|N/A"
         return
     fi
     
-    # Extract release information - try multiple patterns
-    local release_type=$(echo "$release_section" | grep -i "Release type\|Type:" | head -1)
-    local release_date=$(echo "$release_section" | grep -i "Release date\|Date:" | head -1)
-    local release_complete=$(echo "$release_section" | grep -i "Completeness\|Complete:" | head -1)
+    # Strip ANSI color codes from the section
+    release_section=$(echo "$release_section" | sed 's/\x1b\[[0-9;]*m//g')
     
-    # Check for specific release flags
-    local has_sta=$(echo "$release_section" | grep -i "STA.*release\|Sta:.*True" | head -1)
-    local has_fcl=$(echo "$release_section" | grep -i "FCL.*release\|Fcl:.*True" | head -1)
-    local has_pnr=$(echo "$release_section" | grep -i "PNR.*release\|Pnr:.*True" | head -1)
+    # Extract total attempts, successful, and failed counts
+    # Format: "Total Attempts: 5"
+    local total_attempts=$(echo "$release_section" | grep -i "Total Attempts:" | head -1 | grep -oP "Total Attempts:\s*\K[0-9]+" | head -1)
+    local successful_attempts=$(echo "$release_section" | grep -i "Successful:" | head -1 | grep -oP "Successful:\s*\K[0-9]+" | head -1)
+    local failed_attempts=$(echo "$release_section" | grep -i "Failed:" | head -1 | grep -oP "Failed:\s*\K[0-9]+" | head -1)
     
-    # Count release types
-    local release_count=0
-    [ -n "$has_sta" ] && release_count=$((release_count + 1))
-    [ -n "$has_fcl" ] && release_count=$((release_count + 1))
-    [ -n "$has_pnr" ] && release_count=$((release_count + 1))
+    # Set defaults if extraction failed
+    [ -z "$total_attempts" ] && total_attempts=0
+    [ -z "$successful_attempts" ] && successful_attempts=0
+    [ -z "$failed_attempts" ] && failed_attempts=0
     
-    # Determine overall release status
+    # Extract custom links list from the summary section (not from individual attempts)
+    # Format: "Custom Links: SEP_28_FP_eco_01, SEP_28_FP, SEP_10_eco_01, SEP_10_cport_eco_01, SEP_10"
+    # Use awk to extract only from the "Release Attempts from Workarea" summary section
+    local custom_links=$(echo "$release_section" | awk '/Release Attempts from Workarea/,/^[[:space:]]*$/ {print}' | grep -i "Custom Links:" | head -1 | sed 's/.*Custom Links:\s*//')
+    
+    # Extract latest release date
+    # Format: "Latest Success: 2025-10-16"
+    local latest_date=$(echo "$release_section" | grep -i "Latest Success:" | head -1 | grep -oP "Latest Success:\s*\K[0-9-]+" | head -1)
+    
+    # Determine overall release status based on attempts
     local overall_status="UNKNOWN"
     
-    if [ -z "$release_type" ] && [ -z "$release_date" ]; then
-        overall_status="NO_DATA"
-        details="No release data available"
-    elif [ $release_count -gt 0 ]; then
-        # Build release types string
-        local types=""
-        [ -n "$has_sta" ] && types="${types}STA, "
-        [ -n "$has_fcl" ] && types="${types}FCL, "
-        [ -n "$has_pnr" ] && types="${types}PNR, "
-        types=${types%, }  # Remove trailing comma
+    if [ $total_attempts -eq 0 ]; then
+        overall_status="NOT_FOUND"
+        details="No release attempts detected"
+    elif [ $successful_attempts -gt 0 ] && [ $failed_attempts -eq 0 ]; then
+        # All attempts successful
+        overall_status="PASSED"
+        details="${successful_attempts} successful / ${total_attempts} total attempts"
         
-        # Check if release is complete (all 3 types present)
-        if [ $release_count -ge 3 ]; then
-            overall_status="PASSED"
-            details="Complete release: ${types}"
-        elif [ $release_count -eq 2 ]; then
-            overall_status="PARTIAL_PASS"
-            details="Partial release: ${types}"
-        else
-            overall_status="WARN"
-            details="Minimal release: ${types}"
+        # Add custom links if available
+        if [ -n "$custom_links" ]; then
+            # Truncate long custom links list for display
+            if [ ${#custom_links} -gt 60 ]; then
+                custom_links="${custom_links:0:57}..."
+            fi
+            details="${details}; Links: ${custom_links}"
         fi
         
-        # Add date if found
-        if [ -n "$release_date" ]; then
-            local date_str=$(echo "$release_date" | grep -oP "[0-9]{4}[/-][0-9]{1,2}[/-][0-9]{1,2}" | head -1)
-            [ -n "$date_str" ] && details="${details} (${date_str})"
+        # Add latest date
+        [ -n "$latest_date" ] && details="${details}; Latest: ${latest_date}"
+        
+    elif [ $successful_attempts -gt 0 ] && [ $failed_attempts -gt 0 ]; then
+        # Mixed success and failure - partial success
+        overall_status="WARN"
+        details="${successful_attempts} successful, ${failed_attempts} failed / ${total_attempts} total"
+        
+        # Add custom links if available
+        if [ -n "$custom_links" ]; then
+            if [ ${#custom_links} -gt 50 ]; then
+                custom_links="${custom_links:0:47}..."
+            fi
+            details="${details}; Links: ${custom_links}"
         fi
+        
+        [ -n "$latest_date" ] && details="${details}; Latest: ${latest_date}"
+        
+    elif [ $failed_attempts -gt 0 ] && [ $successful_attempts -eq 0 ]; then
+        # All attempts failed
+        overall_status="FAILED"
+        details="All ${failed_attempts} release attempts FAILED"
     else
-        # No clear release types found, try to determine from content
-        if echo "$release_section" | grep -qi "complete\|success"; then
-            overall_status="PASSED"
-            details="Release found and appears complete"
-        elif echo "$release_section" | grep -qi "incomplete\|partial"; then
-            overall_status="WARN"
-            details="Release found but may be incomplete"
-        else
-            overall_status="UNKNOWN"
-            details="Release status unclear"
-        fi
+        # Unknown state
+        overall_status="UNKNOWN"
+        details="Unable to determine release status"
     fi
     
-    # Extract runtime if available
-    runtime=$(echo "$release_section" | grep -i "Runtime:" | head -1 | grep -oP "Runtime:\s*\K[0-9.]+ (hours|minutes|seconds)")
+    # Extract runtime from latest attempt (if available)
+    # Look for "Status: SUCCESS" or "Status: FAILED" lines, then find Runtime nearby
+    runtime=$(echo "$release_section" | grep -i "Runtime:" | tail -1 | grep -oP "Runtime:\s*\K[0-9.]+ (hours|minutes|seconds)")
     [ -z "$runtime" ] && runtime="N/A"
     
     # Return pipe-delimited string
@@ -669,14 +1010,39 @@ while [[ $# -gt 0 ]]; do
             ;;
         -c|--chiplet)
             # Support comma-separated chiplets: -c CPORT,CFAN
-            IFS=',' read -ra CHIPLETS <<< "$2"
-            for chiplet in "${CHIPLETS[@]}"; do
+            IFS=',' read -ra TEMP_CHIPLETS <<< "$2"
+            for chiplet in "${TEMP_CHIPLETS[@]}"; do
                 FILTER_CHIPLETS+=("$chiplet")
             done
             shift 2
             ;;
         -u|--unit)
             FILTER_UNIT="$2"
+            shift 2
+            ;;
+        -j|--jobs)
+            if [ "$2" = "auto" ]; then
+                # Auto-detect CPU cores
+                PARALLEL_JOBS=$(nproc 2>/dev/null || echo 4)
+            else
+                PARALLEL_JOBS="$2"
+            fi
+            shift 2
+            ;;
+        --dry-run)
+            DRY_RUN=1
+            shift
+            ;;
+        -v|--verbose)
+            VERBOSE=1
+            shift
+            ;;
+        --resume)
+            RESUME_FILE="$2"
+            shift 2
+            ;;
+        --config)
+            CONFIG_FILE="$2"
             shift 2
             ;;
         -h|--help)
@@ -711,6 +1077,18 @@ for type in "${REGRESSION_TYPES[@]}"; do
     esac
 done
 
+# Load configuration file if specified
+if [ -n "$CONFIG_FILE" ]; then
+    load_config "$CONFIG_FILE"
+fi
+
+# Validate parallel jobs setting
+if ! [[ "$PARALLEL_JOBS" =~ ^[0-9]+$ ]] || [ "$PARALLEL_JOBS" -lt 1 ]; then
+    echo -e "${RED}[ERROR]${NC} Invalid parallel jobs value: $PARALLEL_JOBS"
+    echo "Must be a positive integer or 'auto'"
+    exit 1
+fi
+
 # Set HTML output filename based on number of regression types
 if [ ${#REGRESSION_TYPES[@]} -eq 1 ]; then
     HTML_FILE="agur_${REGRESSION_TYPES[0]}_regression_dashboard_${TIMESTAMP}.html"
@@ -718,11 +1096,45 @@ else
     HTML_FILE="agur_multi_regression_dashboard_${TIMESTAMP}.html"
 fi
 
+# Set state file for resume capability
+STATE_FILE=".agur_regression_state_${TIMESTAMP}.txt"
+
+# Load resume state if specified
+if [ -n "$RESUME_FILE" ]; then
+    if [ ! -f "$RESUME_FILE" ]; then
+        echo -e "${RED}[ERROR]${NC} Resume file not found: $RESUME_FILE"
+        exit 1
+    fi
+    echo -e "${CYAN}Resuming from previous run: $RESUME_FILE${NC}"
+    STATE_FILE="$RESUME_FILE"
+    log_verbose "Loaded $(wc -l < "$RESUME_FILE") completed units from state file"
+fi
+
 #===============================================================================
 # Main Script
 #===============================================================================
 
+# Start timer for ETA calculations
+START_TIME=$SECONDS
+
 print_header
+
+# Display execution mode information
+if [ $DRY_RUN -eq 1 ]; then
+    echo -e "${YELLOW}[DRY-RUN MODE]${NC} Preview only - no analyses will be executed"
+    echo ""
+fi
+
+if [ $VERBOSE -eq 1 ]; then
+    echo -e "${BLUE}[VERBOSE MODE]${NC} Debug output enabled"
+    echo ""
+fi
+
+if [ $PARALLEL_JOBS -gt 1 ]; then
+    echo -e "${GREEN}[PARALLEL MODE]${NC} Running with $PARALLEL_JOBS parallel jobs"
+    log_verbose "CPU cores available: $(nproc 2>/dev/null || echo 'unknown')"
+    echo ""
+fi
 
 # Check if units table exists
 if [ ! -f "$UNITS_TABLE" ]; then
@@ -822,94 +1234,147 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
     # Run analysis on each unit
     print_section "Running $REGRESSION_NAME Analysis"
     echo ""
-
-for i in "${!UNITS[@]}"; do
-    unit="${UNITS[$i]}"
-    chiplet="${CHIPLETS[$i]}"
-    workarea="${WORKAREAS[$i]}"
-    release_date="${RELEASE_DATES[$i]}"
-    release_user="${RELEASE_USERS[$i]}"
     
-    echo ""
-    print_section "Unit $((i+1))/$TOTAL_UNITS: $unit ($chiplet)"
-    echo "Workarea: $workarea"
-    echo "Released: $release_date by $release_user"
-    echo ""
-    
-    # Check if workarea exists
-    if [ ! -d "$workarea" ]; then
-        echo -e "${RED}[MISSING]${NC} Workarea does not exist"
-        ANALYSIS_STATUS+=("MISSING")
-        ANALYSIS_DETAILS+=("Workarea path not found or deleted")
-        ANALYSIS_RUNTIMES+=("N/A")
-        continue
-    fi
-    
-    # Run analysis
-    echo -e "${CYAN}Running $REGRESSION_NAME analysis...${NC}"
-    
-    OUTPUT_FILE="$TEMP_DIR/${unit}_${REGRESSION_TYPE}_output.txt"
-    
-    "$PYTHON_BIN" "$AVICE_SCRIPT" "$workarea" -s "$ANALYSIS_SECTION" --no-logo > "$OUTPUT_FILE" 2>&1
-    EXIT_CODE=$?
-    
-    # Parse output based on regression type
-    if [ $EXIT_CODE -ne 0 ]; then
-        echo -e "${RED}[ERROR]${NC} Analysis failed (exit code: $EXIT_CODE)"
-        ANALYSIS_STATUS+=("ERROR")
-        ANALYSIS_DETAILS+=("Script execution failed")
-        ANALYSIS_RUNTIMES+=("N/A")
+    # Dry-run mode: just preview
+    if [ $DRY_RUN -eq 1 ]; then
+        echo -e "${YELLOW}[DRY-RUN] Would analyze the following units:${NC}"
+        for i in "${!UNITS[@]}"; do
+            unit="${UNITS[$i]}"
+            chiplet="${CHIPLETS[$i]}"
+            workarea="${WORKAREAS[$i]}"
+            
+            # Check if already processed (for resume)
+            if [ -n "$RESUME_FILE" ] && is_unit_processed "$STATE_FILE" "$REGRESSION_TYPE" "$i"; then
+                echo "  [$((i+1))/$TOTAL_UNITS] $unit ($chiplet) - ${GREEN}ALREADY COMPLETED (skipped)${NC}"
+            else
+                echo "  [$((i+1))/$TOTAL_UNITS] $unit ($chiplet) - $workarea"
+            fi
+        done
+        echo ""
+        
+        # Initialize empty results for dry-run
+        for i in "${!UNITS[@]}"; do
+            ANALYSIS_STATUS+=("NOT_RUN")
+            ANALYSIS_DETAILS+=("Dry-run mode - not executed")
+            ANALYSIS_RUNTIMES+=("N/A")
+        done
     else
-        # Call appropriate parser function based on regression type
-        parse_result=""
-        case "$REGRESSION_TYPE" in
-            formal)
-                parse_result=$(parse_formal_output "$OUTPUT_FILE")
-                ;;
-            timing)
-                parse_result=$(parse_timing_output "$OUTPUT_FILE")
-                ;;
-            pv)
-                parse_result=$(parse_pv_output "$OUTPUT_FILE")
-                ;;
-            clock)
-                parse_result=$(parse_clock_output "$OUTPUT_FILE")
-                ;;
-            release)
-                parse_result=$(parse_release_output "$OUTPUT_FILE")
-                ;;
-            *)
-                parse_result="ERROR|Unknown regression type|N/A"
-                ;;
-        esac
+        # Real execution: sequential or parallel
         
-        # Parse the pipe-delimited result: status|details|runtime
-        IFS='|' read -r overall_status details runtime <<< "$parse_result"
+        # Launch analyses (parallel or sequential)
+        declare -a job_pids=()
+        jobs_running=0
+        units_completed=0
         
-        # Add to arrays
-        ANALYSIS_STATUS+=("$overall_status")
-        ANALYSIS_DETAILS+=("$details")
-        ANALYSIS_RUNTIMES+=("$runtime")
+        for i in "${!UNITS[@]}"; do
+            unit="${UNITS[$i]}"
+            chiplet="${CHIPLETS[$i]}"
+            workarea="${WORKAREAS[$i]}"
+            
+            # Check if already processed (for resume)
+            if [ -n "$RESUME_FILE" ] && is_unit_processed "$STATE_FILE" "$REGRESSION_TYPE" "$i"; then
+                log_verbose "Skipping already processed unit: $unit"
+                
+                # Load previous result
+                result_file="$TEMP_DIR/${unit}_${REGRESSION_TYPE}_result.txt"
+                if [ -f "$result_file" ]; then
+                    parse_result=$(cat "$result_file")
+                else
+                    parse_result="NOT_FOUND|Previous result not found|N/A"
+                fi
+                
+                IFS='|' read -r overall_status details runtime <<< "$parse_result"
+                ANALYSIS_STATUS+=("$overall_status")
+                ANALYSIS_DETAILS+=("$details")
+                ANALYSIS_RUNTIMES+=("$runtime")
+                ((units_completed++))
+                continue
+            fi
+            
+            # Show progress
+            if [ $PARALLEL_JOBS -eq 1 ]; then
+                echo ""
+                print_section "Unit $((i+1))/$TOTAL_UNITS: $unit ($chiplet)"
+                echo "Workarea: $workarea"
+                echo "Released: ${RELEASE_DATES[$i]} by ${RELEASE_USERS[$i]}"
+                echo ""
+                echo -e "${CYAN}Running $REGRESSION_NAME analysis...${NC}"
+            else
+                show_progress "$units_completed" "$TOTAL_UNITS" "$unit"
+            fi
+            
+            # Run analysis (parallel or sequential)
+            if [ $PARALLEL_JOBS -gt 1 ]; then
+                # Parallel mode: launch in background
+                run_unit_analysis "$i" "$unit" "$chiplet" "$workarea" "$REGRESSION_TYPE" "$ANALYSIS_SECTION" "$TEMP_DIR" "$STATE_FILE" &
+                job_pids[$i]=$!
+                ((jobs_running++))
+                
+                # Wait if we've reached max parallel jobs
+                if [ $jobs_running -ge $PARALLEL_JOBS ]; then
+                    # Wait for any job to complete
+                    wait -n
+                    ((jobs_running--))
+                    ((units_completed++))
+                fi
+            else
+                # Sequential mode: run directly
+                run_unit_analysis "$i" "$unit" "$chiplet" "$workarea" "$REGRESSION_TYPE" "$ANALYSIS_SECTION" "$TEMP_DIR" "$STATE_FILE"
+                ((units_completed++))
+                
+                # Show result in sequential mode
+                result_file="$TEMP_DIR/${unit}_${REGRESSION_TYPE}_result.txt"
+                if [ -f "$result_file" ]; then
+                    parse_result=$(cat "$result_file")
+                    IFS='|' read -r overall_status details runtime <<< "$parse_result"
+                    
+                    status_color="${YELLOW}"
+                    case "$overall_status" in
+                        PASSED)
+                            status_color="${GREEN}"
+                            ;;
+                        FAILED|CRASHED|ERROR|MISSING)
+                            status_color="${RED}"
+                            ;;
+                    esac
+                    
+                    echo -e "${status_color}Status: $overall_status${NC}"
+                    echo "Details: $details"
+                    echo "Runtime: $runtime"
+                fi
+            fi
+        done
         
-        # Determine status color for console output
-        status_color="${YELLOW}"
-        case "$overall_status" in
-            PASSED)
-                status_color="${GREEN}"
-                ;;
-            FAILED|CRASHED|ERROR|MISSING)
-                status_color="${RED}"
-                ;;
-            *)
-                status_color="${YELLOW}"
-                ;;
-        esac
+        # Wait for all remaining jobs if in parallel mode
+        if [ $PARALLEL_JOBS -gt 1 ]; then
+            log_verbose "Waiting for remaining parallel jobs to complete..."
+            wait
+            show_progress "$TOTAL_UNITS" "$TOTAL_UNITS" "All units completed"
+            echo ""  # New line after progress bar
+        fi
         
-        echo -e "${status_color}Status: $overall_status${NC}"
-        echo "Details: $details"
-        echo "Runtime: $runtime"
+        # Collect results from result files
+        ANALYSIS_STATUS=()
+        ANALYSIS_DETAILS=()
+        ANALYSIS_RUNTIMES=()
+        
+        for i in "${!UNITS[@]}"; do
+            unit="${UNITS[$i]}"
+            result_file="$TEMP_DIR/${unit}_${REGRESSION_TYPE}_result.txt"
+            
+            if [ -f "$result_file" ]; then
+                parse_result=$(cat "$result_file")
+                IFS='|' read -r overall_status details runtime <<< "$parse_result"
+                ANALYSIS_STATUS+=("$overall_status")
+                ANALYSIS_DETAILS+=("$details")
+                ANALYSIS_RUNTIMES+=("$runtime")
+            else
+                ANALYSIS_STATUS+=("ERROR")
+                ANALYSIS_DETAILS+=("Result file not found")
+                ANALYSIS_RUNTIMES+=("N/A")
+            fi
+        done
     fi
-done
 
     # Store results for this regression type
     # Use sequential counter to match ANALYSIS_STATUS array indices
@@ -972,6 +1437,9 @@ done  # End of regression types loop
 #===============================================================================
 # Generate HTML Dashboard
 #===============================================================================
+# Uses unified tabbed HTML generation for both single and multi-regression
+# - Single type: Tab bar is hidden via CSS, content shows immediately
+# - Multiple types: Tab bar is visible, tabs switch between regression types
 
 print_section "Generating HTML Dashboard"
 
@@ -982,12 +1450,615 @@ if [ -f "$LOGO_PATH" ]; then
     LOGO_DATA=$(base64 -w 0 "$LOGO_PATH")
 fi
 
-# Check if single or multi-regression
-if [ ${#REGRESSION_TYPES[@]} -eq 1 ]; then
-    # Single regression - use existing HTML generation
-    REGRESSION_TYPE="${REGRESSION_TYPES[0]}"
+cat > "$HTML_FILE" << 'MULTI_HTML_START'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGUR Multi-Regression Dashboard</title>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
     
-    # Restore statistics for single regression
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px;
+        min-height: 100vh;
+    }
+    
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        overflow: hidden;
+    }
+    
+    .header {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+    }
+    
+    .header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .header .subtitle {
+        font-size: 1.2em;
+        opacity: 0.9;
+    }
+    
+    /* Tab Navigation */
+    .tab-nav {
+        display: flex;
+        background: #f8f9fa;
+        border-bottom: 3px solid #dee2e6;
+        overflow-x: auto;
+    }
+    
+    /* Hide tab navigation when only one regression type */
+    .tab-nav.single-type {
+        display: none;
+    }
+    
+    .tab-button {
+        flex: 1;
+        min-width: 150px;
+        padding: 18px 25px;
+        background: #e9ecef;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        transition: all 0.3s;
+        border-bottom: 4px solid transparent;
+        color: #495057;
+    }
+    
+    .tab-button:hover {
+        background: #dee2e6;
+        transform: translateY(-2px);
+    }
+    
+    .tab-button.active {
+        background: white;
+        border-bottom-color: #667eea;
+        color: #667eea;
+    }
+    
+    /* Tab Content */
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        padding: 30px;
+        background: #f8f9fa;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border 0.3s ease;
+        cursor: pointer;
+        border: 3px solid transparent;
+        position: relative;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        background: #f8f9fa;
+    }
+    
+    .stat-card.active {
+        border-color: #667eea;
+        background: #f0f4ff;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .stat-card.clickable::after {
+        content: "Click to filter";
+        position: absolute;
+        bottom: 5px;
+        left: 0;
+        right: 0;
+        font-size: 0.7em;
+        color: #999;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .stat-card.clickable:hover::after {
+        opacity: 1;
+    }
+    
+    .stat-value {
+        font-size: 2.5em;
+        font-weight: bold;
+        margin: 15px 0;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.95em;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .stat-passed { color: #28a745; }
+    .stat-failed { color: #dc3545; }
+    .stat-unresolved { color: #ffc107; }
+    .stat-crashed { color: #6c1a1a; }
+    
+    .content {
+        padding: 30px;
+    }
+    
+    .chiplet-section {
+        margin-bottom: 40px;
+    }
+    
+    .chiplet-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 10px;
+        font-size: 1.5em;
+        margin-bottom: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .chiplet-header:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .chiplet-header .toggle {
+        font-size: 0.8em;
+    }
+    
+    .collapsible-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.5s ease;
+    }
+    
+    .collapsible-content.active {
+        max-height: 50000px;
+    }
+    
+    .units-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 20px;
+        padding: 10px;
+    }
+    
+    .unit-card {
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .unit-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 6px 12px rgba(102, 126, 234, 0.2);
+        transform: translateY(-3px);
+    }
+    
+    .unit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .unit-name {
+        font-size: 1.4em;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9em;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .status-passed {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-partial {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-unresolved {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-failed {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .status-crashed {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .status-running {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .status-error {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .status-notfound {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+    
+    .unit-info {
+        margin: 10px 0;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 0;
+        font-size: 0.9em;
+    }
+    
+    .workarea-row {
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .workarea-path {
+        flex: 1;
+        font-family: monospace;
+        font-size: 0.85em;
+        color: #555;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .copy-btn {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.85em;
+        transition: all 0.3s;
+    }
+    
+    .copy-btn:hover {
+        background: #5568d3;
+        transform: scale(1.05);
+    }
+    
+    .copy-btn:active {
+        transform: scale(0.95);
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #666;
+    }
+    
+    .info-value {
+        color: #333;
+    }
+    
+    /* Formal Flows / PV Metrics */
+    .formal-flows {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 2px solid #f0f0f0;
+    }
+    
+    .flow-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #667eea;
+    }
+    
+    .flow-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 12px;
+        margin: 5px 0;
+        background: #f8f9fa;
+        border-radius: 5px;
+        font-size: 0.9em;
+    }
+    
+    .flow-succeeded {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .flow-failed {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .flow-unresolved {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .flow-crashed {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .flow-running {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .footer {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        text-align: center;
+        padding: 20px;
+        margin-top: 40px;
+    }
+    
+    .footer p {
+        margin: 5px 0;
+    }
+    
+    .footer strong {
+        color: #00ff00;
+    }
+    
+    /* Toast Notification */
+    .toast {
+        visibility: hidden;
+        min-width: 250px;
+        background-color: #28a745;
+        color: white;
+        text-align: center;
+        border-radius: 10px;
+        padding: 16px;
+        position: fixed;
+        z-index: 1;
+        right: 30px;
+        bottom: 30px;
+        font-size: 17px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .toast.show {
+        visibility: visible;
+        animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    }
+    
+    @keyframes fadein {
+        from {bottom: 0; opacity: 0;}
+        to {bottom: 30px; opacity: 1;}
+    }
+    
+    @keyframes fadeout {
+        from {bottom: 30px; opacity: 1;}
+        to {bottom: 0; opacity: 0;}
+    }
+    
+    /* Search and Filter Section */
+    .filter-section {
+        background: #f8f9fa;
+        padding: 20px 30px;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .filter-container {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 20px;
+        align-items: center;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .search-box {
+        position: relative;
+    }
+    
+    .search-box input {
+        width: 100%;
+        padding: 12px 20px;
+        font-size: 16px;
+        border: 2px solid #ddd;
+        border-radius: 25px;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+    
+    .search-box input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+    }
+    
+    .filter-buttons {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .filter-btn {
+        padding: 10px 20px;
+        border: 2px solid #667eea;
+        background: white;
+        color: #667eea;
+        border-radius: 20px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+    
+    .filter-btn:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    }
+    
+    .filter-btn.active {
+        background: #667eea;
+        color: white;
+    }
+    
+    .export-buttons {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .export-btn {
+        padding: 10px 20px;
+        border: 2px solid #28a745;
+        background: white;
+        color: #28a745;
+        border-radius: 20px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+    
+    .export-btn:hover {
+        background: #28a745;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+    }
+    
+    .unit-card.hidden {
+        display: none;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🔬 AGUR Multi-Regression Dashboard</h1>
+MULTI_HTML_START
+
+# Add generation info and filter
+cat >> "$HTML_FILE" << MULTI_META
+        <div class="subtitle">Generated: $(date '+%Y-%m-%d %H:%M:%S')</div>
+        <div class="subtitle">Regression Types: ${REGRESSION_TYPES[*]}</div>
+MULTI_META
+
+if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
+    echo "            <div class=\"subtitle\">Filter: Chiplet = ${FILTER_CHIPLETS[*]}</div>" >> "$HTML_FILE"
+fi
+
+# Add tab navigation (with conditional single-type class)
+TAB_NAV_CLASS=""
+if [ ${#REGRESSION_TYPES[@]} -eq 1 ]; then
+    TAB_NAV_CLASS=" single-type"
+fi
+
+cat >> "$HTML_FILE" << MULTI_TABS_START
+    </div>
+    
+    <div class="tab-nav$TAB_NAV_CLASS">
+MULTI_TABS_START
+
+# Generate tab buttons
+for idx in "${!REGRESSION_TYPES[@]}"; do
+    regression_type="${REGRESSION_TYPES[$idx]}"
+    active_class=""
+    [ $idx -eq 0 ] && active_class=" active"
+    
+    # Get regression name for tab
+    case "$regression_type" in
+        formal) tab_name="🔍 Formal" ;;
+        timing) tab_name="⏱️ Timing" ;;
+        pv) tab_name="✓ PV" ;;
+        clock) tab_name="🕒 Clock" ;;
+        release) tab_name="📦 Release" ;;
+        *) tab_name="$regression_type" ;;
+    esac
+    
+    echo "            <button class=\"tab-button$active_class\" onclick=\"openTab('$regression_type')\">$tab_name</button>" >> "$HTML_FILE"
+done
+
+cat >> "$HTML_FILE" << 'MULTI_FILTER_SECTION'
+    </div>
+    
+    <!-- Search and Filter Section -->
+    <div class="filter-section">
+        <div class="filter-container">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Search units by name..." onkeyup="filterUnits()">
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterStatus(event, 'all')">All</button>
+                <button class="filter-btn" onclick="filterStatus(event, 'passed')">✅ Passed</button>
+                <button class="filter-btn" onclick="filterStatus(event, 'failed')">❌ Failed</button>
+                <button class="filter-btn" onclick="filterStatus(event, 'warn')">⚠️ Warnings</button>
+            </div>
+            <div class="export-buttons">
+                <button class="export-btn" onclick="exportToCSV()" title="Export results to CSV">📄 Export CSV</button>
+                <button class="export-btn" onclick="printDashboard()" title="Print dashboard">🖨️ Print</button>
+            </div>
+        </div>
+    </div>
+MULTI_FILTER_SECTION
+
+# Generate tab content for each regression type
+for idx in "${!REGRESSION_TYPES[@]}"; do
+    REGRESSION_TYPE="${REGRESSION_TYPES[$idx]}"
+    active_class=""
+    [ $idx -eq 0 ] && active_class=" active"
+    
+    # Get statistics for this regression
     passed_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_passed_count"]}
     warn_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_warn_count"]}
     partial_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_partial_count"]}
@@ -997,734 +2068,181 @@ if [ ${#REGRESSION_TYPES[@]} -eq 1 ]; then
     error_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_error_count"]}
     running_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_running_count"]}
     not_found_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_not_found_count"]}
-    no_data_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_no_data_count"]}
-    missing_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_missing_count"]}
     
-    # Restore unit results
-    declare -a ANALYSIS_STATUS
-    declare -a ANALYSIS_DETAILS
-    declare -a ANALYSIS_RUNTIMES
-    for i in "${!UNITS[@]}"; do
-        ANALYSIS_STATUS+=("${REGRESSION_RESULTS[${REGRESSION_TYPE}_${i}_status]}")
-        ANALYSIS_DETAILS+=("${REGRESSION_RESULTS[${REGRESSION_TYPE}_${i}_details]}")
-        ANALYSIS_RUNTIMES+=("${REGRESSION_RESULTS[${REGRESSION_TYPE}_${i}_runtime]}")
-    done
-
-# Generate HTML with embedded CSS and JavaScript
-# Generate dynamic title based on regression type
-case "$REGRESSION_TYPE" in
-    formal)
-        HTML_TITLE="AGUR Formal Verification Regression Dashboard"
-        HTML_ICON="🔍"
-        ;;
-    timing)
-        HTML_TITLE="AGUR PT Signoff Timing Regression Dashboard"
-        HTML_ICON="⏱️"
-        ;;
-    pv)
-        HTML_TITLE="AGUR Physical Verification Regression Dashboard"
-        HTML_ICON="✓"
-        ;;
-    clock)
-        HTML_TITLE="AGUR Clock Tree Analysis Regression Dashboard"
-        HTML_ICON="🕒"
-        ;;
-    release)
-        HTML_TITLE="AGUR Block Release Status Regression Dashboard"
-        HTML_ICON="📦"
-        ;;
-    *)
-        HTML_TITLE="AGUR Regression Dashboard"
-        HTML_ICON="📊"
-        ;;
-esac
-
-cat > "$HTML_FILE" << 'HTML_START'
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-HTML_START
-
-cat >> "$HTML_FILE" << EOF
-    <title>$HTML_TITLE</title>
-    <style>
-EOF
-
-cat >> "$HTML_FILE" << 'HTML_STYLE'
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .header-content {
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 25px;
-            align-items: center;
-        }
-        
-        .logo {
-            width: 100px;
-            height: 100px;
-            border-radius: 10px;
-            background: white;
-            padding: 10px;
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .logo:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
-        }
-        
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .header .subtitle {
-            font-size: 1.2em;
-            opacity: 0.9;
-        }
-        
-        /* Logo Modal */
-        .logo-modal {
-            display: none;
-            position: fixed;
-            z-index: 10000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.9);
-            cursor: pointer;
-        }
-        
-        .logo-modal-content {
-            margin: auto;
-            display: block;
-            max-width: 80%;
-            max-height: 80%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        
-        .logo-modal-close {
-            position: absolute;
-            top: 30px;
-            right: 50px;
-            color: #f1f1f1;
-            font-size: 50px;
-            font-weight: bold;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            padding: 30px;
-            background: #f8f9fa;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-align: center;
-            transition: transform 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
-        }
-        
-        .stat-value {
-            font-size: 2.5em;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        
-        .stat-label {
-            color: #666;
-            font-size: 0.9em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .stat-passed { color: #28a745; }
-        .stat-partial { color: #ffc107; }
-        .stat-unresolved { color: #ff9800; }
-        .stat-failed { color: #dc3545; }
-        .stat-crashed { color: #6c1a1a; }
-        
-        .content {
-            padding: 30px;
-        }
-        
-        .chiplet-section {
-            margin-bottom: 40px;
-        }
-        
-        .chiplet-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            font-size: 1.5em;
-            margin-bottom: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .chiplet-header:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        
-        .chiplet-header .toggle {
-            font-size: 0.8em;
-        }
-        
-        .units-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
-            padding: 10px;
-        }
-        
-        .unit-card {
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 20px;
-            transition: all 0.3s ease;
-        }
-        
-        .unit-card:hover {
-            border-color: #667eea;
-            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.2);
-            transform: translateY(-3px);
-        }
-        
-        .unit-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-        
-        .unit-name {
-            font-size: 1.4em;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .status-badge {
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .status-passed {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status-partial {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-unresolved {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-failed {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .status-crashed {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .status-running {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        
-        .status-error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .status-notfound {
-            background: #e2e3e5;
-            color: #383d41;
-        }
-        
-        .unit-info {
-            margin: 10px 0;
-        }
-        
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            font-size: 0.9em;
-        }
-        
-        .workarea-row {
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .workarea-path {
-            flex: 1;
-            font-family: monospace;
-            font-size: 0.85em;
-            color: #555;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
-        .copy-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.85em;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-        
-        .copy-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
-        }
-        
-        .copy-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .copy-btn.copied {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        }
-        
-        .info-label {
-            color: #666;
-            font-weight: 600;
-        }
-        
-        .info-value {
-            color: #333;
-        }
-        
-        .formal-flows {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #e0e0e0;
-        }
-        
-        .flow-title {
-            font-weight: bold;
-            color: #666;
-            margin-bottom: 10px;
-            font-size: 0.9em;
-        }
-        
-        .flow-item {
-            padding: 5px 10px;
-            margin: 5px 0;
-            border-radius: 5px;
-            font-size: 0.85em;
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        .flow-succeeded {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .flow-failed {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .flow-unresolved {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .flow-crashed {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .flow-running {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        
-        .footer {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            text-align: center;
-            padding: 20px;
-            margin-top: 40px;
-        }
-        
-        .footer p {
-            margin: 5px 0;
-        }
-        
-        .footer strong {
-            color: #00ff00;
-        }
-        
-        #backToTopBtn {
-            display: none;
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 99;
-            border: none;
-            outline: none;
-            background-color: #667eea;
-            color: white;
-            cursor: pointer;
-            padding: 15px 20px;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-        }
-        
-        #backToTopBtn:hover {
-            background-color: #5568d3;
-            transform: scale(1.1);
-        }
-        
-        .collapsible-content {
-            display: none;
-            overflow: hidden;
-        }
-        
-        .collapsible-content.active {
-            display: block;
-        }
-HTML_STYLE
-
-cat >> "$HTML_FILE" << 'HTML_END_STYLE'
-    </style>
-</head>
-<body>
-HTML_END_STYLE
-
-# Add logo modal and header
-if [ -n "$LOGO_DATA" ]; then
-    cat >> "$HTML_FILE" << EOF
-    <!-- Logo Modal -->
-    <div id="logoModal" class="logo-modal" onclick="hideLogoModal()">
-        <span class="logo-modal-close">&times;</span>
-        <img class="logo-modal-content" id="logoModalImg">
-    </div>
-    
-    <div class="container">
-        <div class="header">
-            <div class="header-content">
-                <img class="logo" src="data:image/png;base64,$LOGO_DATA" alt="AVICE Logo" onclick="showLogoModal()" title="Click to enlarge">
-                <div>
-                    <h1>$HTML_ICON $HTML_TITLE</h1>
-EOF
-else
-    cat >> "$HTML_FILE" << EOF
-    <div class="container">
-        <div class="header">
-            <h1>$HTML_ICON $HTML_TITLE</h1>
-EOF
-fi
-
-# Add generation timestamp and filter info
-if [ -n "$LOGO_DATA" ]; then
-    cat >> "$HTML_FILE" << HTML_META
-                    <div class="subtitle">Generated: $(date '+%Y-%m-%d %H:%M:%S')</div>
-HTML_META
-    
-    if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
-        echo "                    <div class=\"subtitle\">Filter: Chiplet = ${FILTER_CHIPLETS[*]}</div>" >> "$HTML_FILE"
-    fi
-    if [ -n "$FILTER_UNIT" ]; then
-        echo "                    <div class=\"subtitle\">Filter: Unit = $FILTER_UNIT</div>" >> "$HTML_FILE"
-    fi
-    
-    # Close the nested divs for logo layout (close text div, header-content, and header)
-    cat >> "$HTML_FILE" << 'EOF'
-                </div>
-            </div>
-        </div>
-EOF
-else
-    cat >> "$HTML_FILE" << HTML_META
-            <div class="subtitle">Generated: $(date '+%Y-%m-%d %H:%M:%S')</div>
-HTML_META
-    
-    if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
-        echo "            <div class=\"subtitle\">Filter: Chiplet = ${FILTER_CHIPLETS[*]}</div>" >> "$HTML_FILE"
-    fi
-    if [ -n "$FILTER_UNIT" ]; then
-        echo "            <div class=\"subtitle\">Filter: Unit = $FILTER_UNIT</div>" >> "$HTML_FILE"
-    fi
-    
-    # Close the header div
-    cat >> "$HTML_FILE" << 'EOF'
-        </div>
-EOF
-fi
-
-cat >> "$HTML_FILE" << 'HTML_CONTINUE'
-        
-        <!-- Statistics Grid -->
+    cat >> "$HTML_FILE" << TAB_CONTENT_START
+    <div id="$REGRESSION_TYPE" class="tab-content$active_class">
         <div class="stats-grid">
-            <div class="stat-card">
+            <div class="stat-card" onclick="filterStatus(event, 'all')" data-filter="all" title="Click to show all units">
                 <div class="stat-label">Total Units</div>
-HTML_CONTINUE
-
-echo "                <div class=\"stat-value\">$TOTAL_UNITS</div>" >> "$HTML_FILE"
-
-cat >> "$HTML_FILE" << 'HTML_STATS'
+                <div class="stat-value">$TOTAL_UNITS</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card clickable" onclick="filterStatus(event, 'passed')" data-filter="passed" title="Click to show only passed units">
                 <div class="stat-label">✅ Passed</div>
-HTML_STATS
-
-echo "                <div class=\"stat-value stat-passed\">$passed_count</div>" >> "$HTML_FILE"
-echo "                <div class=\"stat-label\">$(( passed_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
-
-cat >> "$HTML_FILE" << 'HTML_STATS_WARN'
+                <div class="stat-value stat-passed">$passed_count</div>
+                <div class="stat-label">$(( passed_count * 100 / TOTAL_UNITS ))%</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card clickable" onclick="filterStatus(event, 'warn')" data-filter="warn" title="Click to show only units with warnings">
                 <div class="stat-label">⚠️ Warnings</div>
-HTML_STATS_WARN
-
-echo "                <div class=\"stat-value stat-unresolved\">$warn_count</div>" >> "$HTML_FILE"
-echo "                <div class=\"stat-label\">$(( warn_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
-
-cat >> "$HTML_FILE" << 'HTML_STATS_WARN_END'
+                <div class="stat-value stat-unresolved">$warn_count</div>
+                <div class="stat-label">$(( warn_count * 100 / TOTAL_UNITS ))%</div>
             </div>
-HTML_STATS_WARN_END
-
-# Unresolved is only relevant for formal regression
-if [ "$REGRESSION_TYPE" = "formal" ]; then
-    cat >> "$HTML_FILE" << 'HTML_STATS2'
-            <div class="stat-card">
-                <div class="stat-label">⚠️ Unresolved</div>
-HTML_STATS2
-
-    echo "                <div class=\"stat-value stat-unresolved\">$unresolved_count</div>" >> "$HTML_FILE"
-    echo "                <div class=\"stat-label\">$(( unresolved_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
+TAB_CONTENT_START
     
-    cat >> "$HTML_FILE" << 'HTML_STATS_UNRESOLVED_END'
+    # Unresolved is only relevant for formal regression
+    if [ "$REGRESSION_TYPE" = "formal" ]; then
+        cat >> "$HTML_FILE" << TAB_UNRESOLVED
+            <div class="stat-card clickable" onclick="filterStatus(event, 'unresolved')" data-filter="unresolved" title="Click to show only unresolved units">
+                <div class="stat-label">⚠️ Unresolved</div>
+                <div class="stat-value stat-unresolved">$unresolved_count</div>
+                <div class="stat-label">$(( unresolved_count * 100 / TOTAL_UNITS ))%</div>
             </div>
-HTML_STATS_UNRESOLVED_END
-fi
-
-cat >> "$HTML_FILE" << 'HTML_STATS3'
-            <div class="stat-card">
+TAB_UNRESOLVED
+    fi
+    
+    cat >> "$HTML_FILE" << TAB_STATS_REST
+            <div class="stat-card clickable" onclick="filterStatus(event, 'failed')" data-filter="failed" title="Click to show only failed units">
                 <div class="stat-label">❌ Failed</div>
-HTML_STATS3
-
-echo "                <div class=\"stat-value stat-failed\">$failed_count</div>" >> "$HTML_FILE"
-echo "                <div class=\"stat-label\">$(( failed_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
-
-cat >> "$HTML_FILE" << 'HTML_STATS4'
+                <div class="stat-value stat-failed">$failed_count</div>
+                <div class="stat-label">$(( failed_count * 100 / TOTAL_UNITS ))%</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card clickable" onclick="filterStatus(event, 'crashed')" data-filter="crashed" title="Click to show only crashed units">
                 <div class="stat-label">💥 Crashed</div>
-HTML_STATS4
-
-echo "                <div class=\"stat-value stat-crashed\">$crashed_count</div>" >> "$HTML_FILE"
-echo "                <div class=\"stat-label\">$(( crashed_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
-
-cat >> "$HTML_FILE" << 'HTML_STATS_NOTFOUND'
+                <div class="stat-value stat-crashed">$crashed_count</div>
+                <div class="stat-label">$(( crashed_count * 100 / TOTAL_UNITS ))%</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card clickable" onclick="filterStatus(event, 'not_run')" data-filter="not_run" title="Click to show only units not run">
                 <div class="stat-label">⏸️ Not Run</div>
-HTML_STATS_NOTFOUND
-
-echo "                <div class=\"stat-value stat-unresolved\">$not_found_count</div>" >> "$HTML_FILE"
-echo "                <div class=\"stat-label\">$(( not_found_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
-
-cat >> "$HTML_FILE" << 'HTML_STATS_NODATA'
+                <div class="stat-value stat-unresolved">$not_found_count</div>
+                <div class="stat-label">$(( not_found_count * 100 / TOTAL_UNITS ))%</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card clickable" onclick="filterStatus(event, 'no_data')" data-filter="no_data" title="Click to show only units with no data">
                 <div class="stat-label">📊 No Data</div>
-HTML_STATS_NODATA
-
-echo "                <div class=\"stat-value stat-unresolved\">$no_data_count</div>" >> "$HTML_FILE"
-echo "                <div class=\"stat-label\">$(( no_data_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
-
-cat >> "$HTML_FILE" << 'HTML_STATS_MISSING'
+                <div class="stat-value stat-unresolved">$no_data_count</div>
+                <div class="stat-label">$(( no_data_count * 100 / TOTAL_UNITS ))%</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card clickable" onclick="filterStatus(event, 'missing')" data-filter="missing" title="Click to show only missing units">
                 <div class="stat-label">🚫 Missing</div>
-HTML_STATS_MISSING
-
-echo "                <div class=\"stat-value stat-failed\">$missing_count</div>" >> "$HTML_FILE"
-echo "                <div class=\"stat-label\">$(( missing_count * 100 / TOTAL_UNITS ))%</div>" >> "$HTML_FILE"
-
-cat >> "$HTML_FILE" << 'HTML_CONTENT_START'
+                <div class="stat-value stat-failed">$missing_count</div>
+                <div class="stat-label">$(( missing_count * 100 / TOTAL_UNITS ))%</div>
             </div>
         </div>
         
         <div class="content">
-HTML_CONTENT_START
+TAB_STATS_REST
 
-# Group units by chiplet
-declare -A chiplet_units
-
-for i in "${!UNITS[@]}"; do
-    unit="${UNITS[$i]}"
-    chiplet="${CHIPLETS[$i]}"
+    # Group units by chiplet
+    declare -A chiplet_units_tab
+    for i in "${!UNITS[@]}"; do
+        unit="${UNITS[$i]}"
+        chiplet="${CHIPLETS[$i]}"
+        
+        log_debug "Grouping unit $unit (index $i) into chiplet [$chiplet]"
+        
+        if [ -z "${chiplet_units_tab[$chiplet]}" ]; then
+            chiplet_units_tab[$chiplet]="$i"
+        else
+            chiplet_units_tab[$chiplet]="${chiplet_units_tab[$chiplet]},$i"
+        fi
+    done
     
-    if [ -z "${chiplet_units[$chiplet]}" ]; then
-        chiplet_units[$chiplet]="$i"
-    else
-        chiplet_units[$chiplet]="${chiplet_units[$chiplet]},$i"
+    # Debug: Show chiplet grouping
+    if [ $VERBOSE -eq 1 ]; then
+        for chiplet_key in "${!chiplet_units_tab[@]}"; do
+            log_debug "Chiplet [$chiplet_key] has indices: ${chiplet_units_tab[$chiplet_key]}"
+        done
     fi
-done
-
-# Generate HTML for each chiplet
-for chiplet in "${!chiplet_units[@]}"; do
-    unit_indices="${chiplet_units[$chiplet]}"
     
-    # Count units in this chiplet
-    IFS=',' read -ra indices <<< "$unit_indices"
-    chiplet_unit_count=${#indices[@]}
-    
-    cat >> "$HTML_FILE" << CHIPLET_SECTION
+    # Generate HTML for each chiplet in this tab
+    for chiplet in "${!chiplet_units_tab[@]}"; do
+        unit_indices="${chiplet_units_tab[$chiplet]}"
+        
+        # Count units in this chiplet
+        IFS=',' read -ra indices <<< "$unit_indices"
+        chiplet_unit_count=${#indices[@]}
+        
+        cat >> "$HTML_FILE" << CHIPLET_SECTION
             <div class="chiplet-section">
-                <div class="chiplet-header" onclick="toggleChiplet('$chiplet')">
+                <div class="chiplet-header" onclick="toggleChiplet('${REGRESSION_TYPE}_$chiplet')">
                     <span>$chiplet Chiplet ($chiplet_unit_count units)</span>
-                    <span class="toggle" id="toggle-$chiplet">▼</span>
+                    <span class="toggle" id="toggle-${REGRESSION_TYPE}_$chiplet">▼</span>
                 </div>
-                <div class="collapsible-content active" id="content-$chiplet">
+                <div class="collapsible-content active" id="content-${REGRESSION_TYPE}_$chiplet">
                     <div class="units-grid">
 CHIPLET_SECTION
-    
-    # Add units for this chiplet
-    for idx in "${indices[@]}"; do
-        unit="${UNITS[$idx]}"
-        status="${ANALYSIS_STATUS[$idx]}"
-        details="${ANALYSIS_DETAILS[$idx]}"
-        runtime="${ANALYSIS_RUNTIMES[$idx]}"
-        release_date="${RELEASE_DATES[$idx]}"
-        release_user="${RELEASE_USERS[$idx]}"
-        workarea="${WORKAREAS[$idx]}"
-        rtl_tag="${RTL_TAGS[$idx]}"
         
-        # Determine status class and display text
-        case "$status" in
-            PASSED)
-                status_class="status-passed"
-                status_text="✅ PASSED"
-                ;;
-            WARN)
-                status_class="status-unresolved"
-                status_text="⚠️ WARN"
-                ;;
-            PARTIAL_PASS)
-                status_class="status-partial"
-                status_text="⚠️ PARTIAL"
-                ;;
-            UNRESOLVED)
-                status_class="status-unresolved"
-                status_text="⚠️ UNRESOLVED"
-                ;;
-            FAILED)
-                status_class="status-failed"
-                status_text="❌ FAILED"
-                ;;
-            CRASHED)
-                status_class="status-crashed"
-                status_text="💥 CRASHED"
-                ;;
-            RUNNING)
-                status_class="status-running"
-                status_text="🔄 RUNNING"
-                ;;
-            ERROR)
-                status_class="status-error"
-                status_text="⚠️ ERROR"
-                ;;
-            NOT_FOUND)
-                status_class="status-notfound"
-                status_text="⏸️ NOT RUN"
-                ;;
-            NO_DATA)
-                status_class="status-notfound"
-                status_text="📊 NO DATA"
-                ;;
-            MISSING)
-                status_class="status-failed"
-                status_text="🚫 MISSING"
-                ;;
-            *)
-                status_class="status-notfound"
-                status_text="❔ UNKNOWN"
-                ;;
-        esac
-        
-        cat >> "$HTML_FILE" << UNIT_CARD
+        # Add units for this chiplet
+        for idx in "${indices[@]}"; do
+            unit="${UNITS[$idx]}"
+            unit_chiplet="${CHIPLETS[$idx]}"
+            workarea="${WORKAREAS[$idx]}"
+            rtl_tag="${RTL_TAGS[$idx]}"
+            release_date="${RELEASE_DATES[$idx]}"
+            release_user="${RELEASE_USERS[$idx]}"
+            
+            # Validation: Skip if unit doesn't belong to this chiplet (sanity check)
+            if [ "$unit_chiplet" != "$chiplet" ]; then
+                log_debug "WARNING: Unit $unit has chiplet $unit_chiplet but is in section $chiplet (skipping)"
+                continue
+            fi
+            
+            # Get results for this unit in this regression type
+            status="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_status]}"
+            details="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_details]}"
+            runtime="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_runtime]}"
+            
+            # Determine status class and text
+            case "$status" in
+                PASSED)
+                    status_class="status-passed"
+                    status_text="✅ PASSED"
+                    ;;
+                WARN)
+                    status_class="status-unresolved"
+                    status_text="⚠️ WARN"
+                    ;;
+                PARTIAL_PASS)
+                    status_class="status-partial"
+                    status_text="⚠️ PARTIAL"
+                    ;;
+                UNRESOLVED)
+                    status_class="status-unresolved"
+                    status_text="⚠️ UNRESOLVED"
+                    ;;
+                FAILED)
+                    status_class="status-failed"
+                    status_text="❌ FAILED"
+                    ;;
+                CRASHED)
+                    status_class="status-crashed"
+                    status_text="💥 CRASHED"
+                    ;;
+                RUNNING)
+                    status_class="status-running"
+                    status_text="🔄 RUNNING"
+                    ;;
+                ERROR)
+                    status_class="status-error"
+                    status_text="⚠️ ERROR"
+                    ;;
+                NOT_FOUND)
+                    status_class="status-notfound"
+                    status_text="⏸️ NOT RUN"
+                    ;;
+                NO_DATA)
+                    status_class="status-notfound"
+                    status_text="📊 NO DATA"
+                    ;;
+                MISSING)
+                    status_class="status-failed"
+                    status_text="🚫 MISSING"
+                    ;;
+                *)
+                    status_class="status-notfound"
+                    status_text="❔ UNKNOWN"
+                    ;;
+            esac
+            
+            cat >> "$HTML_FILE" << UNIT_CARD
                         <div class="unit-card">
                             <div class="unit-header">
                                 <div class="unit-name">$unit</div>
@@ -1740,1156 +2258,527 @@ CHIPLET_SECTION
                                     <span class="info-value">$release_date</span>
                                 </div>
 UNIT_CARD
-        
-        # RTL Tag is only relevant for formal and release regressions
-        if [ "$REGRESSION_TYPE" = "formal" ] || [ "$REGRESSION_TYPE" = "release" ]; then
-            cat >> "$HTML_FILE" << RTL_TAG
+            
+            # RTL Tag is only relevant for formal and release regressions
+            if [ "$REGRESSION_TYPE" = "formal" ] || [ "$REGRESSION_TYPE" = "release" ]; then
+                cat >> "$HTML_FILE" << RTL_TAG
                                 <div class="info-row workarea-row">
                                     <span class="info-label">RTL Tag:</span>
-                                    <span class="info-value workarea-path" id="rtl-$unit">$rtl_tag</span>
-                                    <button class="copy-btn" onclick="copyToClipboard('rtl-$unit', this)" title="Copy RTL tag">
+                                    <span class="info-value workarea-path" id="rtl-${REGRESSION_TYPE}-$unit">$rtl_tag</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('rtl-${REGRESSION_TYPE}-$unit', this)" title="Copy RTL tag">
                                         📋 Copy
                                     </button>
                                 </div>
 RTL_TAG
-        fi
-        
-        cat >> "$HTML_FILE" << RUNTIME_WA
+            fi
+            
+            # Show runtime only for non-formal and non-release types
+            # (formal shows runtime per flow, release shows detailed attempt history)
+            if [ "$REGRESSION_TYPE" != "formal" ] && [ "$REGRESSION_TYPE" != "release" ]; then
+                cat >> "$HTML_FILE" << RUNTIME_SECTION
                                 <div class="info-row">
                                     <span class="info-label">Runtime:</span>
                                     <span class="info-value">$runtime</span>
                                 </div>
+RUNTIME_SECTION
+            fi
+            
+            cat >> "$HTML_FILE" << WORKAREA_SECTION
                                 <div class="info-row workarea-row">
                                     <span class="info-label">Workarea:</span>
-                                    <span class="info-value workarea-path" id="wa-$unit">$workarea</span>
-                                    <button class="copy-btn" onclick="copyToClipboard('wa-$unit', this)" title="Copy workarea path">
+                                    <span class="info-value workarea-path" id="wa-${REGRESSION_TYPE}-$unit">$workarea</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('wa-${REGRESSION_TYPE}-$unit', this)" title="Copy workarea path">
                                         📋 Copy
                                     </button>
                                 </div>
                             </div>
-RUNTIME_WA
-        
-        # Display details based on regression type
-        if [ "$REGRESSION_TYPE" = "pv" ]; then
-            # For PV: Display metrics differently with overall status
-            if [ "$details" != "No PV data available" ] && [ "$details" != "No PV analysis found" ]; then
-                # Extract overall status from details (MINOR/CRITICAL/ALL CLEAN)
-                overall_pv_status=$(echo "$details" | grep -oP '\((MINOR|CRITICAL|ALL CLEAN)\)' | tr -d '()')
-                
-                cat >> "$HTML_FILE" << PV_START
+WORKAREA_SECTION
+            
+            # Display details based on regression type
+            if [ "$REGRESSION_TYPE" = "pv" ]; then
+                # For PV: Display metrics
+                if [ "$details" != "No PV data available" ] && [ "$details" != "No PV analysis found" ]; then
+                    overall_pv_status=$(echo "$details" | grep -oP '\((MINOR|CRITICAL|ALL CLEAN)\)' | tr -d '()')
+                    
+                    cat >> "$HTML_FILE" << PV_START
                             <div class="formal-flows">
                                 <div class="flow-title">PV Metrics:</div>
 PV_START
-                
-                # Parse PV metrics: "DRC: X, LVS: Y, Antenna: Z (STATUS)"
-                IFS=',' read -ra metrics <<< "$details"
-                for metric_info in "${metrics[@]}"; do
-                    metric_info=$(echo "$metric_info" | xargs)  # trim whitespace
-                    # Remove the status label from the last metric
-                    metric_info=$(echo "$metric_info" | sed 's/ (MINOR)//' | sed 's/ (CRITICAL)//' | sed 's/ (ALL CLEAN)//')
-                    metric_name=$(echo "$metric_info" | cut -d':' -f1 | xargs)
-                    metric_value=$(echo "$metric_info" | cut -d':' -f2 | xargs)
                     
-                    cat >> "$HTML_FILE" << PV_METRIC
+                    # Parse PV metrics
+                    IFS=',' read -ra metrics <<< "$details"
+                    for metric_info in "${metrics[@]}"; do
+                        metric_info=$(echo "$metric_info" | xargs)
+                        metric_info=$(echo "$metric_info" | sed 's/ (MINOR)//' | sed 's/ (CRITICAL)//' | sed 's/ (ALL CLEAN)//')
+                        metric_name=$(echo "$metric_info" | cut -d':' -f1 | xargs)
+                        metric_value=$(echo "$metric_info" | cut -d':' -f2 | xargs)
+                        
+                        cat >> "$HTML_FILE" << PV_METRIC
                                 <div class="flow-item">
                                     <span>$metric_name</span>
                                     <span>❔ $metric_value</span>
                                 </div>
 PV_METRIC
-                done
-                
-                # Add overall status as a separate item
-                if [ -n "$overall_pv_status" ]; then
-                    pv_status_icon="❔"
-                    pv_status_class=""
-                    case "$overall_pv_status" in
-                        "ALL CLEAN")
-                            pv_status_icon="✅"
-                            pv_status_class="flow-succeeded"
-                            ;;
-                        "MINOR")
-                            pv_status_icon="⚠️"
-                            pv_status_class="flow-unresolved"
-                            ;;
-                        "CRITICAL")
-                            pv_status_icon="❌"
-                            pv_status_class="flow-failed"
-                            ;;
-                    esac
+                    done
                     
-                    cat >> "$HTML_FILE" << PV_STATUS
+                    # Add overall status
+                    if [ -n "$overall_pv_status" ]; then
+                        pv_status_icon="❔"
+                        pv_status_class=""
+                        case "$overall_pv_status" in
+                            "ALL CLEAN")
+                                pv_status_icon="✅"
+                                pv_status_class="flow-succeeded"
+                                ;;
+                            "MINOR")
+                                pv_status_icon="⚠️"
+                                pv_status_class="flow-unresolved"
+                                ;;
+                            "CRITICAL")
+                                pv_status_icon="❌"
+                                pv_status_class="flow-failed"
+                                ;;
+                        esac
+                        
+                        cat >> "$HTML_FILE" << PV_STATUS
                                 <div class="flow-item $pv_status_class" style="border-top: 1px solid #ddd; margin-top: 5px; padding-top: 5px;">
                                     <span><strong>Overall</strong></span>
                                     <span>$pv_status_icon $overall_pv_status</span>
                                 </div>
 PV_STATUS
+                    fi
+                    
+                    echo "                                </div>" >> "$HTML_FILE"
                 fi
-                
-                echo "                            </div>" >> "$HTML_FILE"
-            fi
-        else
-            # For other regression types (formal, timing, etc): Display as flows
-            if [ "$details" != "No formal flows found" ] && [ "$details" != "No formal flow detected" ]; then
-                cat >> "$HTML_FILE" << FLOWS_START
+            elif [ "$REGRESSION_TYPE" = "release" ]; then
+                # For Release: Display release statistics and links
+                if [ "$details" != "No release attempts detected" ] && [ "$details" != "No block release found" ]; then
+                    cat >> "$HTML_FILE" << RELEASE_START
+                            <div class="formal-flows">
+                                <div class="flow-title">Release Summary:</div>
+RELEASE_START
+                    
+                    # Parse release details (format: "N successful / M total attempts; Links: xxx; Latest: yyyy")
+                    # Split by semicolon
+                    IFS=';' read -ra release_parts <<< "$details"
+                    
+                    for part in "${release_parts[@]}"; do
+                        part=$(echo "$part" | xargs)  # Trim whitespace
+                        
+                        # Determine what type of information this is
+                        if [[ "$part" =~ ^[0-9]+ ]]; then
+                            # This is the attempt summary (e.g., "3 successful / 5 total attempts")
+                            metric_icon="📊"
+                            metric_name="Attempts"
+                            metric_value="$part"
+                            cat >> "$HTML_FILE" << RELEASE_METRIC
+                                <div class="flow-item">
+                                    <span><strong>$metric_icon $metric_name</strong></span>
+                                    <span>$metric_value</span>
+                                </div>
+RELEASE_METRIC
+                        elif [[ "$part" =~ ^Links: ]]; then
+                            # Extract custom link details from output file - display each link with its date
+                            # Format: "  Custom Link Detail: LINK_NAME|DATE"
+                            custom_link_details=$(grep "Custom Link Detail:" "$TEMP_DIR/${unit}_${REGRESSION_TYPE}_output.txt" 2>/dev/null | sed 's/.*Custom Link Detail:[[:space:]]*//' | sed 's/\x1b\[[0-9;]*m//g')
+                            
+                            if [ -n "$custom_link_details" ]; then
+                                # Display each custom link with its date
+                                while IFS='|' read -r link_name link_date; do
+                                    cat >> "$HTML_FILE" << CUSTOM_LINK
+                                <div class="flow-item">
+                                    <span><strong>🔗 Custom Link</strong></span>
+                                    <span>$link_name <span style="color: #7f8c8d; font-size: 0.9em;">($link_date)</span></span>
+                                </div>
+CUSTOM_LINK
+                                done <<< "$custom_link_details"
+                            fi
+                        elif [[ "$part" =~ ^Latest: ]]; then
+                            # Latest success date
+                            metric_icon="📅"
+                            metric_name="Latest Success"
+                            metric_value=$(echo "$part" | sed 's/^Latest:[[:space:]]*//')
+                            cat >> "$HTML_FILE" << RELEASE_METRIC
+                                <div class="flow-item">
+                                    <span><strong>$metric_icon $metric_name</strong></span>
+                                    <span>$metric_value</span>
+                                </div>
+RELEASE_METRIC
+                        fi
+                    done
+                    
+                    echo "                                </div>" >> "$HTML_FILE"
+                fi
+            elif [ "$REGRESSION_TYPE" = "clock" ]; then
+                # For Clock: Display individual clock latencies
+                if [ "$details" != "No clock tree analysis found" ] && [ "$details" != "No clock data available" ]; then
+                    cat >> "$HTML_FILE" << CLOCK_START
+                            <div class="formal-flows">
+                                <div class="flow-title">Clock Latencies:</div>
+CLOCK_START
+                    
+                    # Extract per-clock details from output file
+                    # Format: "Clock Detail: CLOCK_NAME|MAX_LATENCY_PS|SKEW_PS"
+                    clock_details=$(grep "Clock Detail:" "$TEMP_DIR/${unit}_${REGRESSION_TYPE}_output.txt" 2>/dev/null | sed 's/.*Clock Detail:[[:space:]]*//' | sed 's/\x1b\[[0-9;]*m//g')
+                    
+                    if [ -n "$clock_details" ]; then
+                        # Display each clock with its latency and skew
+                        while IFS='|' read -r clock_name max_latency skew; do
+                            # Determine status color based on latency
+                            if (( $(echo "$max_latency >= 580" | bc -l) )); then
+                                latency_class="flow-failed"
+                                latency_icon="❌"
+                            elif (( $(echo "$max_latency > 550" | bc -l) )); then
+                                latency_class="flow-unresolved"
+                                latency_icon="⚠️"
+                            else
+                                latency_class="flow-succeeded"
+                                latency_icon="✅"
+                            fi
+                            
+                            # Format latency with proper decimals
+                            formatted_latency=$(printf "%.1f" "$max_latency")
+                            formatted_skew=$(printf "%.1f" "$skew")
+                            
+                            cat >> "$HTML_FILE" << CLOCK_ITEM
+                                <div class="flow-item $latency_class">
+                                    <span><strong>🕐 $clock_name</strong></span>
+                                    <span>$latency_icon ${formatted_latency}ps <span style="font-size: 0.85em; color: #666;">(skew: ${formatted_skew}ps)</span></span>
+                                </div>
+CLOCK_ITEM
+                        done <<< "$clock_details"
+                    else
+                        # Fallback to displaying summary details
+                        cat >> "$HTML_FILE" << CLOCK_SUMMARY
+                                <div class="flow-item">
+                                    <span>Summary</span>
+                                    <span>$details</span>
+                                </div>
+CLOCK_SUMMARY
+                    fi
+                    
+                    echo "                                </div>" >> "$HTML_FILE"
+                fi
+            else
+                # For other types: Display as flows
+                if [ "$details" != "No formal flows found" ] && [ "$details" != "No formal flow detected" ]; then
+                    cat >> "$HTML_FILE" << FLOWS_START
                             <div class="formal-flows">
                                 <div class="flow-title">Formal Flows:</div>
 FLOWS_START
-                
-                # Parse details string (format: "flow1: STATUS, flow2: STATUS, ...")
-                IFS=',' read -ra flows <<< "$details"
-                for flow_info in "${flows[@]}"; do
-                    flow_info=$(echo "$flow_info" | xargs)  # trim whitespace
-                    flow_name=$(echo "$flow_info" | cut -d':' -f1 | xargs)
-                    flow_status=$(echo "$flow_info" | cut -d':' -f2 | xargs)
-                
-                # Determine flow status class
-                case "$flow_status" in
-                    SUCCEEDED)
-                        flow_class="flow-succeeded"
-                        flow_icon="✅"
-                        ;;
-                    FAILED)
-                        flow_class="flow-failed"
-                        flow_icon="❌"
-                        ;;
-                    UNRESOLVED)
-                        flow_class="flow-unresolved"
-                        flow_icon="⚠️"
-                        ;;
-                    CRASHED)
-                        flow_class="flow-crashed"
-                        flow_icon="💥"
-                        ;;
-                    RUNNING)
-                        flow_class="flow-running"
-                        flow_icon="🔄"
-                        ;;
-                    *)
-                        flow_class=""
-                        flow_icon="❔"
-                        ;;
-                esac
-                
-                cat >> "$HTML_FILE" << FLOW_ITEM
-                                <div class="flow-item $flow_class">
-                                    <span>$flow_name</span>
-                                    <span>$flow_icon $flow_status</span>
-                                </div>
-FLOW_ITEM
-            done
-            
-            echo "                            </div>" >> "$HTML_FILE"
-            fi
-        fi
-        
-        echo "                        </div>" >> "$HTML_FILE"
-    done
-    
-    cat >> "$HTML_FILE" << CHIPLET_END
-                    </div>
-                </div>
-            </div>
-CHIPLET_END
-done
-
-# Close HTML and add JavaScript
-cat >> "$HTML_FILE" << 'HTML_END'
-        </div>
-        
-        <!-- Copyright Footer -->
-        <div class="footer">
-            <p><strong>AVICE Formal Regression Dashboard</strong></p>
-            <p>Copyright (c) 2025 Alon Vice (avice)</p>
-            <p>Contact: avice@nvidia.com</p>
-        </div>
-    </div>
-    
-    <!-- Back to Top Button -->
-    <button id="backToTopBtn" onclick="scrollToTop()">↑ Top</button>
-    
-    <script>
-        // Toggle chiplet sections
-        function toggleChiplet(chiplet) {
-            const content = document.getElementById('content-' + chiplet);
-            const toggle = document.getElementById('toggle-' + chiplet);
-            
-            if (content.classList.contains('active')) {
-                content.classList.remove('active');
-                toggle.textContent = '▶';
-            } else {
-                content.classList.add('active');
-                toggle.textContent = '▼';
-            }
-        }
-        
-        // Back to top functionality
-        const backToTopBtn = document.getElementById('backToTopBtn');
-        
-        window.addEventListener('scroll', function() {
-            if (window.pageYOffset > 300) {
-                backToTopBtn.style.display = 'block';
-            } else {
-                backToTopBtn.style.display = 'none';
-            }
-        });
-        
-        function scrollToTop() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        
-        // Logo modal functionality
-        function showLogoModal() {
-            const modal = document.getElementById('logoModal');
-            const modalImg = document.getElementById('logoModalImg');
-            const logo = document.querySelector('.logo');
-            
-            if (modal && modalImg && logo) {
-                modal.style.display = 'block';
-                modalImg.src = logo.src;
-            }
-        }
-        
-        function hideLogoModal() {
-            const modal = document.getElementById('logoModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        }
-        
-        // Copy workarea path to clipboard
-        function copyToClipboard(elementId, button) {
-            const element = document.getElementById(elementId);
-            const text = element.textContent;
-            
-            // Use modern clipboard API
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(function() {
-                    // Success feedback
-                    const originalText = button.innerHTML;
-                    button.innerHTML = '✅ Copied!';
-                    button.classList.add('copied');
                     
-                    setTimeout(function() {
-                        button.innerHTML = originalText;
-                        button.classList.remove('copied');
-                    }, 2000);
-                }).catch(function(err) {
-                    console.error('Failed to copy: ', err);
-                    alert('Failed to copy to clipboard');
-                });
-            } else {
-                // Fallback for older browsers
-                const textarea = document.createElement('textarea');
-                textarea.value = text;
-                textarea.style.position = 'fixed';
-                textarea.style.opacity = '0';
-                document.body.appendChild(textarea);
-                textarea.select();
-                try {
-                    document.execCommand('copy');
-                    const originalText = button.innerHTML;
-                    button.innerHTML = '✅ Copied!';
-                    button.classList.add('copied');
-                    
-                    setTimeout(function() {
-                        button.innerHTML = originalText;
-                        button.classList.remove('copied');
-                    }, 2000);
-                } catch (err) {
-                    console.error('Failed to copy: ', err);
-                    alert('Failed to copy to clipboard');
-                }
-                document.body.removeChild(textarea);
-            }
-        }
-    </script>
-</body>
-</html>
-HTML_END
-
-echo "HTML dashboard generated: $HTML_FILE"
-
-else
-    # Multi-regression - generate tabbed HTML dashboard with full styling
-    # This uses the same professional styling as single regression but with tabs
-    
-    # Start HTML with full CSS from single regression
-    cat > "$HTML_FILE" << 'MULTI_HTML_START'
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AGUR Multi-Regression Dashboard</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .header .subtitle {
-            font-size: 1.2em;
-            opacity: 0.9;
-        }
-        
-        /* Tab Navigation */
-        .tab-nav {
-            display: flex;
-            background: #f8f9fa;
-            border-bottom: 3px solid #dee2e6;
-            overflow-x: auto;
-        }
-        
-        .tab-button {
-            flex: 1;
-            min-width: 150px;
-            padding: 18px 25px;
-            background: #e9ecef;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: all 0.3s;
-            border-bottom: 4px solid transparent;
-            color: #495057;
-        }
-        
-        .tab-button:hover {
-            background: #dee2e6;
-            transform: translateY(-2px);
-        }
-        
-        .tab-button.active {
-            background: white;
-            border-bottom-color: #667eea;
-            color: #667eea;
-        }
-        
-        /* Tab Content */
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            padding: 30px;
-            background: #f8f9fa;
-        }
-        
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-        }
-        
-        .stat-value {
-            font-size: 2.5em;
-            font-weight: bold;
-            margin: 15px 0;
-        }
-        
-        .stat-label {
-            color: #6c757d;
-            font-size: 0.95em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .stat-passed { color: #28a745; }
-        .stat-failed { color: #dc3545; }
-        .stat-unresolved { color: #ffc107; }
-        .stat-crashed { color: #6c1a1a; }
-        
-        .content {
-            padding: 30px;
-        }
-        
-        .chiplet-section {
-            margin-bottom: 40px;
-        }
-        
-        .chiplet-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            font-size: 1.5em;
-            margin-bottom: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .chiplet-header:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        
-        .chiplet-header .toggle {
-            font-size: 0.8em;
-        }
-        
-        .collapsible-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s ease;
-        }
-        
-        .collapsible-content.active {
-            max-height: 50000px;
-        }
-        
-        .units-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
-            padding: 10px;
-        }
-        
-        .unit-card {
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 20px;
-            transition: all 0.3s ease;
-        }
-        
-        .unit-card:hover {
-            border-color: #667eea;
-            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.2);
-            transform: translateY(-3px);
-        }
-        
-        .unit-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-        
-        .unit-name {
-            font-size: 1.4em;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .status-badge {
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .status-passed {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status-partial {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-unresolved {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-failed {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .status-crashed {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .status-running {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        
-        .status-error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .status-notfound {
-            background: #e2e3e5;
-            color: #383d41;
-        }
-        
-        .unit-info {
-            margin: 10px 0;
-        }
-        
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            font-size: 0.9em;
-        }
-        
-        .workarea-row {
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .workarea-path {
-            flex: 1;
-            font-family: monospace;
-            font-size: 0.85em;
-            color: #555;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        
-        .copy-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 5px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.85em;
-            transition: all 0.3s;
-        }
-        
-        .copy-btn:hover {
-            background: #5568d3;
-            transform: scale(1.05);
-        }
-        
-        .copy-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .info-label {
-            font-weight: 600;
-            color: #666;
-        }
-        
-        .info-value {
-            color: #333;
-        }
-        
-        /* Formal Flows / PV Metrics */
-        .formal-flows {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 2px solid #f0f0f0;
-        }
-        
-        .flow-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #667eea;
-        }
-        
-        .flow-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 12px;
-            margin: 5px 0;
-            background: #f8f9fa;
-            border-radius: 5px;
-            font-size: 0.9em;
-        }
-        
-        .flow-succeeded {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .flow-failed {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .flow-unresolved {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .flow-crashed {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .flow-running {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        
-        .footer {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            text-align: center;
-            padding: 20px;
-            margin-top: 40px;
-        }
-        
-        .footer p {
-            margin: 5px 0;
-        }
-        
-        .footer strong {
-            color: #00ff00;
-        }
-        
-        /* Toast Notification */
-        .toast {
-            visibility: hidden;
-            min-width: 250px;
-            background-color: #28a745;
-            color: white;
-            text-align: center;
-            border-radius: 10px;
-            padding: 16px;
-            position: fixed;
-            z-index: 1;
-            right: 30px;
-            bottom: 30px;
-            font-size: 17px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        
-        .toast.show {
-            visibility: visible;
-            animation: fadein 0.5s, fadeout 0.5s 2.5s;
-        }
-        
-        @keyframes fadein {
-            from {bottom: 0; opacity: 0;}
-            to {bottom: 30px; opacity: 1;}
-        }
-        
-        @keyframes fadeout {
-            from {bottom: 30px; opacity: 1;}
-            to {bottom: 0; opacity: 0;}
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🔬 AGUR Multi-Regression Dashboard</h1>
-MULTI_HTML_START
-
-    # Add generation info and filter
-    cat >> "$HTML_FILE" << MULTI_META
-            <div class="subtitle">Generated: $(date '+%Y-%m-%d %H:%M:%S')</div>
-            <div class="subtitle">Regression Types: ${REGRESSION_TYPES[*]}</div>
-MULTI_META
-
-    if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
-        echo "            <div class=\"subtitle\">Filter: Chiplet = ${FILTER_CHIPLETS[*]}</div>" >> "$HTML_FILE"
-    fi
-    
-    # Add tab navigation
-    cat >> "$HTML_FILE" << 'MULTI_TABS_START'
-        </div>
-        
-        <div class="tab-nav">
-MULTI_TABS_START
-
-    # Generate tab buttons
-    for idx in "${!REGRESSION_TYPES[@]}"; do
-        regression_type="${REGRESSION_TYPES[$idx]}"
-        active_class=""
-        [ $idx -eq 0 ] && active_class=" active"
-        
-        # Get regression name for tab
-        case "$regression_type" in
-            formal) tab_name="🔍 Formal" ;;
-            timing) tab_name="⏱️ Timing" ;;
-            pv) tab_name="✓ PV" ;;
-            clock) tab_name="🕒 Clock" ;;
-            release) tab_name="📦 Release" ;;
-            *) tab_name="$regression_type" ;;
-        esac
-        
-        echo "            <button class=\"tab-button$active_class\" onclick=\"openTab('$regression_type')\">$tab_name</button>" >> "$HTML_FILE"
-    done
-    
-    echo "        </div>" >> "$HTML_FILE"
-    
-    # Generate tab content for each regression type
-    for idx in "${!REGRESSION_TYPES[@]}"; do
-        REGRESSION_TYPE="${REGRESSION_TYPES[$idx]}"
-        active_class=""
-        [ $idx -eq 0 ] && active_class=" active"
-        
-        # Get statistics for this regression
-        passed_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_passed_count"]}
-        warn_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_warn_count"]}
-        partial_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_partial_count"]}
-        unresolved_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_unresolved_count"]}
-        failed_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_failed_count"]}
-        crashed_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_crashed_count"]}
-        error_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_error_count"]}
-        running_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_running_count"]}
-        not_found_count=${REGRESSION_RESULTS["${REGRESSION_TYPE}_not_found_count"]}
-        
-        cat >> "$HTML_FILE" << TAB_CONTENT_START
-        <div id="$REGRESSION_TYPE" class="tab-content$active_class">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Total Units</div>
-                    <div class="stat-value">$TOTAL_UNITS</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">✅ Passed</div>
-                    <div class="stat-value stat-passed">$passed_count</div>
-                    <div class="stat-label">$(( passed_count * 100 / TOTAL_UNITS ))%</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">⚠️ Warnings</div>
-                    <div class="stat-value stat-unresolved">$warn_count</div>
-                    <div class="stat-label">$(( warn_count * 100 / TOTAL_UNITS ))%</div>
-                </div>
-TAB_CONTENT_START
-        
-        # Unresolved is only relevant for formal regression
-        if [ "$REGRESSION_TYPE" = "formal" ]; then
-            cat >> "$HTML_FILE" << TAB_UNRESOLVED
-                <div class="stat-card">
-                    <div class="stat-label">⚠️ Unresolved</div>
-                    <div class="stat-value stat-unresolved">$unresolved_count</div>
-                    <div class="stat-label">$(( unresolved_count * 100 / TOTAL_UNITS ))%</div>
-                </div>
-TAB_UNRESOLVED
-        fi
-        
-        cat >> "$HTML_FILE" << TAB_STATS_REST
-                <div class="stat-card">
-                    <div class="stat-label">❌ Failed</div>
-                    <div class="stat-value stat-failed">$failed_count</div>
-                    <div class="stat-label">$(( failed_count * 100 / TOTAL_UNITS ))%</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">💥 Crashed</div>
-                    <div class="stat-value stat-crashed">$crashed_count</div>
-                    <div class="stat-label">$(( crashed_count * 100 / TOTAL_UNITS ))%</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">⏸️ Not Run</div>
-                    <div class="stat-value stat-unresolved">$not_found_count</div>
-                    <div class="stat-label">$(( not_found_count * 100 / TOTAL_UNITS ))%</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">📊 No Data</div>
-                    <div class="stat-value stat-unresolved">$no_data_count</div>
-                    <div class="stat-label">$(( no_data_count * 100 / TOTAL_UNITS ))%</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">🚫 Missing</div>
-                    <div class="stat-value stat-failed">$missing_count</div>
-                    <div class="stat-label">$(( missing_count * 100 / TOTAL_UNITS ))%</div>
-                </div>
-            </div>
-            
-            <div class="content">
-TAB_STATS_REST
-
-        # Group units by chiplet
-        declare -A chiplet_units_tab
-        for i in "${!UNITS[@]}"; do
-            unit="${UNITS[$i]}"
-            chiplet="${CHIPLETS[$i]}"
-            
-            if [ -z "${chiplet_units_tab[$chiplet]}" ]; then
-                chiplet_units_tab[$chiplet]="$i"
-            else
-                chiplet_units_tab[$chiplet]="${chiplet_units_tab[$chiplet]},$i"
-            fi
-        done
-        
-        # Generate HTML for each chiplet in this tab
-        for chiplet in "${!chiplet_units_tab[@]}"; do
-            unit_indices="${chiplet_units_tab[$chiplet]}"
-            
-            # Count units in this chiplet
-            IFS=',' read -ra indices <<< "$unit_indices"
-            chiplet_unit_count=${#indices[@]}
-            
-            cat >> "$HTML_FILE" << CHIPLET_SECTION
-                <div class="chiplet-section">
-                    <div class="chiplet-header" onclick="toggleChiplet('${REGRESSION_TYPE}_$chiplet')">
-                        <span>$chiplet Chiplet ($chiplet_unit_count units)</span>
-                        <span class="toggle" id="toggle-${REGRESSION_TYPE}_$chiplet">▼</span>
-                    </div>
-                    <div class="collapsible-content active" id="content-${REGRESSION_TYPE}_$chiplet">
-                        <div class="units-grid">
-CHIPLET_SECTION
-            
-            # Add units for this chiplet
-            for idx in "${indices[@]}"; do
-                unit="${UNITS[$idx]}"
-                chiplet="${CHIPLETS[$idx]}"
-                workarea="${WORKAREAS[$idx]}"
-                rtl_tag="${RTL_TAGS[$idx]}"
-                release_date="${RELEASE_DATES[$idx]}"
-                release_user="${RELEASE_USERS[$idx]}"
-                
-                # Get results for this unit in this regression type
-                status="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_status]}"
-                details="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_details]}"
-                runtime="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_runtime]}"
-                
-                # Determine status class and text
-                case "$status" in
-                    PASSED)
-                        status_class="status-passed"
-                        status_text="✅ PASSED"
-                        ;;
-                    WARN)
-                        status_class="status-unresolved"
-                        status_text="⚠️ WARN"
-                        ;;
-                    PARTIAL_PASS)
-                        status_class="status-partial"
-                        status_text="⚠️ PARTIAL"
-                        ;;
-                    UNRESOLVED)
-                        status_class="status-unresolved"
-                        status_text="⚠️ UNRESOLVED"
-                        ;;
-                    FAILED)
-                        status_class="status-failed"
-                        status_text="❌ FAILED"
-                        ;;
-                    CRASHED)
-                        status_class="status-crashed"
-                        status_text="💥 CRASHED"
-                        ;;
-                    RUNNING)
-                        status_class="status-running"
-                        status_text="🔄 RUNNING"
-                        ;;
-                    ERROR)
-                        status_class="status-error"
-                        status_text="⚠️ ERROR"
-                        ;;
-                    NOT_FOUND)
-                        status_class="status-notfound"
-                        status_text="⏸️ NOT RUN"
-                        ;;
-                    NO_DATA)
-                        status_class="status-notfound"
-                        status_text="📊 NO DATA"
-                        ;;
-                    MISSING)
-                        status_class="status-failed"
-                        status_text="🚫 MISSING"
-                        ;;
-                    *)
-                        status_class="status-notfound"
-                        status_text="❔ UNKNOWN"
-                        ;;
-                esac
-                
-                cat >> "$HTML_FILE" << UNIT_CARD
-                            <div class="unit-card">
-                                <div class="unit-header">
-                                    <div class="unit-name">$unit</div>
-                                    <div class="status-badge $status_class">$status_text</div>
-                                </div>
-                                <div class="unit-info">
-                                    <div class="info-row">
-                                        <span class="info-label">Released By:</span>
-                                        <span class="info-value">$release_user</span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="info-label">Release Date:</span>
-                                        <span class="info-value">$release_date</span>
-                                    </div>
-UNIT_CARD
-                
-                # RTL Tag is only relevant for formal and release regressions
-                if [ "$REGRESSION_TYPE" = "formal" ] || [ "$REGRESSION_TYPE" = "release" ]; then
-                    cat >> "$HTML_FILE" << RTL_TAG
-                                    <div class="info-row workarea-row">
-                                        <span class="info-label">RTL Tag:</span>
-                                        <span class="info-value workarea-path" id="rtl-${REGRESSION_TYPE}-$unit">$rtl_tag</span>
-                                        <button class="copy-btn" onclick="copyToClipboard('rtl-${REGRESSION_TYPE}-$unit', this)" title="Copy RTL tag">
-                                            📋 Copy
-                                        </button>
-                                    </div>
-RTL_TAG
-                fi
-                
-                cat >> "$HTML_FILE" << RUNTIME_WA
-                                    <div class="info-row">
-                                        <span class="info-label">Runtime:</span>
-                                        <span class="info-value">$runtime</span>
-                                    </div>
-                                    <div class="info-row workarea-row">
-                                        <span class="info-label">Workarea:</span>
-                                        <span class="info-value workarea-path" id="wa-${REGRESSION_TYPE}-$unit">$workarea</span>
-                                        <button class="copy-btn" onclick="copyToClipboard('wa-${REGRESSION_TYPE}-$unit', this)" title="Copy workarea path">
-                                            📋 Copy
-                                        </button>
-                                    </div>
-                                </div>
-RUNTIME_WA
-                
-                # Display details based on regression type
-                if [ "$REGRESSION_TYPE" = "pv" ]; then
-                    # For PV: Display metrics
-                    if [ "$details" != "No PV data available" ] && [ "$details" != "No PV analysis found" ]; then
-                        overall_pv_status=$(echo "$details" | grep -oP '\((MINOR|CRITICAL|ALL CLEAN)\)' | tr -d '()')
+                    # Parse details string (format: "flow: STATUS (runtime)")
+                    IFS=',' read -ra flows <<< "$details"
+                    for flow_info in "${flows[@]}"; do
+                        flow_info=$(echo "$flow_info" | xargs)
+                        flow_name=$(echo "$flow_info" | cut -d':' -f1 | xargs)
+                        flow_rest=$(echo "$flow_info" | cut -d':' -f2- | xargs)
                         
-                        cat >> "$HTML_FILE" << PV_START
-                                <div class="formal-flows">
-                                    <div class="flow-title">PV Metrics:</div>
-PV_START
-                        
-                        # Parse PV metrics
-                        IFS=',' read -ra metrics <<< "$details"
-                        for metric_info in "${metrics[@]}"; do
-                            metric_info=$(echo "$metric_info" | xargs)
-                            metric_info=$(echo "$metric_info" | sed 's/ (MINOR)//' | sed 's/ (CRITICAL)//' | sed 's/ (ALL CLEAN)//')
-                            metric_name=$(echo "$metric_info" | cut -d':' -f1 | xargs)
-                            metric_value=$(echo "$metric_info" | cut -d':' -f2 | xargs)
-                            
-                            cat >> "$HTML_FILE" << PV_METRIC
-                                    <div class="flow-item">
-                                        <span>$metric_name</span>
-                                        <span>❔ $metric_value</span>
-                                    </div>
-PV_METRIC
-                        done
-                        
-                        # Add overall status
-                        if [ -n "$overall_pv_status" ]; then
-                            pv_status_icon="❔"
-                            pv_status_class=""
-                            case "$overall_pv_status" in
-                                "ALL CLEAN")
-                                    pv_status_icon="✅"
-                                    pv_status_class="flow-succeeded"
-                                    ;;
-                                "MINOR")
-                                    pv_status_icon="⚠️"
-                                    pv_status_class="flow-unresolved"
-                                    ;;
-                                "CRITICAL")
-                                    pv_status_icon="❌"
-                                    pv_status_class="flow-failed"
-                                    ;;
-                            esac
-                            
-                            cat >> "$HTML_FILE" << PV_STATUS
-                                    <div class="flow-item $pv_status_class" style="border-top: 1px solid #ddd; margin-top: 5px; padding-top: 5px;">
-                                        <span><strong>Overall</strong></span>
-                                        <span>$pv_status_icon $overall_pv_status</span>
-                                    </div>
-PV_STATUS
+                        # Extract status and runtime (runtime is in parentheses)
+                        # Use variable to avoid shell escaping issues
+                        status_runtime_regex='^([A-Z_]+)[[:space:]]*\(([^)]+)\)'
+                        if [[ "$flow_rest" =~ $status_runtime_regex ]]; then
+                            flow_status="${BASH_REMATCH[1]}"
+                            flow_runtime="${BASH_REMATCH[2]}"
+                        else
+                            flow_status="$flow_rest"
+                            flow_runtime=""
                         fi
                         
-                        echo "                                </div>" >> "$HTML_FILE"
-                    fi
-                else
-                    # For other types: Display as flows
-                    if [ "$details" != "No formal flows found" ] && [ "$details" != "No formal flow detected" ]; then
-                        cat >> "$HTML_FILE" << FLOWS_START
-                                <div class="formal-flows">
-                                    <div class="flow-title">Formal Flows:</div>
-FLOWS_START
+                        # Determine flow status class
+                        case "$flow_status" in
+                            SUCCEEDED)
+                                flow_class="flow-succeeded"
+                                flow_icon="✅"
+                                ;;
+                            FAILED)
+                                flow_class="flow-failed"
+                                flow_icon="❌"
+                                ;;
+                            UNRESOLVED)
+                                flow_class="flow-unresolved"
+                                flow_icon="⚠️"
+                                ;;
+                            CRASHED)
+                                flow_class="flow-crashed"
+                                flow_icon="💥"
+                                ;;
+                            RUNNING)
+                                flow_class="flow-running"
+                                flow_icon="🔄"
+                                ;;
+                            *)
+                                flow_class=""
+                                flow_icon="❔"
+                                ;;
+                        esac
                         
-                        # Parse details string
-                        IFS=',' read -ra flows <<< "$details"
-                        for flow_info in "${flows[@]}"; do
-                            flow_info=$(echo "$flow_info" | xargs)
-                            flow_name=$(echo "$flow_info" | cut -d':' -f1 | xargs)
-                            flow_status=$(echo "$flow_info" | cut -d':' -f2 | xargs)
-                            
-                            # Determine flow status class
-                            case "$flow_status" in
-                                SUCCEEDED)
-                                    flow_class="flow-succeeded"
-                                    flow_icon="✅"
-                                    ;;
-                                FAILED)
-                                    flow_class="flow-failed"
-                                    flow_icon="❌"
-                                    ;;
-                                UNRESOLVED)
-                                    flow_class="flow-unresolved"
-                                    flow_icon="⚠️"
-                                    ;;
-                                CRASHED)
-                                    flow_class="flow-crashed"
-                                    flow_icon="💥"
-                                    ;;
-                                RUNNING)
-                                    flow_class="flow-running"
-                                    flow_icon="🔄"
-                                    ;;
-                                *)
-                                    flow_class=""
-                                    flow_icon="❔"
-                                    ;;
-                            esac
-                            
-                            cat >> "$HTML_FILE" << FLOW_ITEM
-                                    <div class="flow-item $flow_class">
-                                        <span>$flow_name</span>
-                                        <span>$flow_icon $flow_status</span>
-                                    </div>
+                        # Build display text with runtime
+                        if [ -n "$flow_runtime" ]; then
+                            flow_display="$flow_icon $flow_status <span style=\"font-size: 0.85em; color: #666;\">($flow_runtime)</span>"
+                        else
+                            flow_display="$flow_icon $flow_status"
+                        fi
+                        
+                        cat >> "$HTML_FILE" << FLOW_ITEM
+                                <div class="flow-item $flow_class">
+                                    <span>$flow_name</span>
+                                    <span>$flow_display</span>
+                                </div>
 FLOW_ITEM
-                        done
-                        
-                        echo "                                </div>" >> "$HTML_FILE"
-                    fi
+                    done
+                    
+                    echo "                                </div>" >> "$HTML_FILE"
                 fi
-                
-                echo "                            </div>" >> "$HTML_FILE"
-            done
+            fi
             
-            cat >> "$HTML_FILE" << CHIPLET_END
-                        </div>
-                    </div>
-                </div>
-CHIPLET_END
+            echo "                            </div>" >> "$HTML_FILE"
         done
         
-        unset chiplet_units_tab
-        
-        cat >> "$HTML_FILE" << 'TAB_CONTENT_END'
+        cat >> "$HTML_FILE" << CHIPLET_END
+                    </div>
+                </div>
             </div>
-        </div>
-TAB_CONTENT_END
+CHIPLET_END
     done
     
-    # Close HTML with footer and JavaScript
-    cat >> "$HTML_FILE" << 'MULTI_HTML_END'
-        
-        <div class="footer">
-            <p><strong>AVICE Multi-Regression Dashboard</strong></p>
-            <p>Copyright (c) 2025 Alon Vice (avice)</p>
-            <p>Contact: avice@nvidia.com</p>
+    unset chiplet_units_tab
+    
+    cat >> "$HTML_FILE" << 'TAB_CONTENT_END'
         </div>
     </div>
+TAB_CONTENT_END
+done
+
+# Close HTML with footer and JavaScript
+cat >> "$HTML_FILE" << 'MULTI_HTML_END'
     
-    <div id="toast" class="toast">Copied to clipboard!</div>
+    <div class="footer">
+        <p><strong>AVICE Multi-Regression Dashboard</strong></p>
+        <p>Copyright (c) 2025 Alon Vice (avice)</p>
+        <p>Contact: avice@nvidia.com</p>
+    </div>
+</div>
+
+<div id="toast" class="toast">Copied to clipboard!</div>
+
+<script>
+    // Tab switching
+    function openTab(tabName) {
+        const tabContents = document.getElementsByClassName('tab-content');
+        for (let i = 0; i < tabContents.length; i++) {
+            tabContents[i].classList.remove('active');
+        }
+        
+        const tabButtons = document.getElementsByClassName('tab-button');
+        for (let i = 0; i < tabButtons.length; i++) {
+            tabButtons[i].classList.remove('active');
+        }
+        
+        document.getElementById(tabName).classList.add('active');
+        event.target.classList.add('active');
+    }
     
-    <script>
-        // Tab switching
-        function openTab(tabName) {
-            const tabContents = document.getElementsByClassName('tab-content');
-            for (let i = 0; i < tabContents.length; i++) {
-                tabContents[i].classList.remove('active');
-            }
-            
-            const tabButtons = document.getElementsByClassName('tab-button');
-            for (let i = 0; i < tabButtons.length; i++) {
-                tabButtons[i].classList.remove('active');
-            }
-            
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-        }
+    // Toggle chiplet sections
+    function toggleChiplet(chipletId) {
+        const content = document.getElementById('content-' + chipletId);
+        const toggle = document.getElementById('toggle-' + chipletId);
         
-        // Toggle chiplet sections
-        function toggleChiplet(chipletId) {
-            const content = document.getElementById('content-' + chipletId);
-            const toggle = document.getElementById('toggle-' + chipletId);
-            
-            if (content.classList.contains('active')) {
-                content.classList.remove('active');
-                toggle.textContent = '▶';
-            } else {
-                content.classList.add('active');
-                toggle.textContent = '▼';
-            }
+        if (content.classList.contains('active')) {
+            content.classList.remove('active');
+            toggle.textContent = '▶';
+        } else {
+            content.classList.add('active');
+            toggle.textContent = '▼';
         }
+    }
+    
+    // Copy to clipboard
+    function copyToClipboard(elementId, button) {
+        const element = document.getElementById(elementId);
+        const text = element.textContent;
         
-        // Copy to clipboard
-        function copyToClipboard(elementId, button) {
-            const element = document.getElementById(elementId);
-            const text = element.textContent;
-            
-            navigator.clipboard.writeText(text).then(function() {
-                showToast();
-                button.textContent = '✓ Copied';
-                setTimeout(function() {
-                    button.textContent = '📋 Copy';
-                }, 2000);
-            });
-        }
-        
-        function showToast() {
-            const toast = document.getElementById('toast');
-            toast.classList.add('show');
+        navigator.clipboard.writeText(text).then(function() {
+            showToast();
+            button.textContent = '✓ Copied';
             setTimeout(function() {
-                toast.classList.remove('show');
-            }, 3000);
+                button.textContent = '📋 Copy';
+            }, 2000);
+        });
+    }
+    
+    function showToast() {
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(function() {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+    
+    // Search and filter functionality
+    function filterUnits() {
+        const searchInput = document.getElementById('searchInput').value.toLowerCase();
+        const unitCards = document.getElementsByClassName('unit-card');
+        let visibleCount = 0;
+        
+        for (let card of unitCards) {
+            const unitName = card.querySelector('.unit-name').textContent.toLowerCase();
+            const workarea = card.querySelector('.workarea-path') ? card.querySelector('.workarea-path').textContent.toLowerCase() : '';
+            
+            if (unitName.includes(searchInput) || workarea.includes(searchInput)) {
+                if (!card.classList.contains('status-filtered')) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                }
+            } else {
+                card.classList.add('hidden');
+            }
         }
-    </script>
+    }
+    
+    function filterStatus(evt, status) {
+        try {
+            const unitCards = document.getElementsByClassName('unit-card');
+            const filterButtons = document.getElementsByClassName('filter-btn');
+            const statCards = document.getElementsByClassName('stat-card');
+            
+            // Update active button (filter buttons in the bar)
+            for (let btn of filterButtons) {
+                btn.classList.remove('active');
+            }
+            
+            // Update active stat card (statistics cards at top)
+            for (let card of statCards) {
+                card.classList.remove('active');
+            }
+            
+            // Add active class to clicked element
+            if (evt && evt.target) {
+                // If clicked on a child element (like stat-value), find parent stat-card
+                let targetElement = evt.target;
+                if (!targetElement.classList.contains('stat-card') && !targetElement.classList.contains('filter-btn')) {
+                    targetElement = evt.target.closest('.stat-card') || evt.target.closest('.filter-btn');
+                }
+                if (targetElement) {
+                    targetElement.classList.add('active');
+                }
+            }
+            
+            // Filter unit cards based on status
+            for (let card of unitCards) {
+                const statusBadgeEl = card.querySelector('.status-badge');
+                if (!statusBadgeEl) continue;
+                
+                const statusBadge = statusBadgeEl.textContent.toLowerCase();
+            
+            if (status === 'all') {
+                card.classList.remove('status-filtered', 'hidden');
+            } else if (status === 'passed' && statusBadge.includes('passed')) {
+                card.classList.remove('status-filtered', 'hidden');
+            } else if (status === 'failed' && (statusBadge.includes('failed') || statusBadge.includes('error'))) {
+                card.classList.remove('status-filtered', 'hidden');
+            } else if (status === 'crashed' && statusBadge.includes('crashed')) {
+                card.classList.remove('status-filtered', 'hidden');
+            } else if (status === 'warn' && (statusBadge.includes('warn') || statusBadge.includes('partial'))) {
+                card.classList.remove('status-filtered', 'hidden');
+            } else if (status === 'unresolved' && statusBadge.includes('unresolved')) {
+                card.classList.remove('status-filtered', 'hidden');
+            } else if (status === 'not_run' && statusBadge.includes('not run')) {
+                card.classList.remove('status-filtered', 'hidden');
+            } else if (status === 'no_data' && statusBadge.includes('no data')) {
+                card.classList.remove('status-filtered', 'hidden');
+            } else if (status === 'missing' && statusBadge.includes('missing')) {
+                card.classList.remove('status-filtered', 'hidden');
+            } else {
+                card.classList.add('status-filtered', 'hidden');
+            }
+        }
+        
+        // Re-apply search filter
+        filterUnits();
+        } catch (e) {
+            console.error('Error in filterStatus:', e);
+        }
+    }
+    
+    function exportToCSV() {
+        try {
+        const unitCards = document.getElementsByClassName('unit-card');
+        let csv = 'Unit,Chiplet,Status,Released By,Release Date,Runtime,Workarea\n';
+        
+        for (let card of unitCards) {
+            if (card.classList.contains('hidden')) continue;
+            
+            const unit = card.querySelector('.unit-name').textContent.trim();
+            const status = card.querySelector('.status-badge').textContent.trim();
+            const infoRows = card.querySelectorAll('.info-value');
+            
+            let releasedBy = '';
+            let releaseDate = '';
+            let runtime = '';
+            let workarea = '';
+            let chiplet = card.closest('.chiplet-section') ? card.closest('.chiplet-section').querySelector('.chiplet-header span').textContent.split(' ')[0] : '';
+            
+            const infoLabels = card.querySelectorAll('.info-label');
+            for (let i = 0; i < infoLabels.length; i++) {
+                const label = infoLabels[i].textContent.trim();
+                const value = infoRows[i] ? infoRows[i].textContent.trim() : '';
+                
+                if (label.includes('Released By')) releasedBy = value;
+                if (label.includes('Release Date')) releaseDate = value;
+                if (label.includes('Runtime')) runtime = value;
+                if (label.includes('Workarea')) workarea = value;
+            }
+            
+            csv += `"${unit}","${chiplet}","${status}","${releasedBy}","${releaseDate}","${runtime}","${workarea}"\n`;
+        }
+        
+        // Download CSV
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'agur_regression_results_' + new Date().toISOString().split('T')[0] + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        showToast();
+        } catch (e) {
+            console.error('Error in exportToCSV:', e);
+            alert('Error exporting CSV: ' + e.message);
+        }
+    }
+    
+    function printDashboard() {
+        try {
+            window.print();
+        } catch (e) {
+            console.error('Error in printDashboard:', e);
+        }
+    }
+    
+    // Initialize page - activate "Total Units" card by default
+    window.addEventListener('DOMContentLoaded', function() {
+        try {
+            // Find and activate the first stat-card (Total Units)
+            const firstStatCard = document.querySelector('.stat-card[data-filter="all"]');
+            if (firstStatCard) {
+                firstStatCard.classList.add('active');
+            }
+        } catch (e) {
+            console.error('Error in page initialization:', e);
+        }
+    });
+</script>
 </body>
 </html>
 MULTI_HTML_END
 
-    echo "Multi-regression HTML dashboard generated: $HTML_FILE"
+echo "HTML dashboard generated: $HTML_FILE"
 
-fi  # End of single/multi-regression conditional
-
-# For multi-regression, generate summary message
+# Set regression name for summary
 if [ ${#REGRESSION_TYPES[@]} -gt 1 ]; then
     REGRESSION_NAME="Multi-Type (${REGRESSION_TYPES[*]})"
 fi

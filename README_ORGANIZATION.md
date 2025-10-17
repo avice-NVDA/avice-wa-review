@@ -14,14 +14,14 @@ avice_wa_review/
 │   └── docs_generator.py               # Documentation generator (510 lines)
 │
 ├── Documentation
-│   ├── README_avice_wa_review.md       # Main user documentation (314 lines)
+│   ├── README_avice_wa_review.md       # Main user documentation (360 lines)
 │   ├── README_ORGANIZATION.md          # Organization and structure guide (this file)
 │   ├── INDEX.md                        # Complete script index with line numbers (583 lines)
-│   ├── architecture.mdc                # Architecture rules and standards (509 lines)
-│   ├── SECTION_HEADERS.md              # Section header formatting guide (134 lines)
-│   ├── ORDERING_CHANGE.md              # Section index reordering documentation (161 lines)
-│   ├── MERGE_SUMMARY.md                # Unix compatibility guide merge summary (131 lines)
-│   └── CLEANUP_SUMMARY.md              # File cleanup documentation (235 lines)
+│   ├── architecture.mdc                # Architecture rules and standards (1,050 lines - ENHANCED)
+│   ├── MASTER_DASHBOARD.md             # Master Dashboard complete documentation (400 lines)
+│   ├── HTML_PORTABILITY_IMPROVEMENTS.md # HTML portability fixes summary (600 lines)
+│   ├── DEVELOPMENT_HISTORY.md          # Development history and changes (350 lines)
+│   └── CONSOLIDATION_PLAN.md           # Documentation consolidation plan
 │
 ├── Configuration & Data
 │   └── workareas.txt                   # Workarea tracking database (41 lines)

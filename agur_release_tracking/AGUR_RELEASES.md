@@ -5,7 +5,7 @@ This document tracks the latest block releases for all units across all chiplets
 
 **Total Units**: 67  
 **Total Chiplets**: 7  
-**Last Updated**: 2025-10-14 20:39:52
+**Last Updated**: 2025-10-17 14:12:22
 
 ### Chiplet Breakdown
 - **HIOPL**: 4 units (ioptca, ioptcb, ioptcc, ioptcd)
@@ -51,12 +51,12 @@ This document tracks the latest block releases for all units across all chiplets
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/09 10:51:41 |
+| **Release Timestamp** | 2025/10/16 17:30:09 |
 | **Release User** | dkolesnikov |
 | **Workarea Name** | `fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__floorplanChange_run1` |
 | **Source Workarea Path** | `/home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__floorplanChange_run1` |
 | **RTL Tag** | `fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__floorplanChange_run1__2025_10_9_10_51_41` |
+| **Release Directory** | `fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__floorplanChange_run1__2025_10_16_17_30_9` |
 
 **Release Flags:**
 
@@ -75,8 +75,8 @@ This document tracks the latest block releases for all units across all chiplets
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/09/30 08:51:38 |
-| **Release Directory** | `fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run2__2025_9_30_8_51_38` |
+| **Release Timestamp** | 2025/10/09 10:51:41 |
+| **Release Directory** | `fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__floorplanChange_run1__2025_10_9_10_51_41` |
 
 ---
 
@@ -86,12 +86,12 @@ This document tracks the latest block releases for all units across all chiplets
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 15:10:17 |
-| **Release User** | miancu |
-| **Workarea Name** | `fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner` |
-| **Source Workarea Path** | `/home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner` |
+| **Release Timestamp** | 2025/10/17 10:54:41 |
+| **Release User** | lmustafa |
+| **Workarea Name** | `fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner_ref_run` |
+| **Source Workarea Path** | `/home/scratch.lmustafa_vlsi/agur/fth/fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner_ref_run` |
 | **RTL Tag** | `fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner__2025_10_8_15_10_17` |
+| **Release Directory** | `fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner_ref_run__2025_10_17_10_54_41` |
 
 **Release Flags:**
 
@@ -110,8 +110,8 @@ This document tracks the latest block releases for all units across all chiplets
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/09/30 12:16:48 |
-| **Release Directory** | `fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_1st_side__2025_9_30_12_16_48` |
+| **Release Timestamp** | 2025/10/08 15:10:17 |
+| **Release Directory** | `fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner__2025_10_8_15_10_17` |
 
 ---
 
@@ -121,32 +121,34 @@ This document tracks the latest block releases for all units across all chiplets
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 09:00:34 |
+| **Release Timestamp** | 2025/10/17 08:26:05 |
 | **Release User** | shlomoc |
 | **Workarea Name** | `run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065` |
 | **Source Workarea Path** | `/home/scratch.shlomoc_vlsi/agur/lnd/run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065` |
 | **RTL Tag** | `lnd_rbv_2025_09_26_trex_response_tag` |
-| **Release Directory** | `run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065__2025_10_8_9_0_34` |
+| **Release Directory** | `run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065__2025_10_17_8_26_5` |
 
 **Release Flags:**
 
 | Flag | Status | Description |
 |------|--------|-------------|
 | **Sta** | True | Static Timing Analysis (SPEF, SDC, netlist) |
-| **Fcl** | True | Functional/Layout (DB, IOs, OASIS) |
+| **Fcl** | False | Functional/Layout (DB, IOs, OASIS) |
 | **Pnr** | False | Place & Route database |
-| **FE_DCT** | True | Front End DCT |
+| **FE_DCT** | False | Front End DCT |
 | **DC** | False | Design Compiler synthesis |
 | **Full** | False | Full release (all files) |
 
-**Note:** FCL release points to same directory as STA release.
+### Latest FCL Release (fcl_release) - Different from STA
+
+FCL release is in a different directory than STA.
 
 ### Previous STA Release (prev_last_sta_rel)
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/09/30 15:51:37 |
-| **Release Directory** | `run_10_09_2025_lnd_rbv_2025_09_01_no_icc__2025_9_30_15_51_37` |
+| **Release Timestamp** | 2025/10/08 09:00:34 |
+| **Release Directory** | `run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065__2025_10_8_9_0_34` |
 
 ---
 
@@ -156,12 +158,12 @@ This document tracks the latest block releases for all units across all chiplets
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/09 17:04:55 |
+| **Release Timestamp** | 2025/10/16 12:49:23 |
 | **Release User** | brachas |
 | **Workarea Name** | `pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10` |
 | **Source Workarea Path** | `/home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10` |
 | **RTL Tag** | `pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_9_17_4_55` |
+| **Release Directory** | `pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_16_12_49_23` |
 
 **Release Flags:**
 
@@ -180,8 +182,8 @@ This document tracks the latest block releases for all units across all chiplets
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/07 19:08:47 |
-| **Release Directory** | `pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_7_19_8_47` |
+| **Release Timestamp** | 2025/10/09 17:04:55 |
+| **Release Directory** | `pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_9_17_4_55` |
 
 ---
 
@@ -191,12 +193,12 @@ This document tracks the latest block releases for all units across all chiplets
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 10:14:33 |
+| **Release Timestamp** | 2025/10/16 09:36:11 |
 | **Release User** | ykatzav |
 | **Workarea Name** | `prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap` |
 | **Source Workarea Path** | `/home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap` |
 | **RTL Tag** | `prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap__2025_10_8_10_14_33` |
+| **Release Directory** | `prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap__2025_10_16_9_36_11` |
 
 **Release Flags:**
 
@@ -215,8 +217,8 @@ This document tracks the latest block releases for all units across all chiplets
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/09/30 15:29:27 |
-| **Release Directory** | `prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap__2025_9_30_15_29_27` |
+| **Release Timestamp** | 2025/10/08 10:14:33 |
+| **Release Directory** | `prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap__2025_10_8_10_14_33` |
 
 ---
 
@@ -434,12 +436,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/06 17:11:32 |
+| **Release Timestamp** | 2025/10/15 10:00:09 |
 | **Release User** | aamsalem |
 | **Workarea Name** | `clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3` |
 | **Source Workarea Path** | `/home/scratch.aamsalem_vlsi/agur/clt/1NL/9_9_new_flow/clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3` |
 | **RTL Tag** | `clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3__2025_10_6_17_11_32` |
+| **Release Directory** | `clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3__2025_10_15_10_0_9` |
 
 **Release Flags:**
 
@@ -452,14 +454,16 @@ FCL release is in a different directory than STA.
 | **DC** | False | Design Compiler synthesis |
 | **Full** | False | Full release (all files) |
 
-**Note:** FCL release points to same directory as STA release.
+### Latest FCL Release (fcl_release) - Different from STA
+
+FCL release is in a different directory than STA.
 
 ### Previous STA Release (prev_last_sta_rel)
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/03 15:07:49 |
-| **Release Directory** | `clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3__2025_10_3_15_7_49` |
+| **Release Timestamp** | 2025/10/06 17:11:32 |
+| **Release Directory** | `clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3__2025_10_6_17_11_32` |
 
 ---
 
@@ -469,12 +473,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 16:05:40 |
+| **Release Timestamp** | 2025/10/15 09:38:17 |
 | **Release User** | ynaim |
-| **Workarea Name** | `cscore.cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_eco_fix` |
-| **Source Workarea Path** | `/home/scratch.ynaim_vlsi/agur/1NL/cscore/cscore.cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_eco_fix` |
+| **Workarea Name** | `cscore.cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_eco_fix_vivid` |
+| **Source Workarea Path** | `/home/scratch.ynaim_vlsi_1/agur/1NL/cscore/cscore.cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_eco_fix_vivid` |
 | **RTL Tag** | `cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `cscore.cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_eco_fix__2025_10_8_16_5_40` |
+| **Release Directory** | `cscore.cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_eco_fix_vivid__2025_10_15_9_38_17` |
 
 **Release Flags:**
 
@@ -495,8 +499,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/09/29 16:10:01 |
-| **Release Directory** | `cscore.cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__2025_9_29_16_10_1` |
+| **Release Timestamp** | 2025/10/08 16:05:40 |
+| **Release Directory** | `cscore.cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_eco_fix__2025_10_8_16_5_40` |
 
 ---
 
@@ -506,12 +510,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 13:53:32 |
+| **Release Timestamp** | 2025/10/15 11:30:10 |
 | **Release User** | rmenasheof |
 | **Workarea Name** | `dcmp_manual_flp_21_9_for_vivid` |
 | **Source Workarea Path** | `/home/scratch.rmenasheof_vlsi/agur/dcmp/dcmp_manual_flp_21_9_for_vivid` |
 | **RTL Tag** | `dcmp_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `dcmp_manual_flp_21_9_for_vivid__2025_10_8_13_53_32` |
+| **Release Directory** | `dcmp_manual_flp_21_9_for_vivid__2025_10_15_11_30_10` |
 
 **Release Flags:**
 
@@ -532,8 +536,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/08/28 13:55:50 |
-| **Release Directory** | `dcmp_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap__2025_8_28_13_55_50` |
+| **Release Timestamp** | 2025/10/08 13:53:32 |
+| **Release Directory** | `dcmp_manual_flp_21_9_for_vivid__2025_10_8_13_53_32` |
 
 ---
 
@@ -543,12 +547,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/12 09:03:46 |
+| **Release Timestamp** | 2025/10/15 08:39:51 |
 | **Release User** | dkolesnikov |
 | **Workarea Name** | `fdbm_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run1` |
 | **Source Workarea Path** | `/home/scratch.dkolesnikov_vlsi/agur/fdbm/1NL/fdbm_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run1` |
 | **RTL Tag** | `fdbm_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `fdbm_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run1__2025_10_12_9_3_46` |
+| **Release Directory** | `fdbm_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run1__2025_10_15_8_39_51` |
 
 **Release Flags:**
 
@@ -567,8 +571,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 09:42:43 |
-| **Release Directory** | `fdbm_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run1__2025_10_8_9_42_43` |
+| **Release Timestamp** | 2025/10/12 09:03:46 |
+| **Release Directory** | `fdbm_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run1__2025_10_12_9_3_46` |
 
 ---
 
@@ -578,21 +582,21 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/07 22:57:20 |
+| **Release Timestamp** | 2025/10/15 12:54:27 |
 | **Release User** | brachas |
 | **Workarea Name** | `fdbs_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ctsfix2` |
 | **Source Workarea Path** | `/home/scratch.brachas_vlsi/agur/1NL/fdbs/fdbs_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ctsfix2` |
 | **RTL Tag** | `fdbs_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `fdbs_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ctsfix2__2025_10_7_22_57_20` |
+| **Release Directory** | `fdbs_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ctsfix2__2025_10_15_12_54_27` |
 
 **Release Flags:**
 
 | Flag | Status | Description |
 |------|--------|-------------|
 | **Sta** | True | Static Timing Analysis (SPEF, SDC, netlist) |
-| **Fcl** | False | Functional/Layout (DB, IOs, OASIS) |
-| **Pnr** | False | Place & Route database |
-| **FE_DCT** | False | Front End DCT |
+| **Fcl** | True | Functional/Layout (DB, IOs, OASIS) |
+| **Pnr** | True | Place & Route database |
+| **FE_DCT** | True | Front End DCT |
 | **DC** | False | Design Compiler synthesis |
 | **Full** | False | Full release (all files) |
 
@@ -604,8 +608,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/05 08:14:47 |
-| **Release Directory** | `fdbs_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ctsfix2__2025_10_5_8_14_47` |
+| **Release Timestamp** | 2025/10/07 22:57:20 |
+| **Release Directory** | `fdbs_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ctsfix2__2025_10_7_22_57_20` |
 
 ---
 
@@ -615,12 +619,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/14 09:43:10 |
-| **Release User** | miancu |
-| **Workarea Name** | `fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_1st_side` |
-| **Source Workarea Path** | `/home/scratch.miancu_vlsi/fthm/fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_1st_side` |
+| **Release Timestamp** | 2025/10/16 18:13:16 |
+| **Release User** | ayerushalmy |
+| **Workarea Name** | `fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_V3` |
+| **Source Workarea Path** | `/home/scratch.ayerushalmy_vlsi/agur/fthm/1NL/fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_V3` |
 | **RTL Tag** | `fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_1st_side__2025_10_14_9_43_10` |
+| **Release Directory** | `fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_V3__2025_10_16_18_13_16` |
 
 **Release Flags:**
 
@@ -628,7 +632,7 @@ FCL release is in a different directory than STA.
 |------|--------|-------------|
 | **Sta** | True | Static Timing Analysis (SPEF, SDC, netlist) |
 | **Fcl** | True | Functional/Layout (DB, IOs, OASIS) |
-| **Pnr** | False | Place & Route database |
+| **Pnr** | True | Place & Route database |
 | **FE_DCT** | False | Front End DCT |
 | **DC** | False | Design Compiler synthesis |
 | **Full** | False | Full release (all files) |
@@ -639,8 +643,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/11 11:29:51 |
-| **Release Directory** | `fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_1st_side__2025_10_11_11_29_51` |
+| **Release Timestamp** | 2025/10/14 09:43:10 |
+| **Release Directory** | `fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_1st_side__2025_10_14_9_43_10` |
 
 ---
 
@@ -650,34 +654,32 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 14:31:09 |
+| **Release Timestamp** | 2025/10/16 12:49:16 |
 | **Release User** | thadad |
 | **Workarea Name** | `nbu_signoff` |
 | **Source Workarea Path** | `/home/scratch.thadad_vlsi_1/agur/1NL/ftos/condb_int3_2025_08_27_0_1NL_snap_th/pnr_flow/nv_flow/ftos/ipo1000/nbu_signoff` |
 | **RTL Tag** | `ftos_rbv_2025_09_04_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `nbu_signoff_condb_int3_2025_08_27_0_1NL_snap_th_ipo1000_2025_10_8_14_31_9` |
+| **Release Directory** | `nbu_signoff_condb_int3_2025_08_27_0_1NL_snap_th_ipo1000_2025_10_16_12_49_16` |
 
 **Release Flags:**
 
 | Flag | Status | Description |
 |------|--------|-------------|
 | **Sta** | True | Static Timing Analysis (SPEF, SDC, netlist) |
-| **Fcl** | False | Functional/Layout (DB, IOs, OASIS) |
+| **Fcl** | True | Functional/Layout (DB, IOs, OASIS) |
 | **Pnr** | True | Place & Route database |
 | **FE_DCT** | False | Front End DCT |
 | **DC** | False | Design Compiler synthesis |
 | **Full** | False | Full release (all files) |
 
-### Latest FCL Release (fcl_release) - Different from STA
-
-FCL release is in a different directory than STA.
+**Note:** FCL release points to same directory as STA release.
 
 ### Previous STA Release (prev_last_sta_rel)
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/03 17:31:45 |
-| **Release Directory** | `condb_int3_2025_08_27_0_1NL_snap_th__2025_10_3_17_31_45` |
+| **Release Timestamp** | 2025/10/14 23:49:28 |
+| **Release Directory** | `nbu_signoff_condb_int3_2025_08_27_0_1NL_snap_th_ipo1000_2025_10_14_23_49_28` |
 
 ---
 
@@ -687,12 +689,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 13:05:32 |
+| **Release Timestamp** | 2025/10/15 11:08:39 |
 | **Release User** | zbirman |
-| **Workarea Name** | `run_15_09_2025_fwam_rbv_2025_09_07_4x6_clock_tree_Tzlil_Hook` |
-| **Source Workarea Path** | `/home/scratch.zbirman_vlsi/agur/fwam/run_15_09_2025_fwam_rbv_2025_09_07_4x6_clock_tree_Tzlil_Hook` |
+| **Workarea Name** | `run_15_09_2025_fwam_rbv_2025_09_07_4x6_clock_tree_Tzlil_Hook_for_vivid` |
+| **Source Workarea Path** | `/home/scratch.zbirman_vlsi/agur/fwam/run_15_09_2025_fwam_rbv_2025_09_07_4x6_clock_tree_Tzlil_Hook_for_vivid` |
 | **RTL Tag** | `fwam_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `run_15_09_2025_fwam_rbv_2025_09_07_4x6_clock_tree_Tzlil_Hook__2025_10_8_13_5_32` |
+| **Release Directory** | `run_15_09_2025_fwam_rbv_2025_09_07_4x6_clock_tree_Tzlil_Hook_for_vivid__2025_10_15_11_8_39` |
 
 **Release Flags:**
 
@@ -709,8 +711,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/09/21 11:18:24 |
-| **Release Directory** | `run_09_09_2025_fwam_rbv_2025_09_07__2025_9_21_11_18_24` |
+| **Release Timestamp** | 2025/10/08 13:05:32 |
+| **Release Directory** | `run_15_09_2025_fwam_rbv_2025_09_07_4x6_clock_tree_Tzlil_Hook__2025_10_8_13_5_32` |
 
 ---
 
@@ -720,12 +722,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 09:06:50 |
+| **Release Timestamp** | 2025/10/15 14:40:41 |
 | **Release User** | rmenasheof |
 | **Workarea Name** | `fwas_golden_ipo4_21_9_for_vivid` |
 | **Source Workarea Path** | `/home/scratch.rmenasheof_vlsi/agur/fwas/fwas_golden_ipo4_21_9_for_vivid` |
 | **RTL Tag** | `fwas_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `fwas_golden_ipo4_21_9_for_vivid__2025_10_8_9_6_50` |
+| **Release Directory** | `fwas_golden_ipo4_21_9_for_vivid__2025_10_15_14_40_41` |
 
 **Release Flags:**
 
@@ -747,7 +749,7 @@ FCL release is in a different directory than STA.
 | Property | Value |
 |----------|-------|
 | **Release Timestamp** | 2025/10/08 09:06:50 |
-| **Release Directory** | `fwas_golden_ipo4_21_9_for_vivid__2025_10_8_9_5_16` |
+| **Release Directory** | `fwas_golden_ipo4_21_9_for_vivid__2025_10_8_9_6_50` |
 
 ---
 
@@ -757,12 +759,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 15:57:13 |
+| **Release Timestamp** | 2025/10/15 09:29:21 |
 | **Release User** | ynaim |
-| **Workarea Name** | `glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound` |
-| **Source Workarea Path** | `/home/scratch.ynaim_vlsi/agur/1NL/glc/glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound` |
+| **Workarea Name** | `glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound_vivid` |
+| **Source Workarea Path** | `/home/scratch.ynaim_vlsi_1/agur/1NL/glc/glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound_vivid` |
 | **RTL Tag** | `glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound__2025_10_8_15_57_13` |
+| **Release Directory** | `glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound_vivid__2025_10_15_9_29_21` |
 
 **Release Flags:**
 
@@ -783,8 +785,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/09/21 15:37:12 |
-| **Release Directory** | `glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_spr__2025_9_21_15_37_12` |
+| **Release Timestamp** | 2025/10/08 15:57:13 |
+| **Release Directory** | `glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound__2025_10_8_15_57_13` |
 
 ---
 
@@ -872,12 +874,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 09:07:16 |
+| **Release Timestamp** | 2025/10/15 16:05:35 |
 | **Release User** | shlomoc |
 | **Workarea Name** | `run_07_09_2025_lndm_rbv_2025_09_01_new_flow` |
 | **Source Workarea Path** | `/home/scratch.shlomoc_vlsi/agur/lndm/run_07_09_2025_lndm_rbv_2025_09_01_new_flow` |
 | **RTL Tag** | `lndm_rbv_2025_09_01_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `run_07_09_2025_lndm_rbv_2025_09_01_new_flow__2025_10_8_9_7_16` |
+| **Release Directory** | `run_07_09_2025_lndm_rbv_2025_09_01_new_flow__2025_10_15_16_5_35` |
 
 **Release Flags:**
 
@@ -885,76 +887,6 @@ FCL release is in a different directory than STA.
 |------|--------|-------------|
 | **Sta** | True | Static Timing Analysis (SPEF, SDC, netlist) |
 | **Fcl** | True | Functional/Layout (DB, IOs, OASIS) |
-| **Pnr** | False | Place & Route database |
-| **FE_DCT** | False | Front End DCT |
-| **DC** | False | Design Compiler synthesis |
-| **Full** | False | Full release (all files) |
-
-**Note:** FCL release points to same directory as STA release.
-
-### Previous STA Release (prev_last_sta_rel)
-
-| Property | Value |
-|----------|-------|
-| **Release Timestamp** | 2025/10/03 09:38:34 |
-| **Release Directory** | `run_07_09_2025_lndm_rbv_2025_09_01_new_flow__2025_10_3_9_38_34` |
-
----
-
-## Unit: nvrisc
-
-### Latest STA Release (last_sta_rel)
-
-| Property | Value |
-|----------|-------|
-| **Release Timestamp** | 2025/10/06 10:19:07 |
-| **Release User** | ykatzav |
-| **Workarea Name** | `nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2` |
-| **Source Workarea Path** | `/home/scratch.ykatzav_vlsi/agur/nvrisc/nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2` |
-| **RTL Tag** | `nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2__2025_10_6_10_19_7` |
-
-**Release Flags:**
-
-| Flag | Status | Description |
-|------|--------|-------------|
-| **Sta** | True | Static Timing Analysis (SPEF, SDC, netlist) |
-| **Fcl** | True | Functional/Layout (DB, IOs, OASIS) |
-| **Pnr** | False | Place & Route database |
-| **FE_DCT** | False | Front End DCT |
-| **DC** | False | Design Compiler synthesis |
-| **Full** | False | Full release (all files) |
-
-**Note:** FCL release points to same directory as STA release.
-
-### Previous STA Release (prev_last_sta_rel)
-
-| Property | Value |
-|----------|-------|
-| **Release Timestamp** | 2025/10/03 10:49:09 |
-| **Release Directory** | `nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2__2025_10_3_10_49_9` |
-
----
-
-## Unit: pmuxm
-
-### Latest STA Release (last_sta_rel)
-
-| Property | Value |
-|----------|-------|
-| **Release Timestamp** | 2025/10/06 11:13:14 |
-| **Release User** | brachas |
-| **Workarea Name** | `pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10` |
-| **Source Workarea Path** | `/home/scratch.brachas_vlsi/agur/1NL/pmuxm/pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10` |
-| **RTL Tag** | `pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_6_11_13_14` |
-
-**Release Flags:**
-
-| Flag | Status | Description |
-|------|--------|-------------|
-| **Sta** | True | Static Timing Analysis (SPEF, SDC, netlist) |
-| **Fcl** | False | Functional/Layout (DB, IOs, OASIS) |
 | **Pnr** | False | Place & Route database |
 | **FE_DCT** | False | Front End DCT |
 | **DC** | False | Design Compiler synthesis |
@@ -968,8 +900,82 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/05 08:20:16 |
-| **Release Directory** | `pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_5_8_20_16` |
+| **Release Timestamp** | 2025/10/15 15:50:51 |
+| **Release Directory** | `run_07_09_2025_lndm_rbv_2025_09_01_new_flow__2025_10_15_15_50_51` |
+
+---
+
+## Unit: nvrisc
+
+### Latest STA Release (last_sta_rel)
+
+| Property | Value |
+|----------|-------|
+| **Release Timestamp** | 2025/10/15 13:28:31 |
+| **Release User** | ykatzav |
+| **Workarea Name** | `nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2` |
+| **Source Workarea Path** | `/home/scratch.ykatzav_vlsi/agur/nvrisc/nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2` |
+| **RTL Tag** | `nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap` |
+| **Release Directory** | `nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2__2025_10_15_13_28_31` |
+
+**Release Flags:**
+
+| Flag | Status | Description |
+|------|--------|-------------|
+| **Sta** | True | Static Timing Analysis (SPEF, SDC, netlist) |
+| **Fcl** | True | Functional/Layout (DB, IOs, OASIS) |
+| **Pnr** | False | Place & Route database |
+| **FE_DCT** | False | Front End DCT |
+| **DC** | False | Design Compiler synthesis |
+| **Full** | False | Full release (all files) |
+
+### Latest FCL Release (fcl_release) - Different from STA
+
+FCL release is in a different directory than STA.
+
+### Previous STA Release (prev_last_sta_rel)
+
+| Property | Value |
+|----------|-------|
+| **Release Timestamp** | 2025/10/06 10:19:07 |
+| **Release Directory** | `nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2__2025_10_6_10_19_7` |
+
+---
+
+## Unit: pmuxm
+
+### Latest STA Release (last_sta_rel)
+
+| Property | Value |
+|----------|-------|
+| **Release Timestamp** | 2025/10/15 11:53:00 |
+| **Release User** | brachas |
+| **Workarea Name** | `pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10` |
+| **Source Workarea Path** | `/home/scratch.brachas_vlsi/agur/1NL/pmuxm/pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10` |
+| **RTL Tag** | `pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap` |
+| **Release Directory** | `pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_15_11_53_0` |
+
+**Release Flags:**
+
+| Flag | Status | Description |
+|------|--------|-------------|
+| **Sta** | True | Static Timing Analysis (SPEF, SDC, netlist) |
+| **Fcl** | True | Functional/Layout (DB, IOs, OASIS) |
+| **Pnr** | True | Place & Route database |
+| **FE_DCT** | True | Front End DCT |
+| **DC** | False | Design Compiler synthesis |
+| **Full** | False | Full release (all files) |
+
+### Latest FCL Release (fcl_release) - Different from STA
+
+FCL release is in a different directory than STA.
+
+### Previous STA Release (prev_last_sta_rel)
+
+| Property | Value |
+|----------|-------|
+| **Release Timestamp** | 2025/10/06 11:13:14 |
+| **Release Directory** | `pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_6_11_13_14` |
 
 ---
 
@@ -979,12 +985,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 15:52:10 |
+| **Release Timestamp** | 2025/10/15 16:32:41 |
 | **Release User** | lmustafa |
 | **Workarea Name** | `prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry` |
 | **Source Workarea Path** | `/home/scratch.lmustafa_vlsi/agur/prtm/prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry` |
 | **RTL Tag** | `prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1` |
-| **Release Directory** | `prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry__2025_10_8_15_52_10` |
+| **Release Directory** | `prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry__2025_10_15_16_32_41` |
 
 **Release Flags:**
 
@@ -1005,8 +1011,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/09/17 14:27:48 |
-| **Release Directory** | `prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry__2025_9_17_14_27_48` |
+| **Release Timestamp** | 2025/10/08 15:52:10 |
+| **Release Directory** | `prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry__2025_10_8_15_52_10` |
 
 ---
 
@@ -1016,12 +1022,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/12 08:45:31 |
+| **Release Timestamp** | 2025/10/15 20:48:53 |
 | **Release User** | nkahaz |
 | **Workarea Name** | `nbu_signoff` |
 | **Source Workarea Path** | `/home/scratch.nkahaz_vlsi/ww38_5_fixes/psca_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_ref` |
 | **RTL Tag** | `psca_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `nbu_signoff_psca_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_ref_ipo1044_2025_10_12_8_45_31` |
+| **Release Directory** | `nbu_signoff_psca_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_ref_ipo1045_2025_10_15_20_48_53` |
 
 **Release Flags:**
 
@@ -1038,8 +1044,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 15:18:31 |
-| **Release Directory** | `nbu_signoff_psca_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_ref_ipo1042_2025_10_8_15_18_31` |
+| **Release Timestamp** | 2025/10/12 08:45:31 |
+| **Release Directory** | `nbu_signoff_psca_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_ref_ipo1044_2025_10_12_8_45_31` |
 
 ---
 
@@ -1082,12 +1088,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 14:47:33 |
+| **Release Timestamp** | 2025/10/16 11:44:08 |
 | **Release User** | dtraitelovic |
 | **Workarea Name** | `nbu_signoff` |
 | **Source Workarea Path** | `/home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc` |
 | **RTL Tag** | `pscc_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `nbu_signoff_pscc_2025_09_02_1NL_snap_new_flow_flp_cdc_ipo1000_2025_10_8_14_47_33` |
+| **Release Directory** | `nbu_signoff_pscc_2025_09_02_1NL_snap_new_flow_flp_cdc_ipo1003_2025_10_16_11_44_8` |
 
 **Release Flags:**
 
@@ -1104,8 +1110,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/09/21 15:25:07 |
-| **Release Directory** | `nbu_signoff_pscc_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000_2025_9_21_15_25_7` |
+| **Release Timestamp** | 2025/10/08 14:47:33 |
+| **Release Directory** | `nbu_signoff_pscc_2025_09_02_1NL_snap_new_flow_flp_cdc_ipo1000_2025_10_8_14_47_33` |
 
 ---
 
@@ -1115,12 +1121,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/11 07:13:59 |
+| **Release Timestamp** | 2025/10/16 11:54:04 |
 | **Release User** | gibell |
-| **Workarea Name** | `pscd_rbv_2025_09_02_ver6_Sep25_gb` |
-| **Source Workarea Path** | `/home/scratch.gibell_vlsi_1/agur/1nl/pscd/pscd_rbv_2025_09_02_ver6_Sep25_gb` |
+| **Workarea Name** | `pscd_rbv_2025_09_02_ver4_Sep25_gb` |
+| **Source Workarea Path** | `/home/scratch.gibell_vlsi/agur/1nl/pscd/pscd_rbv_2025_09_02_ver4_Sep25_gb` |
 | **RTL Tag** | `pscd_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `pscd_rbv_2025_09_02_ver6_Sep25_gb__2025_10_11_7_13_59` |
+| **Release Directory** | `pscd_rbv_2025_09_02_ver4_Sep25_gb__2025_10_16_11_54_4` |
 
 **Release Flags:**
 
@@ -1137,8 +1143,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 15:27:52 |
-| **Release Directory** | `pscd_rbv_2025_09_02_ver6_Sep25_gb__2025_10_8_15_27_52` |
+| **Release Timestamp** | 2025/10/16 11:54:04 |
+| **Release Directory** | `pscd_rbv_2025_09_02_ver4_Sep25_gb__2025_10_16_11_52_47` |
 
 ---
 
@@ -1148,12 +1154,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/06 14:21:06 |
+| **Release Timestamp** | 2025/10/15 10:08:41 |
 | **Release User** | aamsalem |
-| **Workarea Name** | `px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_fix-gl-check` |
-| **Source Workarea Path** | `/home/scratch.aamsalem_vlsi/agur/px/1NL/run_5_10_gl-check_fix/px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_fix-gl-check` |
+| **Workarea Name** | `px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_old_util65` |
+| **Source Workarea Path** | `/home/scratch.aamsalem_vlsi/agur/px/1NL/run_9_9_old_util65/px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_old_util65` |
 | **RTL Tag** | `px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_fix-gl-check__2025_10_6_14_21_6` |
+| **Release Directory** | `px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_old_util65__2025_10_15_10_8_41` |
 
 **Release Flags:**
 
@@ -1172,8 +1178,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/03 14:36:00 |
-| **Release Directory** | `px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_old_util65__2025_10_3_14_36_0` |
+| **Release Timestamp** | 2025/10/15 10:08:41 |
+| **Release Directory** | `px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_old_util65__2025_10_15_10_5_44` |
 
 ---
 
@@ -1183,12 +1189,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 09:07:41 |
+| **Release Timestamp** | 2025/10/15 10:53:34 |
 | **Release User** | rmenasheof |
 | **Workarea Name** | `riba_10_9_1nl_new_flow_golden` |
 | **Source Workarea Path** | `/home/scratch.rmenasheof_vlsi/agur/riba/riba_10_9_1nl_new_flow_golden` |
 | **RTL Tag** | `riba_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `riba_10_9_1nl_new_flow_golden__2025_10_8_9_7_41` |
+| **Release Directory** | `riba_10_9_1nl_new_flow_golden__2025_10_15_10_53_34` |
 
 **Release Flags:**
 
@@ -1210,7 +1216,7 @@ FCL release is in a different directory than STA.
 | Property | Value |
 |----------|-------|
 | **Release Timestamp** | 2025/10/08 09:07:41 |
-| **Release Directory** | `riba_10_9_1nl_new_flow_golden__2025_10_8_9_5_41` |
+| **Release Directory** | `riba_10_9_1nl_new_flow_golden__2025_10_8_9_7_41` |
 
 ---
 
@@ -1220,12 +1226,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 15:54:01 |
+| **Release Timestamp** | 2025/10/15 09:29:31 |
 | **Release User** | ynaim |
-| **Workarea Name** | `ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk` |
-| **Source Workarea Path** | `/home/scratch.ynaim_vlsi/agur/1NL/ribs/ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk` |
+| **Workarea Name** | `ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk_vivid` |
+| **Source Workarea Path** | `/home/scratch.ynaim_vlsi_1/agur/1NL/ribs/ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk_vivid` |
 | **RTL Tag** | `ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap` |
-| **Release Directory** | `ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk__2025_10_8_15_54_1` |
+| **Release Directory** | `ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk_vivid__2025_10_15_9_29_31` |
 
 **Release Flags:**
 
@@ -1242,8 +1248,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/09/01 00:23:16 |
-| **Release Directory** | `ribs.ribs_be_agur_2025_08_05_flow_ww13_01_rev13__2025_9_1_0_23_16` |
+| **Release Timestamp** | 2025/10/08 15:54:01 |
+| **Release Directory** | `ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk__2025_10_8_15_54_1` |
 
 ---
 
@@ -1253,12 +1259,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/08 09:13:02 |
+| **Release Timestamp** | 2025/10/15 16:05:39 |
 | **Release User** | shlomoc |
 | **Workarea Name** | `run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix` |
 | **Source Workarea Path** | `/home/scratch.shlomoc_vlsi/agur/sma/run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix` |
 | **RTL Tag** | `sma_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix__2025_10_8_9_13_2` |
+| **Release Directory** | `run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix__2025_10_15_16_5_39` |
 
 **Release Flags:**
 
@@ -1271,14 +1277,16 @@ FCL release is in a different directory than STA.
 | **DC** | False | Design Compiler synthesis |
 | **Full** | False | Full release (all files) |
 
-**Note:** FCL release points to same directory as STA release.
+### Latest FCL Release (fcl_release) - Different from STA
+
+FCL release is in a different directory than STA.
 
 ### Previous STA Release (prev_last_sta_rel)
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/03 09:51:56 |
-| **Release Directory** | `run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix__2025_10_3_9_51_56` |
+| **Release Timestamp** | 2025/10/15 15:51:49 |
+| **Release Directory** | `run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix__2025_10_15_15_51_49` |
 
 ---
 
@@ -1455,32 +1463,34 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/08/27 17:26:38 |
+| **Release Timestamp** | 2025/10/16 08:46:23 |
 | **Release User** | mlanzerer |
-| **Workarea Name** | `dqamci_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap` |
-| **Source Workarea Path** | `/home/scratch.mlanzerer_vlsi/dqamci_dir/dqamci_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap` |
-| **RTL Tag** | `dqamci_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap` |
-| **Release Directory** | `dqamci_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap__2025_8_27_17_26_38` |
+| **Workarea Name** | `dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap` |
+| **Source Workarea Path** | `/home/scratch.mlanzerer_vlsi/dqamci_dir/dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap` |
+| **RTL Tag** | `dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap` |
+| **Release Directory** | `dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap__2025_10_16_8_46_23` |
 
 **Release Flags:**
 
 | Flag | Status | Description |
 |------|--------|-------------|
 | **Sta** | True | Static Timing Analysis (SPEF, SDC, netlist) |
-| **Fcl** | True | Functional/Layout (DB, IOs, OASIS) |
-| **Pnr** | True | Place & Route database |
-| **FE_DCT** | True | Front End DCT |
+| **Fcl** | False | Functional/Layout (DB, IOs, OASIS) |
+| **Pnr** | False | Place & Route database |
+| **FE_DCT** | False | Front End DCT |
 | **DC** | False | Design Compiler synthesis |
 | **Full** | False | Full release (all files) |
 
-**Note:** FCL release points to same directory as STA release.
+### Latest FCL Release (fcl_release) - Different from STA
+
+FCL release is in a different directory than STA.
 
 ### Previous STA Release (prev_last_sta_rel)
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/05/22 08:09:56 |
-| **Release Directory** | `new_tools__2025_5_22_8_9_56` |
+| **Release Timestamp** | 2025/08/27 17:26:38 |
+| **Release Directory** | `dqamci_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap__2025_8_27_17_26_38` |
 
 ---
 
@@ -1912,12 +1922,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/10 10:48:20 |
+| **Release Timestamp** | 2025/10/16 15:35:44 |
 | **Release User** | vliberchuk |
 | **Workarea Name** | `nbu_signoff` |
 | **Source Workarea Path** | `/home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10` |
 | **RTL Tag** | `bta_rbv_2025_09_25new_tag_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `nbu_signoff_bta_2025_09_25_Oct10_ipo1005_2025_10_10_10_48_20` |
+| **Release Directory** | `nbu_signoff_bta_2025_09_25_Oct10_ipo1006_2025_10_16_15_35_44` |
 
 **Release Flags:**
 
@@ -1934,8 +1944,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/04/28 09:48:13 |
-| **Release Directory** | `bta_rbv_2025_03_17_condb_int1_11_4_BE_TNL_snap_input_test__2025_4_28_9_48_13` |
+| **Release Timestamp** | 2025/10/10 10:48:20 |
+| **Release Directory** | `nbu_signoff_bta_2025_09_25_Oct10_ipo1005_2025_10_10_10_48_20` |
 
 ---
 
@@ -2034,48 +2044,48 @@ FCL release is in a different directory than STA.
 
 | Unit | Chiplet | Latest STA Timestamp | User | Source Workarea | Release Types |
 |------|---------|---------------------|------|-----------------|---------------|
-| **fdb** | CPORT | 2025/10/09 10:51:41 | dkolesnikov | `/home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__floorplanChange_run1` |  STA FCL PNR FE_DCT |
-| **fth** | CPORT | 2025/10/08 15:10:17 | miancu | `/home/scratch.miancu_vlsi/fth/fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner` |  STA FCL FE_DCT |
-| **lnd** | CPORT | 2025/10/08 09:00:34 | shlomoc | `/home/scratch.shlomoc_vlsi/agur/lnd/run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065` |  STA FCL FE_DCT |
-| **pmux** | CPORT | 2025/10/09 17:04:55 | brachas | `/home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10` |  STA FCL PNR FE_DCT |
-| **prt** | CPORT | 2025/10/08 10:14:33 | ykatzav | `/home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap` |  STA FCL |
+| **fdb** | CPORT | 2025/10/16 17:30:09 | dkolesnikov | `/home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__floorplanChange_run1` |  STA FCL PNR FE_DCT |
+| **fth** | CPORT | 2025/10/17 10:54:41 | lmustafa | `/home/scratch.lmustafa_vlsi/agur/fth/fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner_ref_run` |  STA FCL FE_DCT |
+| **lnd** | CPORT | 2025/10/17 08:26:05 | shlomoc | `/home/scratch.shlomoc_vlsi/agur/lnd/run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065` |  STA |
+| **pmux** | CPORT | 2025/10/16 12:49:23 | brachas | `/home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10` |  STA FCL PNR FE_DCT |
+| **prt** | CPORT | 2025/10/16 09:36:11 | ykatzav | `/home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap` |  STA FCL |
 | **ccorea** | HPORT | 2025/10/08 14:36:32 | roir | `/home/scratch.roir_vlsi/agur/ccorea/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap` |  STA |
 | **ccoreb** | HPORT | 2025/10/08 14:35:39 | roir | `/home/scratch.roir_vlsi/agur/ccoreb/ccoreb_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap` |  STA |
 | **ccorec** | HPORT | 2025/10/08 14:34:09 | roir | `/home/scratch.roir_vlsi/agur/ccorec/ccorec_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap` |  STA |
 | **ccored** | HPORT | 2025/10/08 16:40:05 | sorino | `/home/scratch.sorino_vlsi/ccored/ccored_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__updated_pins` |  STA FE_DCT |
 | **ccoree** | HPORT | 2025/10/08 16:28:05 | sorino | `/home/scratch.sorino_vlsi/ccoree/ccoree_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__updated_pins` |  STA FE_DCT |
 | **ccoref** | HPORT | 2025/10/08 14:36:00 | sorino | `/home/scratch.sorino_vlsi/ccoref/ccoref_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__updated_pins` |  STA FE_DCT |
-| **clt** | NDQ | 2025/10/06 17:11:32 | aamsalem | `/home/scratch.aamsalem_vlsi/agur/clt/1NL/9_9_new_flow/clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3` |  STA FCL PNR |
-| **cscore** | NDQ | 2025/10/08 16:05:40 | ynaim | `/home/scratch.ynaim_vlsi/agur/1NL/cscore/cscore.cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_eco_fix` |  STA |
-| **dcmp** | NDQ | 2025/10/08 13:53:32 | rmenasheof | `/home/scratch.rmenasheof_vlsi/agur/dcmp/dcmp_manual_flp_21_9_for_vivid` |  STA |
-| **fdbm** | NDQ | 2025/10/12 09:03:46 | dkolesnikov | `/home/scratch.dkolesnikov_vlsi/agur/fdbm/1NL/fdbm_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run1` |  STA FCL PNR FE_DCT |
-| **fdbs** | NDQ | 2025/10/07 22:57:20 | brachas | `/home/scratch.brachas_vlsi/agur/1NL/fdbs/fdbs_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ctsfix2` |  STA |
-| **fthm** | NDQ | 2025/10/14 09:43:10 | miancu | `/home/scratch.miancu_vlsi/fthm/fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_1st_side` |  STA FCL |
-| **ftos** | NDQ | 2025/10/08 14:31:09 | thadad | `/home/scratch.thadad_vlsi_1/agur/1NL/ftos/condb_int3_2025_08_27_0_1NL_snap_th/pnr_flow/nv_flow/ftos/ipo1000/nbu_signoff` |  STA PNR |
-| **fwam** | NDQ | 2025/10/08 13:05:32 | zbirman | `/home/scratch.zbirman_vlsi/agur/fwam/run_15_09_2025_fwam_rbv_2025_09_07_4x6_clock_tree_Tzlil_Hook` |  STA |
-| **fwas** | NDQ | 2025/10/08 09:06:50 | rmenasheof | `/home/scratch.rmenasheof_vlsi/agur/fwas/fwas_golden_ipo4_21_9_for_vivid` |  STA |
-| **glc** | NDQ | 2025/10/08 15:57:13 | ynaim | `/home/scratch.ynaim_vlsi/agur/1NL/glc/glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound` |  STA |
+| **clt** | NDQ | 2025/10/15 10:00:09 | aamsalem | `/home/scratch.aamsalem_vlsi/agur/clt/1NL/9_9_new_flow/clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3` |  STA FCL PNR |
+| **cscore** | NDQ | 2025/10/15 09:38:17 | ynaim | `/home/scratch.ynaim_vlsi_1/agur/1NL/cscore/cscore.cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_eco_fix_vivid` |  STA |
+| **dcmp** | NDQ | 2025/10/15 11:30:10 | rmenasheof | `/home/scratch.rmenasheof_vlsi/agur/dcmp/dcmp_manual_flp_21_9_for_vivid` |  STA |
+| **fdbm** | NDQ | 2025/10/15 08:39:51 | dkolesnikov | `/home/scratch.dkolesnikov_vlsi/agur/fdbm/1NL/fdbm_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run1` |  STA FCL PNR FE_DCT |
+| **fdbs** | NDQ | 2025/10/15 12:54:27 | brachas | `/home/scratch.brachas_vlsi/agur/1NL/fdbs/fdbs_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ctsfix2` |  STA FCL PNR FE_DCT |
+| **fthm** | NDQ | 2025/10/16 18:13:16 | ayerushalmy | `/home/scratch.ayerushalmy_vlsi/agur/fthm/1NL/fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_V3` |  STA FCL PNR |
+| **ftos** | NDQ | 2025/10/16 12:49:16 | thadad | `/home/scratch.thadad_vlsi_1/agur/1NL/ftos/condb_int3_2025_08_27_0_1NL_snap_th/pnr_flow/nv_flow/ftos/ipo1000/nbu_signoff` |  STA FCL PNR |
+| **fwam** | NDQ | 2025/10/15 11:08:39 | zbirman | `/home/scratch.zbirman_vlsi/agur/fwam/run_15_09_2025_fwam_rbv_2025_09_07_4x6_clock_tree_Tzlil_Hook_for_vivid` |  STA |
+| **fwas** | NDQ | 2025/10/15 14:40:41 | rmenasheof | `/home/scratch.rmenasheof_vlsi/agur/fwas/fwas_golden_ipo4_21_9_for_vivid` |  STA |
+| **glc** | NDQ | 2025/10/15 09:29:21 | ynaim | `/home/scratch.ynaim_vlsi_1/agur/1NL/glc/glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound_vivid` |  STA |
 | **iopl** | NDQ | 2025/07/27 10:38:26 | yshlush | `/home/scratch.yshlush_vlsi/iopl/iopl_condb_int1_52_2r1/export/export_icc2` |  STA FCL |
 | **ioplm** | NDQ | 2024/11/14 11:05:29 | netaa | `/home/sunbird_netaa/ioplm/starling_ioplm_2024_10_30` |  STA |
 | **iopx** | NDQ | 2025/03/05 13:10:45 | vmoshkovich | `/home/sunbird_vmoshkovich/iopx/starling_iopx_2024_11_06` |  STA FCL |
-| **lndm** | NDQ | 2025/10/08 09:07:16 | shlomoc | `/home/scratch.shlomoc_vlsi/agur/lndm/run_07_09_2025_lndm_rbv_2025_09_01_new_flow` |  STA FCL |
-| **nvrisc** | NDQ | 2025/10/06 10:19:07 | ykatzav | `/home/scratch.ykatzav_vlsi/agur/nvrisc/nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2` |  STA FCL |
-| **pmuxm** | NDQ | 2025/10/06 11:13:14 | brachas | `/home/scratch.brachas_vlsi/agur/1NL/pmuxm/pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10` |  STA |
-| **prtm** | NDQ | 2025/10/08 15:52:10 | lmustafa | `/home/scratch.lmustafa_vlsi/agur/prtm/prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry` |  STA FE_DCT |
-| **psca** | NDQ | 2025/10/12 08:45:31 | nkahaz | `/home/scratch.nkahaz_vlsi/ww38_5_fixes/psca_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_ref` |  STA |
+| **lndm** | NDQ | 2025/10/15 16:05:35 | shlomoc | `/home/scratch.shlomoc_vlsi/agur/lndm/run_07_09_2025_lndm_rbv_2025_09_01_new_flow` |  STA FCL |
+| **nvrisc** | NDQ | 2025/10/15 13:28:31 | ykatzav | `/home/scratch.ykatzav_vlsi/agur/nvrisc/nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2` |  STA FCL |
+| **pmuxm** | NDQ | 2025/10/15 11:53:00 | brachas | `/home/scratch.brachas_vlsi/agur/1NL/pmuxm/pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10` |  STA FCL PNR FE_DCT |
+| **prtm** | NDQ | 2025/10/15 16:32:41 | lmustafa | `/home/scratch.lmustafa_vlsi/agur/prtm/prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry` |  STA FE_DCT |
+| **psca** | NDQ | 2025/10/15 20:48:53 | nkahaz | `/home/scratch.nkahaz_vlsi/ww38_5_fixes/psca_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_ref` |  STA |
 | **pscb** | NDQ | 2025/10/14 19:38:28 | nkahaz | `/home/scratch.nkahaz_vlsi/ww38_5_fixes/pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref` |  STA |
-| **pscc** | NDQ | 2025/10/08 14:47:33 | dtraitelovic | `/home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc` |  STA |
-| **pscd** | NDQ | 2025/10/11 07:13:59 | gibell | `/home/scratch.gibell_vlsi_1/agur/1nl/pscd/pscd_rbv_2025_09_02_ver6_Sep25_gb` |  STA |
-| **px** | NDQ | 2025/10/06 14:21:06 | aamsalem | `/home/scratch.aamsalem_vlsi/agur/px/1NL/run_5_10_gl-check_fix/px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_fix-gl-check` |  STA FCL PNR |
-| **riba** | NDQ | 2025/10/08 09:07:41 | rmenasheof | `/home/scratch.rmenasheof_vlsi/agur/riba/riba_10_9_1nl_new_flow_golden` |  STA |
-| **ribs** | NDQ | 2025/10/08 15:54:01 | ynaim | `/home/scratch.ynaim_vlsi/agur/1NL/ribs/ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk` |  STA |
-| **sma** | NDQ | 2025/10/08 09:13:02 | shlomoc | `/home/scratch.shlomoc_vlsi/agur/sma/run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix` |  STA FCL |
+| **pscc** | NDQ | 2025/10/16 11:44:08 | dtraitelovic | `/home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc` |  STA |
+| **pscd** | NDQ | 2025/10/16 11:54:04 | gibell | `/home/scratch.gibell_vlsi/agur/1nl/pscd/pscd_rbv_2025_09_02_ver4_Sep25_gb` |  STA |
+| **px** | NDQ | 2025/10/15 10:08:41 | aamsalem | `/home/scratch.aamsalem_vlsi/agur/px/1NL/run_9_9_old_util65/px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_old_util65` |  STA FCL PNR |
+| **riba** | NDQ | 2025/10/15 10:53:34 | rmenasheof | `/home/scratch.rmenasheof_vlsi/agur/riba/riba_10_9_1nl_new_flow_golden` |  STA |
+| **ribs** | NDQ | 2025/10/15 09:29:31 | ynaim | `/home/scratch.ynaim_vlsi_1/agur/1NL/ribs/ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk_vivid` |  STA |
+| **sma** | NDQ | 2025/10/15 16:05:39 | shlomoc | `/home/scratch.shlomoc_vlsi/agur/sma/run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix` |  STA FCL |
 | **yu** | NDQ | 2025/05/25 09:29:17 | ashahock | `/home/scratch.ashahock_vlsi_1/agur/yu/yu_agur_rbv_2025_03_17_condb_int1_11_3_BE_TNL_snap_ver7_new_flow` |  STA PNR |
 | **dqaa** | QNS | 2025/10/12 04:26:30 | siddharthasa | `/home/scratch.siddharthasa_vlsi/agur/1NL/dqaa/dqaa_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_10_sep` |  STA FCL PNR |
 | **dqaci** | QNS | 2025/08/26 21:44:33 | mbetzer | `/home/scratch.mbetzer_vlsi/agur/dqaci/dqaci_250609_new_pin_placement` |  STA |
 | **dqaco** | QNS | 2025/08/26 11:31:56 | mbetzer | `/home/scratch.mbetzer_vlsi/agur/dqaco/dqaco_250609_new_pin_placement` |  STA |
 | **dqai** | QNS | 2025/08/31 08:59:25 | mlanzerer | `/home/scratch.mlanzerer_vlsi/dqai_dir/dqai_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap` |  STA FE_DCT |
-| **dqamci** | QNS | 2025/08/27 17:26:38 | mlanzerer | `/home/scratch.mlanzerer_vlsi/dqamci_dir/dqamci_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap` |  STA FCL PNR FE_DCT |
+| **dqamci** | QNS | 2025/10/16 08:46:23 | mlanzerer | `/home/scratch.mlanzerer_vlsi/dqamci_dir/dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap` |  STA |
 | **dqamco** | QNS | 2025/09/05 07:09:42 | siddharthasa | `/home/scratch.siddharthasa_vlsi/agur/sfnl/dqamco/dqamco_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap_run1` |  STA FCL PNR FE_DCT |
 | **dqamdi** | QNS | 2025/10/13 19:44:12 | seeman | `/home/scratch.seeman_vlsi_1/agur/1nl/dqamdi/dqamdi_rbv_2025_09_18_agur_condb_int3_2025_08_27_0_1NL_snap_q2si` |  STA |
 | **dqamdo** | QNS | 2025/09/16 21:26:44 | abarman | `/home/scratch.abarman_vlsi/agur/SFNL/DQAMDO/DQAMDO_NewPinDef2_SynPNR_run2_SO2/dqamdo_rbv_2025_07_06_agur_int2_condb_int2_23_5r1_BE_SFNL_no_SLCG_so2` |  STA PNR FE_DCT |
@@ -2088,14 +2098,14 @@ FCL release is in a different directory than STA.
 | **eds** | QNS | 2025/04/02 15:59:49 | ysapojnikov | `/home/scratch.ysapojnikov_vlsi_1/agur/eds/eds_rbv_2025_03_13_condb_int1_11_3_BE_TNL_snap` |  STA |
 | **qcorer** | QNS | 2025/10/01 14:32:00 | daltman | `/home/scratch.daltman_vlsi/qcorer/qcorer_rbv_2025_09_02_1NL_snap_ref` |  STA |
 | **tds** | QNS | 2025/10/10 07:26:36 | hsajwan | `/home/scratch.hsajwan_vlsi/agur/1NL/tds/tds_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_FIRST_RUN` |  STA FCL PNR |
-| **bta** | TCB | 2025/10/10 10:48:20 | vliberchuk | `/home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10` |  STA |
+| **bta** | TCB | 2025/10/16 15:35:44 | vliberchuk | `/home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10` |  STA |
 | **eri** | TCB | 2025/08/28 17:07:57 | hschiffavrah | `/home/scratch.hschiffavrah_vlsi/agur/eri/eri_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap_nf` |  STA FCL PNR FE_DCT |
 | **hib** | TCB | 2025/10/11 11:33:58 | maximkr | `/home/scratch.maximkr_vlsi/agur/hib/hib_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_fp2` |  STA FCL |
 
 ---
 
 *Document Auto-Generated from Block Release Logs*  
-*Generation Date: 2025-10-14 20:40:00*  
+*Generation Date: 2025-10-17 14:12:27*  
 *Script: extract_agur_releases.sh*  
 *Base Path: /home/agur_backend_blockRelease/block/*
 
