@@ -13,6 +13,7 @@
 #===============================================================================
 #
 # Script: run_agur_regression.sh
+# Version: 2.0.0
 # Purpose: Run various analysis regressions on all released AGUR units
 #
 # Description:
@@ -25,7 +26,7 @@
 #
 # Options:
 #   -t, --type TYPE          Regression type: formal|timing|pv|clock|release (REQUIRED)
-#   -c, --chiplet CHIPLET    Filter by chiplet (default: all chiplets)
+#   -c, --chiplet CHIPLET    Filter by chiplet - case-insensitive (default: all chiplets)
 #   -u, --unit UNIT          Run for specific unit only
 #   -h, --help               Show this help message
 #
@@ -54,13 +55,18 @@ TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
 TEMP_DIR="/tmp/agur_regression_$$"
 
 # Filters
-FILTER_CHIPLETS=()  # Array to store multiple chiplets: CPORT, CFAN, etc.
+FILTER_CHIPLETS=()  # Array to store multiple chiplets: CPORT, HPORT, NDQ, QNS, TCB
 FILTER_UNIT=""
 
 # Execution options
-PARALLEL_JOBS=1           # Number of parallel jobs (default: sequential)
+# Default: auto-detect with smart capping (min(cpu_cores, 16))
+CPU_CORES=$(nproc 2>/dev/null || echo 8)
+PARALLEL_JOBS=$([[ $CPU_CORES -le 16 ]] && echo $CPU_CORES || echo 16)
+AUTO_DETECTED_JOBS=1      # Flag to track if jobs were auto-detected (default: auto)
 DRY_RUN=0                 # Dry-run mode (preview only)
 VERBOSE=0                 # Verbose/debug mode
+QUIET=1                   # Quiet mode (only show progress bar) - default: enabled
+NO_UPDATE=0               # Skip auto-update of AGUR units table
 RESUME_FILE=""            # Resume from previous run
 CONFIG_FILE=""            # Optional configuration file
 MAX_RETRIES=2             # Number of retries for failed analyses
@@ -80,71 +86,11 @@ NC='\033[0m' # No Color
 #===============================================================================
 
 show_help() {
-    cat << EOF
-Usage: $0 [-t TYPE[,TYPE2,...]] [options]
-
-Run various analysis regressions on all released AGUR units.
-If no -t option is specified, runs ALL regression types (formal, timing, pv, clock, release).
-
-Options:
-  -t, --type TYPE          Regression type (optional - defaults to ALL types)
-                           Options: formal, timing, pv, clock, release
-                           Multiple types: comma-separated or multiple -t flags
-                           If omitted: runs all 5 regression types
-
-Filters:
-  -c, --chiplet CHIPLET    Filter by chiplet (e.g., CPORT)
-                           Multiple chiplets: comma-separated or multiple -c flags
-  -u, --unit UNIT          Run for specific unit only
-
-Execution Control:
-  -j, --jobs N             Run N analyses in parallel (default: 1, sequential)
-                           Use -j auto to auto-detect CPU cores
-  --dry-run                Preview what will be executed without running
-  -v, --verbose            Enable verbose/debug output
-  --resume FILE            Resume from a previous interrupted run
-  --config FILE            Load configuration from file
-
-Other:
-  -h, --help               Show this help message
-
-Examples:
-  $0                               # Run ALL 5 regression types on all units (sequential)
-  $0 -j 4                          # Run with 4 parallel jobs
-  $0 -j auto                       # Auto-detect CPU cores for parallelism
-  $0 --dry-run                     # Preview what will be executed
-  $0 -v                            # Run with verbose output
-  $0 -c CPORT                      # Run ALL types on CPORT units only
-  $0 -u fdb                        # Run ALL types on fdb unit only
-  $0 -t formal                     # Run formal regression on all units
-  $0 -t formal -j 8                # Run formal with 8 parallel jobs
-  $0 -t formal,pv                  # Run formal AND PV regressions (multi-tab HTML)
-  $0 -t formal -t pv               # Same as above (multiple -t flags)
-  $0 -t formal -c CPORT            # Run formal on CPORT units only
-  $0 -t formal -c CPORT,CFAN       # Run formal on CPORT and CFAN units
-  $0 -t formal -c CPORT -c CFAN    # Same as above (multiple -c flags)
-  $0 -t timing -u prt              # Run timing regression on prt unit only
-  $0 -t pv,formal,timing           # Run 3 regressions in one dashboard
-  $0 --resume .agur_regression_state.txt  # Resume from previous run
-
-Regression Types:
-  formal    - Formal verification status (RTL vs PNR/Synthesis)
-  timing    - PT signoff timing analysis (WNS, TNS, paths)
-  pv        - Physical verification (DRC, LVS, Antenna)
-  clock     - Clock tree analysis (latency, skew)
-  release   - Block release status and completeness
-
-Output Files (generated in current directory):
-  Single type:    agur_<type>_regression_dashboard_YYYYMMDD_HHMMSS.html
-  Multiple types: agur_multi_regression_dashboard_YYYYMMDD_HHMMSS.html
-  State file:     .agur_regression_state_YYYYMMDD_HHMMSS.txt (for resume)
-
-Performance Tips:
-  - Use -j auto for optimal parallelism based on your CPU
-  - Parallel execution significantly speeds up large regressions
-  - Use --dry-run first to preview the execution plan
-
-EOF
+    # Get the directory where this script is located
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    
+    # Call the Python help script with colorized output
+    /home/utils/Python/builds/3.11.9-20250715/bin/python3 "${SCRIPT_DIR}/show_agur_help.py" "$0"
     exit 0
 }
 
@@ -334,6 +280,7 @@ run_unit_analysis() {
         log_debug "Executing avice_wa_review.py for $unit (attempt $((retry_count+1)))"
         
         # Use timeout if available
+        # NOTE: Do NOT use --quiet here - we need the full output for parser functions to extract data!
         if command -v timeout &> /dev/null; then
             timeout 1800 "$PYTHON_BIN" "$AVICE_SCRIPT" "$workarea" -s "$analysis_section" --no-logo > "$output_file" 2>&1
             local exit_code=$?
@@ -393,18 +340,6 @@ run_unit_analysis() {
     # Save state
     save_state "$state_file" "$regression_type" "$unit_idx" "$unit"
 }
-
-# Export functions and variables for parallel execution
-export -f run_unit_analysis
-export -f parse_formal_output
-export -f parse_timing_output
-export -f parse_pv_output
-export -f parse_clock_output
-export -f parse_release_output
-export -f save_state
-export -f log_debug
-export -f log_verbose
-export PYTHON_BIN AVICE_SCRIPT VERBOSE BLUE MAGENTA NC MAX_RETRIES RETRY_DELAY
 
 #===============================================================================
 # Regression Type Functions
@@ -888,10 +823,6 @@ parse_release_output() {
     # Use awk to extract only from the "Release Attempts from Workarea" summary section
     local custom_links=$(echo "$release_section" | awk '/Release Attempts from Workarea/,/^[[:space:]]*$/ {print}' | grep -i "Custom Links:" | head -1 | sed 's/.*Custom Links:\s*//')
     
-    # Extract latest release date
-    # Format: "Latest Success: 2025-10-16"
-    local latest_date=$(echo "$release_section" | grep -i "Latest Success:" | head -1 | grep -oP "Latest Success:\s*\K[0-9-]+" | head -1)
-    
     # Determine overall release status based on attempts
     local overall_status="UNKNOWN"
     
@@ -912,9 +843,6 @@ parse_release_output() {
             details="${details}; Links: ${custom_links}"
         fi
         
-        # Add latest date
-        [ -n "$latest_date" ] && details="${details}; Latest: ${latest_date}"
-        
     elif [ $successful_attempts -gt 0 ] && [ $failed_attempts -gt 0 ]; then
         # Mixed success and failure - partial success
         overall_status="WARN"
@@ -927,8 +855,6 @@ parse_release_output() {
             fi
             details="${details}; Links: ${custom_links}"
         fi
-        
-        [ -n "$latest_date" ] && details="${details}; Latest: ${latest_date}"
         
     elif [ $failed_attempts -gt 0 ] && [ $successful_attempts -eq 0 ]; then
         # All attempts failed
@@ -945,9 +871,41 @@ parse_release_output() {
     runtime=$(echo "$release_section" | grep -i "Runtime:" | tail -1 | grep -oP "Runtime:\s*\K[0-9.]+ (hours|minutes|seconds)")
     [ -z "$runtime" ] && runtime="N/A"
     
-    # Return pipe-delimited string
-    echo "${overall_status}|${details}|${runtime}"
+    # Extract flags from latest successful attempt for release type badges
+    # Find the last SUCCESS attempt and get its flags
+    latest_flags=""
+    if [ $successful_attempts -gt 0 ]; then
+        # Extract the last successful attempt's flags line
+        # Format: "Flags: sta_release, fcl_release, pnr_release, fe_dct_release"
+        latest_flags=$(awk '/Block Release Attempts:/,/Release Attempts from Workarea/ {
+            if (/Status:.*SUCCESS/) {
+                success=1
+                next
+            }
+            if (success && /Flags:/) {
+                print
+                success=0
+            }
+        }' <<< "$release_section" | tail -1 | sed 's/.*Flags:[[:space:]]*//' | tr -d '\n')
+    fi
+    [ -z "$latest_flags" ] && latest_flags="N/A"
+    
+    # Return pipe-delimited string (added flags as 4th field)
+    echo "${overall_status}|${details}|${runtime}|${latest_flags}"
 }
+
+# Export functions and variables for parallel execution
+# Note: Must export AFTER functions are defined to avoid warnings
+export -f run_unit_analysis
+export -f parse_formal_output
+export -f parse_timing_output
+export -f parse_pv_output
+export -f parse_clock_output
+export -f parse_release_output
+export -f save_state
+export -f log_debug
+export -f log_verbose
+export PYTHON_BIN AVICE_SCRIPT VERBOSE QUIET BLUE MAGENTA NC MAX_RETRIES RETRY_DELAY
 
 # Get section flag for avice_wa_review.py based on regression type
 get_analysis_section() {
@@ -1009,10 +967,11 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         -c|--chiplet)
-            # Support comma-separated chiplets: -c CPORT,CFAN
+            # Support comma-separated chiplets: -c CPORT,CFAN (case-insensitive)
             IFS=',' read -ra TEMP_CHIPLETS <<< "$2"
             for chiplet in "${TEMP_CHIPLETS[@]}"; do
-                FILTER_CHIPLETS+=("$chiplet")
+                # Convert to uppercase for case-insensitive matching
+                FILTER_CHIPLETS+=("$(echo "$chiplet" | tr '[:lower:]' '[:upper:]')")
             done
             shift 2
             ;;
@@ -1022,10 +981,19 @@ while [[ $# -gt 0 ]]; do
             ;;
         -j|--jobs)
             if [ "$2" = "auto" ]; then
-                # Auto-detect CPU cores
-                PARALLEL_JOBS=$(nproc 2>/dev/null || echo 4)
+                # Smart auto-detect: Consider CPU cores but cap at reasonable maximum
+                # Logic: min(num_cores, 16) for optimal balance
+                # Reason: Beyond 16 jobs, overhead dominates and performance degrades
+                CPU_CORES=$(nproc 2>/dev/null || echo 4)
+                if [ $CPU_CORES -le 16 ]; then
+                    PARALLEL_JOBS=$CPU_CORES
+                else
+                    PARALLEL_JOBS=16  # Cap at 16 for optimal performance
+                fi
+                AUTO_DETECTED_JOBS=1
             else
                 PARALLEL_JOBS="$2"
+                AUTO_DETECTED_JOBS=0  # User explicitly set jobs
             fi
             shift 2
             ;;
@@ -1035,6 +1003,18 @@ while [[ $# -gt 0 ]]; do
             ;;
         -v|--verbose)
             VERBOSE=1
+            shift
+            ;;
+        -q|--quiet)
+            QUIET=1
+            shift
+            ;;
+        -nq|--no-quiet)
+            QUIET=0
+            shift
+            ;;
+        --no-update)
+            NO_UPDATE=1
             shift
             ;;
         --resume)
@@ -1117,23 +1097,59 @@ fi
 # Start timer for ETA calculations
 START_TIME=$SECONDS
 
-print_header
-
-# Display execution mode information
-if [ $DRY_RUN -eq 1 ]; then
-    echo -e "${YELLOW}[DRY-RUN MODE]${NC} Preview only - no analyses will be executed"
-    echo ""
+# Print header only if not in quiet mode
+if [ $QUIET -eq 0 ]; then
+    print_header
+    
+    # Display execution mode information
+    if [ $DRY_RUN -eq 1 ]; then
+        echo -e "${YELLOW}[DRY-RUN MODE]${NC} Preview only - no analyses will be executed"
+        echo ""
+    fi
+    
+    if [ $VERBOSE -eq 1 ]; then
+        echo -e "${BLUE}[VERBOSE MODE]${NC} Debug output enabled"
+        echo ""
+    fi
+    
+    # Only show parallel mode message if not auto-detected (already shown above)
+    if [ $PARALLEL_JOBS -gt 1 ] && [ $AUTO_DETECTED_JOBS -eq 0 ]; then
+        echo -e "${GREEN}[PARALLEL MODE]${NC} Running with $PARALLEL_JOBS parallel jobs"
+        log_verbose "CPU cores available: $(nproc 2>/dev/null || echo 'unknown')"
+        echo ""
+    fi
 fi
 
-if [ $VERBOSE -eq 1 ]; then
-    echo -e "${BLUE}[VERBOSE MODE]${NC} Debug output enabled"
-    echo ""
-fi
-
-if [ $PARALLEL_JOBS -gt 1 ]; then
-    echo -e "${GREEN}[PARALLEL MODE]${NC} Running with $PARALLEL_JOBS parallel jobs"
-    log_verbose "CPU cores available: $(nproc 2>/dev/null || echo 'unknown')"
-    echo ""
+# Auto-update AGUR units table (unless --no-update is specified)
+if [ $NO_UPDATE -eq 0 ]; then
+    if [ $QUIET -eq 0 ]; then
+        echo -e "${CYAN}Updating AGUR units table...${NC}"
+    fi
+    
+    # Run extract script
+    EXTRACT_SCRIPT="$SCRIPT_DIR/extract_agur_releases.sh"
+    if [ -f "$EXTRACT_SCRIPT" ]; then
+        if [ $QUIET -eq 1 ]; then
+            # In quiet mode, suppress extract script output
+            "$EXTRACT_SCRIPT" > /dev/null 2>&1
+        else
+            "$EXTRACT_SCRIPT"
+        fi
+        
+        if [ $? -eq 0 ]; then
+            if [ $QUIET -eq 0 ]; then
+                echo -e "${GREEN}[OK] AGUR units table updated${NC}"
+                echo ""
+            fi
+        else
+            echo -e "${RED}[ERROR]${NC} Failed to update AGUR units table"
+            exit 1
+        fi
+    else
+        echo -e "${YELLOW}[WARN]${NC} Extract script not found: $EXTRACT_SCRIPT"
+        echo "Continuing with existing units table..."
+        echo ""
+    fi
 fi
 
 # Check if units table exists
@@ -1151,6 +1167,42 @@ fi
 
 # Create temp directory
 mkdir -p "$TEMP_DIR"
+
+# Validate chiplet filter if specified
+if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
+    # Extract all valid chiplets from the table (case-insensitive, unique)
+    declare -A VALID_CHIPLETS
+    while IFS='|' read -r unit chiplet workarea rtl_tag release_types release_date release_user; do
+        # Skip comments and empty lines
+        [[ "$unit" =~ ^#.*$ ]] && continue
+        [[ -z "$unit" ]] && continue
+        
+        # Trim and uppercase chiplet
+        chiplet=$(echo "$chiplet" | xargs | tr '[:lower:]' '[:upper:]')
+        VALID_CHIPLETS["$chiplet"]=1
+    done < "$UNITS_TABLE"
+    
+    # Check if user-specified chiplets exist
+    INVALID_CHIPLETS=()
+    for filter_chiplet in "${FILTER_CHIPLETS[@]}"; do
+        if [ -z "${VALID_CHIPLETS[$filter_chiplet]}" ]; then
+            INVALID_CHIPLETS+=("$filter_chiplet")
+        fi
+    done
+    
+    # Report error if invalid chiplets found
+    if [ ${#INVALID_CHIPLETS[@]} -gt 0 ]; then
+        echo -e "${RED}Error: Invalid chiplet(s) specified: ${INVALID_CHIPLETS[*]}${NC}"
+        echo ""
+        echo -e "${CYAN}Available chiplets in AGUR_UNITS_TABLE.txt:${NC}"
+        for chiplet in "${!VALID_CHIPLETS[@]}"; do
+            echo "  - $chiplet"
+        done | sort
+        echo ""
+        echo "Use: $0 -c <CHIPLET> -t <TYPE>"
+        exit 1
+    fi
+fi
 
 # Read units from table
 declare -a UNITS
@@ -1175,10 +1227,11 @@ while IFS='|' read -r unit chiplet workarea rtl_tag release_types release_date r
     
     # Apply filters
     if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
-        # Check if unit's chiplet is in the FILTER_CHIPLETS array
+        # Check if unit's chiplet is in the FILTER_CHIPLETS array (case-insensitive)
+        chiplet_upper=$(echo "$chiplet" | tr '[:lower:]' '[:upper:]')
         chiplet_match=0
         for filter_chiplet in "${FILTER_CHIPLETS[@]}"; do
-            if [ "$chiplet" = "$filter_chiplet" ]; then
+            if [ "$chiplet_upper" = "$filter_chiplet" ]; then
                 chiplet_match=1
                 break
             fi
@@ -1206,14 +1259,46 @@ if [ $TOTAL_UNITS -eq 0 ]; then
     exit 1
 fi
 
-echo -e "${GREEN}Found $TOTAL_UNITS unit(s) to analyze${NC}"
-if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
-    echo "Filter: Chiplet = ${FILTER_CHIPLETS[*]}"
+# Smart auto-adjust parallel jobs based on unit count (if -j auto was used)
+if [ $AUTO_DETECTED_JOBS -eq 1 ]; then
+    CPU_CORES=$(nproc 2>/dev/null || echo 4)
+    ORIGINAL_JOBS=$PARALLEL_JOBS
+    
+    # Smart logic: min(cpu_cores, num_units, 16)
+    # Don't use more jobs than units, and cap at 16 for optimal performance
+    if [ $TOTAL_UNITS -lt $PARALLEL_JOBS ]; then
+        PARALLEL_JOBS=$TOTAL_UNITS
+    fi
+    
+    # Display auto-detect message (always shown, even in quiet mode)
+    if [ $CPU_CORES -gt 16 ] && [ $ORIGINAL_JOBS -eq 16 ]; then
+        # CPU cores were capped at 16
+        if [ $PARALLEL_JOBS -lt 16 ]; then
+            echo -e "${CYAN}[AUTO-DETECT]${NC} Detected $CPU_CORES CPU cores, $TOTAL_UNITS units -> Using $PARALLEL_JOBS jobs (matched to unit count)"
+        else
+            echo -e "${CYAN}[AUTO-DETECT]${NC} Detected $CPU_CORES CPU cores -> Using $PARALLEL_JOBS jobs (capped for optimal performance)"
+        fi
+    elif [ $PARALLEL_JOBS -lt $ORIGINAL_JOBS ]; then
+        # Jobs adjusted down to match unit count
+        echo -e "${CYAN}[AUTO-DETECT]${NC} Detected $CPU_CORES CPU cores, $TOTAL_UNITS units -> Using $PARALLEL_JOBS jobs (matched to unit count)"
+    else
+        # Using all detected cores
+        echo -e "${CYAN}[AUTO-DETECT]${NC} Using $PARALLEL_JOBS CPU cores (auto-detected via nproc)"
+    fi
+    echo ""
 fi
-if [ -n "$FILTER_UNIT" ]; then
-    echo "Filter: Unit = $FILTER_UNIT"
+
+# Print unit count and filters only if not in quiet mode
+if [ $QUIET -eq 0 ]; then
+    echo -e "${GREEN}Found $TOTAL_UNITS unit(s) to analyze${NC}"
+    if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
+        echo "Filter: Chiplet = ${FILTER_CHIPLETS[*]}"
+    fi
+    if [ -n "$FILTER_UNIT" ]; then
+        echo "Filter: Unit = $FILTER_UNIT"
+    fi
+    echo ""
 fi
-echo ""
 
 # Arrays to store results per regression type
 # Structure: REGRESSION_RESULTS[type_unitidx_field] = value
@@ -1232,25 +1317,29 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
     REGRESSION_NAME=$(get_regression_name)
 
     # Run analysis on each unit
-    print_section "Running $REGRESSION_NAME Analysis"
-    echo ""
+    if [ $QUIET -eq 0 ]; then
+        print_section "Running $REGRESSION_NAME Analysis"
+        echo ""
+    fi
     
     # Dry-run mode: just preview
     if [ $DRY_RUN -eq 1 ]; then
-        echo -e "${YELLOW}[DRY-RUN] Would analyze the following units:${NC}"
-        for i in "${!UNITS[@]}"; do
-            unit="${UNITS[$i]}"
-            chiplet="${CHIPLETS[$i]}"
-            workarea="${WORKAREAS[$i]}"
-            
-            # Check if already processed (for resume)
-            if [ -n "$RESUME_FILE" ] && is_unit_processed "$STATE_FILE" "$REGRESSION_TYPE" "$i"; then
-                echo "  [$((i+1))/$TOTAL_UNITS] $unit ($chiplet) - ${GREEN}ALREADY COMPLETED (skipped)${NC}"
-            else
-                echo "  [$((i+1))/$TOTAL_UNITS] $unit ($chiplet) - $workarea"
-            fi
-        done
-        echo ""
+        if [ $QUIET -eq 0 ]; then
+            echo -e "${YELLOW}[DRY-RUN] Would analyze the following units:${NC}"
+            for i in "${!UNITS[@]}"; do
+                unit="${UNITS[$i]}"
+                chiplet="${CHIPLETS[$i]}"
+                workarea="${WORKAREAS[$i]}"
+                
+                # Check if already processed (for resume)
+                if [ -n "$RESUME_FILE" ] && is_unit_processed "$STATE_FILE" "$REGRESSION_TYPE" "$i"; then
+                    echo "  [$((i+1))/$TOTAL_UNITS] $unit ($chiplet) - ${GREEN}ALREADY COMPLETED (skipped)${NC}"
+                else
+                    echo "  [$((i+1))/$TOTAL_UNITS] $unit ($chiplet) - $workarea"
+                fi
+            done
+            echo ""
+        fi
         
         # Initialize empty results for dry-run
         for i in "${!UNITS[@]}"; do
@@ -1293,12 +1382,17 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
             
             # Show progress
             if [ $PARALLEL_JOBS -eq 1 ]; then
-                echo ""
-                print_section "Unit $((i+1))/$TOTAL_UNITS: $unit ($chiplet)"
-                echo "Workarea: $workarea"
-                echo "Released: ${RELEASE_DATES[$i]} by ${RELEASE_USERS[$i]}"
-                echo ""
-                echo -e "${CYAN}Running $REGRESSION_NAME analysis...${NC}"
+                # In sequential mode, show progress bar if quiet, otherwise show detailed info
+                if [ $QUIET -eq 1 ]; then
+                    show_progress "$units_completed" "$TOTAL_UNITS" "$unit"
+                else
+                    echo ""
+                    print_section "Unit $((i+1))/$TOTAL_UNITS: $unit ($chiplet)"
+                    echo "Workarea: $workarea"
+                    echo "Released: ${RELEASE_DATES[$i]} by ${RELEASE_USERS[$i]}"
+                    echo ""
+                    echo -e "${CYAN}Running $REGRESSION_NAME analysis...${NC}"
+                fi
             else
                 show_progress "$units_completed" "$TOTAL_UNITS" "$unit"
             fi
@@ -1313,7 +1407,8 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
                 # Wait if we've reached max parallel jobs
                 if [ $jobs_running -ge $PARALLEL_JOBS ]; then
                     # Wait for any job to complete
-                    wait -n
+                    # Suppress error if wait -n is not supported (falls through silently)
+                    wait -n 2>/dev/null || true
                     ((jobs_running--))
                     ((units_completed++))
                 fi
@@ -1322,25 +1417,27 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
                 run_unit_analysis "$i" "$unit" "$chiplet" "$workarea" "$REGRESSION_TYPE" "$ANALYSIS_SECTION" "$TEMP_DIR" "$STATE_FILE"
                 ((units_completed++))
                 
-                # Show result in sequential mode
-                result_file="$TEMP_DIR/${unit}_${REGRESSION_TYPE}_result.txt"
-                if [ -f "$result_file" ]; then
-                    parse_result=$(cat "$result_file")
-                    IFS='|' read -r overall_status details runtime <<< "$parse_result"
-                    
-                    status_color="${YELLOW}"
-                    case "$overall_status" in
-                        PASSED)
-                            status_color="${GREEN}"
-                            ;;
-                        FAILED|CRASHED|ERROR|MISSING)
-                            status_color="${RED}"
-                            ;;
-                    esac
-                    
-                    echo -e "${status_color}Status: $overall_status${NC}"
-                    echo "Details: $details"
-                    echo "Runtime: $runtime"
+                # Show result in sequential mode (only if not quiet)
+                if [ $QUIET -eq 0 ]; then
+                    result_file="$TEMP_DIR/${unit}_${REGRESSION_TYPE}_result.txt"
+                    if [ -f "$result_file" ]; then
+                        parse_result=$(cat "$result_file")
+                        IFS='|' read -r overall_status details runtime <<< "$parse_result"
+                        
+                        status_color="${YELLOW}"
+                        case "$overall_status" in
+                            PASSED)
+                                status_color="${GREEN}"
+                                ;;
+                            FAILED|CRASHED|ERROR|MISSING)
+                                status_color="${RED}"
+                                ;;
+                        esac
+                        
+                        echo -e "${status_color}Status: $overall_status${NC}"
+                        echo "Details: $details"
+                        echo "Runtime: $runtime"
+                    fi
                 fi
             fi
         done
@@ -1357,6 +1454,7 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
         ANALYSIS_STATUS=()
         ANALYSIS_DETAILS=()
         ANALYSIS_RUNTIMES=()
+        ANALYSIS_FLAGS=()
         
         for i in "${!UNITS[@]}"; do
             unit="${UNITS[$i]}"
@@ -1364,14 +1462,16 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
             
             if [ -f "$result_file" ]; then
                 parse_result=$(cat "$result_file")
-                IFS='|' read -r overall_status details runtime <<< "$parse_result"
+                IFS='|' read -r overall_status details runtime flags <<< "$parse_result"
                 ANALYSIS_STATUS+=("$overall_status")
                 ANALYSIS_DETAILS+=("$details")
                 ANALYSIS_RUNTIMES+=("$runtime")
+                ANALYSIS_FLAGS+=("$flags")
             else
                 ANALYSIS_STATUS+=("ERROR")
                 ANALYSIS_DETAILS+=("Result file not found")
                 ANALYSIS_RUNTIMES+=("N/A")
+                ANALYSIS_FLAGS+=("N/A")
             fi
         done
     fi
@@ -1383,6 +1483,7 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
         REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_status"]="${ANALYSIS_STATUS[$result_idx]}"
         REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_details"]="${ANALYSIS_DETAILS[$result_idx]}"
         REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_runtime"]="${ANALYSIS_RUNTIMES[$result_idx]}"
+        REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_flags"]="${ANALYSIS_FLAGS[$result_idx]}"
         ((result_idx++))
     done
     
@@ -1428,9 +1529,12 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
     unset ANALYSIS_DETAILS
     unset ANALYSIS_RUNTIMES
     
-    echo ""
-    echo -e "${GREEN}✓ Completed $REGRESSION_NAME analysis${NC}"
-    echo ""
+    # Print completion message only if not in quiet mode
+    if [ $QUIET -eq 0 ]; then
+        echo ""
+        echo -e "${GREEN}[OK] Completed $REGRESSION_NAME analysis${NC}"
+        echo ""
+    fi
 
 done  # End of regression types loop
 
@@ -1441,14 +1545,12 @@ done  # End of regression types loop
 # - Single type: Tab bar is hidden via CSS, content shows immediately
 # - Multiple types: Tab bar is visible, tabs switch between regression types
 
-print_section "Generating HTML Dashboard"
-
-# Read and encode logo as base64 for HTML embedding (portability)
-LOGO_DATA=""
-LOGO_PATH="/home/avice/scripts/avice_wa_review/images/avice_logo.png"
-if [ -f "$LOGO_PATH" ]; then
-    LOGO_DATA=$(base64 -w 0 "$LOGO_PATH")
+if [ $QUIET -eq 0 ]; then
+    print_section "Generating HTML Dashboard"
 fi
+
+# Note: Logo will be loaded AFTER HTML generation to avoid "Argument list too long" error
+# (base64 logo is ~1MB which makes environment too large for subprocesses)
 
 cat > "$HTML_FILE" << 'MULTI_HTML_START'
 <!DOCTYPE html>
@@ -1485,6 +1587,29 @@ cat > "$HTML_FILE" << 'MULTI_HTML_START'
         color: white;
         padding: 30px;
         text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 30px;
+        flex-wrap: wrap;
+    }
+    
+    .header-logo {
+        height: 100px;
+        width: auto;
+        max-width: 200px;
+        display: block;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    
+    .header-logo:hover {
+        transform: scale(1.05);
+    }
+    
+    .header-text {
+        flex: 1;
+        min-width: 300px;
     }
     
     .header h1 {
@@ -1496,6 +1621,48 @@ cat > "$HTML_FILE" << 'MULTI_HTML_START'
     .header .subtitle {
         font-size: 1.2em;
         opacity: 0.9;
+    }
+    
+    /* Logo Modal */
+    .logo-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.9);
+    }
+    
+    .logo-modal-content {
+        margin: auto;
+        display: block;
+        width: 80%;
+        max-width: 700px;
+        animation: zoom 0.6s;
+    }
+    
+    .logo-modal-close {
+        position: absolute;
+        top: 15px;
+        right: 35px;
+        color: #f1f1f1;
+        font-size: 40px;
+        font-weight: bold;
+        transition: 0.3s;
+        cursor: pointer;
+    }
+    
+    .logo-modal-close:hover,
+    .logo-modal-close:focus {
+        color: #bbb;
+    }
+    
+    @keyframes zoom {
+        from {transform: scale(0)}
+        to {transform: scale(1)}
     }
     
     /* Tab Navigation */
@@ -1548,16 +1715,16 @@ cat > "$HTML_FILE" << 'MULTI_HTML_START'
     /* Stats Grid */
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        padding: 30px;
+        grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+        gap: 12px;
+        padding: 20px;
         background: #f8f9fa;
     }
     
     .stat-card {
         background: white;
-        padding: 25px;
-        border-radius: 15px;
+        padding: 15px 10px;
+        border-radius: 12px;
         text-align: center;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border 0.3s ease;
@@ -1595,16 +1762,16 @@ cat > "$HTML_FILE" << 'MULTI_HTML_START'
     }
     
     .stat-value {
-        font-size: 2.5em;
+        font-size: 2em;
         font-weight: bold;
-        margin: 15px 0;
+        margin: 10px 0;
     }
     
     .stat-label {
         color: #6c757d;
-        font-size: 0.95em;
+        font-size: 0.8em;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
     }
     
     .stat-passed { color: #28a745; }
@@ -1984,19 +2151,32 @@ cat > "$HTML_FILE" << 'MULTI_HTML_START'
 </head>
 <body>
 <div class="container">
-    <div class="header">
-        <h1>🔬 AGUR Multi-Regression Dashboard</h1>
 MULTI_HTML_START
 
-# Add generation info and filter
-cat >> "$HTML_FILE" << MULTI_META
-        <div class="subtitle">Generated: $(date '+%Y-%m-%d %H:%M:%S')</div>
-        <div class="subtitle">Regression Types: ${REGRESSION_TYPES[*]}</div>
-MULTI_META
+# Add header with logo
+cat >> "$HTML_FILE" << HEADER_START
+    <!-- Logo Modal -->
+    <div id="logoModal" class="logo-modal" onclick="closeLogoModal()">
+        <span class="logo-modal-close">&times;</span>
+        <img class="logo-modal-content" src="file:///home/avice/scripts/avice_wa_review/images/avice_logo.png" alt="AVICE Logo">
+    </div>
+    
+    <div class="header">
+        <img class="header-logo" src="file:///home/avice/scripts/avice_wa_review/images/avice_logo.png" alt="AVICE Logo" onclick="showLogoModal()" title="Click to enlarge">
+        <div class="header-text">
+            <h1>🔬 AGUR Multi-Regression Dashboard</h1>
+            <div class="subtitle">Generated: $(date '+%Y-%m-%d %H:%M:%S')</div>
+            <div class="subtitle">Regression Types: ${REGRESSION_TYPES[*]}</div>
+HEADER_START
 
 if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
     echo "            <div class=\"subtitle\">Filter: Chiplet = ${FILTER_CHIPLETS[*]}</div>" >> "$HTML_FILE"
 fi
+
+cat >> "$HTML_FILE" << HEADER_END
+        </div>
+    </div>
+HEADER_END
 
 # Add tab navigation (with conditional single-type class)
 TAB_NAV_CLASS=""
@@ -2005,7 +2185,6 @@ if [ ${#REGRESSION_TYPES[@]} -eq 1 ]; then
 fi
 
 cat >> "$HTML_FILE" << MULTI_TABS_START
-    </div>
     
     <div class="tab-nav$TAB_NAV_CLASS">
 MULTI_TABS_START
@@ -2189,6 +2368,7 @@ CHIPLET_SECTION
             status="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_status]}"
             details="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_details]}"
             runtime="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_runtime]}"
+            release_flags="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_flags]}"
             
             # Determine status class and text
             case "$status" in
@@ -2242,10 +2422,36 @@ CHIPLET_SECTION
                     ;;
             esac
             
+            # Generate release type badges for release regression type
+            release_badges_html=""
+            if [ "$REGRESSION_TYPE" = "release" ] && [ -n "$release_flags" ] && [ "$release_flags" != "N/A" ]; then
+                # Parse the flags and create badges
+                badges=""
+                
+                # Check for each release type and add badge
+                if [[ "$release_flags" =~ sta_release ]]; then
+                    badges="${badges}<span class='release-badge' style='background: #3498db; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='Timing Release'>S</span>"
+                fi
+                if [[ "$release_flags" =~ fcl_release ]]; then
+                    badges="${badges}<span class='release-badge' style='background: #9b59b6; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FCL Release'>F</span>"
+                fi
+                if [[ "$release_flags" =~ pnr_release ]]; then
+                    badges="${badges}<span class='release-badge' style='background: #e67e22; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='PnR Release'>P</span>"
+                fi
+                if [[ "$release_flags" =~ fe_dct_release ]]; then
+                    badges="${badges}<span class='release-badge' style='background: #27ae60; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FE DCT Release'>D</span>"
+                fi
+                
+                if [ -n "$badges" ]; then
+                    release_badges_html="<div style='display: flex; align-items: center; gap: 4px;'>$badges</div>"
+                fi
+            fi
+            
             cat >> "$HTML_FILE" << UNIT_CARD
                         <div class="unit-card">
                             <div class="unit-header">
                                 <div class="unit-name">$unit</div>
+                                $release_badges_html
                                 <div class="status-badge $status_class">$status_text</div>
                             </div>
                             <div class="unit-info">
@@ -2253,11 +2459,35 @@ CHIPLET_SECTION
                                     <span class="info-label">Released By:</span>
                                     <span class="info-value">$release_user</span>
                                 </div>
+UNIT_CARD
+            
+            # Calculate release date age and add color coding
+            # Color scheme: <1 week=green, 1-2 weeks=orange, >2 weeks=red
+            release_date_color="#95a5a6"  # Default gray
+            if [ -n "$release_date" ] && [[ "$release_date" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+                # Calculate age in days
+                current_date=$(date +%s)
+                release_date_epoch=$(date -d "$release_date" +%s 2>/dev/null || echo "0")
+                
+                if [ "$release_date_epoch" != "0" ]; then
+                    age_days=$(( (current_date - release_date_epoch) / 86400 ))
+                    
+                    if [ $age_days -le 7 ]; then
+                        release_date_color="#27ae60"  # Green - fresh (≤1 week)
+                    elif [ $age_days -le 14 ]; then
+                        release_date_color="#f39c12"  # Orange - attention (1-2 weeks)
+                    else
+                        release_date_color="#e74c3c"  # Red - old (>2 weeks)
+                    fi
+                fi
+            fi
+            
+            cat >> "$HTML_FILE" << RELEASE_DATE_COLORED
                                 <div class="info-row">
                                     <span class="info-label">Release Date:</span>
-                                    <span class="info-value">$release_date</span>
+                                    <span class="info-value" style="color: $release_date_color; font-weight: 500;">$release_date</span>
                                 </div>
-UNIT_CARD
+RELEASE_DATE_COLORED
             
             # RTL Tag is only relevant for formal and release regressions
             if [ "$REGRESSION_TYPE" = "formal" ] || [ "$REGRESSION_TYPE" = "release" ]; then
@@ -2368,42 +2598,226 @@ RELEASE_START
                         # Determine what type of information this is
                         if [[ "$part" =~ ^[0-9]+ ]]; then
                             # This is the attempt summary (e.g., "3 successful / 5 total attempts")
-                            metric_icon="📊"
-                            metric_name="Attempts"
+                            # Make it expandable to show all attempts with details
                             metric_value="$part"
-                            cat >> "$HTML_FILE" << RELEASE_METRIC
+                            
+                            # Parse all attempts from output file
+                            # Format: "Attempt #N: YYYY-MM-DD HH MM SS | User: username"
+                            #         "Status: SUCCESS/FAILED"
+                            #         "Flags: flag1, flag2, ..."
+                            
+                            attempts_data=$(awk '/Block Release Attempts:/,/Release Attempts from Workarea/ {print}' "$TEMP_DIR/${unit}_${REGRESSION_TYPE}_output.txt" | grep -E "Attempt #|Status:|Flags:" | sed 's/\x1b\[[0-9;]*m//g')
+                            
+                            if [ -n "$attempts_data" ]; then
+                                # Count total attempts for expandable ID
+                                total_count=$(echo "$attempts_data" | grep -c "Attempt #")
+                                expand_id="release_attempts_${unit}_$$"
+                                
+                                # Display summary with expandable button
+                                cat >> "$HTML_FILE" << ATTEMPTS_SUMMARY
                                 <div class="flow-item">
-                                    <span><strong>$metric_icon $metric_name</strong></span>
+                                    <span><strong>📊 Attempts</strong></span>
+                                    <span>$metric_value</span>
+                                </div>
+                                <div style="margin-left: 20px; margin-top: 6px;">
+                                    <button onclick="toggleCustomLinks('${expand_id}')" 
+                                            id="${expand_id}_btn"
+                                            style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                   font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                   display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-size: 0.8em;">▼</span>
+                                        <span>Show all $total_count attempts</span>
+                                    </button>
+                                </div>
+                                <div id="${expand_id}" style="display: none; margin-left: 20px; margin-top: 8px; font-size: 0.9em;">
+ATTEMPTS_SUMMARY
+                                
+                                # Parse and display each attempt
+                                attempt_num=""
+                                attempt_date=""
+                                attempt_status=""
+                                attempt_flags=""
+                                
+                                while IFS= read -r line; do
+                                    if [[ "$line" =~ Attempt\ \#([0-9]+):\ ([0-9-]+\ [0-9\ ]+) ]]; then
+                                        # New attempt - display previous if exists
+                                        if [ -n "$attempt_num" ]; then
+                                            status_color="#27ae60"  # Green for success
+                                            status_icon="✓"
+                                            if [[ "$attempt_status" == *"FAILED"* ]]; then
+                                                status_color="#e74c3c"  # Red for failed
+                                                status_icon="✗"
+                                            fi
+                                            
+                                            cat >> "$HTML_FILE" << ATTEMPT_ITEM
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-left: 3px solid $status_color; border-radius: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong style="color: $status_color;">$status_icon Attempt #$attempt_num</strong> 
+                                            <span style="color: #7f8c8d; font-size: 0.85em;">($attempt_date)</span>
+                                        </div>
+                                        <div style="color: #555; font-size: 0.85em; margin-left: 20px;">
+                                            Flags: <span style="color: #3498db;">$attempt_flags</span>
+                                        </div>
+                                    </div>
+ATTEMPT_ITEM
+                                        fi
+                                        
+                                        # Start new attempt
+                                        attempt_num="${BASH_REMATCH[1]}"
+                                        attempt_date="${BASH_REMATCH[2]}"
+                                        attempt_status=""
+                                        attempt_flags=""
+                                    elif [[ "$line" =~ Status:\ (.+) ]]; then
+                                        attempt_status="${BASH_REMATCH[1]}"
+                                    elif [[ "$line" =~ Flags:\ (.+) ]]; then
+                                        attempt_flags="${BASH_REMATCH[1]}"
+                                    fi
+                                done <<< "$attempts_data"
+                                
+                                # Display last attempt
+                                if [ -n "$attempt_num" ]; then
+                                    status_color="#27ae60"  # Green for success
+                                    status_icon="✓"
+                                    if [[ "$attempt_status" == *"FAILED"* ]]; then
+                                        status_color="#e74c3c"  # Red for failed
+                                        status_icon="✗"
+                                    fi
+                                    
+                                    cat >> "$HTML_FILE" << ATTEMPT_ITEM
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-left: 3px solid $status_color; border-radius: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong style="color: $status_color;">$status_icon Attempt #$attempt_num</strong> 
+                                            <span style="color: #7f8c8d; font-size: 0.85em;">($attempt_date)</span>
+                                        </div>
+                                        <div style="color: #555; font-size: 0.85em; margin-left: 20px;">
+                                            Flags: <span style="color: #3498db;">$attempt_flags</span>
+                                        </div>
+                                    </div>
+ATTEMPT_ITEM
+                                fi
+                                
+                                echo "                                </div>" >> "$HTML_FILE"
+                            else
+                                # Fallback: simple display if parsing fails
+                                cat >> "$HTML_FILE" << RELEASE_METRIC
+                                <div class="flow-item">
+                                    <span><strong>📊 Attempts</strong></span>
                                     <span>$metric_value</span>
                                 </div>
 RELEASE_METRIC
+                            fi
                         elif [[ "$part" =~ ^Links: ]]; then
-                            # Extract custom link details from output file - display each link with its date
-                            # Format: "  Custom Link Detail: LINK_NAME|DATE"
-                            custom_link_details=$(grep "Custom Link Detail:" "$TEMP_DIR/${unit}_${REGRESSION_TYPE}_output.txt" 2>/dev/null | sed 's/.*Custom Link Detail:[[:space:]]*//' | sed 's/\x1b\[[0-9;]*m//g')
+                            # Extract both regular and manual custom link details from output file
+                            # Combine and sort them by date (oldest first)
                             
+                            # Format: "  Custom Link Detail: LINK_NAME|DATE" (exclude Manual Custom Link Detail)
+                            custom_link_details=$(grep "Custom Link Detail:" "$TEMP_DIR/${unit}_${REGRESSION_TYPE}_output.txt" 2>/dev/null | grep -v "Manual Custom Link Detail:" | sed 's/.*Custom Link Detail:[[:space:]]*//' | sed 's/\x1b\[[0-9;]*m//g')
+                            
+                            # Format: "  Manual Custom Link Detail: LINK_NAME|DATE"
+                            manual_link_details=$(grep "Manual Custom Link Detail:" "$TEMP_DIR/${unit}_${REGRESSION_TYPE}_output.txt" 2>/dev/null | sed 's/.*Manual Custom Link Detail:[[:space:]]*//' | sed 's/\x1b\[[0-9;]*m//g')
+                            
+                            # Combine both types with a marker: LINK_NAME|DATE|TYPE
+                            all_links=""
                             if [ -n "$custom_link_details" ]; then
-                                # Display each custom link with its date
                                 while IFS='|' read -r link_name link_date; do
-                                    cat >> "$HTML_FILE" << CUSTOM_LINK
-                                <div class="flow-item">
-                                    <span><strong>🔗 Custom Link</strong></span>
-                                    <span>$link_name <span style="color: #7f8c8d; font-size: 0.9em;">($link_date)</span></span>
-                                </div>
-CUSTOM_LINK
+                                    all_links="${all_links}${link_name}|${link_date}|regular"$'\n'
                                 done <<< "$custom_link_details"
                             fi
-                        elif [[ "$part" =~ ^Latest: ]]; then
-                            # Latest success date
-                            metric_icon="📅"
-                            metric_name="Latest Success"
-                            metric_value=$(echo "$part" | sed 's/^Latest:[[:space:]]*//')
-                            cat >> "$HTML_FILE" << RELEASE_METRIC
-                                <div class="flow-item">
-                                    <span><strong>$metric_icon $metric_name</strong></span>
-                                    <span>$metric_value</span>
+                            if [ -n "$manual_link_details" ]; then
+                                while IFS='|' read -r link_name link_date; do
+                                    all_links="${all_links}${link_name}|${link_date}|manual"$'\n'
+                                done <<< "$manual_link_details"
+                            fi
+                            
+                            # Sort by date (column 2) - newest first, then take only top 3
+                            if [ -n "$all_links" ]; then
+                                sorted_links=$(echo "$all_links" | grep -v '^$' | sort -t'|' -k2,2 -r)
+                                total_links=$(echo "$sorted_links" | wc -l)
+                                top_3_links=$(echo "$sorted_links" | head -3)
+                                
+                                # Display compact custom links section header
+                                cat >> "$HTML_FILE" << LINKS_HEADER
+                                <div class="flow-item" style="margin-top: 10px;">
+                                    <span><strong>🔗 Custom Links:</strong></span>
                                 </div>
-RELEASE_METRIC
+                                <div style="margin-left: 20px; font-size: 0.95em; line-height: 1.6;">
+LINKS_HEADER
+                                
+                                # Display top 3 most recent links with color coding
+                                link_num=0
+                                while IFS='|' read -r link_name link_date link_type; do
+                                    link_num=$((link_num + 1))
+                                    
+                                    # Color coding: 1st=green, 2nd=orange, 3rd=gray
+                                    if [ $link_num -eq 1 ]; then
+                                        link_color="#27ae60"  # Green - newest
+                                    elif [ $link_num -eq 2 ]; then
+                                        link_color="#f39c12"  # Orange - 2nd newest
+                                    else
+                                        link_color="#7f8c8d"  # Gray - 3rd newest
+                                    fi
+                                    
+                                    # Manual badge if applicable
+                                    manual_badge=""
+                                    if [ "$link_type" = "manual" ]; then
+                                        manual_badge=" <span style=\"color: #3498db; font-size: 0.85em;\">Manual</span>"
+                                    fi
+                                    
+                                    cat >> "$HTML_FILE" << COMPACT_LINK
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: $link_color; font-weight: 500;">$link_name</span> <span style="color: #95a5a6; font-size: 0.9em;">($link_date)</span>$manual_badge
+                                    </div>
+COMPACT_LINK
+                                done <<< "$top_3_links"
+                                
+                                # Show expandable section for older links if there are more than 3
+                                if [ $total_links -gt 3 ]; then
+                                    older_count=$((total_links - 3))
+                                    older_links=$(echo "$sorted_links" | tail -n +4)
+                                    
+                                    # Generate unique ID for this unit's expandable section
+                                    expand_id="custom_links_${unit}_$$"
+                                    
+                                    # Hidden section with older links (initially hidden)
+                                    cat >> "$HTML_FILE" << OLDER_LINKS_START
+                                    <div id="${expand_id}" style="display: none; margin-top: 4px;">
+OLDER_LINKS_START
+                                    
+                                    # Display all older links (all in gray)
+                                    while IFS='|' read -r link_name link_date link_type; do
+                                        # Manual badge if applicable
+                                        manual_badge=""
+                                        if [ "$link_type" = "manual" ]; then
+                                            manual_badge=" <span style=\"color: #3498db; font-size: 0.85em;\">Manual</span>"
+                                        fi
+                                        
+                                        cat >> "$HTML_FILE" << OLDER_LINK
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">$link_name</span> <span style="color: #95a5a6; font-size: 0.9em;">($link_date)</span>$manual_badge
+                                        </div>
+OLDER_LINK
+                                    done <<< "$older_links"
+                                    
+                                    # Close hidden section
+                                    echo "                                    </div>" >> "$HTML_FILE"
+                                    
+                                    # Expandable button
+                                    cat >> "$HTML_FILE" << EXPAND_BUTTON
+                                    <div style="margin-top: 6px;">
+                                        <button onclick="toggleCustomLinks('${expand_id}')" 
+                                                id="${expand_id}_btn"
+                                                style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                       font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                       display: flex; align-items: center; gap: 4px;">
+                                            <span style="font-size: 0.8em;">▼</span>
+                                            <span>Show $older_count more older link(s)</span>
+                                        </button>
+                                    </div>
+EXPAND_BUTTON
+                                fi
+                                
+                                echo "                                </div>" >> "$HTML_FILE"
+                            fi
                         fi
                     done
                     
@@ -2563,6 +2977,15 @@ cat >> "$HTML_FILE" << 'MULTI_HTML_END'
 <div id="toast" class="toast">Copied to clipboard!</div>
 
 <script>
+    // Logo modal functionality
+    function showLogoModal() {
+        document.getElementById('logoModal').style.display = 'block';
+    }
+    
+    function closeLogoModal() {
+        document.getElementById('logoModal').style.display = 'none';
+    }
+    
     // Tab switching
     function openTab(tabName) {
         const tabContents = document.getElementsByClassName('tab-content');
@@ -2613,6 +3036,31 @@ cat >> "$HTML_FILE" << 'MULTI_HTML_END'
         setTimeout(function() {
             toast.classList.remove('show');
         }, 3000);
+    }
+    
+    // Toggle custom links expandable section
+    function toggleCustomLinks(expandId) {
+        const expandDiv = document.getElementById(expandId);
+        const button = document.getElementById(expandId + '_btn');
+        
+        if (expandDiv.style.display === 'none') {
+            // Expand - show older links
+            expandDiv.style.display = 'block';
+            // Change button text and arrow
+            const arrow = button.querySelector('span:first-child');
+            const text = button.querySelector('span:last-child');
+            arrow.textContent = '▲';
+            text.textContent = 'Show less';
+        } else {
+            // Collapse - hide older links
+            expandDiv.style.display = 'none';
+            // Change button text and arrow
+            const arrow = button.querySelector('span:first-child');
+            const text = button.querySelector('span:last-child');
+            const count = text.textContent.match(/\d+/);
+            arrow.textContent = '▼';
+            text.textContent = 'Show ' + (count ? count[0] : '') + ' more older link(s)';
+        }
     }
     
     // Search and filter functionality
@@ -2776,7 +3224,10 @@ cat >> "$HTML_FILE" << 'MULTI_HTML_END'
 </html>
 MULTI_HTML_END
 
-echo "HTML dashboard generated: $HTML_FILE"
+# Print HTML generation message based on quiet mode
+if [ $QUIET -eq 0 ]; then
+    echo "HTML dashboard generated: $HTML_FILE"
+fi
 
 # Set regression name for summary
 if [ ${#REGRESSION_TYPES[@]} -gt 1 ]; then
@@ -2790,29 +3241,36 @@ rm -rf "$TEMP_DIR"
 # Final Summary
 #===============================================================================
 
-echo ""
-echo ""
-print_header
-echo -e "${GREEN}$REGRESSION_NAME Regression Complete!${NC}"
-echo ""
-echo "Results Summary:"
-echo "  - Total Units: $TOTAL_UNITS"
-echo -e "  - ${GREEN}Passed: $passed_count${NC}"
-echo -e "  - ${YELLOW}Warnings: $warn_count${NC}"
-echo -e "  - ${YELLOW}Partial Pass: $partial_count${NC}"
-echo -e "  - ${YELLOW}Unresolved: $unresolved_count${NC}"
-echo -e "  - ${RED}Failed: $failed_count${NC}"
-echo -e "  - ${RED}Crashed: $crashed_count${NC}"
-echo -e "  - ${YELLOW}Running: $running_count${NC}"
-echo -e "  - ${YELLOW}Errors: $error_count${NC}"
-echo -e "  - ${YELLOW}Not Run: $not_found_count${NC}"
-echo -e "  - ${YELLOW}No Data: $no_data_count${NC}"
-echo -e "  - ${RED}Missing WA: $missing_count${NC}"
-echo ""
-echo "Output File:"
-echo "  - HTML Dashboard: $HTML_FILE"
-echo ""
-echo -e "${CYAN}===============================================================================${NC}"
+# Print summary only if not in quiet mode
+if [ $QUIET -eq 0 ]; then
+    echo ""
+    echo ""
+    print_header
+    echo -e "${GREEN}$REGRESSION_NAME Regression Complete!${NC}"
+    echo ""
+    echo "Results Summary:"
+    echo "  - Total Units: $TOTAL_UNITS"
+    echo -e "  - ${GREEN}Passed: $passed_count${NC}"
+    echo -e "  - ${YELLOW}Warnings: $warn_count${NC}"
+    echo -e "  - ${YELLOW}Partial Pass: $partial_count${NC}"
+    echo -e "  - ${YELLOW}Unresolved: $unresolved_count${NC}"
+    echo -e "  - ${RED}Failed: $failed_count${NC}"
+    echo -e "  - ${RED}Crashed: $crashed_count${NC}"
+    echo -e "  - ${YELLOW}Running: $running_count${NC}"
+    echo -e "  - ${YELLOW}Errors: $error_count${NC}"
+    echo -e "  - ${YELLOW}Not Run: $not_found_count${NC}"
+    echo -e "  - ${YELLOW}No Data: $no_data_count${NC}"
+    echo -e "  - ${RED}Missing WA: $missing_count${NC}"
+    echo ""
+    echo "Output File:"
+    echo "  - HTML Dashboard: $HTML_FILE"
+    echo ""
+    echo -e "${CYAN}===============================================================================${NC}"
+else
+    # In quiet mode, just print the HTML file location
+    echo ""
+    echo "HTML Dashboard: $HTML_FILE"
+fi
 
 # Exit with appropriate code
 if [ $failed_count -gt 0 ] || [ $crashed_count -gt 0 ] || [ $error_count -gt 0 ]; then
