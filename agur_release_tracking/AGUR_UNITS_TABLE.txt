@@ -45,8 +45,8 @@ dqaa | QNS | /home/scratch.siddharthasa_vlsi/agur/1NL/dqaa/dqaa_rbv_2025_09_04_a
 dqaci | QNS | /home/scratch.mbetzer_vlsi/agur/dqaci/dqaci_250609_new_pin_placement | dqaci_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap | STA | 2025-08-26 | mbetzer
 dqaco | QNS | /home/scratch.mbetzer_vlsi/agur/dqaco/dqaco_250609_new_pin_placement | dqaco_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap | STA | 2025-08-26 | mbetzer
 dqai | QNS | /home/scratch.mlanzerer_vlsi/dqai_dir/dqai_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap | dqai_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap | STA,FE_DCT | 2025-08-31 | mlanzerer
-dqamci | QNS | /home/scratch.mlanzerer_vlsi/dqamci_dir/dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap | dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap | STA | 2025-10-16 | mlanzerer
-dqamco | QNS | /home/scratch.siddharthasa_vlsi/agur/sfnl/dqamco/dqamco_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap_run1 | dqamco_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap | STA,FCL,PNR,FE_DCT | 2025-09-05 | siddharthasa
+dqamci | QNS | /home/scratch.mlanzerer_vlsi/dqamci_dir/dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap | dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap | STA | 2025-10-18 | mlanzerer
+dqamco | QNS | /home/scratch.siddharthasa_vlsi/agur/1NL/dqamco/dqamco_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_10_sep | dqamco_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap | STA,FCL,PNR | 2025-10-17 | siddharthasa
 dqamdi | QNS | /home/scratch.seeman_vlsi_1/agur/1nl/dqamdi/dqamdi_rbv_2025_09_18_agur_condb_int3_2025_08_27_0_1NL_snap_q2si | dqamdi_rbv_2025_09_18_agur_condb_int3_2025_08_27_0_1NL_snap | STA | 2025-10-13 | seeman
 dqamdo | QNS | /home/scratch.abarman_vlsi/agur/SFNL/DQAMDO/DQAMDO_NewPinDef2_SynPNR_run2_SO2/dqamdo_rbv_2025_07_06_agur_int2_condb_int2_23_5r1_BE_SFNL_no_SLCG_so2 | agur_int2_condb_int2_23_5r1_BE_SFNL_no_SLCG_so2 | STA,PNR,FE_DCT | 2025-09-16 | abarman
 dqap | QNS | /home/scratch.tmazor_vlsi/agur/dqap_rbv_2025_09_05_agur_condb_int3_2025_08_27_0_1NL_snap_new_flow | dqap_rbv_2025_09_05_agur_condb_int3_2025_08_27_0_1NL_snap | STA | 2025-09-21 | tmazor
@@ -59,5 +59,5 @@ eds | QNS | /home/scratch.ysapojnikov_vlsi_1/agur/eds/eds_rbv_2025_03_13_condb_i
 qcorer | QNS | /home/scratch.daltman_vlsi/qcorer/qcorer_rbv_2025_09_02_1NL_snap_ref | qcorer_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap | STA | 2025-10-01 | daltman
 tds | QNS | /home/scratch.hsajwan_vlsi/agur/1NL/tds/tds_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_FIRST_RUN | tds_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap | STA,FCL,PNR | 2025-10-10 | hsajwan
 bta | TCB | /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10 | bta_rbv_2025_09_25new_tag_agur_condb_int3_2025_08_27_0_1NL_snap | STA | 2025-10-16 | vliberchuk
-eri | TCB | /home/scratch.hschiffavrah_vlsi/agur/eri/eri_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap_nf | eri_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap | STA,FCL,PNR,FE_DCT | 2025-08-28 | hschiffavrah
+eri | TCB | /home/scratch.hsajwan_vlsi/agur/1NL/ERI/eri_rbv_2025_09_28_timing_fixes_first_run | eri_rbv_2025_09_28_timing_fixes | STA,PNR | 2025-10-17 | hsajwan
 hib | TCB | /home/scratch.maximkr_vlsi/agur/hib/hib_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_fp2 | hib_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap | STA,FCL | 2025-10-11 | maximkr

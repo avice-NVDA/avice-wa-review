@@ -5,7 +5,7 @@ This document tracks the latest block releases for all units across all chiplets
 
 **Total Units**: 67  
 **Total Chiplets**: 7  
-**Last Updated**: 2025-10-17 14:12:22
+**Last Updated**: 2025-10-18 19:32:26
 
 ### Chiplet Breakdown
 - **HIOPL**: 4 units (ioptca, ioptcb, ioptcc, ioptcd)
@@ -1463,12 +1463,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/10/16 08:46:23 |
+| **Release Timestamp** | 2025/10/18 07:16:45 |
 | **Release User** | mlanzerer |
 | **Workarea Name** | `dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap` |
 | **Source Workarea Path** | `/home/scratch.mlanzerer_vlsi/dqamci_dir/dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap` |
 | **RTL Tag** | `dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap` |
-| **Release Directory** | `dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap__2025_10_16_8_46_23` |
+| **Release Directory** | `dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap__2025_10_18_7_16_45` |
 
 **Release Flags:**
 
@@ -1489,8 +1489,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/08/27 17:26:38 |
-| **Release Directory** | `dqamci_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap__2025_8_27_17_26_38` |
+| **Release Timestamp** | 2025/10/16 08:46:23 |
+| **Release Directory** | `dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap__2025_10_16_8_46_23` |
 
 ---
 
@@ -1500,12 +1500,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/09/05 07:09:42 |
+| **Release Timestamp** | 2025/10/17 14:17:56 |
 | **Release User** | siddharthasa |
-| **Workarea Name** | `dqamco_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap_run1` |
-| **Source Workarea Path** | `/home/scratch.siddharthasa_vlsi/agur/sfnl/dqamco/dqamco_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap_run1` |
-| **RTL Tag** | `dqamco_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap` |
-| **Release Directory** | `dqamco_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap_run1__2025_9_5_7_9_42` |
+| **Workarea Name** | `dqamco_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_10_sep` |
+| **Source Workarea Path** | `/home/scratch.siddharthasa_vlsi/agur/1NL/dqamco/dqamco_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_10_sep` |
+| **RTL Tag** | `dqamco_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap` |
+| **Release Directory** | `dqamco_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_10_sep__2025_10_17_14_17_56` |
 
 **Release Flags:**
 
@@ -1514,7 +1514,7 @@ FCL release is in a different directory than STA.
 | **Sta** | True | Static Timing Analysis (SPEF, SDC, netlist) |
 | **Fcl** | True | Functional/Layout (DB, IOs, OASIS) |
 | **Pnr** | True | Place & Route database |
-| **FE_DCT** | True | Front End DCT |
+| **FE_DCT** | False | Front End DCT |
 | **DC** | False | Design Compiler synthesis |
 | **Full** | False | Full release (all files) |
 
@@ -1524,8 +1524,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/04/21 12:30:54 |
-| **Release Directory** | `dqamco_rbv_2025_03_13_condb_int1_11_3_BE_TNL_snap_run_1__2025_4_21_12_30_54` |
+| **Release Timestamp** | 2025/09/05 07:09:42 |
+| **Release Directory** | `dqamco_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap_run1__2025_9_5_7_9_42` |
 
 ---
 
@@ -1955,32 +1955,34 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/08/28 17:07:57 |
-| **Release User** | hschiffavrah |
-| **Workarea Name** | `eri_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap_nf` |
-| **Source Workarea Path** | `/home/scratch.hschiffavrah_vlsi/agur/eri/eri_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap_nf` |
-| **RTL Tag** | `eri_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap` |
-| **Release Directory** | `eri_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap_nf__2025_8_28_17_7_57` |
+| **Release Timestamp** | 2025/10/17 18:13:28 |
+| **Release User** | hsajwan |
+| **Workarea Name** | `eri_rbv_2025_09_28_timing_fixes_first_run` |
+| **Source Workarea Path** | `/home/scratch.hsajwan_vlsi/agur/1NL/ERI/eri_rbv_2025_09_28_timing_fixes_first_run` |
+| **RTL Tag** | `eri_rbv_2025_09_28_timing_fixes` |
+| **Release Directory** | `eri_rbv_2025_09_28_timing_fixes_first_run__2025_10_17_18_13_28` |
 
 **Release Flags:**
 
 | Flag | Status | Description |
 |------|--------|-------------|
 | **Sta** | True | Static Timing Analysis (SPEF, SDC, netlist) |
-| **Fcl** | True | Functional/Layout (DB, IOs, OASIS) |
+| **Fcl** | False | Functional/Layout (DB, IOs, OASIS) |
 | **Pnr** | True | Place & Route database |
-| **FE_DCT** | True | Front End DCT |
+| **FE_DCT** | False | Front End DCT |
 | **DC** | False | Design Compiler synthesis |
 | **Full** | False | Full release (all files) |
 
-**Note:** FCL release points to same directory as STA release.
+### Latest FCL Release (fcl_release) - Different from STA
+
+FCL release is in a different directory than STA.
 
 ### Previous STA Release (prev_last_sta_rel)
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2025/05/27 10:36:46 |
-| **Release Directory** | `eri_rbv_2025_03_13_condb_int1_11_3_BE_TNL_snap_with_usfsk_2_ref___2025_5_27_10_36_46` |
+| **Release Timestamp** | 2025/08/28 17:07:57 |
+| **Release Directory** | `eri_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap_nf__2025_8_28_17_7_57` |
 
 ---
 
@@ -2085,8 +2087,8 @@ FCL release is in a different directory than STA.
 | **dqaci** | QNS | 2025/08/26 21:44:33 | mbetzer | `/home/scratch.mbetzer_vlsi/agur/dqaci/dqaci_250609_new_pin_placement` |  STA |
 | **dqaco** | QNS | 2025/08/26 11:31:56 | mbetzer | `/home/scratch.mbetzer_vlsi/agur/dqaco/dqaco_250609_new_pin_placement` |  STA |
 | **dqai** | QNS | 2025/08/31 08:59:25 | mlanzerer | `/home/scratch.mlanzerer_vlsi/dqai_dir/dqai_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap` |  STA FE_DCT |
-| **dqamci** | QNS | 2025/10/16 08:46:23 | mlanzerer | `/home/scratch.mlanzerer_vlsi/dqamci_dir/dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap` |  STA |
-| **dqamco** | QNS | 2025/09/05 07:09:42 | siddharthasa | `/home/scratch.siddharthasa_vlsi/agur/sfnl/dqamco/dqamco_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap_run1` |  STA FCL PNR FE_DCT |
+| **dqamci** | QNS | 2025/10/18 07:16:45 | mlanzerer | `/home/scratch.mlanzerer_vlsi/dqamci_dir/dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap` |  STA |
+| **dqamco** | QNS | 2025/10/17 14:17:56 | siddharthasa | `/home/scratch.siddharthasa_vlsi/agur/1NL/dqamco/dqamco_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_10_sep` |  STA FCL PNR |
 | **dqamdi** | QNS | 2025/10/13 19:44:12 | seeman | `/home/scratch.seeman_vlsi_1/agur/1nl/dqamdi/dqamdi_rbv_2025_09_18_agur_condb_int3_2025_08_27_0_1NL_snap_q2si` |  STA |
 | **dqamdo** | QNS | 2025/09/16 21:26:44 | abarman | `/home/scratch.abarman_vlsi/agur/SFNL/DQAMDO/DQAMDO_NewPinDef2_SynPNR_run2_SO2/dqamdo_rbv_2025_07_06_agur_int2_condb_int2_23_5r1_BE_SFNL_no_SLCG_so2` |  STA PNR FE_DCT |
 | **dqap** | QNS | 2025/09/21 11:23:47 | tmazor | `/home/scratch.tmazor_vlsi/agur/dqap_rbv_2025_09_05_agur_condb_int3_2025_08_27_0_1NL_snap_new_flow` |  STA |
@@ -2099,13 +2101,13 @@ FCL release is in a different directory than STA.
 | **qcorer** | QNS | 2025/10/01 14:32:00 | daltman | `/home/scratch.daltman_vlsi/qcorer/qcorer_rbv_2025_09_02_1NL_snap_ref` |  STA |
 | **tds** | QNS | 2025/10/10 07:26:36 | hsajwan | `/home/scratch.hsajwan_vlsi/agur/1NL/tds/tds_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_FIRST_RUN` |  STA FCL PNR |
 | **bta** | TCB | 2025/10/16 15:35:44 | vliberchuk | `/home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10` |  STA |
-| **eri** | TCB | 2025/08/28 17:07:57 | hschiffavrah | `/home/scratch.hschiffavrah_vlsi/agur/eri/eri_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap_nf` |  STA FCL PNR FE_DCT |
+| **eri** | TCB | 2025/10/17 18:13:28 | hsajwan | `/home/scratch.hsajwan_vlsi/agur/1NL/ERI/eri_rbv_2025_09_28_timing_fixes_first_run` |  STA PNR |
 | **hib** | TCB | 2025/10/11 11:33:58 | maximkr | `/home/scratch.maximkr_vlsi/agur/hib/hib_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_fp2` |  STA FCL |
 
 ---
 
 *Document Auto-Generated from Block Release Logs*  
-*Generation Date: 2025-10-17 14:12:27*  
+*Generation Date: 2025-10-18 19:32:31*  
 *Script: extract_agur_releases.sh*  
 *Base Path: /home/agur_backend_blockRelease/block/*
 
