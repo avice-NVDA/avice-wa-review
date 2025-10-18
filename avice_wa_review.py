@@ -11,6 +11,37 @@
 # This script is the intellectual property of Alon Vice.
 # For permissions and licensing, contact: avice@nvidia.com
 #===============================================================================
+
+import sys
+import io
+from contextlib import contextmanager
+
+class QuietMode:
+    """Context manager for suppressing stdout while allowing selective printing"""
+    def __init__(self, enabled=False):
+        self.enabled = enabled
+        self.original_stdout = None
+        self.null_stream = None
+    
+    def __enter__(self):
+        if self.enabled:
+            self.original_stdout = sys.stdout
+            self.null_stream = io.StringIO()
+            sys.stdout = self.null_stream
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.enabled and self.original_stdout:
+            sys.stdout = self.original_stdout
+        return False
+    
+    def print_always(self, *args, **kwargs):
+        """Print to original stdout even in quiet mode"""
+        if self.enabled and self.original_stdout:
+            print(*args, **kwargs, file=self.original_stdout)
+        else:
+            print(*args, **kwargs)
+
 """
 Script Name: avice_wa_review.py
 Version: 2.0.0
@@ -92,8 +123,8 @@ Description:
 
   DISPLAY OPTIONS:
     --no-logo             Disable ASCII logo (useful for scripts/automation)
-    --show-size           Calculate workarea size (may be slow for large dirs)
     -v, --verbose         Enable detailed verbose output
+    -q, --quiet           Suppress all output except HTML file messages
 
   ADVANCED:
     --skip-validation     Skip workarea validation (use with caution)
@@ -170,8 +201,12 @@ Description:
     # No logo for scripts
     /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea --no-logo
 
-    # With workarea size calculation
-    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea --show-size
+    # Quiet mode (suppress output, only show HTML files)
+    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea --quiet
+    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -q
+
+    # Batch processing example
+    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -q --no-logo
 
   DOCUMENTATION:
     /home/avice/scripts/avice_wa_review_launcher.csh --help-docs
@@ -197,7 +232,7 @@ Description:
 
   [!] Performance:
       - Use -s flag for selective analysis (much faster)
-      - --show-size may be slow for large workareas (use only when needed)
+      - Use --quiet flag for batch processing (suppresses output)
       - Full analysis takes 30-60 seconds
 
   [!] Known Issues:
@@ -1585,12 +1620,13 @@ class FileUtils:
 class WorkareaReviewer:
     """Main class for workarea review"""
     
-    def __init__(self, workarea: str, ipo: Optional[str] = None, show_logo: bool = True, skip_validation: bool = False, show_size: bool = False):
+    def __init__(self, workarea: str, ipo: Optional[str] = None, show_logo: bool = True, skip_validation: bool = False, quiet: bool = False, quiet_mode=None):
         self.workarea = workarea
         self.workarea_abs = os.path.abspath(workarea)  # Absolute path for display
         self.ipo = ipo
         self.show_logo = show_logo
-        self.show_size = show_size
+        self.quiet = quiet  # Suppress terminal output except HTML generation messages
+        self.quiet_mode = quiet_mode  # QuietMode instance for selective printing
         self.file_utils = FileUtils()
         self.lvs_parser = LVSViolationParser()
         
@@ -1605,6 +1641,25 @@ class WorkareaReviewer:
         # Initialize Master Dashboard
         self.master_dashboard = MasterDashboard(self.design_info)
         self.section_summaries = []  # Collect section summaries for master dashboard
+    
+    def _print(self, *args, **kwargs):
+        """Print to stdout only if quiet mode is disabled
+        
+        In quiet mode, suppress all terminal output to allow focus on HTML generation.
+        Use _print_always() for messages that must always be shown (e.g., HTML file names).
+        """
+        if not self.quiet:
+            print(*args, **kwargs)
+    
+    def _print_always(self, *args, **kwargs):
+        """Print to stdout regardless of quiet mode
+        
+        Use this for critical messages that must always be shown:
+        - HTML file generation messages
+        - Master Dashboard generation messages
+        - Critical errors
+        """
+        print(*args, **kwargs)
     
     def _cleanup_old_html_files(self):
         """Remove old HTML files from previous runs to prevent confusion"""
@@ -3700,22 +3755,6 @@ class WorkareaReviewer:
         # Display design information
         print(f"UNIT: {self.design_info.top_hier}")
         print(f"TAG: {self.design_info.tag}")
-        
-        # Calculate and display workarea size (only if --show-size flag is used)
-        if self.show_size:
-            try:
-                result = subprocess.run(['du', '-sh', self.workarea], 
-                                      capture_output=True, text=True, timeout=180)
-                if result.returncode == 0 and result.stdout:
-                    size = result.stdout.strip().split()[0]
-                    print(f"WORKAREA SIZE: {size}")
-                else:
-                    print(f"WORKAREA SIZE: Unable to determine")
-            except subprocess.TimeoutExpired:
-                # For very large workareas (>500GB), du can take minutes
-                print(f"WORKAREA SIZE: Large workarea (calculation takes >3 min, skipped)")
-            except Exception as e:
-                print(f"WORKAREA SIZE: Unable to calculate")
         
         # Show IPO information with directory status
         prc_ipo = self.design_info.ipo
@@ -14282,12 +14321,13 @@ class WorkareaReviewer:
             print(f"  {Color.RED}Error extracting block release commands: {e}{Color.RESET}")
             return release_data
     
-    def _generate_block_release_html_report(self, release_data: dict, release_to_path: str) -> str:
+    def _generate_block_release_html_report(self, release_data: dict, release_to_path: str, umake_custom_links: list = None) -> str:
         """Generate comprehensive HTML report for block release
         
         Args:
             release_data: Dictionary with release attempts and custom links
             release_to_path: Path to central release area
+            umake_custom_links: List of custom links created via umake (for manual detection)
             
         Returns:
             Path to generated HTML file
@@ -14307,8 +14347,10 @@ class WorkareaReviewer:
                     import base64
                     logo_data = base64.b64encode(logo_file.read()).decode('utf-8')
             
-            # Get central area links
+            # Get central area links (with manual detection)
             central_links = []
+            umake_link_names = set(umake_custom_links) if umake_custom_links else set()
+            
             if release_to_path:
                 base_release_dir = os.path.dirname(release_to_path)
                 automatic_link_names = [
@@ -14341,7 +14383,11 @@ class WorkareaReviewer:
                                                 user_match = re.search(r'scratch\.([^_/]+)', target)
                                                 if user_match:
                                                     user = user_match.group(1)
-                                        central_links.append((entry, link_date, link_time, user, target_basename, os.path.abspath(target)))
+                                        
+                                        # Check if this is a manual link (not in umake logs)
+                                        is_manual = entry not in umake_link_names
+                                        
+                                        central_links.append((entry, link_date, link_time, user, target_basename, os.path.abspath(target), is_manual))
                                     except:
                                         pass
                         central_links.sort(key=lambda x: x[2])
@@ -14371,9 +14417,46 @@ class WorkareaReviewer:
         failed_count = release_data.get('failed_attempts', 0)
         success_rate = (success_count / total_attempts * 100) if total_attempts > 0 else 0
         
-        # Build attempts HTML
-        attempts_html = ""
-        for attempt in release_data.get('attempts', []):
+        # Extract latest successful attempt's flags for release type badges
+        latest_success_flags = {}
+        successful_attempts = [a for a in release_data.get('attempts', []) if a['status'] == 'SUCCESS']
+        if successful_attempts:
+            latest_success_flags = successful_attempts[-1].get('flags', {})
+        
+        # Generate release type badges
+        release_badges_html = ""
+        badges = []
+        if 'sta_release' in latest_success_flags:
+            badges.append('<span class="release-badge" style="background: #3498db;" title="Timing Release">S</span>')
+        if 'fcl_release' in latest_success_flags:
+            badges.append('<span class="release-badge" style="background: #9b59b6;" title="FCL Release">F</span>')
+        if 'pnr_release' in latest_success_flags:
+            badges.append('<span class="release-badge" style="background: #e67e22;" title="PnR Release">P</span>')
+        if 'fe_dct_release' in latest_success_flags:
+            badges.append('<span class="release-badge" style="background: #27ae60;" title="FE DCT Release">D</span>')
+        
+        if badges:
+            release_badges_html = f"""
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px;">
+                <span style="color: white; opacity: 0.9; font-size: 0.9em;">Latest Release Contains:</span>
+                {' '.join(badges)}
+            </div>
+            """
+        
+        # Build attempts HTML (expandable)
+        attempts_list = release_data.get('attempts', [])
+        total_release_attempts = len(attempts_list)
+        success_attempts = [a for a in attempts_list if a['status'] == 'SUCCESS']
+        fail_attempts = [a for a in attempts_list if a['status'] == 'FAILED']
+        
+        # Summary line
+        attempts_summary = f"<strong>{total_release_attempts} total attempt(s)</strong> - "
+        attempts_summary += f"<span style='color: #27ae60;'>{len(success_attempts)} SUCCESS</span>, "
+        attempts_summary += f"<span style='color: #e74c3c;'>{len(fail_attempts)} FAILED</span>"
+        
+        # Build detailed attempts HTML
+        attempts_detail_html = ""
+        for attempt in attempts_list:
             status_class = "success" if attempt['status'] == 'SUCCESS' else ("failed" if attempt['status'] == 'FAILED' else "unknown")
             status_icon = "✓" if attempt['status'] == 'SUCCESS' else ("✗" if attempt['status'] == 'FAILED' else "?")
             
@@ -14388,7 +14471,7 @@ class WorkareaReviewer:
             flags_list = [f"{k}={v}" if v != True else k for k, v in attempt.get('flags', {}).items()]
             flags_html = ", ".join(flags_list) if flags_list else "None"
             
-            attempts_html += f"""
+            attempts_detail_html += f"""
             <div class="attempt-card {status_class}">
                 <div class="attempt-header">
                     <span class="attempt-number">#{attempt['attempt_num']}</span>
@@ -14398,24 +14481,77 @@ class WorkareaReviewer:
                 </div>
                 <div class="attempt-details">
                     <div class="command-line"><strong>Command:</strong> <code>{attempt.get('command', 'N/A')}</code></div>
-                    <div class="flags-line"><strong>Flags:</strong> {flags_html}</div>
+                    <div class="flags-line"><strong>Flags:</strong> <span style="color: #3498db;">{flags_html}</span></div>
                     {custom_links_html}
                     {failure_html}
                 </div>
             </div>
             """
         
-        # Build central links HTML
+        # Combine with expandable button
+        attempts_html = f"""
+        <div class="attempts-summary">{attempts_summary}</div>
+        <button class="expand-btn" onclick="toggleSection('attemptsDetail')">
+            <span id="attemptsDetailToggle">▼</span> Show all {total_release_attempts} attempt(s)
+        </button>
+        <div id="attemptsDetail" class="expandable-content">
+            {attempts_detail_html}
+        </div>
+        """
+        
+        # Build central links HTML (expandable with color coding and manual detection)
         central_links_html = ""
         if central_links:
-            for link_name, link_date, link_time, user, target_basename, target_full_path in central_links:
+            # Sort by date (most recent first)
+            sorted_links = sorted(central_links, key=lambda x: x[2], reverse=True)
+            total_links = len(sorted_links)
+            
+            # Show top 3 with color coding
+            for idx, (link_name, link_date, link_time, user, target_basename, target_full_path, is_manual) in enumerate(sorted_links[:3]):
+                # Color code: 1st=green, 2nd=orange, 3rd=gray
+                if idx == 0:
+                    row_color = "#d5f4e6"  # Light green
+                elif idx == 1:
+                    row_color = "#ffeaa7"  # Light orange
+                else:
+                    row_color = "#dfe6e9"  # Light gray
+                
+                manual_badge = '<span class="manual-badge">Manual</span>' if is_manual else ''
+                
                 central_links_html += f"""
-                <tr>
-                    <td><strong>{link_name}</strong></td>
+                <tr style="background-color: {row_color};">
+                    <td><strong>{link_name}</strong> {manual_badge}</td>
                     <td>{link_date}</td>
                     <td>{user}</td>
                     <td><a href="file://{target_full_path}" class="path-link" title="{target_full_path}">{target_basename}</a></td>
                 </tr>
+                """
+            
+            # Build older links (expandable)
+            if total_links > 3:
+                older_links_html = ""
+                for link_name, link_date, link_time, user, target_basename, target_full_path, is_manual in sorted_links[3:]:
+                    manual_badge = '<span class="manual-badge">Manual</span>' if is_manual else ''
+                    older_links_html += f"""
+                    <tr>
+                        <td><strong>{link_name}</strong> {manual_badge}</td>
+                        <td>{link_date}</td>
+                        <td>{user}</td>
+                        <td><a href="file://{target_full_path}" class="path-link" title="{target_full_path}">{target_basename}</a></td>
+                    </tr>
+                    """
+                
+                central_links_html += f"""
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 10px;">
+                        <button class="expand-btn" onclick="toggleSection('olderLinks')" style="margin: 0 auto;">
+                            <span id="olderLinksToggle">▼</span> Show {total_links - 3} more older link(s)
+                        </button>
+                    </td>
+                </tr>
+                <tbody id="olderLinks" class="expandable-content">
+                    {older_links_html}
+                </tbody>
                 """
         else:
             central_links_html = "<tr><td colspan='4' class='no-data'>No custom links found in central release area</td></tr>"
@@ -14432,14 +14568,15 @@ class WorkareaReviewer:
                 'user': attempt['user'],
                 'details': f"Release attempt #{attempt['attempt_num']}"
             })
-        for link_name, link_date, link_time, user, target_basename, target_full_path in central_links:
+        for link_name, link_date, link_time, user, target_basename, target_full_path, is_manual in central_links:
+            link_type = "Manual custom link" if is_manual else "Custom link"
             all_events.append({
                 'date': link_date,
                 'time': link_time,
                 'type': 'link',
                 'status': 'SUCCESS',
                 'user': user,
-                'details': f"Custom link created: {link_name}"
+                'details': f"{link_type} created: {link_name}"
             })
         
         all_events.sort(key=lambda x: x['time'])
@@ -14855,6 +14992,51 @@ class WorkareaReviewer:
         .footer strong {{
             color: #00ff00;
         }}
+        
+        /* Release Type Badges */
+        .release-badge {{
+            display: inline-block;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin: 0 4px;
+            cursor: help;
+        }}
+        
+        /* Expandable sections */
+        .expand-btn {{
+            background: none;
+            border: none;
+            color: #3498db;
+            cursor: pointer;
+            font-size: 0.95em;
+            padding: 8px 12px;
+            text-decoration: underline;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 10px 0;
+        }}
+        
+        .expand-btn:hover {{
+            color: #2980b9;
+        }}
+        
+        .expandable-content {{
+            display: none;
+        }}
+        
+        /* Manual link annotation */
+        .manual-badge {{
+            background: #3498db;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            margin-left: 8px;
+        }}
     </style>
 </head>
 <body>
@@ -14871,6 +15053,7 @@ class WorkareaReviewer:
                 <h1>🚀 Block Release Report</h1>
                 <div class="header-subtitle">Design: {self.design_info.top_hier}</div>
                 <div class="header-subtitle">Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</div>
+                {release_badges_html}
             </div>
         </div>
         
@@ -14956,6 +15139,22 @@ class WorkareaReviewer:
             document.getElementById('logoModal').style.display = 'none';
         }}
         
+        // Toggle expandable sections
+        function toggleSection(sectionId) {{
+            var content = document.getElementById(sectionId);
+            var toggle = document.getElementById(sectionId + 'Toggle');
+            
+            if (content.style.display === 'none' || content.style.display === '') {{
+                // Determine the appropriate display type
+                var displayType = content.tagName === 'TBODY' ? 'table-row-group' : 'block';
+                content.style.display = displayType;
+                if (toggle) toggle.textContent = '▲';
+            }} else {{
+                content.style.display = 'none';
+                if (toggle) toggle.textContent = '▼';
+            }}
+        }}
+        
         // Back to top button functionality
         const backToTopBtn = document.getElementById('backToTopBtn');
         if (backToTopBtn) {{
@@ -14977,23 +15176,27 @@ class WorkareaReviewer:
 """
         return html
     
-    def _check_central_block_release_links(self, release_to_path: str, automatic_link_names: list):
+    def _check_central_block_release_links(self, release_to_path: str, automatic_link_names: list, umake_custom_links: list = None):
         """Check central block release area for all custom links with metadata
         
         Args:
             release_to_path: Path from 'Release to:' line (e.g., /home/agur_backend_blockRelease/block/prt/...)
             automatic_link_names: List of known automatic link names
+            umake_custom_links: List of custom links found in umake logs (for comparison)
+        
+        Returns:
+            list: Manually created custom links (in central but not in umake logs)
         """
         try:
             # Extract base path (e.g., /home/agur_backend_blockRelease/block/prt/)
             if not release_to_path:
-                return
+                return []
             
             # Get the parent directory (should be /home/agur_backend_blockRelease/block/<unit>/)
             base_release_dir = os.path.dirname(release_to_path)
             
             if not os.path.exists(base_release_dir):
-                return
+                return []
             
             print(f"\n  {Color.CYAN}All Custom Links in Central Release Area:{Color.RESET}")
             print(f"  {Color.CYAN}Location: {base_release_dir}{Color.RESET}")
@@ -15003,9 +15206,11 @@ class WorkareaReviewer:
                 entries = os.listdir(base_release_dir)
             except PermissionError:
                 print(f"    {Color.YELLOW}No permission to access central release area{Color.RESET}")
-                return
+                return []
             
             custom_links_found = []
+            manually_created_links = []  # Links in central but not in umake logs
+            umake_links_set = set(umake_custom_links) if umake_custom_links else set()
             
             # Check each entry
             for entry in sorted(entries):
@@ -15030,7 +15235,7 @@ class WorkareaReviewer:
                             
                             # Get target path
                             target = os.readlink(entry_path)
-                            target_basename = os.path.basename(target)
+                            target_full = target  # Store full path for display
                             
                             # Get the owner of the symlink (the user who created it)
                             user = "Unknown"
@@ -15044,27 +15249,43 @@ class WorkareaReviewer:
                                     if user_match:
                                         user = user_match.group(1)
                             
-                            custom_links_found.append((entry, link_date, link_time, user, target_basename))
+                            # Check if this link is manually created (not in umake logs)
+                            is_manual = (umake_custom_links is not None) and (entry not in umake_links_set)
+                            
+                            custom_links_found.append((entry, link_date, link_time, user, target_full, is_manual))
+                            
+                            if is_manual:
+                                manually_created_links.append((entry, link_date))
                         except Exception as e:
-                            custom_links_found.append((entry, 'Unknown', 'Unknown', 'Unknown', ''))
+                            custom_links_found.append((entry, 'Unknown', 'Unknown', 'Unknown', '', False))
             
             if custom_links_found:
                 # Sort by date (oldest first)
                 custom_links_found.sort(key=lambda x: x[2])  # x[2] is link_time (full timestamp)
                 
                 # Display in a table format
-                print(f"    {'Link Name':<30} {'Date':<12} {'User':<15} {'Target'}")
-                print(f"    {'-'*30} {'-'*12} {'-'*15} {'-'*50}")
-                for link_name, link_date, link_time, user, target in custom_links_found:
-                    # Show full target name (no truncation)
-                    print(f"    {Color.GREEN}{link_name:<30}{Color.RESET} {link_date:<12} {user:<15} {target}")
+                print(f"    {'Link Name':<30} {'Date':<12} {'User':<15} {'Target':<80} {'Status'}")
+                print(f"    {'-'*30} {'-'*12} {'-'*15} {'-'*80} {'-'*20}")
+                for link_name, link_date, link_time, user, target, is_manual in custom_links_found:
+                    status_str = f"{Color.CYAN}Manual{Color.RESET}" if is_manual else ""
+                    # Show full target path (no truncation)
+                    print(f"    {Color.GREEN}{link_name:<30}{Color.RESET} {link_date:<12} {user:<15} {target:<80} {status_str}")
                 
                 print(f"\n    {Color.CYAN}Total custom links found: {len(custom_links_found)}{Color.RESET}")
+                
+                # Print manually created links for regression parsing
+                if manually_created_links:
+                    print(f"\n  {Color.CYAN}Manually Created Custom Links (no release log):{Color.RESET}")
+                    for link_name, link_date in manually_created_links:
+                        print(f"  Manual Custom Link Detail: {link_name}|{link_date}")
             else:
                 print(f"    {Color.YELLOW}No custom links found in central release area{Color.RESET}")
+            
+            return manually_created_links
                 
         except Exception as e:
             print(f"  {Color.YELLOW}Unable to check central block release area: {e}{Color.RESET}")
+            return []
     
     def _parse_release_log_file(self, log_file: str, automatic_link_names: list, attempt_num: int) -> dict:
         """Parse a single release log file to extract all relevant information
@@ -15189,6 +15410,9 @@ class WorkareaReviewer:
             '--hs': 'hs_copy'
         }
         
+        # Flags that can take values (not boolean)
+        flags_with_values = {'release_name', 'block'}
+        
         # Simple flag parsing
         parts = command.split()
         i = 0
@@ -15197,11 +15421,12 @@ class WorkareaReviewer:
             
             if part in flag_map:
                 flag_name = flag_map[part]
-                # Check if next part is a value (not another flag)
-                if i + 1 < len(parts) and not parts[i + 1].startswith('-'):
+                # Only check for value if this flag can take values
+                if flag_name in flags_with_values and i + 1 < len(parts) and not parts[i + 1].startswith('-'):
                     flags[flag_name] = parts[i + 1]
                     i += 2
                 else:
+                    # Boolean flag - always True
                     flags[flag_name] = True
                     i += 1
             else:
@@ -15455,6 +15680,7 @@ class WorkareaReviewer:
                     issues.append(f"Failure: {attempt['failure_reason']}")
         
         # Check central block release area for all custom links (if we have the path)
+        manually_created_links = []
         if release_to_path and release_data:
             automatic_link_names = [
                 'fcl_release', 'sta_release', 'pnr_release', 'dc_release',
@@ -15462,12 +15688,24 @@ class WorkareaReviewer:
                 'last_sta_rel', 'last_fcl_rel', 'last_pnr_rel', 'last_dc_rel',
                 'release', 'last_release'
             ]
-            self._check_central_block_release_links(release_to_path, automatic_link_names)
+            # Pass umake custom links for comparison to detect manually created links
+            umake_custom_links = release_data.get('custom_links', [])
+            manually_created_links = self._check_central_block_release_links(
+                release_to_path, automatic_link_names, umake_custom_links
+            ) or []
+            
+            # Add manually created links to key metrics if present
+            if manually_created_links:
+                manual_link_names = [link[0] for link in manually_created_links]
+                key_metrics["Manual Links"] = ', '.join(manual_link_names[:3])
+                if len(manual_link_names) > 3:
+                    key_metrics["Manual Links"] += f" (+{len(manual_link_names) - 3} more)"
         
         # Generate HTML report
         html_path = ""
         if release_data:
-            html_path = self._generate_block_release_html_report(release_data, release_to_path)
+            umake_custom_links = release_data.get('custom_links', [])
+            html_path = self._generate_block_release_html_report(release_data, release_to_path, umake_custom_links)
             if html_path:
                 html_filename = os.path.basename(html_path)
                 print(f"\n  {Color.CYAN}Block Release HTML Report:{Color.RESET}")
@@ -15509,18 +15747,31 @@ class WorkareaReviewer:
         self.run_nv_gate_eco()
         self.run_block_release()
         
-        # Generate Master Dashboard
-        print(f"\n{Color.CYAN}Generating Master Dashboard...{Color.RESET}")
+        # Generate Master Dashboard (always print these messages)
+        if self.quiet_mode:
+            self.quiet_mode.print_always(f"\n{Color.CYAN}Generating Master Dashboard...{Color.RESET}")
+        else:
+            print(f"\n{Color.CYAN}Generating Master Dashboard...{Color.RESET}")
+        
         try:
             dashboard_path = self.master_dashboard.generate_html()
             dashboard_filename = os.path.basename(dashboard_path)
-            print(f"{Color.GREEN}[OK] Master Dashboard generated: {dashboard_filename}{Color.RESET}")
-            print(f"{Color.CYAN}     Open with recommended browser:{Color.RESET}")
-            print(f"     /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{dashboard_filename}{Color.RESET} &")
+            if self.quiet_mode:
+                self.quiet_mode.print_always(f"{Color.GREEN}[OK] Master Dashboard generated: {dashboard_filename}{Color.RESET}")
+                self.quiet_mode.print_always(f"{Color.CYAN}     Open with recommended browser:{Color.RESET}")
+                self.quiet_mode.print_always(f"     /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{dashboard_filename}{Color.RESET} &")
+            else:
+                print(f"{Color.GREEN}[OK] Master Dashboard generated: {dashboard_filename}{Color.RESET}")
+                print(f"{Color.CYAN}     Open with recommended browser:{Color.RESET}")
+                print(f"     /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{dashboard_filename}{Color.RESET} &")
         except Exception as e:
-            print(f"{Color.RED}[ERROR] Failed to generate Master Dashboard: {e}{Color.RESET}")
+            if self.quiet_mode:
+                self.quiet_mode.print_always(f"{Color.RED}[ERROR] Failed to generate Master Dashboard: {e}{Color.RESET}")
+            else:
+                print(f"{Color.RED}[ERROR] Failed to generate Master Dashboard: {e}{Color.RESET}")
         
-        print(f"\n{Color.GREEN}Review completed successfully!{Color.RESET}")
+        if not self.quiet:
+            print(f"\n{Color.GREEN}Review completed successfully!{Color.RESET}")
 
     def run_runtime_analysis(self):
         """Run runtime analysis"""
@@ -17551,8 +17802,12 @@ def main():
   # No logo for scripts
   /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea --no-logo
 
-  # With workarea size calculation
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea --show-size
+  # Quiet mode (suppress output, only show HTML files)
+  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea --quiet
+  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -q
+
+  # Batch processing example
+  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -q --no-logo
 
   # Documentation
   /home/avice/scripts/avice_wa_review_launcher.csh --help-docs
@@ -17572,7 +17827,7 @@ AVAILABLE SECTIONS (use with -s flag):
   gl-check       Gate-level check error analysis
   eco            PT-ECO analysis and dont_use cell checks
   nv-gate-eco    NVIDIA Gate ECO command analysis
-  block-release  Block release information and umake commands
+  block-release  Block release information and umake commands (alias: release)
 
 {CYAN}-------------------------------------------------------------------------------
 KEY FEATURES:
@@ -17623,10 +17878,10 @@ OUTPUT:
                        help="Show version information and exit")
     parser.add_argument("--no-logo", action="store_true",
                        help="Disable logo display (useful for automated scripts)")
+    parser.add_argument("--quiet", "-q", action="store_true",
+                       help="Suppress all terminal output except HTML file generation messages (useful for batch processing)")
     parser.add_argument("--skip-validation", action="store_true",
                        help="Skip workarea validation (use with caution)")
-    parser.add_argument("--show-size", action="store_true",
-                       help="Calculate and display workarea total size (may be slow for large workareas)")
     parser.add_argument("--unit", "-u", type=str,
                        help="Unit name from agur release table (e.g., prt, pmux). Automatically looks up released workarea path from AGUR_UNITS_TABLE.txt")
     parser.add_argument("--sections", "-s", nargs="+", 
@@ -17635,8 +17890,8 @@ OUTPUT:
                        choices=["setup", "runtime", "synthesis", "syn", "dc", "pnr", 
                                "clock", "formal", "star", "pt", "pv", 
                                "gl-check", "eco", "nv-gate-eco", 
-                               "block-release"],
-                       help="Run only specific analysis sections (case-insensitive). Choices: setup, runtime, synthesis (syn/dc), pnr, clock, formal, star, pt, pv, gl-check, eco, nv-gate-eco, block-release. Aliases: syn/dc=synthesis")
+                               "block-release", "release"],
+                       help="Run only specific analysis sections (case-insensitive). Choices: setup, runtime, synthesis (syn/dc), pnr, clock, formal, star, pt, pv, gl-check, eco, nv-gate-eco, block-release (release). Aliases: syn/dc=synthesis, release=block-release")
     parser.add_argument("--output", "-o", 
                        help="Output file to save results (optional)")
     parser.add_argument("--format", choices=["text", "json"], default="text",
@@ -17727,57 +17982,63 @@ OUTPUT:
         sys.exit(1)
     
     try:
-        reviewer = WorkareaReviewer(args.workarea, args.ipo, show_logo=not args.no_logo, skip_validation=args.skip_validation, show_size=args.show_size)
+        # Create QuietMode context manager
+        quiet_mode = QuietMode(enabled=args.quiet)
+        
+        reviewer = WorkareaReviewer(args.workarea, args.ipo, show_logo=not args.no_logo, skip_validation=args.skip_validation, quiet=args.quiet, quiet_mode=quiet_mode)
         
         # Cleanup old HTML files from previous runs to avoid confusion
         reviewer._cleanup_old_html_files()
         
-        # Handle selective section running
-        if args.sections:
-            # Run only specified sections
-            section_mapping = {
-                "setup": reviewer.run_setup_analysis,
-                "runtime": reviewer.run_runtime_analysis,
-                "synthesis": reviewer.run_synthesis_analysis,
-                "syn": reviewer.run_synthesis_analysis,  # Alias for synthesis
-                "dc": reviewer.run_synthesis_analysis,   # Alias for synthesis (Design Compiler)
-                "pnr": reviewer.run_pnr_analysis,
-                "clock": reviewer.run_clock_analysis,
-                "formal": reviewer.run_formal_verification,
-                "star": reviewer.run_parasitic_extraction,
-                "pt": reviewer.run_signoff_timing,
-                "pv": reviewer.run_physical_verification,
-                "gl-check": reviewer.run_gl_check,
-                "eco": reviewer.run_eco_analysis,
-                "nv-gate-eco": reviewer.run_nv_gate_eco,
-                "block-release": reviewer.run_block_release
-            }
-            
-            print(f"Running selected sections: {', '.join(args.sections)}")
-            for section in args.sections:
-                # Convert to lowercase for case-insensitive matching
-                section_lower = section.lower()
-                if section_lower in section_mapping:
-                    try:
-                        section_mapping[section_lower]()
-                    except Exception as e:
-                        print(f"Error running {section} section: {e}")
-                else:
-                    print(f"Unknown section: {section}")
-            
-            # Generate Master Dashboard after running selected sections
-            print(f"\n{Color.CYAN}Generating Master Dashboard...{Color.RESET}")
-            try:
-                dashboard_path = reviewer.master_dashboard.generate_html()
-                dashboard_filename = os.path.basename(dashboard_path)
-                print(f"{Color.GREEN}[OK] Master Dashboard generated: {dashboard_filename}{Color.RESET}")
-                print(f"{Color.CYAN}     Open with recommended browser:{Color.RESET}")
-                print(f"     /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{dashboard_filename}{Color.RESET} &")
-            except Exception as e:
-                print(f"{Color.RED}[ERROR] Failed to generate Master Dashboard: {e}{Color.RESET}")
-        else:
-            # Run complete review
-            reviewer.run_complete_review()
+        # Execute analysis within QuietMode context
+        with quiet_mode:
+            # Handle selective section running
+            if args.sections:
+                # Run only specified sections
+                section_mapping = {
+                    "setup": reviewer.run_setup_analysis,
+                    "runtime": reviewer.run_runtime_analysis,
+                    "synthesis": reviewer.run_synthesis_analysis,
+                    "syn": reviewer.run_synthesis_analysis,  # Alias for synthesis
+                    "dc": reviewer.run_synthesis_analysis,   # Alias for synthesis (Design Compiler)
+                    "pnr": reviewer.run_pnr_analysis,
+                    "clock": reviewer.run_clock_analysis,
+                    "formal": reviewer.run_formal_verification,
+                    "star": reviewer.run_parasitic_extraction,
+                    "pt": reviewer.run_signoff_timing,
+                    "pv": reviewer.run_physical_verification,
+                    "gl-check": reviewer.run_gl_check,
+                    "eco": reviewer.run_eco_analysis,
+                    "nv-gate-eco": reviewer.run_nv_gate_eco,
+                    "block-release": reviewer.run_block_release,
+                    "release": reviewer.run_block_release  # Alias for block-release
+                }
+                
+                print(f"Running selected sections: {', '.join(args.sections)}")
+                for section in args.sections:
+                    # Convert to lowercase for case-insensitive matching
+                    section_lower = section.lower()
+                    if section_lower in section_mapping:
+                        try:
+                            section_mapping[section_lower]()
+                        except Exception as e:
+                            print(f"Error running {section} section: {e}")
+                    else:
+                        print(f"Unknown section: {section}")
+                
+                # Generate Master Dashboard after running selected sections
+                quiet_mode.print_always(f"\n{Color.CYAN}Generating Master Dashboard...{Color.RESET}")
+                try:
+                    dashboard_path = reviewer.master_dashboard.generate_html()
+                    dashboard_filename = os.path.basename(dashboard_path)
+                    quiet_mode.print_always(f"{Color.GREEN}[OK] Master Dashboard generated: {dashboard_filename}{Color.RESET}")
+                    quiet_mode.print_always(f"{Color.CYAN}     Open with recommended browser:{Color.RESET}")
+                    quiet_mode.print_always(f"     /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{dashboard_filename}{Color.RESET} &")
+                except Exception as e:
+                    quiet_mode.print_always(f"{Color.RED}[ERROR] Failed to generate Master Dashboard: {e}{Color.RESET}")
+            else:
+                # Run complete review
+                reviewer.run_complete_review()
             
         # Handle output file
         if args.output:
