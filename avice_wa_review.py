@@ -50,7 +50,6 @@ Purpose: Comprehensive ASIC/SoC design workarea analysis and review tool
 Description:
     This script provides a comprehensive analysis of ASIC/SoC design workareas,
     covering the complete ASIC design flow from synthesis through signoff.
-    It extracts, analyzes, and visualizes design metrics, timing data, runtime
     statistics, verification results, and generates interactive HTML reports.
 
 ===============================================================================
@@ -77,7 +76,7 @@ Description:
   synthesis       | QoR reports, floorplan dimensions, timing groups
   pnr             | Step sequence, routing data, timing histograms
   clock           | Clock tree analysis, DSR latency, clock gating
-  formal          | Formal verification status, timestamp tracking
+  formal          | Formal verification status, multibit mapping files, timestamps
   star            | Parasitic extraction (SPEF) runtime and status
   pt              | Signoff timing, dual-scenario WNS/TNS/NVP, DSR skew
   pv              | Physical verification (LVS/DRC/Antenna) analysis
@@ -254,6 +253,7 @@ import glob
 import re
 import subprocess
 import argparse
+import shutil
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 from enum import Enum
@@ -1423,19 +1423,19 @@ class MasterDashboard:
                         status_badge = "PASS"
                         status_color = "#27ae60"  # green
                         # Make even more compact: show as checkmark + time
-                        display_value = f"✓ " + display_value.replace("SUCCEEDED ", "")
+                        display_value = f"[OK] " + display_value.replace("SUCCEEDED ", "")
                     elif "FAILED" in value or "CRASHED" in value:
                         status_badge = "FAIL"
                         status_color = "#e74c3c"  # red
-                        display_value = f"✗ " + display_value.replace("FAILED ", "").replace("CRASHED ", "")
+                        display_value = f"[X] " + display_value.replace("FAILED ", "").replace("CRASHED ", "")
                     elif "UNRESOLVED" in value:
                         status_badge = "UNRESOLVED"
                         status_color = "#f39c12"  # orange
-                        display_value = f"⚠ " + display_value.replace("UNRESOLVED ", "")
+                        display_value = f"[WARN] " + display_value.replace("UNRESOLVED ", "")
                     elif "RUNNING" in value:
                         status_badge = "RUNNING"
                         status_color = "#17a2b8"  # blue
-                        display_value = f"⏳ " + display_value.replace("RUNNING ", "")
+                        display_value = f"[RUN] " + display_value.replace("RUNNING ", "")
                     
                     # Create a styled row for formal flows with status badge
                     metrics_html += f"""
@@ -1615,6 +1615,44 @@ class FileUtils:
             return result.stdout.decode('utf-8').strip()
         except subprocess.SubprocessError:
             return ""
+    
+    @staticmethod
+    def filter_symlinks(file_paths: List[str]) -> List[str]:
+        """Filter out symlink duplicates from file list
+        
+        When searching directories with symlinks (e.g., umake_log/latest_dir),
+        the same file can appear multiple times via different paths (once via 
+        symlink, once via real path). This method resolves all paths to their
+        real locations and removes duplicates.
+        
+        Args:
+            file_paths: List of file paths that may contain symlink duplicates
+            
+        Returns:
+            List of unique file paths with symlinks resolved
+            
+        Example:
+            files = [
+                '/wa/umake_log/latest_dir/umake.log',  # symlink
+                '/wa/umake_log/2025_10_22/umake.log'   # real file (same as above)
+            ]
+            result = FileUtils.filter_symlinks(files)
+            # Returns: ['/wa/umake_log/latest_dir/umake.log']  # Only one entry
+            
+        Note:
+            This addresses the architecture.mdc requirement (Lines 73-78) to
+            always filter out symlinks when searching directories to avoid duplicates.
+        """
+        seen_real_paths = set()
+        filtered_paths = []
+        
+        for path in file_paths:
+            real_path = os.path.realpath(path)
+            if real_path not in seen_real_paths:
+                seen_real_paths.add(real_path)
+                filtered_paths.append(path)  # Keep original path
+        
+        return filtered_paths
 
 
 class WorkareaReviewer:
@@ -1641,9 +1679,25 @@ class WorkareaReviewer:
         # Initialize Master Dashboard
         self.master_dashboard = MasterDashboard(self.design_info)
         self.section_summaries = []  # Collect section summaries for master dashboard
+        
+        # NBU Signoff Support - Initialize detection variables
+        self.uses_nbu_signoff = False                # Boolean flag - True if NBU signoff detected
+        self.nbu_signoff_paths = {}                  # Dict: {ipo_name: nbu_signoff_path}
+        self.nbu_signoff_steps = []                  # List of steps using NBU (e.g., ['auto_pt', 'gl-check'])
+        self.current_ipo_nbu_path = None             # Currently active IPO's nbu_signoff path
+        self.workarea_owner = None                   # Workarea owner for block release validation
+        
+        # Discover NBU signoff structure and workarea owner
+        self._detect_workarea_owner()
+        self._discover_nbu_signoff_paths()
+        self._detect_nbu_signoff_from_prc()
     
-    def _print(self, *args, **kwargs):
+    def _print(self, *args, **kwargs) -> None:
         """Print to stdout only if quiet mode is disabled
+        
+        Args:
+            *args: Arguments to pass to print()
+            **kwargs: Keyword arguments to pass to print()
         
         In quiet mode, suppress all terminal output to allow focus on HTML generation.
         Use _print_always() for messages that must always be shown (e.g., HTML file names).
@@ -1651,8 +1705,12 @@ class WorkareaReviewer:
         if not self.quiet:
             print(*args, **kwargs)
     
-    def _print_always(self, *args, **kwargs):
+    def _print_always(self, *args, **kwargs) -> None:
         """Print to stdout regardless of quiet mode
+        
+        Args:
+            *args: Arguments to pass to print()
+            **kwargs: Keyword arguments to pass to print()
         
         Use this for critical messages that must always be shown:
         - HTML file generation messages
@@ -1661,7 +1719,7 @@ class WorkareaReviewer:
         """
         print(*args, **kwargs)
     
-    def _cleanup_old_html_files(self):
+    def _cleanup_old_html_files(self) -> None:
         """Remove old HTML files from previous runs to prevent confusion"""
         try:
             # Get current working directory where HTMLs are generated
@@ -1693,11 +1751,64 @@ class WorkareaReviewer:
             # Don't fail the review if cleanup fails
             pass
     
+    def _organize_html_files(self) -> None:
+        """Move generated HTML files to html/ folder for better organization"""
+        try:
+            # Get current working directory where HTMLs are generated
+            cwd = os.getcwd()
+            html_dir = os.path.join(cwd, "html")
+            
+            # Create html directory if it doesn't exist
+            os.makedirs(html_dir, exist_ok=True)
+            
+            # Define pattern for HTML files generated during this run
+            design_pattern = f"*{self.design_info.top_hier}*.html"
+            
+            # Find all matching HTML files in current directory
+            matching_files = glob.glob(os.path.join(cwd, design_pattern))
+            
+            # Filter to only include files in root (not already in html/)
+            root_html_files = [f for f in matching_files if os.path.dirname(f) == cwd]
+            
+            if root_html_files:
+                moved_count = 0
+                for html_file in root_html_files:
+                    try:
+                        # Get just the filename
+                        filename = os.path.basename(html_file)
+                        dest_path = os.path.join(html_dir, filename)
+                        
+                        # Move file to html/ directory
+                        shutil.move(html_file, dest_path)
+                        moved_count += 1
+                    except OSError as e:
+                        # If we can't move (permissions, etc.), just skip
+                        pass
+                
+                if moved_count > 0:
+                    print(f"{Color.CYAN}Organized {moved_count} HTML file(s) into html/ folder{Color.RESET}")
+        
+        except Exception as e:
+            # Don't fail the review if organization fails
+            pass
+    
     def _add_section_summary(self, section_name: str, section_id: str, stage: FlowStage, 
-                            status: str = "NOT_RUN", key_metrics: Dict[str, str] = None,
-                            html_file: str = "", priority: int = 3, issues: List[str] = None,
-                            icon: str = ""):
-        """Helper method to add a section summary to the master dashboard"""
+                            status: str = "NOT_RUN", key_metrics: Optional[Dict[str, str]] = None,
+                            html_file: str = "", priority: int = 3, issues: Optional[List[str]] = None,
+                            icon: str = "") -> None:
+        """Helper method to add a section summary to the master dashboard
+        
+        Args:
+            section_name: Name of the section
+            section_id: Unique section identifier
+            stage: Flow stage enum
+            status: Status string (PASS/WARN/FAIL/NOT_RUN)
+            key_metrics: Optional dictionary of key metrics
+            html_file: Optional HTML file path
+            priority: Priority level (1=highest, 4=lowest)
+            issues: Optional list of issue strings
+            icon: Optional icon string
+        """
         if key_metrics is None:
             key_metrics = {}
         if issues is None:
@@ -1725,7 +1836,11 @@ class WorkareaReviewer:
         self.section_summaries.append(summary)
     
     def _validate_workarea(self) -> bool:
-        """Validate that the workarea is a proper ASIC/SoC workarea (PnR, Syn, or both)"""
+        """Validate that the workarea is a proper ASIC/SoC workarea (PnR, Syn, or both)
+        
+        Returns:
+            True if workarea is valid, False otherwise
+        """
         print(f"{Color.CYAN}Validating workarea structure...{Color.RESET}")
         
         validation_errors = []
@@ -1747,7 +1862,26 @@ class WorkareaReviewer:
         if os.path.isdir(pnr_flow_dir):
             nv_flow_dir = os.path.join(pnr_flow_dir, "nv_flow")
             if not os.path.isdir(nv_flow_dir):
-                validation_warnings.append("Missing pnr_flow/nv_flow/ directory")
+                # Check if this is ECO/Signoff workarea with imported PnR data
+                export_innovus_dir = os.path.join(self.workarea, "export/export_innovus")
+                signoff_flow_dir = os.path.join(self.workarea, "signoff_flow")
+                
+                has_pnr_data = False
+                if os.path.isdir(export_innovus_dir):
+                    # Check for PnR artifacts (DEF, netlist)
+                    def_files = glob.glob(os.path.join(export_innovus_dir, "*.def.gz"))
+                    netlist_files = glob.glob(os.path.join(export_innovus_dir, "*.gv.gz"))
+                    has_pnr_data = bool(def_files or netlist_files)
+                
+                if has_pnr_data:
+                    if os.path.isdir(signoff_flow_dir):
+                        flow_types.append("PnR-ECO")
+                        validation_warnings.append("ECO/Signoff workarea detected (PnR results imported from external source)")
+                    else:
+                        flow_types.append("PnR-Imported")
+                        validation_warnings.append("PnR results imported (no local PnR execution)")
+                else:
+                    validation_warnings.append("Missing pnr_flow/nv_flow/ directory")
             else:
                 # Check for PRC files (indicates PnR configuration)
                 prc_files = glob.glob(os.path.join(nv_flow_dir, "*.prc"))
@@ -1818,7 +1952,11 @@ class WorkareaReviewer:
                 print(f"  {Color.YELLOW}WARNING:{Color.RESET} {warning}")
         
         # Determine flow type for success message
-        if "PnR" in flow_types and "Syn" in flow_types:
+        if "PnR-ECO" in flow_types:
+            flow_desc = "ECO/Signoff workarea (imported PnR)"
+        elif "PnR-Imported" in flow_types:
+            flow_desc = "PnR-imported workarea"
+        elif "PnR" in flow_types and "Syn" in flow_types:
             flow_desc = "PnR + Syn workarea"
         elif "PnR" in flow_types:
             flow_desc = "PnR-only workarea"
@@ -1875,7 +2013,305 @@ class WorkareaReviewer:
             all_ipos=all_ipos
         )
     
-    def print_header(self, stage: FlowStage):
+    def _detect_workarea_owner(self) -> None:
+        """
+        Detect workarea owner for block release validation
+        
+        Used to determine which block_release is "real" vs "stale copy"
+        when multiple block_release locations exist (root + nbu_signoff).
+        """
+        try:
+            import pwd
+            stat_info = os.stat(self.workarea)
+            owner_uid = stat_info.st_uid
+            self.workarea_owner = pwd.getpwuid(owner_uid).pw_name
+        except Exception as e:
+            # Fallback to environment variable
+            self.workarea_owner = os.environ.get('USER', 'unknown')
+    
+    def _discover_nbu_signoff_paths(self) -> None:
+        """
+        Discover NBU signoff directories for each IPO
+        
+        NBU signoff structure: pnr_flow/nv_flow/<design>/<ipo>/nbu_signoff/
+        
+        Updates:
+            self.nbu_signoff_paths: Dict mapping IPO names to nbu_signoff paths
+            self.uses_nbu_signoff: Boolean flag if any nbu_signoff found
+        """
+        # Pattern: pnr_flow/nv_flow/<design>/<ipo>/nbu_signoff
+        pnr_nv_flow = os.path.join(self.workarea, 'pnr_flow', 'nv_flow')
+        
+        if not os.path.exists(pnr_nv_flow):
+            return
+        
+        try:
+            # Look for <design> subdirectory
+            for design_dir in os.listdir(pnr_nv_flow):
+                design_path = os.path.join(pnr_nv_flow, design_dir)
+                
+                if not os.path.isdir(design_path):
+                    continue
+                
+                # Look for IPO directories
+                for ipo_dir in os.listdir(design_path):
+                    if not ipo_dir.startswith('ipo'):
+                        continue
+                    
+                    ipo_path = os.path.join(design_path, ipo_dir)
+                    if not os.path.isdir(ipo_path):
+                        continue
+                    
+                    # Check if nbu_signoff exists
+                    nbu_path = os.path.join(ipo_path, 'nbu_signoff')
+                    if os.path.exists(nbu_path) and os.path.isdir(nbu_path):
+                        # Extract just the ipo name (e.g., "ipo1000" from "ipo1000_ref")
+                        # Store full directory name as key
+                        self.nbu_signoff_paths[ipo_dir] = nbu_path
+                        self.uses_nbu_signoff = True
+        
+        except Exception as e:
+            # Gracefully handle any filesystem errors
+            pass
+    
+    def _detect_nbu_signoff_from_prc(self) -> None:
+        """
+        Detect NBU signoff steps from PRC file
+        
+        Looks for: command: ${FLOW2_UTILS_SITE}/runNbuSignoff.py -step <step_name>
+        
+        Updates:
+            self.nbu_signoff_steps: List of steps that use NBU signoff
+        """
+        # Check main prc file
+        prc_files = []
+        
+        # Pattern 1: pnr_flow/nv_flow/<design>.prc
+        if self.design_info.top_hier:
+            main_prc = os.path.join(self.workarea, f"pnr_flow/nv_flow/{self.design_info.top_hier}.prc")
+            if os.path.exists(main_prc):
+                prc_files.append(main_prc)
+        
+        # Pattern 2: Check nbu_signoff prc files
+        for ipo_dir, nbu_path in self.nbu_signoff_paths.items():
+            nbu_prc = os.path.join(nbu_path, 'export', 'nv_star', f"{self.design_info.top_hier}.prc")
+            if os.path.exists(nbu_prc):
+                prc_files.append(nbu_prc)
+        
+        # Extract runNbuSignoff.py steps from all prc files
+        steps_found = set()
+        for prc_file in prc_files:
+            try:
+                with open(prc_file, 'r') as f:
+                    for line in f:
+                        # Pattern: command: ${FLOW2_UTILS_SITE}/runNbuSignoff.py -step <step_name>
+                        if 'runNbuSignoff.py' in line and '-step' in line:
+                            match = re.search(r'-step\s+(\S+)', line)
+                            if match:
+                                step = match.group(1)
+                                steps_found.add(step)
+            except Exception:
+                continue
+        
+        self.nbu_signoff_steps = sorted(list(steps_found))
+    
+    def _get_signoff_base_path(self, ipo_name: Optional[str] = None) -> str:
+        """
+        Get base path for signoff analysis based on NBU mode
+        
+        Args:
+            ipo_name: IPO to get path for (uses current design_info.ipo if None)
+        
+        Returns:
+            Base path (either workarea root or nbu_signoff path)
+            
+        Examples:
+            Regular WA:  /path/to/workarea/
+            NBU WA:      /path/to/workarea/pnr_flow/nv_flow/design/ipo1000/nbu_signoff/
+        """
+        if not ipo_name:
+            ipo_name = self.design_info.ipo
+        
+        # Check if this IPO uses NBU signoff
+        if self.uses_nbu_signoff and ipo_name in self.nbu_signoff_paths:
+            return self.nbu_signoff_paths[ipo_name]
+        else:
+            return self.workarea
+    
+    def _get_signoff_path(self, subdir: str = 'signoff_flow', ipo_name: Optional[str] = None) -> str:
+        """
+        Get specific signoff subdirectory path
+        
+        Args:
+            subdir: Subdirectory name ('signoff_flow', 'pv_flow', 'formal_flow', 'export', etc.)
+            ipo_name: IPO to get path for (uses current design_info.ipo if None)
+        
+        Returns:
+            Full path to signoff subdirectory
+            
+        Examples:
+            Regular WA:  /path/to/workarea/signoff_flow/
+            NBU WA:      /path/to/workarea/pnr_flow/nv_flow/design/ipo1000/nbu_signoff/signoff_flow/
+        """
+        base = self._get_signoff_base_path(ipo_name)
+        return os.path.join(base, subdir)
+    
+    def _detect_nbu_release_from_target(self, target_path: str) -> tuple:
+        """
+        Detect if a release link points to NBU signoff location
+        
+        Args:
+            target_path: Full path to release target (e.g., /home/.../nbu_signoff_ccorea_..._ipo1001_...)
+        
+        Returns:
+            (is_nbu, ipo_name) - e.g., (True, "ipo1001") or (False, None)
+            
+        Example:
+            nbu_signoff_ccorea_rbv_2025_09_02_..._ipo1001_2025_10_23 -> (True, "ipo1001")
+            ccorea_rbv_2025_09_02_..._2025_10_08 -> (False, None)
+        """
+        basename = os.path.basename(target_path)
+        
+        # Check if directory name starts with 'nbu_signoff_'
+        if basename.startswith('nbu_signoff_'):
+            # Extract IPO from path: nbu_signoff_ccorea_..._ipo1001_2025_...
+            # Pattern: nbu_signoff_{design}_..._{ipoXXXX}_{timestamp}
+            ipo_match = re.search(r'_(ipo\d+[^_]*?)_\d{4}_\d', basename)
+            if ipo_match:
+                return (True, ipo_match.group(1))
+            # If no specific IPO found but it's clearly NBU
+            return (True, "unknown")
+        
+        return (False, None)
+    
+    def _discover_block_release_locations(self) -> List[tuple]:
+        """
+        Find ALL block_release locations (root and nbu_signoff)
+        
+        Returns:
+            List of tuples: [(path, ipo, is_nbu, metadata), ...]
+            where:
+                path: Full path to block_release directory
+                ipo: IPO name (None for root location)
+                is_nbu: Boolean - True if in nbu_signoff
+                metadata: Dict with USER, timestamp, confidence score
+        """
+        locations = []
+        
+        # 1. Check root location
+        root_br = os.path.join(self.workarea, 'export', 'block_release')
+        if os.path.exists(root_br):
+            metadata = self._extract_block_release_metadata(root_br)
+            locations.append((root_br, None, False, metadata))
+        
+        # 2. Check each IPO's nbu_signoff location
+        for ipo_dir, nbu_path in self.nbu_signoff_paths.items():
+            nbu_br = os.path.join(nbu_path, 'export', 'block_release')
+            if os.path.exists(nbu_br):
+                metadata = self._extract_block_release_metadata(nbu_br)
+                locations.append((nbu_br, ipo_dir, True, metadata))
+        
+        return locations
+    
+    def _extract_block_release_metadata(self, br_path: str) -> Dict[str, Any]:
+        """
+        Extract metadata from block_release directory
+        
+        Args:
+            br_path: Path to block_release directory
+        
+        Returns:
+            dict with USER, timestamp, confidence score
+        """
+        metadata = {
+            'user': 'unknown',
+            'timestamp': None,
+            'log_exists': False,
+            'confidence_score': 0,
+            'date_str': 'N/A'
+        }
+        
+        # Extract USER from block_release.log
+        log_file = os.path.join(br_path, 'log', 'block_release.log')
+        if os.path.exists(log_file):
+            metadata['log_exists'] = True
+            metadata['timestamp'] = os.path.getmtime(log_file)
+            
+            # Format timestamp for display
+            try:
+                import datetime
+                dt = datetime.datetime.fromtimestamp(metadata['timestamp'])
+                metadata['date_str'] = dt.strftime('%b %d %H:%M')
+            except Exception:
+                pass
+            
+            # Extract USER field from log
+            try:
+                with open(log_file, 'r') as f:
+                    for line in f:
+                        # Pattern: "-I- [2025/10/23 12:03:41] USER: arcohen"
+                        match = re.search(r'USER:\s+(\S+)', line, re.IGNORECASE)
+                        if match:
+                            metadata['user'] = match.group(1)
+                            break
+            except Exception:
+                pass  # Handle read errors gracefully
+        
+        # Calculate confidence score
+        if metadata['user'] == self.workarea_owner:
+            metadata['confidence_score'] += 50  # Owner match = high confidence
+        
+        if metadata['timestamp']:
+            days_old = (time.time() - metadata['timestamp']) / 86400
+            if days_old < 30:
+                metadata['confidence_score'] += 30  # Recent = high confidence
+            elif days_old < 90:
+                metadata['confidence_score'] += 10  # Somewhat recent
+        
+        return metadata
+    
+    def _select_real_block_release(self, locations: List[tuple]) -> tuple:
+        """
+        Select the REAL block release from multiple candidates
+        
+        Priority:
+        1. USER matches workarea owner (most important!)
+        2. Newest timestamp (tiebreaker)
+        3. Prefer nbu_signoff if tied (newer workflow)
+        
+        Args:
+            locations: List of tuples from _discover_block_release_locations()
+        
+        Returns:
+            (path, ipo, is_nbu, metadata, reason) or (None, None, False, None, reason)
+        """
+        if not locations:
+            return (None, None, False, None, "No block_release found")
+        
+        if len(locations) == 1:
+            path, ipo, is_nbu, meta = locations[0]
+            return (path, ipo, is_nbu, meta, "Only one location")
+        
+        # Sort by confidence score (highest first)
+        sorted_locs = sorted(locations, 
+                            key=lambda x: x[3]['confidence_score'], 
+                            reverse=True)
+        
+        best = sorted_locs[0]
+        second = sorted_locs[1] if len(sorted_locs) > 1 else None
+        
+        # Determine selection reason
+        if best[3]['user'] == self.workarea_owner:
+            if second and second[3]['user'] != self.workarea_owner:
+                reason = f"USER matches workarea owner ({self.workarea_owner})"
+            else:
+                reason = "Newest with matching USER"
+        else:
+            reason = "Newest timestamp (no USER match found)"
+        
+        return (best[0], best[1], best[2], best[3], reason)
+    
+    def print_header(self, stage: FlowStage) -> None:
         """Print section header with index number"""
         stage_num = STAGE_INDEX.get(stage, "")
         stage_prefix = f"[{stage_num}] " if stage_num else ""
@@ -1891,8 +2327,18 @@ class WorkareaReviewer:
             print(f"{description}: File not found")
             return False
     
-    def _extract_power_summary_table(self, power_file: str):
-        """Extract the first power summary table from power report"""
+    def _extract_power_summary_table(self, power_file: str) -> Optional[Dict[str, Any]]:
+        """Extract the first power summary table from power report
+        
+        Args:
+            power_file: Path to power report file (can be .gz compressed)
+            
+        Returns:
+            Dictionary with power metrics or None if extraction fails:
+            - Power values (internal, switching, leakage, total)
+            - Percentages for each power component
+            Returns None if file not found or parsing fails
+        """
         try:
             # Read the file content
             if power_file.endswith('.gz'):
@@ -1941,8 +2387,16 @@ class WorkareaReviewer:
         except (OSError, UnicodeDecodeError, gzip.BadGzipFile) as e:
             print(f"  Error reading power file: {e}")
     
-    def _extract_pnr_timing_histogram(self):
-        """Extract PnR timing histogram from setup timing report"""
+    def _extract_pnr_timing_histogram(self) -> Optional[Dict[str, Any]]:
+        """Extract PnR timing histogram from setup timing report
+        
+        Returns:
+            Dictionary with timing histogram data or None if not found:
+            - 'stage': str - Stage name (postroute, route, cts, place, plan)
+            - 'histogram_tables': List[str] - Raw histogram table text
+            - 'histogram_file': str - Absolute path to timing file
+            Returns None if no timing reports found
+        """
         try:
             # Define stage priority order
             pnr_stages = ['postroute', 'route', 'cts', 'place', 'plan']
@@ -2016,8 +2470,12 @@ class WorkareaReviewer:
         except Exception as e:
             print(f"  {Color.RED}Error extracting PnR timing histogram: {e}{Color.RESET}")
     
-    def _extract_timing_histogram_for_html(self):
-        """Extract timing histogram data for HTML report"""
+    def _extract_timing_histogram_for_html(self) -> Optional[Dict[str, Any]]:
+        """Extract timing histogram data for HTML report
+        
+        Returns:
+            Dictionary with histogram data or None if not found
+        """
         try:
             # Define stage priority order
             pnr_stages = ['postroute', 'route', 'cts', 'place', 'plan']
@@ -2079,8 +2537,12 @@ class WorkareaReviewer:
             print(f"  Error extracting timing histogram for HTML: {e}")
             return None
     
-    def _generate_image_html_report(self):
-        """Generate HTML report with all relevant pictures using avice_image_debug_report.py"""
+    def _generate_image_html_report(self) -> Optional[str]:
+        """Generate HTML report with all relevant pictures using avice_image_debug_report.py
+        
+        Returns:
+            HTML filename if generated successfully, None otherwise
+        """
         try:
             # Import the image debug report functions
             import subprocess
@@ -2121,7 +2583,7 @@ class WorkareaReviewer:
                         break
                 
                 if html_file and os.path.exists(html_file):
-                    print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{os.path.basename(html_file)}{Color.RESET} &")
+                    print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{os.path.basename(html_file)}{Color.RESET} &")
                     return os.path.abspath(html_file)
                 else:
                     print(f"  HTML report generated successfully")
@@ -2138,8 +2600,15 @@ class WorkareaReviewer:
             print(f"  Error generating HTML report: {e}")
             return ""
     
-    def _extract_clock_tree_data(self, clock_file: str):
-        """Extract clock tree data for func.std_tt_0c_0p6v.setup.typical scenario"""
+    def _extract_clock_tree_data(self, clock_file: str) -> Dict[str, Any]:
+        """Extract clock tree data for func.std_tt_0c_0p6v.setup.typical scenario
+        
+        Args:
+            clock_file: Path to clock report file
+            
+        Returns:
+            Dictionary containing clock tree metrics
+        """
         try:
             if clock_file.endswith('.gz'):
                 with gzip.open(clock_file, 'rt', encoding='utf-8') as f:
@@ -2247,8 +2716,15 @@ class WorkareaReviewer:
             print(f"  Error reading clock file: {e}")
             return 0, {}
     
-    def _extract_pt_clock_latency(self, pt_clock_file: str):
-        """Extract min and max total clock latency per clock from PT clock latency report"""
+    def _extract_pt_clock_latency(self, pt_clock_file: str) -> Dict[str, tuple]:
+        """Extract min and max total clock latency per clock from PT clock latency report
+        
+        Args:
+            pt_clock_file: Path to PrimeTime clock report file
+            
+        Returns:
+            Dictionary mapping clock names to (latency, skew) tuples
+        """
         try:
             with open(pt_clock_file, 'r', encoding='utf-8') as f:
                 content = f.read()
@@ -2560,8 +3036,12 @@ class WorkareaReviewer:
             print(f"  Error reading formal log: {e}")
             return ("UNKNOWN", "Unknown", "Unknown", 0, 0, {}, [])
     
-    def _display_formal_timestamps(self, log_file: str):
-        """Extract and display start/end timestamps for formal verification"""
+    def _display_formal_timestamps(self, log_file: str) -> None:
+        """Extract and display start/end timestamps for formal verification
+        
+        Args:
+            log_file: Path to formal verification log file
+        """
         try:
             # Get end time from file modification time
             end_time_epoch = os.path.getmtime(log_file)
@@ -2640,7 +3120,7 @@ class WorkareaReviewer:
         
         return expected_ipo  # Return original as fallback
     
-    def _check_formal_vs_eco_timestamps(self, formal_end_time: float):
+    def _check_formal_vs_eco_timestamps(self, formal_end_time: float) -> None:
         """Check if ECO was run after formal verification (potential issue)"""
         try:
             if not formal_end_time:
@@ -2683,8 +3163,199 @@ class WorkareaReviewer:
         except Exception:
             pass  # Silently skip if check fails
     
-    def _extract_postroute_data_parameters(self, data_file: str, stage: str = 'postroute'):
-        """Extract most significant parameters and generate HTML table with full data"""
+    def _check_multibit_mapping_files(self) -> tuple:
+        """Check that critical multibit mapping files exist in all required locations
+        
+        These files are needed to prevent formal verification non-equivalence points.
+        
+        Returns:
+            tuple: (status, issues_list, results_dict)
+                   status: "PASS", "WARN", or "FAIL"
+                   issues_list: List of issue strings for dashboard
+                   results_dict: Dict with detailed results per IPO
+        """
+        try:
+            status = "PASS"
+            issues = []
+            results = {}
+            
+            design = self.design_info.top_hier
+            
+            # Get all IPOs to check - auto-detect if not specified or unknown
+            ipos = []
+            if self.design_info.ipo and self.design_info.ipo != "unknown":
+                ipos = [self.design_info.ipo]
+            else:
+                # Auto-detect IPOs from multibit mapping files in export_innovus
+                export_dir = os.path.join(self.workarea, "export/export_innovus")
+                if os.path.isdir(export_dir):
+                    # Look for files matching pattern: {design}.ipo*.multibitMapping*.gz
+                    pattern = os.path.join(export_dir, f"{design}.ipo*.multibitMapping*.gz")
+                    found_files = glob.glob(pattern)
+                    
+                    # Extract unique IPOs from filenames
+                    detected_ipos = set()
+                    for filepath in found_files:
+                        filename = os.path.basename(filepath)
+                        # Pattern: design.ipoXXXX.multibitMapping...
+                        match = re.search(rf'{design}\.(ipo\d+)\.multibitMapping', filename)
+                        if match:
+                            detected_ipos.add(match.group(1))
+                    
+                    ipos = sorted(list(detected_ipos))
+            
+            if not ipos:
+                print(f"  {Color.YELLOW}[SKIP] No IPO specified and none auto-detected{Color.RESET}")
+                return "PASS", [], {}
+            
+            # Inform user if IPOs were auto-detected
+            if (not self.design_info.ipo or self.design_info.ipo == "unknown") and ipos:
+                print(f"  Auto-detected IPO(s): {', '.join(ipos)}")
+            
+            # Define the two multibit mapping files to check
+            multibit_files = [
+                "multibitMapping.gz",
+                "multibitMapping_for_gen_mbff_scandef.gz"
+            ]
+            
+            # Define the three locations where files should exist
+            locations = [
+                ("PnR Flow", f"pnr_flow/nv_flow/{design}/{{ipo}}/IOs/netlists"),
+                ("Export Innovus", "export/export_innovus"),
+                ("NV Gate ECO", f"signoff_flow/nv_gate_eco/{design}/{{ipo}}/IOs/netlists")
+            ]
+            
+            for ipo in ipos:
+                ipo_results = {}
+                ipo_missing = []
+                
+                for loc_name, loc_path_template in locations:
+                    # Replace {ipo} placeholder
+                    loc_path = loc_path_template.replace("{ipo}", ipo)
+                    
+                    loc_status = []
+                    for mb_file in multibit_files:
+                        # Construct filename with design and ipo
+                        filename = f"{design}.{ipo}.{mb_file}"
+                        
+                        # Construct full path
+                        full_path = os.path.join(self.workarea, loc_path, filename)
+                        
+                        # Check if file exists
+                        exists = os.path.isfile(full_path)
+                        loc_status.append(exists)
+                        
+                        if not exists:
+                            ipo_missing.append(f"{loc_name}: {filename}")
+                    
+                    # Store results for this location
+                    ipo_results[loc_name] = {
+                        "path": loc_path,
+                        "files_exist": loc_status,
+                        "all_exist": all(loc_status)
+                    }
+                
+                results[ipo] = {
+                    "locations": ipo_results,
+                    "missing_files": ipo_missing
+                }
+                
+                # Determine status based on missing files
+                if ipo_missing:
+                    # Count how many locations are missing files
+                    missing_locations = [loc for loc, data in ipo_results.items() if not data["all_exist"]]
+                    
+                    if len(missing_locations) >= 2:
+                        # Critical: Missing in 2+ locations
+                        status = "FAIL"
+                        issues.append(f"{ipo}: Missing multibit mapping files in {len(missing_locations)} locations")
+                    else:
+                        # Warning: Missing in 1 location
+                        if status == "PASS":
+                            status = "WARN"
+                        issues.append(f"{ipo}: Missing multibit mapping files in {missing_locations[0]}")
+            
+            # Display results in terminal (compact format)
+            self._display_multibit_mapping_results(results, multibit_files)
+            
+            return status, issues, results
+            
+        except Exception as e:
+            print(f"  {Color.RED}[ERROR] Failed to check multibit mapping files: {e}{Color.RESET}")
+            import traceback
+            traceback.print_exc()
+            return "WARN", [f"Multibit check error: {str(e)}"], {}
+    
+    def _display_multibit_mapping_results(self, results: Dict[str, Any], multibit_files: List[str]) -> None:
+        """Display multibit mapping file check results in terminal
+        
+        Args:
+            results: Dictionary containing multibit mapping results
+            multibit_files: List of multibit file paths
+        """
+        if not results:
+            return
+        
+        print(f"  Checking 6 files across 3 locations per IPO...")
+        print(f"  Files: 1) multibitMapping.gz  2) multibitMapping_for_gen_mbff_scandef.gz")
+        print()
+        
+        # Prepare table data
+        table_data = []
+        for ipo, ipo_data in results.items():
+            for loc_name, loc_info in ipo_data["locations"].items():
+                files_status = loc_info["files_exist"]
+                # Create status string: [OK] [OK] or [MISS] [OK]
+                status_str = " ".join(["[OK]" if exists else "[MISS]" for exists in files_status])
+                
+                # Color code the row
+                if all(files_status):
+                    row_color = Color.GREEN
+                    status_label = "OK"
+                else:
+                    row_color = Color.RED
+                    status_label = "MISSING"
+                
+                table_data.append((ipo, loc_name, status_str, status_label, row_color))
+        
+        # Print table
+        print(f"  {'IPO':<12} {'Location':<18} {'File Status':<20} {'Result':<10}")
+        print(f"  {'-'*12} {'-'*18} {'-'*20} {'-'*10}")
+        
+        for ipo, loc_name, status_str, status_label, row_color in table_data:
+            print(f"  {ipo:<12} {loc_name:<18} {status_str:<20} {row_color}{status_label}{Color.RESET}")
+        
+        # Print summary
+        print()
+        total_checks = len(table_data)
+        passed_checks = sum(1 for _, _, _, label, _ in table_data if label == "OK")
+        
+        if passed_checks == total_checks:
+            print(f"  {Color.GREEN}[OK] All {total_checks} location checks passed{Color.RESET}")
+        else:
+            failed_checks = total_checks - passed_checks
+            print(f"  {Color.RED}[FAIL] {failed_checks}/{total_checks} location checks failed{Color.RESET}")
+            print(f"  {Color.YELLOW}-> Formal verification may encounter non-equivalence points{Color.RESET}")
+            print(f"  {Color.YELLOW}-> Files are generated in PnR and copied to export_innovus and nv_gate_eco{Color.RESET}")
+    
+    def _extract_postroute_data_parameters(
+        self, 
+        data_file: str, 
+        stage: str = 'postroute'
+    ) -> Optional[Dict[str, Any]]:
+        """Extract most significant parameters and generate HTML table with full data
+        
+        Args:
+            data_file: Path to postroute data file
+            stage: Stage name (e.g., 'postroute', 'route', 'cts')
+            
+        Returns:
+            Dictionary with extracted parameters or None if extraction fails:
+            - Timing metrics (WNS, TNS, NVP)
+            - Design metrics (area, utilization, power)
+            - Routing metrics (DRVs, timing violations)
+            Returns None if file not found or parsing fails
+        """
         try:
             with open(data_file, 'r', encoding='utf-8') as f:
                 content = f.read()
@@ -2746,8 +3417,15 @@ class WorkareaReviewer:
             print(f"    - File corrupted or incomplete")
             return {}
     
-    def _generate_postroute_html_table(self, all_params: dict):
-        """Generate HTML table with full post-route data for all stages"""
+    def _generate_postroute_html_table(self, all_params: dict) -> str:
+        """Generate HTML table with full post-route data for all stages
+        
+        Args:
+            all_params: Dictionary of postroute parameters by stage
+            
+        Returns:
+            HTML string containing the formatted table
+        """
         try:
             # Get all data files for different stages
             stages = ['plan', 'place', 'cts', 'route', 'postroute']
@@ -2804,7 +3482,7 @@ class WorkareaReviewer:
                 f.write(html_content)
             
             print(f"\n  {Color.CYAN}Full PnR Data Table:{Color.RESET}")
-            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{html_filename}{Color.RESET} &")
             
         except Exception as e:
             print(f"  Error generating HTML table: {e}")
@@ -3323,7 +4001,7 @@ class WorkareaReviewer:
         
         return html
     
-    def run_synthesis_analysis(self):
+    def run_synthesis_analysis(self) -> None:
         """Run synthesis (DC) analysis"""
         self.print_header(FlowStage.SYNTHESIS)
         
@@ -3338,6 +4016,10 @@ class WorkareaReviewer:
         dc_log = os.path.join(self.workarea, "syn_flow/dc/log/dc.log")
         if self.file_utils.file_exists(dc_log):
             self.print_file_info(dc_log, "DC Log")
+            # Extract and print DC version
+            self._extract_dc_version(dc_log)
+            # Check for errors and warnings
+            self._check_dc_errors(dc_log)
         
         # DC reports
         reports = [
@@ -3436,8 +4118,12 @@ class WorkareaReviewer:
             icon="[DC]"
         )
     
-    def _extract_floorplan_dimensions(self):
-        """Extract floorplan dimensions from DEF file"""
+    def _extract_floorplan_dimensions(self) -> Optional[Dict[str, str]]:
+        """Extract floorplan dimensions from DEF file
+        
+        Returns:
+            Dictionary with dimension data or None if not found
+        """
         try:
             # Find floorplan DEF file - try with top_hier first
             flp_pattern = os.path.join(self.workarea, "flp", f"{self.design_info.top_hier}_fp.def.gz")
@@ -3481,8 +4167,12 @@ class WorkareaReviewer:
         
         return None
     
-    def _analyze_qor_report(self, qor_file: str):
-        """Analyze QoR report and extract key metrics"""
+    def _analyze_qor_report(self, qor_file: str) -> None:
+        """Analyze QoR report and extract key metrics
+        
+        Args:
+            qor_file: Path to QoR report file
+        """
         try:
             print(f"  {Color.CYAN}QoR Analysis:{Color.RESET}")
             
@@ -3544,20 +4234,13 @@ class WorkareaReviewer:
             # Display extracted metrics
             if qor_metrics:
                 print(f"    {Color.GREEN}Key QoR Metrics:{Color.RESET}")
+                # First print Die dimensions if available
+                if flp_dims:
+                    print(f"      Die (X,Y): {flp_dims['x_dim_um']:.2f} um x {flp_dims['y_dim_um']:.2f} um")
+                
+                # Print other metrics (skip Design Area)
                 for metric, value in qor_metrics.items():
-                    if metric == 'Design Area':
-                        # Convert area from um² to mm² by dividing by 1,000,000
-                        try:
-                            area_um2 = float(value.replace(',', ''))
-                            area_mm2 = area_um2 / 1000000
-                            # Show area and X,Y dimensions in one line
-                            if flp_dims:
-                                print(f"      {metric}: {value} um2 ({area_mm2:.3f} mm2) | Die (X,Y): {flp_dims['x_dim_um']:.2f} um x {flp_dims['y_dim_um']:.2f} um")
-                            else:
-                                print(f"      {metric}: {value} um2 ({area_mm2:.3f} mm2)")
-                        except (ValueError, AttributeError):
-                            print(f"      {metric}: {value}")
-                    else:
+                    if metric != 'Design Area':
                         print(f"      {metric}: {value}")
             else:
                 print(f"    {Color.YELLOW}No QoR metrics found in report{Color.RESET}")
@@ -3602,8 +4285,128 @@ class WorkareaReviewer:
         except (OSError, UnicodeDecodeError, gzip.BadGzipFile) as e:
             print(f"    {Color.RED}Error reading QoR report: {e}{Color.RESET}")
     
-    def _analyze_beflow_config(self, beflow_file: str):
-        """Analyze BeFlow configuration and extract useful variables"""
+    def _extract_dc_version(self, dc_log: str) -> None:
+        """Extract and print DC (Design Compiler) version from dc.log
+        
+        Args:
+            dc_log: Path to dc.log file
+        """
+        try:
+            # Search for DC version in the log file
+            # Typical format: "Version <version_string>"
+            with open(dc_log, 'r', encoding='utf-8', errors='ignore') as f:
+                for line in f:
+                    # Look for version line (e.g., "Version Q-2019.12-SP5" or similar)
+                    if 'Design Compiler' in line and 'Version' in line:
+                        # Extract the version
+                        version_match = re.search(r'Version\s+([\w\-\.]+)', line)
+                        if version_match:
+                            dc_version = version_match.group(1)
+                            print(f"  {Color.GREEN}DC Version: {dc_version}{Color.RESET}")
+                            return
+                    # Alternative format: just "Version X-YYYY.MM"
+                    elif line.strip().startswith('Version '):
+                        version_match = re.search(r'Version\s+([\w\-\.]+)', line)
+                        if version_match:
+                            dc_version = version_match.group(1)
+                            print(f"  {Color.GREEN}DC Version: {dc_version}{Color.RESET}")
+                            return
+        except Exception as e:
+            # Silently fail if version not found
+            pass
+    
+    def _extract_dc_version_for_html(self, dc_log: str) -> str:
+        """Extract DC version for HTML report (returns string, doesn't print)
+        
+        Args:
+            dc_log: Path to dc.log file
+            
+        Returns:
+            DC version string or "Unknown" if not found
+        """
+        try:
+            with open(dc_log, 'r', encoding='utf-8', errors='ignore') as f:
+                for line in f:
+                    if 'Design Compiler' in line and 'Version' in line:
+                        version_match = re.search(r'Version\s+([\w\-\.]+)', line)
+                        if version_match:
+                            return version_match.group(1)
+                    elif line.strip().startswith('Version '):
+                        version_match = re.search(r'Version\s+([\w\-\.]+)', line)
+                        if version_match:
+                            return version_match.group(1)
+        except Exception:
+            pass
+        return "Unknown"
+    
+    def _extract_dc_errors_for_html(self, dc_log: str) -> tuple:
+        """Extract DC error and warning counts for HTML report
+        
+        Args:
+            dc_log: Path to dc.log file
+            
+        Returns:
+            Tuple of (error_count, warning_count)
+        """
+        try:
+            error_count = 0
+            warning_count = 0
+            with open(dc_log, 'r', encoding='utf-8', errors='ignore') as f:
+                for line in f:
+                    if line.startswith('Error:'):
+                        error_count += 1
+                    elif line.startswith('Warning:'):
+                        warning_count += 1
+            return (error_count, warning_count)
+        except Exception:
+            return (0, 0)
+    
+    def _check_dc_errors(self, dc_log: str) -> None:
+        """Check for errors and warnings in dc.log
+        
+        Args:
+            dc_log: Path to dc.log file
+        """
+        try:
+            error_count = 0
+            warning_count = 0
+            errors_list = []
+            
+            # Count errors and warnings
+            with open(dc_log, 'r', encoding='utf-8', errors='ignore') as f:
+                for line in f:
+                    if line.startswith('Error:'):
+                        error_count += 1
+                        # Store first 5 errors for display
+                        if len(errors_list) < 5:
+                            errors_list.append(line.strip())
+                    elif line.startswith('Warning:'):
+                        warning_count += 1
+            
+            # Display results
+            if error_count > 0:
+                print(f"  {Color.RED}[X] DC Errors: {error_count}{Color.RESET}")
+                if errors_list:
+                    print(f"    {Color.RED}Sample errors:{Color.RESET}")
+                    for error in errors_list:
+                        print(f"      {error[:120]}")  # Truncate long errors
+            else:
+                print(f"  {Color.GREEN}[OK] DC Errors: 0{Color.RESET}")
+            
+            # Display warnings (informational only)
+            if warning_count > 0:
+                print(f"  {Color.CYAN}[INFO] DC Warnings: {warning_count:,}{Color.RESET}")
+            
+        except Exception as e:
+            # Silently fail if unable to parse
+            pass
+    
+    def _analyze_beflow_config(self, beflow_file: str) -> None:
+        """Analyze BeFlow configuration and extract useful variables
+        
+        Args:
+            beflow_file: Path to BeFlow configuration file
+        """
         try:
             print(f"  {Color.CYAN}BeFlow Configuration Analysis:{Color.RESET}")
             
@@ -3682,8 +4485,12 @@ class WorkareaReviewer:
         except (OSError, UnicodeDecodeError) as e:
             print(f"    {Color.RED}Error reading BeFlow config: {e}{Color.RESET}")
     
-    def _check_disk_utilization(self):
-        """Check disk utilization for the workarea path and warn if >80%"""
+    def _check_disk_utilization(self) -> Optional[float]:
+        """Check disk utilization for the workarea path and warn if >80%
+        
+        Returns:
+            Float percentage (0-100) of disk usage, or None if check fails
+        """
         try:
             # Run df -h on the workarea path
             result = self.file_utils.run_command(f"df -h {self.workarea}")
@@ -3732,7 +4539,7 @@ class WorkareaReviewer:
             print(f"  {Color.YELLOW}[INFO] Could not check disk utilization: {e}{Color.RESET}")
             return None
     
-    def run_setup_analysis(self):
+    def run_setup_analysis(self) -> None:
         """Run setup analysis including environment and runtime information"""
         self.print_header(FlowStage.SETUP)
         
@@ -3771,6 +4578,25 @@ class WorkareaReviewer:
                 print(f"  {Color.YELLOW}Note: Users sometimes delete IPO directories to save disk space{Color.RESET}")
             else:
                 print(f"  {Color.RED}[ERROR] No IPO directories found{Color.RESET}")
+        
+        # Display NBU Signoff information if detected
+        if self.uses_nbu_signoff:
+            print(f"\n{Color.CYAN}NBU Signoff Mode: {Color.GREEN}DETECTED{Color.RESET}")
+            print(f"  Workarea Owner: {Color.CYAN}{self.workarea_owner}{Color.RESET}")
+            
+            # Show NBU signoff paths for each IPO
+            for ipo_dir, nbu_path in sorted(self.nbu_signoff_paths.items()):
+                # Get relative path for display
+                rel_path = os.path.relpath(nbu_path, self.workarea)
+                print(f"  -> {Color.YELLOW}{ipo_dir}{Color.RESET}: {rel_path}")
+            
+            # Show detected NBU steps
+            if self.nbu_signoff_steps:
+                steps_str = ', '.join(self.nbu_signoff_steps)
+                print(f"  Steps using NBU: {Color.MAGENTA}{steps_str}{Color.RESET}")
+            
+            print(f"\n  {Color.YELLOW}[!] Signoff tools (PT, Star, Formal, PV, GL Check) run in nbu_signoff directories{Color.RESET}")
+            print(f"  {Color.YELLOW}[!] Block release may run from ROOT or NBU (auto-detected){Color.RESET}")
         
         # Extract environment information
         self._extract_environment_info()
@@ -3813,8 +4639,12 @@ class WorkareaReviewer:
             icon="[Setup]"
         )
     
-    def _extract_environment_info(self):
-        """Extract BeFlow, Tech Data, and Tool Override environment information"""
+    def _extract_environment_info(self) -> Dict[str, str]:
+        """Extract BeFlow, Tech Data, and Tool Override environment information
+        
+        Returns:
+            Dictionary containing environment variables and paths
+        """
         print(f"  {Color.CYAN}Environment Information:{Color.RESET}")
         
         # Check formal flow environment files for BeFlow and Tech Data info
@@ -3874,8 +4704,12 @@ class WorkareaReviewer:
         if not any(env_vars_found.values()):
             print(f"    No environment information found")
     
-    def _analyze_pnr_status(self, prc_status_file: str):
-        """Analyze PnR status to show flow progress, running stages, and errors"""
+    def _analyze_pnr_status(self, prc_status_file: str) -> None:
+        """Analyze PnR status to show flow progress, running stages, and errors
+        
+        Args:
+            prc_status_file: Path to prc.status file
+        """
         try:
             with open(prc_status_file, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
@@ -3967,8 +4801,16 @@ class WorkareaReviewer:
         except Exception as e:
             print(f"  Error analyzing PnR status: {e}")
     
-    def _analyze_step_sequence(self, steps, category_name):
-        """Analyze a sequence of steps and return status summary"""
+    def _analyze_step_sequence(self, steps: List[Dict[str, Any]], category_name: str) -> str:
+        """Analyze a sequence of steps and return status summary
+        
+        Args:
+            steps: List of step dictionaries
+            category_name: Name of the category being analyzed
+            
+        Returns:
+            Summary string of progress
+        """
         if not steps:
             return None
         
@@ -4015,8 +4857,15 @@ class WorkareaReviewer:
         
         return f"{category_name}: {progress}"
 
-    def _extract_prc_configuration(self, prc_file):
-        """Extract key configuration information from PRC file (YAML or legacy format)"""
+    def _extract_prc_configuration(self, prc_file: str) -> Optional[Dict[str, Any]]:
+        """Extract key configuration information from PRC file (YAML or legacy format)
+        
+        Args:
+            prc_file: Path to .prc configuration file
+            
+        Returns:
+            Dictionary with configuration data or None if parsing fails
+        """
         try:
             with open(prc_file, 'r', encoding='utf-8') as f:
                 content = f.read()
@@ -4040,8 +4889,14 @@ class WorkareaReviewer:
             except:
                 pass
     
-    def _print_flow_sequence_with_hooks(self, ipo, flow_sequence, hooks):
-        """Print flow sequence with TCL hooks inline"""
+    def _print_flow_sequence_with_hooks(self, ipo: str, flow_sequence: List[str], hooks: Dict[str, List[str]]) -> None:
+        """Print flow sequence with TCL hooks inline
+        
+        Args:
+            ipo: IPO name
+            flow_sequence: List of flow stages
+            hooks: Dictionary mapping hook types to hook scripts
+        """
         # Build the sequence list with hooks and stages combined
         sequence_parts = []
         
@@ -4083,8 +4938,15 @@ class WorkareaReviewer:
         # Print with arrows only between stages (not between hooks and stages)
         print(f"  {Color.CYAN}Flow Sequence ({ipo}):{Color.RESET} {' -> '.join(sequence_parts)}")
     
-    def _extract_yaml_prc_configuration(self, content):
-        """Extract configuration from YAML-based PRC file"""
+    def _extract_yaml_prc_configuration(self, content: str) -> Dict[str, Any]:
+        """Extract configuration from YAML-based PRC file
+        
+        Args:
+            content: YAML content string
+            
+        Returns:
+            Dictionary with parsed YAML configuration
+        """
         lines = content.split('\n')
         
         # Extract IPO information
@@ -4297,8 +5159,13 @@ class WorkareaReviewer:
             for ipo, clocks in clock_names.items():
                 print(f"    {ipo}: {clocks}")
     
-    def _verify_tcl_usage_in_prc(self, prc_file, common_dir):
-        """Verify that Common TCL files are actually used in the PnR configuration"""
+    def _verify_tcl_usage_in_prc(self, prc_file: str, common_dir: str) -> None:
+        """Verify that Common TCL files are actually used in the PnR configuration
+        
+        Args:
+            prc_file: Path to PRC file
+            common_dir: Path to common directory
+        """
         try:
             # Read the PnR configuration file
             with open(prc_file, 'r', encoding='utf-8') as f:
@@ -4351,8 +5218,15 @@ class WorkareaReviewer:
         except Exception as e:
             print(f"    {Color.RED}Error verifying TCL usage: {e}{Color.RESET}")
     
-    def _extract_pnr_flow_variables(self, runset_file):
-        """Extract important PnR flow variables from runset.tcl file"""
+    def _extract_pnr_flow_variables(self, runset_file: str) -> Dict[str, str]:
+        """Extract important PnR flow variables from runset.tcl file
+        
+        Args:
+            runset_file: Path to runset.tcl file
+            
+        Returns:
+            Dictionary mapping variable names to values
+        """
         try:
             with open(runset_file, 'r', encoding='utf-8') as f:
                 content = f.read()
@@ -4370,7 +5244,8 @@ class WorkareaReviewer:
                 (r'set\s+LIB\(PHYSICAL,PATH,RAM\)\s+([^\s\n]+)', 'RAM_LIB_PATH'),
                 (r'set\s+LIB\(CENTRAL,PATH\)\s+([^\s\n]+)', 'CENTRAL_LIB_PATH'),
                 (r'set\s+NETWORK_FLOW\(PATH\)\s+([^\s\n]+)', 'NETWORK_FLOW_PATH'),
-                (r'set\s+NETWORK_FLOW\(UTILS_DIR\)\s+([^\s\n]+)', 'NETWORK_FLOW_UTILS_DIR')
+                (r'set\s+NETWORK_FLOW\(UTILS_DIR\)\s+([^\s\n]+)', 'NETWORK_FLOW_UTILS_DIR'),
+                (r'set\s+OPT\(MULTIBIT_FLOP,ENABLE\)\s+([^\s\n]+)', 'MULTIBIT_FLOP')
             ]
             
             found_variables = []
@@ -4385,20 +5260,789 @@ class WorkareaReviewer:
             if found_variables:
                 for var, value in found_variables:
                     # Display full values without truncation
-                    print(f"    {var}: {value}")
+                    # Highlight MULTIBIT_FLOP setting with color
+                    if var == 'MULTIBIT_FLOP':
+                        if value.lower() in ['1', 'true', 'yes', 'enabled']:
+                            print(f"    {Color.GREEN}{var}: {value} (ENABLED){Color.RESET}")
+                        else:
+                            print(f"    {Color.YELLOW}{var}: {value} (DISABLED){Color.RESET}")
+                    else:
+                        print(f"    {var}: {value}")
+                
+                # Return dictionary for use in HTML reports
+                return dict(found_variables)
             else:
                 print(f"    {Color.YELLOW}No PnR flow variables found{Color.RESET}")
+                return {}
                 
         except Exception as e:
             print(f"    {Color.RED}Error extracting PnR flow variables: {e}{Color.RESET}")
+            return {}
     
-    def run_recipe_analysis(self):
+    def _get_status_indicator(self, status: str) -> tuple:
+        """Map PnR stage status to icon and CSS class
+        
+        Args:
+            status: Status string
+            
+        Returns:
+            Tuple of (icon, css_class)
+        """
+        status_map = {
+            'DONE': ('✓', 'status-pass'),
+            'COMPLETED': ('✓', 'status-pass'),
+            'PASS': ('✓', 'status-pass'),
+            'FAILED': ('✗', 'status-fail'),
+            'FAIL': ('✗', 'status-fail'),
+            'ERROR': ('✗', 'status-fail'),
+            'RUN': ('⟳', 'status-running'),
+            'RUNNING': ('⟳', 'status-running'),
+            'UNKNOWN': ('?', 'status-unknown')
+        }
+        return status_map.get(status.upper(), ('?', 'status-unknown'))
+    
+    def _extract_status_from_log(self, log_file: str) -> str:
+        """Extract status from individual PRIME log file
+        
+        Args:
+            log_file: Path to log file
+            
+        Returns:
+            Status string ('DONE'/'FAIL'/'ERROR'/'RUNNING'/'UNKNOWN')
+        """
+        if not os.path.exists(log_file):
+            return 'UNKNOWN'
+        
+        try:
+            # Read last 50 lines of log file for status
+            result = self.file_utils.run_command(f"tail -50 {log_file}")
+            
+            # Check for explicit STATUS markers
+            if 'STATUS: DONE' in result:
+                return 'DONE'
+            elif 'STATUS: FAIL' in result:
+                return 'FAIL'
+            elif 'STATUS: ERROR' in result:
+                return 'ERROR'
+            elif 'STATUS: RUN' in result:
+                return 'RUNNING'
+            
+            # Check for completion markers
+            if 'Successfully completed' in result:
+                return 'DONE'
+            
+            # Check for failure markers
+            if 'Exited with exit code' in result:
+                # Extract exit code
+                match = re.search(r'Exited with exit code (\d+)', result)
+                if match and match.group(1) != '0':
+                    return 'FAIL'
+                elif match and match.group(1) == '0':
+                    return 'DONE'
+            
+            # If log file exists but no clear status, assume it's still running or incomplete
+            return 'UNKNOWN'
+            
+        except Exception:
+            return 'UNKNOWN'
+    
+    def _extract_be_override_toolvers_data(self) -> Optional[Dict[str, Any]]:
+        """Extract BE_OVERRIDE_TOOLVERS data from all PnR stages for analysis and visualization
+        
+        Returns:
+            Dictionary with structured data including stage executions, configs, timeline, and status, or None if not available
+        """
+        try:
+            debug_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/LOGs/PRIME/*.debug"
+            debug_files = self.file_utils.find_files(debug_pattern, self.workarea)
+            
+            if not debug_files:
+                return None
+            
+            # Extract BE_OVERRIDE_TOOLVERS from each debug file
+            toolvers_data = []
+            
+            for debug_file in sorted(debug_files):
+                try:
+                    # Get file modification time
+                    file_stat = os.stat(debug_file)
+                    timestamp = file_stat.st_mtime
+                    timestamp_str = datetime.fromtimestamp(timestamp).strftime('%m/%d %H:%M')
+                    timestamp_full = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+                    
+                    # Extract stage name from filename
+                    basename = os.path.basename(debug_file)
+                    stage_full = basename.replace('.debug', '')
+                    stage_name = re.sub(r'__\d{14}_[A-Z0-9]+$', '', stage_full)
+                    
+                    # Clean stage name
+                    stage_clean = re.sub(r'^STEP_update__', '', stage_name)
+                    stage_clean = re.sub(r'^STEP__', '', stage_clean)
+                    
+                    # Get status from corresponding log file
+                    log_file = debug_file.replace('.debug', '.log')
+                    status = self._extract_status_from_log(log_file)
+                    
+                    # Search for BE_OVERRIDE_TOOLVERS in the file
+                    result = self.file_utils.run_command(f"grep '^BE_OVERRIDE_TOOLVERS:' {debug_file}")
+                    if result.strip():
+                        match = re.search(r'BE_OVERRIDE_TOOLVERS:\s*(.+)', result)
+                        if match:
+                            config_path = match.group(1).strip()
+                            config_file = os.path.basename(config_path)
+                            toolvers_data.append({
+                                'stage': stage_name,
+                                'stage_clean': stage_clean,
+                                'timestamp': timestamp,
+                                'timestamp_str': timestamp_str,
+                                'timestamp_full': timestamp_full,
+                                'config_file': config_file,
+                                'config_path': config_path,
+                                'status': status
+                            })
+                except Exception:
+                    continue
+            
+            if not toolvers_data:
+                return None
+            
+            # Sort by timestamp
+            toolvers_data.sort(key=lambda x: x['timestamp'])
+            
+            # Check for inconsistencies
+            unique_configs = set(item['config_path'] for item in toolvers_data)
+            is_consistent = len(unique_configs) == 1
+            
+            # Group by config
+            config_groups = {}
+            for item in toolvers_data:
+                config = item['config_path']
+                if config not in config_groups:
+                    config_groups[config] = []
+                config_groups[config].append(item)
+            
+            # Find config change point
+            config_change_index = None
+            if len(unique_configs) > 1:
+                prev_config = toolvers_data[0]['config_path']
+                for idx, item in enumerate(toolvers_data[1:], 1):
+                    if item['config_path'] != prev_config:
+                        config_change_index = idx
+                        break
+            
+            return {
+                'is_consistent': is_consistent,
+                'unique_configs': list(unique_configs),
+                'toolvers_data': toolvers_data,
+                'config_groups': config_groups,
+                'config_change_index': config_change_index,
+                'total_executions': len(toolvers_data)
+            }
+            
+        except Exception as e:
+            return None
+    
+    def _check_be_override_toolvers_consistency(self) -> Dict[str, Any]:
+        """Check BE_OVERRIDE_TOOLVERS consistency across all PnR stages
+        
+        Detects if the user changed tool version configuration mid-flow.
+        
+        Returns:
+            Dictionary with consistency check results
+        """
+        try:
+            data = self._extract_be_override_toolvers_data()
+            if not data:
+                return
+            
+            toolvers_data = data['toolvers_data']
+            is_consistent = data['is_consistent']
+            config_groups = data['config_groups']
+            
+            if not is_consistent:
+                # Inconsistency detected!
+                print(f"\n  {Color.RED}[ERROR] BE_OVERRIDE_TOOLVERS Inconsistency Detected:{Color.RESET}")
+                print(f"    {Color.YELLOW}Tool version configuration changed mid-flow!{Color.RESET}")
+                print(f"    {Color.YELLOW}This can cause inconsistent results across PnR stages.{Color.RESET}\n")
+                
+                # Group by config file
+                config_groups = {}
+                for item in toolvers_data:
+                    config = item['config_path']
+                    if config not in config_groups:
+                        config_groups[config] = []
+                    config_groups[config].append(item)
+                
+                # Display each configuration with its stages (sorted by first occurrence)
+                sorted_groups = sorted(config_groups.items(), key=lambda x: x[1][0]['timestamp'])
+                for idx, (config_path, items) in enumerate(sorted_groups, 1):
+                    config_file = os.path.basename(config_path)
+                    # Sort items by timestamp to get proper first/last
+                    items_sorted = sorted(items, key=lambda x: x['timestamp'])
+                    first_time = items_sorted[0]['timestamp_str']
+                    last_time = items_sorted[-1]['timestamp_str']
+                    stage_count = len(items)
+                    
+                    print(f"    Config {idx}: {config_file}")
+                    print(f"      Path: {config_path}")
+                    print(f"      Used: {first_time} -> {last_time} ({stage_count} executions)")
+                    
+                    # Clean stage names and group by stage with timestamps
+                    # Format: stage (timestamp) or stage (Nx: first, last) for re-runs
+                    stage_groups = {}
+                    stage_order = []  # Preserve chronological order
+                    
+                    for item in items_sorted:
+                        stage = item['stage']
+                        # Remove STEP_update__ and STEP__ prefixes
+                        stage = re.sub(r'^STEP_update__', '', stage)
+                        stage = re.sub(r'^STEP__', '', stage)
+                        
+                        if stage not in stage_groups:
+                            stage_groups[stage] = []
+                            stage_order.append(stage)
+                        stage_groups[stage].append(item['timestamp_str'])
+                    
+                    # Build compact display with timestamps
+                    stage_entries = []
+                    for stage in stage_order:
+                        timestamps = stage_groups[stage]
+                        if len(timestamps) == 1:
+                            stage_entries.append(f"{stage} ({timestamps[0]})")
+                        else:
+                            # Multiple executions - show count and first/last
+                            stage_entries.append(f"{stage} ({len(timestamps)}x: {timestamps[0]}..{timestamps[-1]})")
+                    
+                    # Print stages across multiple lines with proper indentation
+                    stages_display = ', '.join(stage_entries)
+                    print(f"      Stages: {stages_display}")
+                    print()
+                
+            else:
+                # All consistent
+                unique_configs = data['unique_configs']
+                config_path = unique_configs[0]
+                config_file = os.path.basename(config_path)
+                print(f"  {Color.CYAN}BE_OVERRIDE_TOOLVERS:{Color.RESET} {config_file}")
+                print(f"    Path: {config_path}")
+                print(f"    [OK] Consistent across all {len(toolvers_data)} PnR stages")
+                
+        except Exception as e:
+            # Silent failure - this is an optional check
+            pass
+    
+    def _get_toolvers_config_html_content(self) -> str:
+        """Generate HTML content for Tool Version Configuration tab with CSS/HTML flowchart
+        
+        Returns:
+            HTML string for toolvers configuration section
+        """
+        try:
+            data = self._extract_be_override_toolvers_data()
+            
+            if not data:
+                return """
+                <div class="no-data">
+                    <p>No BE_OVERRIDE_TOOLVERS data available</p>
+                    <p>Debug files not found or do not contain tool version configuration information.</p>
+                </div>
+                """
+            
+            toolvers_data = data['toolvers_data']
+            is_consistent = data['is_consistent']
+            config_groups = data['config_groups']
+            unique_configs = data['unique_configs']
+            config_change_index = data['config_change_index']
+            total_executions = data['total_executions']
+            
+            # Determine status
+            status_class = "success" if is_consistent else "error"
+            status_text = "PASS" if is_consistent else "ERROR"
+            status_icon = "✓" if is_consistent else "✗"
+            
+            # Build summary card
+            first_time = toolvers_data[0]['timestamp_full']
+            last_time = toolvers_data[-1]['timestamp_full']
+            
+            summary_html = f"""
+            <div class="summary-card {status_class}">
+                <div class="status-badge {status_class}">
+                    <span class="status-icon">{status_icon}</span>
+                    <span class="status-text">{status_text}</span>
+                </div>
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Configurations Used</div>
+                        <div class="stat-value">{len(unique_configs)}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Total Executions</div>
+                        <div class="stat-value">{total_executions}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Time Span</div>
+                        <div class="stat-value">{toolvers_data[0]['timestamp_str']} → {toolvers_data[-1]['timestamp_str']}</div>
+                    </div>
+                </div>
+            """
+            
+            if not is_consistent and config_change_index:
+                change_time = toolvers_data[config_change_index]['timestamp_full']
+                summary_html += f"""
+                <div class="warning-message">
+                    ⚠ Configuration changed on {change_time}
+                </div>
+                """
+            
+            summary_html += "</div>"
+            
+            # Build CSS/HTML flowchart with parallel stage detection
+            # Group stages by execution time to detect parallel runs
+            # Stages within 2 minutes of each other are considered parallel
+            PARALLEL_THRESHOLD = 120  # seconds
+            
+            # Build flow structure with parallel detection
+            flow_groups = []
+            processed_indices = set()
+            
+            for idx, item in enumerate(toolvers_data):
+                if idx in processed_indices:
+                    continue
+                
+                # Start a new group with this stage
+                current_time = item['timestamp']
+                parallel_group = [item]
+                processed_indices.add(idx)
+                
+                # Look ahead for parallel stages (close timestamps)
+                for next_idx in range(idx + 1, len(toolvers_data)):
+                    if next_idx in processed_indices:
+                        continue
+                    next_item = toolvers_data[next_idx]
+                    time_diff = abs(next_item['timestamp'] - current_time)
+                    
+                    if time_diff <= PARALLEL_THRESHOLD:
+                        parallel_group.append(next_item)
+                        processed_indices.add(next_idx)
+                    else:
+                        break
+                
+                flow_groups.append(parallel_group)
+            
+            # Build HTML flowchart with parallel branches
+            flowchart_nodes = []
+            
+            for group_idx, group in enumerate(flow_groups):
+                is_parallel = len(group) > 1
+                
+                # Check if config change occurs in this group
+                has_config_change = False
+                if group_idx > 0:
+                    prev_config = flow_groups[group_idx - 1][0]['config_path']
+                    curr_config = group[0]['config_path']
+                    has_config_change = (prev_config != curr_config)
+                
+                # Add connector before this group
+                if group_idx > 0:
+                    connector_class = "connector-change" if has_config_change else "connector"
+                    flowchart_nodes.append(f'<div class="{connector_class}"></div>')
+                
+                # Build this group
+                if is_parallel:
+                    # Parallel execution - show side by side
+                    parallel_nodes = []
+                    for item in group:
+                        config_idx = unique_configs.index(item['config_path'])
+                        config_class = f"config{config_idx + 1}"
+                        stage_display = item['stage_clean'].replace('_', ' ')
+                        
+                        # Detect if this is a re-run
+                        stage_name = item['stage_clean']
+                        exec_count = sum(1 for prev_group in flow_groups[:group_idx+1] 
+                                       for prev_item in prev_group 
+                                       if prev_item['stage_clean'] == stage_name)
+                        rerun_badge = f' <span class="rerun-badge">#{exec_count}</span>' if exec_count > 1 else ''
+                        
+                        # Add status indicator
+                        status = item.get('status', 'UNKNOWN')
+                        status_icon, status_class = self._get_status_indicator(status)
+                        status_badge = f'<span class="status-badge {status_class}">{status_icon}</span>'
+                        
+                        parallel_nodes.append(f"""
+                        <div class="flow-node {config_class}">
+                            {status_badge}
+                            <div class="node-content">{stage_display}{rerun_badge}</div>
+                            <div class="node-time">{item['timestamp_str']}</div>
+                        </div>
+                        """)
+                    
+                    flowchart_nodes.append(f"""
+                    <div class="parallel-container">
+                        <div class="parallel-group">
+                            {"".join(parallel_nodes)}
+                        </div>
+                    </div>
+                    """)
+                else:
+                    # Single stage
+                    item = group[0]
+                    config_idx = unique_configs.index(item['config_path'])
+                    config_class = f"config{config_idx + 1}"
+                    stage_display = item['stage_clean'].replace('_', ' ')
+                    
+                    # Detect if this is a re-run
+                    stage_name = item['stage_clean']
+                    exec_count = sum(1 for prev_group in flow_groups[:group_idx+1] 
+                                   for prev_item in prev_group 
+                                   if prev_item['stage_clean'] == stage_name)
+                    rerun_badge = f' <span class="rerun-badge">#{exec_count}</span>' if exec_count > 1 else ''
+                    
+                    # Add status indicator
+                    status = item.get('status', 'UNKNOWN')
+                    status_icon, status_class = self._get_status_indicator(status)
+                    status_badge = f'<span class="status-badge {status_class}">{status_icon}</span>'
+                    
+                    flowchart_nodes.append(f"""
+                    <div class="flow-node {config_class}">
+                        {status_badge}
+                        <div class="node-content">{stage_display}{rerun_badge}</div>
+                        <div class="node-time">{item['timestamp_str']}</div>
+                    </div>
+                    """)
+            
+            flowchart_html = f"""
+            <div class="flowchart-container">
+                <div class="flowchart">
+                    {"".join(flowchart_nodes)}
+                </div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-box config1"></div>
+                        <span>Config 1: {os.path.basename(unique_configs[0])}</span>
+                    </div>
+                    {f'<div class="legend-item"><div class="legend-box config2"></div><span>Config 2: {os.path.basename(unique_configs[1])}</span></div>' if len(unique_configs) > 1 else ''}
+                    <div class="legend-item">
+                        <div class="legend-connector"></div>
+                        <span>Sequential flow</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-connector-change"></div>
+                        <span>Config change</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="status-badge status-pass">✓</span>
+                        <span>Pass/Done</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="status-badge status-fail">✗</span>
+                        <span>Failed/Error</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="status-badge status-running">⟳</span>
+                        <span>Running</span>
+                    </div>
+                </div>
+            </div>
+            """
+            
+            # Build execution table
+            table_rows = []
+            for idx, item in enumerate(toolvers_data):
+                config_idx = unique_configs.index(item['config_path'])
+                row_class = f"config{config_idx + 1}-row"
+                
+                # Check if it's a config change point
+                change_marker = ""
+                if idx == config_change_index:
+                    row_class += " config-change-row"
+                    change_marker = " 🔄"
+                
+                # Check for re-runs with different config
+                rerun_marker = ""
+                stage = item['stage_clean']
+                # Simple check: if this stage appeared before with different config
+                for prev_item in toolvers_data[:idx]:
+                    if prev_item['stage_clean'] == stage and prev_item['config_path'] != item['config_path']:
+                        rerun_marker = " ⚠"
+                        break
+                
+                # Count execution number for this stage
+                exec_num = sum(1 for prev in toolvers_data[:idx+1] if prev['stage_clean'] == stage)
+                exec_display = f"{exec_num}" if exec_num == 1 else f"{exec_num} ⟳"
+                
+                date_part, time_part = item['timestamp_full'].split(' ')
+                
+                table_rows.append(f"""
+                <tr class="{row_class}">
+                    <td>{date_part}</td>
+                    <td>{time_part}</td>
+                    <td>{item['stage_clean']}</td>
+                    <td title="{item['config_path']}">{item['config_file']}{change_marker}{rerun_marker}</td>
+                    <td>{exec_display}</td>
+                </tr>
+                """)
+            
+            table_html = f"""
+            <table class="execution-table">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Date ↕</th>
+                        <th onclick="sortTable(1)">Time ↕</th>
+                        <th onclick="sortTable(2)">Stage ↕</th>
+                        <th onclick="sortTable(3)">Config File ↕</th>
+                        <th onclick="sortTable(4)">Execution ↕</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {"".join(table_rows)}
+                </tbody>
+            </table>
+            """
+            
+            # Build config comparison (if inconsistent)
+            comparison_html = ""
+            if not is_consistent:
+                sorted_groups = sorted(config_groups.items(), key=lambda x: x[1][0]['timestamp'])
+                comparison_cards = []
+                
+                for idx, (config_path, items) in enumerate(sorted_groups):
+                    config_file = os.path.basename(config_path)
+                    first_time = items[0]['timestamp_str']
+                    last_time = items[-1]['timestamp_str']
+                    
+                    # Group stages
+                    stage_counts = {}
+                    for item in items:
+                        stage = item['stage_clean']
+                        stage_counts[stage] = stage_counts.get(stage, 0) + 1
+                    
+                    stage_list = []
+                    for stage, count in stage_counts.items():
+                        if count > 1:
+                            stage_list.append(f"{stage} ({count}x)")
+                        else:
+                            stage_list.append(stage)
+                    
+                    comparison_cards.append(f"""
+                    <div class="config-card config{idx+1}">
+                        <h3>Config {idx+1} {'(OLD)' if idx == 0 else '(NEW)'}</h3>
+                        <div class="config-info">
+                            <p><strong>File:</strong> {config_file}</p>
+                            <p><strong>Path:</strong> <code>{config_path}</code></p>
+                            <p><strong>Used:</strong> {first_time} → {last_time}</p>
+                            <p><strong>Executions:</strong> {len(items)}</p>
+                        </div>
+                        <div class="stage-list">
+                            <strong>Stages:</strong><br/>
+                            {', '.join(stage_list)}
+                        </div>
+                    </div>
+                    """)
+                
+                comparison_html = f"""
+                <div class="section-header">Configuration Comparison</div>
+                <div class="comparison-container">
+                    {"".join(comparison_cards)}
+                </div>
+                """
+            
+            # Build impact analysis (if inconsistent)
+            impact_html = ""
+            if not is_consistent:
+                # Find stages that were re-run with different configs
+                rerun_stages = {}
+                for item in toolvers_data:
+                    stage = item['stage_clean']
+                    config = item['config_path']
+                    if stage not in rerun_stages:
+                        rerun_stages[stage] = set()
+                    rerun_stages[stage].add(config)
+                
+                problematic_stages = {stage: configs for stage, configs in rerun_stages.items() if len(configs) > 1}
+                
+                if problematic_stages:
+                    stage_details = []
+                    for stage, configs in problematic_stages.items():
+                        config_names = [os.path.basename(c) for c in configs]
+                        stage_details.append(f"<li><strong>{stage}</strong>: {' → '.join(config_names)}</li>")
+                    
+                    impact_html = f"""
+                    <div class="section-header">Impact Analysis</div>
+                    <div class="impact-warning">
+                        <h3>⚠ CRITICAL FINDINGS</h3>
+                        <p><strong>Configuration changed mid-flow on {toolvers_data[config_change_index]['timestamp_full']}</strong></p>
+                        <p>The following stages were RE-RUN with different tool versions:</p>
+                        <ul>
+                            {"".join(stage_details)}
+                        </ul>
+                        <div class="impact-issues">
+                            <h4>Potential Issues:</h4>
+                            <ul>
+                                <li>✗ Tool version mismatch may cause inconsistent results</li>
+                                <li>✗ Earlier stages used old tool versions</li>
+                                <li>✗ Later stages used new tool versions</li>
+                                <li>✗ This could affect timing closure, routing quality, or DRC results</li>
+                            </ul>
+                        </div>
+                        <div class="recommendation">
+                            📋 <strong>Recommendation:</strong> Re-run entire flow with single tool version configuration
+                        </div>
+                    </div>
+                    """
+            
+            # Combine all sections
+            html_content = f"""
+            <div class="section-header">Executive Summary</div>
+            {summary_html}
+            
+            <div class="section-header">PnR Flow Diagram</div>
+            {flowchart_html}
+            
+            <div class="section-header">Detailed Execution Timeline</div>
+            {table_html}
+            
+            {comparison_html}
+            {impact_html}
+            """
+            
+            return html_content
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return f"""
+            <div class="no-data">
+                <p>Error generating Tool Version Configuration content</p>
+                <p>Error: {str(e)}</p>
+            </div>
+            """
+    
+    def run_recipe_analysis(self) -> None:
         """Run recipe configuration analysis"""
         pass
     
-    def run_pnr_analysis(self):
+    def _analyze_imported_pnr_data(self, export_dir: str) -> None:
+        """Analyze PnR data from export_innovus (ECO/Signoff workflow)"""
+        print(f"\n{Color.CYAN}[INFO] ECO/Signoff workarea detected - PnR results imported from external source{Color.RESET}\n")
+        
+        # Check for PnR artifacts in export_innovus
+        def_files = glob.glob(os.path.join(export_dir, "*.def.gz"))
+        netlist_lvs_files = glob.glob(os.path.join(export_dir, "*.lvs.gv.gz"))
+        netlist_nopower_files = glob.glob(os.path.join(export_dir, "*.nopower.gv.gz"))
+        lef_files = glob.glob(os.path.join(export_dir, "*.lef"))
+        oas_files = glob.glob(os.path.join(export_dir, "*_fill.oas"))
+        multibit_files = glob.glob(os.path.join(export_dir, "*multibitMapping.gz"))
+        
+        # Extract IPO from filenames if available
+        detected_ipo = self.design_info.ipo
+        if def_files:
+            # Try to extract IPO from filename like ccoreb.ipo1400.def.gz
+            import re
+            match = re.search(r'\.ipo(\d+)\.', os.path.basename(def_files[0]))
+            if match:
+                detected_ipo = f"ipo{match.group(1)}"
+        
+        # Helper function to format file size
+        def format_size(filepath):
+            try:
+                size = os.path.getsize(filepath)
+                for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+                    if size < 1024.0:
+                        return f"{size:.1f} {unit}"
+                    size /= 1024.0
+                return f"{size:.1f} PB"
+            except:
+                return "Unknown"
+        
+        # Print imported PnR data
+        print(f"{Color.CYAN}Imported PnR Data (export/export_innovus/):{Color.RESET}")
+        if detected_ipo != "unknown":
+            print(f"  {Color.GREEN}IPO: {detected_ipo}{Color.RESET}")
+        
+        if def_files:
+            size = format_size(def_files[0])
+            print(f"  {Color.GREEN}[OK] Physical Design (DEF):{Color.RESET}     {size:<12} ({os.path.basename(def_files[0])})")
+        else:
+            print(f"  {Color.YELLOW}[X] Physical Design (DEF):{Color.RESET}     Not found")
+        
+        if oas_files:
+            size = format_size(oas_files[0])
+            print(f"  {Color.GREEN}[OK] Layout (GDS/OAS):{Color.RESET}          {size:<12} ({os.path.basename(oas_files[0])})")
+        else:
+            print(f"  {Color.YELLOW}[X] Layout (GDS/OAS):{Color.RESET}          Not found")
+        
+        if netlist_lvs_files:
+            size = format_size(netlist_lvs_files[0])
+            print(f"  {Color.GREEN}[OK] Netlist (LVS):{Color.RESET}            {size:<12} ({os.path.basename(netlist_lvs_files[0])})")
+        else:
+            print(f"  {Color.YELLOW}[X] Netlist (LVS):{Color.RESET}            Not found")
+        
+        if netlist_nopower_files:
+            size = format_size(netlist_nopower_files[0])
+            print(f"  {Color.GREEN}[OK] Netlist (no-power):{Color.RESET}       {size:<12} ({os.path.basename(netlist_nopower_files[0])})")
+        else:
+            print(f"  {Color.YELLOW}[X] Netlist (no-power):{Color.RESET}       Not found")
+        
+        if lef_files:
+            size = format_size(lef_files[0])
+            print(f"  {Color.GREEN}[OK] LEF:{Color.RESET}                      {size:<12} ({os.path.basename(lef_files[0])})")
+        else:
+            print(f"  {Color.YELLOW}[X] LEF:{Color.RESET}                      Not found")
+        
+        if multibit_files:
+            print(f"  {Color.GREEN}[OK] Multibit Mapping:{Color.RESET}         Present")
+        else:
+            print(f"  {Color.YELLOW}[X] Multibit Mapping:{Color.RESET}         Not found")
+        
+        # Check for signoff_flow activities
+        signoff_flow_dir = os.path.join(self.workarea, "signoff_flow")
+        if os.path.isdir(signoff_flow_dir):
+            print(f"\n{Color.CYAN}Signoff/ECO Activities (signoff_flow/):{Color.RESET}")
+            
+            # Check for specific signoff directories
+            signoff_activities = [
+                ("auto_pt", "PrimeTime Signoff"),
+                ("nv_gate_eco", "NV Gate ECO"),
+                ("gl-check", "Gate-Level Checks"),
+                ("gl-check_eco", "Gate-Level Checks (ECO)"),
+                ("eco_vs_pnr_fm", "Formal Verification (ECO vs PnR)"),
+                ("gen_eco_netlist_innovus", "ECO Netlist Generation"),
+            ]
+            
+            found_any = False
+            for dir_name, description in signoff_activities:
+                full_path = os.path.join(signoff_flow_dir, dir_name)
+                if os.path.isdir(full_path):
+                    print(f"  {Color.GREEN}[OK] {description}:{Color.RESET}".ljust(60) + f"{dir_name}/ (present)")
+                    found_any = True
+            
+            if not found_any:
+                print(f"  {Color.YELLOW}No signoff activities detected{Color.RESET}")
+        
+        # Informative note
+        print(f"\n{Color.YELLOW}Note:{Color.RESET} PnR flow configuration files (prc, runset, beflow_config) not present")
+        print(f"      This is {Color.GREEN}expected{Color.RESET} for ECO/Signoff workflow - workarea uses imported PnR results")
+        print(f"      from external source and focuses on signoff/ECO activities.")
+    
+    def run_pnr_analysis(self) -> None:
         """Run comprehensive PnR (Place & Route) analysis"""
         self.print_header(FlowStage.PNR_ANALYSIS)
+        
+        # Check if this is ECO/Signoff workarea with imported PnR data
+        export_innovus_dir = os.path.join(self.workarea, "export/export_innovus")
+        nv_flow_dir = os.path.join(self.workarea, "pnr_flow/nv_flow")
+        is_eco_workarea = (not os.path.isdir(nv_flow_dir) and os.path.isdir(export_innovus_dir))
+        
+        if is_eco_workarea:
+            # Check for PnR artifacts to confirm this is ECO/Signoff workarea
+            def_files = glob.glob(os.path.join(export_innovus_dir, "*.def.gz"))
+            netlist_files = glob.glob(os.path.join(export_innovus_dir, "*.gv.gz"))
+            
+            if def_files or netlist_files:
+                print(f"  {Color.CYAN}[WARN] IPO directory '{self.design_info.ipo}' from .prc file not found{Color.RESET}")
+                print(f"    {Color.YELLOW}Note: Users sometimes delete IPO directories to save disk space{Color.RESET}")
+                self._analyze_imported_pnr_data(export_innovus_dir)
+                return  # Exit PnR analysis - ECO workarea handles differently
         
         # Resolve IPO directory (may have been deleted to save disk space)
         resolved_ipo = self._resolve_ipo_directory(self.design_info.top_hier, self.design_info.ipo)
@@ -4433,6 +6077,9 @@ class WorkareaReviewer:
         beflow_config = os.path.join(self.workarea, f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/beflow_config.yaml")
         if self.print_file_info(beflow_config, f"PnR BeFlow Configuration ({self.design_info.ipo})"):
             self._analyze_beflow_config(beflow_config)
+        
+        # Check BE_OVERRIDE_TOOLVERS consistency across PnR stages
+        self._check_be_override_toolvers_consistency()
         
         # Summary reports
         summary_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/ipo*/REPs/SUMMARY/*route.nbu_summary.rpt*"
@@ -4555,8 +6202,12 @@ class WorkareaReviewer:
             icon="[PnR]"
         )
     
-    def _generate_unified_pnr_html(self):
-        """Generate unified PnR HTML report combining PnR Data, Timing Histogram, and Images"""
+    def _generate_unified_pnr_html(self) -> Optional[str]:
+        """Generate unified PnR HTML report combining PnR Data, Timing Histogram, and Images
+        
+        Returns:
+            HTML filename if generated successfully, None otherwise
+        """
         try:
             # Generate timestamp for filename
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -4578,6 +6229,9 @@ class WorkareaReviewer:
             
             # Collect Images content  
             images_content = self._get_images_html_content()
+            
+            # Collect Tool Version Configuration content
+            toolvers_config_content = self._get_toolvers_config_html_content()
             
             # Generate unified HTML
             html_content = f"""<!DOCTYPE html>
@@ -4784,6 +6438,524 @@ class WorkareaReviewer:
         .footer strong {{
             color: #00ff00;
         }}
+        
+        /* Tool Version Configuration Tab Styles */
+        .summary-card {{
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }}
+        
+        .summary-card.success {{
+            border-left: 5px solid #27ae60;
+        }}
+        
+        .summary-card.error {{
+            border-left: 5px solid #e74c3c;
+        }}
+        
+        .status-badge {{
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }}
+        
+        .status-badge.success {{
+            background: #27ae60;
+            color: white;
+        }}
+        
+        .status-badge.error {{
+            background: #e74c3c;
+            color: white;
+        }}
+        
+        .status-icon {{
+            margin-right: 8px;
+            font-size: 22px;
+        }}
+        
+        .summary-stats {{
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }}
+        
+        .stat-item {{
+            flex: 1;
+            min-width: 150px;
+        }}
+        
+        .stat-label {{
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }}
+        
+        .stat-value {{
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }}
+        
+        .warning-message {{
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-weight: 500;
+        }}
+        
+        .flowchart-container {{
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 600px;
+        }}
+        
+        .flowchart {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            padding: 20px;
+            min-width: fit-content;
+        }}
+        
+        .flow-node {{
+            min-width: 250px;
+            max-width: 400px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            text-align: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 3px solid;
+            position: relative;
+        }}
+        
+        .flow-node:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }}
+        
+        .flow-node.config1 {{
+            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+            border-color: #2E5F8A;
+            color: white;
+        }}
+        
+        .flow-node.config2 {{
+            background: linear-gradient(135deg, #F5A623 0%, #D68910 100%);
+            border-color: #A86F0D;
+            color: white;
+        }}
+        
+        .node-content {{
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.4;
+        }}
+        
+        .node-time {{
+            margin-top: 8px;
+            font-size: 12px;
+            opacity: 0.9;
+            font-weight: normal;
+        }}
+        
+        .status-badge {{
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }}
+        
+        .status-badge.status-pass {{
+            background: #27ae60;
+            color: white;
+        }}
+        
+        .status-badge.status-fail {{
+            background: #e74c3c;
+            color: white;
+        }}
+        
+        .status-badge.status-running {{
+            background: #f39c12;
+            color: white;
+            animation: spin 2s linear infinite;
+        }}
+        
+        .status-badge.status-unknown {{
+            background: #95a5a6;
+            color: white;
+        }}
+        
+        @keyframes spin {{
+            0% {{ transform: rotate(0deg); }}
+            100% {{ transform: rotate(360deg); }}
+        }}
+        
+        .connector {{
+            width: 3px;
+            height: 25px;
+            background: linear-gradient(180deg, #4A90E2 0%, #357ABD 100%);
+            margin: 0;
+            position: relative;
+        }}
+        
+        .connector::after {{
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid #357ABD;
+        }}
+        
+        .connector-change {{
+            width: 3px;
+            height: 40px;
+            background: repeating-linear-gradient(
+                180deg,
+                #e74c3c 0px,
+                #e74c3c 4px,
+                transparent 4px,
+                transparent 8px
+            );
+            margin: 5px 0;
+            position: relative;
+        }}
+        
+        .connector-change::before {{
+            content: '⚠ CONFIG CHANGE';
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            background: #e74c3c;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }}
+        
+        .connector-change::after {{
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid #e74c3c;
+        }}
+        
+        .parallel-container {{
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin: 5px 0;
+        }}
+        
+        .parallel-group {{
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            position: relative;
+        }}
+        
+        .parallel-group::before {{
+            content: '⚡ PARALLEL EXECUTION';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #9b59b6;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            white-space: nowrap;
+        }}
+        
+        .parallel-group .flow-node {{
+            min-width: 200px;
+            max-width: 280px;
+        }}
+        
+        .rerun-badge {{
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 6px;
+        }}
+        
+        .legend {{
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            justify-content: center;
+            border: 2px solid #e9ecef;
+        }}
+        
+        .legend-item {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }}
+        
+        .legend-box {{
+            width: 40px;
+            height: 30px;
+            border-radius: 4px;
+            border: 2px solid #333;
+        }}
+        
+        .legend-box.config1 {{
+            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+        }}
+        
+        .legend-box.config2 {{
+            background: linear-gradient(135deg, #F5A623 0%, #D68910 100%);
+        }}
+        
+        .legend-connector {{
+            width: 3px;
+            height: 30px;
+            background: linear-gradient(180deg, #4A90E2 0%, #357ABD 100%);
+            position: relative;
+        }}
+        
+        .legend-connector::after {{
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid #357ABD;
+        }}
+        
+        .legend-connector-change {{
+            width: 3px;
+            height: 30px;
+            background: repeating-linear-gradient(
+                180deg,
+                #e74c3c 0px,
+                #e74c3c 3px,
+                transparent 3px,
+                transparent 6px
+            );
+            position: relative;
+        }}
+        
+        .legend-connector-change::after {{
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid #e74c3c;
+        }}
+        
+        .execution-table {{
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }}
+        
+        .execution-table thead {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }}
+        
+        .execution-table th {{
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+        }}
+        
+        .execution-table th:hover {{
+            background: rgba(255,255,255,0.1);
+        }}
+        
+        .execution-table td {{
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }}
+        
+        .execution-table tr:hover {{
+            background: #f8f9fa;
+        }}
+        
+        .config1-row {{
+            background: rgba(74, 144, 226, 0.1);
+        }}
+        
+        .config2-row {{
+            background: rgba(245, 166, 35, 0.1);
+        }}
+        
+        .config-change-row {{
+            border-top: 3px solid #e74c3c;
+            border-bottom: 3px solid #e74c3c;
+            font-weight: bold;
+        }}
+        
+        .comparison-container {{
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }}
+        
+        .config-card {{
+            flex: 1;
+            min-width: 300px;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: white;
+        }}
+        
+        .config-card.config1 {{
+            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+        }}
+        
+        .config-card.config2 {{
+            background: linear-gradient(135deg, #F5A623 0%, #D68910 100%);
+        }}
+        
+        .config-card h3 {{
+            margin: 0 0 15px 0;
+            font-size: 22px;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+        }}
+        
+        .config-info p {{
+            margin: 8px 0;
+            line-height: 1.6;
+        }}
+        
+        .config-info code {{
+            background: rgba(0,0,0,0.2);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 13px;
+        }}
+        
+        .stage-list {{
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.3);
+        }}
+        
+        .impact-warning {{
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+        }}
+        
+        .impact-warning h3 {{
+            color: #856404;
+            margin: 0 0 15px 0;
+            font-size: 22px;
+        }}
+        
+        .impact-warning p {{
+            color: #856404;
+            margin: 10px 0;
+        }}
+        
+        .impact-warning ul {{
+            margin: 15px 0;
+            padding-left: 25px;
+        }}
+        
+        .impact-warning li {{
+            margin: 8px 0;
+            color: #856404;
+        }}
+        
+        .impact-issues {{
+            background: rgba(231, 76, 60, 0.1);
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }}
+        
+        .impact-issues h4 {{
+            margin: 0 0 10px 0;
+            color: #c0392b;
+        }}
+        
+        .recommendation {{
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-weight: 500;
+        }}
     </style>
 </head>
 <body>
@@ -4808,6 +6980,7 @@ class WorkareaReviewer:
             <button class="tab-btn active" onclick="openTab(event, 'pnr-data')">PnR Data</button>
             <button class="tab-btn" onclick="openTab(event, 'timing-histogram')">Timing Histogram</button>
             <button class="tab-btn" onclick="openTab(event, 'images')">Debug Images</button>
+            <button class="tab-btn" onclick="openTab(event, 'toolvers-config')">Tool Version Config</button>
         </div>
         
         <!-- PnR Data Tab -->
@@ -4823,6 +6996,11 @@ class WorkareaReviewer:
         <!-- Images Tab -->
         <div id="images" class="tab-content">
             {images_content}
+        </div>
+        
+        <!-- Tool Version Configuration Tab -->
+        <div id="toolvers-config" class="tab-content">
+            {toolvers_config_content}
         </div>
     </div>
     
@@ -4904,7 +7082,7 @@ class WorkareaReviewer:
                 f.write(html_content)
             
             print(f"  {Color.GREEN}[OK] Unified PnR HTML Report Generated{Color.RESET}")
-            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{html_filename}{Color.RESET} &")
             
             return os.path.abspath(html_path)
             
@@ -4914,8 +7092,12 @@ class WorkareaReviewer:
             traceback.print_exc()
             return None
     
-    def _get_pnr_data_html_content(self):
-        """Extract PnR data content for unified HTML"""
+    def _get_pnr_data_html_content(self) -> str:
+        """Extract PnR data content for unified HTML
+        
+        Returns:
+            HTML string for PnR data section
+        """
         try:
             # Get postroute data from all stages
             stages = ['plan', 'place', 'cts', 'route', 'postroute']
@@ -5156,8 +7338,15 @@ class WorkareaReviewer:
             import traceback
             return f'<div class="no-data">Error loading PnR data: {e}<br><pre>{traceback.format_exc()}</pre></div>'
     
-    def _colorize_histogram_table(self, table_text):
-        """Add color coding to histogram table - highlight negative slack columns in red"""
+    def _colorize_histogram_table(self, table_text: str) -> str:
+        """Add color coding to histogram table - highlight negative slack columns in red
+        
+        Args:
+            table_text: Raw histogram table text
+            
+        Returns:
+            HTML-formatted table with color highlighting
+        """
         try:
             import re
             lines = table_text.split('\n')
@@ -5185,8 +7374,15 @@ class WorkareaReviewer:
             # If coloring fails, return original text
             return table_text
     
-    def _colorize_timing_summary(self, summary_text):
-        """Add color coding to timing summary - highlight negative WNS/TNS values in red"""
+    def _colorize_timing_summary(self, summary_text: str) -> str:
+        """Add color coding to timing summary - highlight negative WNS/TNS values in red
+        
+        Args:
+            summary_text: Raw timing summary text
+            
+        Returns:
+            HTML-formatted summary with color highlighting
+        """
         try:
             import re
             lines = summary_text.split('\n')
@@ -5210,8 +7406,12 @@ class WorkareaReviewer:
             # If coloring fails, return original text
             return summary_text
     
-    def _get_timing_histogram_html_content(self):
-        """Extract timing histogram content for unified HTML"""
+    def _get_timing_histogram_html_content(self) -> str:
+        """Extract timing histogram content for unified HTML
+        
+        Returns:
+            HTML string for timing histogram section
+        """
         try:
             # Find timing histogram files (both setup and hold)
             pnr_stages = ['postroute', 'route', 'cts', 'place', 'plan']
@@ -5363,8 +7563,12 @@ class WorkareaReviewer:
             import traceback
             return f'<div class="no-data">Error loading timing histogram: {e}<br><pre>{traceback.format_exc()}</pre></div>'
     
-    def _get_images_html_content(self):
-        """Extract images content for unified HTML with full categorization"""
+    def _get_images_html_content(self) -> str:
+        """Extract images content for unified HTML with full categorization
+        
+        Returns:
+            HTML string for images section
+        """
         try:
             # Find images directory
             images_dir = os.path.join(self.workarea, f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/IMAGES")
@@ -5674,8 +7878,15 @@ class WorkareaReviewer:
             import traceback
             return f'<div class="no-data">Error loading images: {e}<br><pre>{traceback.format_exc()}</pre></div>'
     
-    def _categorize_images(self, image_files):
-        """Categorize images into sections based on patterns"""
+    def _categorize_images(self, image_files: List[str]) -> Dict[str, List[str]]:
+        """Categorize images into sections based on patterns
+        
+        Args:
+            image_files: List of image file paths
+            
+        Returns:
+            Dictionary mapping category names to lists of image paths
+        """
         import re
         
         # Image categories with patterns (same as standalone report)
@@ -5948,8 +8159,12 @@ class WorkareaReviewer:
         
         return categorized
     
-    def _generate_unified_dc_html(self):
-        """Generate unified DC (Synthesis) HTML report"""
+    def _generate_unified_dc_html(self) -> Optional[str]:
+        """Generate unified DC (Synthesis) HTML report
+        
+        Returns:
+            HTML filename if generated successfully, None otherwise
+        """
         try:
             from datetime import datetime
             import base64
@@ -5967,6 +8182,11 @@ class WorkareaReviewer:
                     logo_data = base64.b64encode(f.read()).decode('utf-8')
             
             print(f"{Color.CYAN}Generating Unified DC HTML Report...{Color.RESET}")
+            
+            # Extract DC version and error statistics
+            dc_log = os.path.join(self.workarea, "syn_flow/dc/log/dc.log")
+            dc_version = self._extract_dc_version_for_html(dc_log)
+            dc_errors, dc_warnings = self._extract_dc_errors_for_html(dc_log)
             
             # Collect content from helper methods
             qor_data_content = self._get_dc_qor_html_content()
@@ -6156,6 +8376,7 @@ class WorkareaReviewer:
             <div class="header-text">
                 <h1>DC (Synthesis) Comprehensive Report</h1>
                 <p>Design: {self.design_info.top_hier} | IPO: {self.design_info.ipo}</p>
+                <p>DC Version: <strong>{dc_version}</strong> | Errors: <strong style="color: {'#e74c3c' if dc_errors > 0 else '#27ae60'}">{dc_errors}</strong> | Warnings: <strong>{dc_warnings:,}</strong></p>
                 <p>Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
             </div>
         </div>
@@ -6272,7 +8493,7 @@ class WorkareaReviewer:
                 f.write(html_content)
             
             print(f"  {Color.GREEN}[OK] Unified DC HTML Report Generated{Color.RESET}")
-            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{os.path.basename(html_path)}{Color.RESET} &")
+            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{os.path.basename(html_path)}{Color.RESET} &")
             
             return html_path
             
@@ -6282,8 +8503,12 @@ class WorkareaReviewer:
             traceback.print_exc()
             return None
     
-    def _get_dc_qor_html_content(self):
-        """Extract DC QoR data content for unified HTML"""
+    def _get_dc_qor_html_content(self) -> str:
+        """Extract DC QoR data content for unified HTML
+        
+        Returns:
+            HTML string for DC QoR section
+        """
         try:
             content = '<div class="section-header">QoR Data (Quality of Results)</div>'
             
@@ -6347,13 +8572,12 @@ class WorkareaReviewer:
                 else:
                     content += '<p>No design metrics found in QoR report</p>'
                 
-                # Add full report preview
-                content += '<h3 style="color: #667eea; margin-top: 30px;">Full QoR Report Preview</h3>'
-                content += f'<p><strong>Report Location:</strong> {qor_report}</p>'
-                content += '<pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; max-height: 500px; font-size: 11px; line-height: 1.4;">'
-                content += qor_content[:5000]  # First 5000 characters
-                if len(qor_content) > 5000:
-                    content += '\n\n... (report truncated, see full file for complete data)'
+                # Add full report with link
+                content += '<h3 style="color: #667eea; margin-top: 30px;">Full QoR Report</h3>'
+                qor_report_abs = os.path.abspath(qor_report)
+                content += f'<p><strong>Report Location:</strong> <a href="file://{qor_report_abs}" style="color: #667eea; text-decoration: none;">{qor_report}</a></p>'
+                content += '<pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; max-height: 600px; font-size: 11px; line-height: 1.4;">'
+                content += qor_content  # Full content, no truncation
                 content += '</pre>'
                 
             except Exception as e:
@@ -6365,8 +8589,12 @@ class WorkareaReviewer:
             import traceback
             return f'<div class="no-data">Error loading QoR data: {e}<br><pre>{traceback.format_exc()}</pre></div>'
     
-    def _get_dc_beflow_html_content(self):
-        """Extract BeFlow configuration content for unified HTML"""
+    def _get_dc_beflow_html_content(self) -> str:
+        """Extract BeFlow configuration content for unified HTML
+        
+        Returns:
+            HTML string for DC BeFlow section
+        """
         try:
             content = '<div class="section-header">BeFlow Configuration</div>'
             
@@ -6500,8 +8728,12 @@ class WorkareaReviewer:
             import traceback
             return f'<div class="no-data">Error loading BeFlow config: {e}<br><pre>{traceback.format_exc()}</pre></div>'
     
-    def _get_dc_images_html_content(self):
-        """Extract synthesis images content for unified HTML"""
+    def _get_dc_images_html_content(self) -> str:
+        """Extract synthesis images content for unified HTML
+        
+        Returns:
+            HTML string for DC images section
+        """
         try:
             # Find DC images directory
             images_dir = os.path.join(self.workarea, "syn_flow/dc/reports/color")
@@ -6768,8 +9000,12 @@ class WorkareaReviewer:
             import traceback
             return f'<div class="no-data">Error loading images: {e}<br><pre>{traceback.format_exc()}</pre></div>'
     
-    def _generate_timing_histogram_html(self):
-        """Generate HTML report with timing histogram tables"""
+    def _generate_timing_histogram_html(self) -> Optional[str]:
+        """Generate HTML report with timing histogram tables
+        
+        Returns:
+            HTML filename if generated successfully, None otherwise
+        """
         try:
             # Define stage priority order
             pnr_stages = ['postroute', 'route', 'cts', 'place', 'plan']
@@ -6824,7 +9060,7 @@ class WorkareaReviewer:
                                 f.write(html_content)
                             
                             print(f"\n  {Color.CYAN}Timing Histogram HTML Report:{Color.RESET}")
-                            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+                            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{html_filename}{Color.RESET} &")
                             return os.path.abspath(html_path)  # Return absolute path for master dashboard
                         
         except Exception as e:
@@ -7292,7 +9528,467 @@ class WorkareaReviewer:
         
         return html
     
-    def run_clock_analysis(self):
+    def _generate_clock_html_report(self, combined_clock_data: Dict[str, Any], max_latency_ps: float, innovus_clock_file: str, pt_clock_file: str, status: str) -> str:
+        """Generate HTML report for clock analysis
+        
+        Args:
+            combined_clock_data: Dictionary of clock data
+            max_latency_ps: Maximum latency in picoseconds
+            innovus_clock_file: Path to Innovus clock file
+            pt_clock_file: Path to PrimeTime clock file
+            status: Clock analysis status
+            
+        Returns:
+            HTML string containing clock report
+        """
+        if not combined_clock_data:
+            return ""
+        
+        try:
+            # Load the Avice logo
+            logo_base64 = ""
+            logo_path = os.path.join(os.path.dirname(__file__), "images/avice_logo.png")
+            if os.path.exists(logo_path):
+                with open(logo_path, "rb") as logo_file:
+                    logo_base64 = base64.b64encode(logo_file.read()).decode('utf-8')
+            
+            # Get current timestamp
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            username = os.environ.get('USER', 'avice')
+            
+            # HTML filename
+            html_filename = f"{username}_clock_analysis_{self.design_info.top_hier}_{self.design_info.ipo}_{timestamp}.html"
+            
+            # Status color and icon
+            if status == "PASS":
+                status_color = "#27ae60"
+                status_icon = "✓"
+            elif status == "WARN":
+                status_color = "#f39c12"
+                status_icon = "⚠"
+            else:  # FAIL
+                status_color = "#e74c3c"
+                status_icon = "✗"
+            
+            # Build clock rows HTML
+            clock_rows = ""
+            for clock_name, (latency_ps, skew_ps) in sorted(combined_clock_data.items()):
+                # Color code based on latency thresholds
+                if latency_ps >= 580:
+                    latency_color = "#e74c3c"  # Red
+                    latency_class = "fail"
+                elif latency_ps > 550:
+                    latency_color = "#f39c12"  # Yellow
+                    latency_class = "warn"
+                else:
+                    latency_color = "#27ae60"  # Green
+                    latency_class = "pass"
+                
+                # Format values
+                latency_ns = latency_ps / 1000.0
+                skew_ns = skew_ps / 1000.0
+                
+                clock_rows += f"""
+                <tr>
+                    <td style="font-family: monospace; font-weight: 500;">{clock_name}</td>
+                    <td style="color: {latency_color}; font-weight: bold;" class="{latency_class}">{latency_ps:.1f} ps ({latency_ns:.3f} ns)</td>
+                    <td>{skew_ps:.1f} ps ({skew_ns:.3f} ns)</td>
+                </tr>
+"""
+            
+            # Count clocks
+            num_clocks = len(combined_clock_data)
+            
+            # Build file links section
+            file_links_html = ""
+            if innovus_clock_file:
+                file_links_html += f"""
+                <div style="margin-top: 8px;">
+                    <a href="file://{innovus_clock_file}" target="_blank" 
+                       style="color: #3498db; text-decoration: none; font-size: 0.9em; display: inline-flex; align-items: center; gap: 6px;">
+                        📄 Innovus Clock Tree Report
+                    </a>
+                </div>
+"""
+            if pt_clock_file:
+                file_links_html += f"""
+                <div style="margin-top: 8px;">
+                    <a href="file://{pt_clock_file}" target="_blank" 
+                       style="color: #3498db; text-decoration: none; font-size: 0.9em; display: inline-flex; align-items: center; gap: 6px;">
+                        📄 PT Clock Latency Report
+                        <span style="font-size: 0.85em; color: #666;">(trace per clock with highest latency path)</span>
+                    </a>
+                </div>
+"""
+            
+            # Generate HTML
+            html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVICE Clock Analysis - {self.design_info.top_hier}</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }}
+        
+        .container {{
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }}
+        
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }}
+        
+        .logo {{
+            max-width: 200px;
+            height: auto;
+            margin-bottom: 15px;
+        }}
+        
+        .header h1 {{
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }}
+        
+        .header p {{
+            font-size: 1.2em;
+            opacity: 0.95;
+        }}
+        
+        .content {{
+            padding: 30px;
+        }}
+        
+        .summary-card {{
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }}
+        
+        .summary-row {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }}
+        
+        .summary-row:last-child {{
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }}
+        
+        .summary-label {{
+            font-weight: 600;
+            color: #555;
+            font-size: 1.1em;
+        }}
+        
+        .summary-value {{
+            font-size: 1.3em;
+            font-weight: bold;
+        }}
+        
+        .status-badge {{
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: white;
+            background-color: {status_color};
+        }}
+        
+        .section {{
+            margin-bottom: 30px;
+        }}
+        
+        .section h2 {{
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            font-size: 1.8em;
+        }}
+        
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }}
+        
+        thead {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }}
+        
+        th {{
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 1.05em;
+        }}
+        
+        td {{
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }}
+        
+        tr:last-child td {{
+            border-bottom: none;
+        }}
+        
+        tr:hover {{
+            background-color: #f5f7fa;
+        }}
+        
+        .pass {{
+            color: #27ae60;
+        }}
+        
+        .warn {{
+            color: #f39c12;
+        }}
+        
+        .fail {{
+            color: #e74c3c;
+        }}
+        
+        .info-box {{
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }}
+        
+        .info-box h3 {{
+            color: #2980b9;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }}
+        
+        .info-box p {{
+            color: #555;
+            line-height: 1.6;
+        }}
+        
+        .threshold-legend {{
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }}
+        
+        .threshold-item {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }}
+        
+        .threshold-dot {{
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }}
+        
+        .footer {{
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 10px;
+            font-size: 14px;
+        }}
+        
+        .footer p {{
+            margin: 5px 0;
+        }}
+        
+        .footer strong {{
+            color: #00ff00;
+        }}
+        
+        a {{
+            color: #3498db;
+            text-decoration: none;
+        }}
+        
+        a:hover {{
+            text-decoration: underline;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="data:image/png;base64,{logo_base64}" alt="Avice Logo" class="logo">
+            <h1>⏱️ Clock Analysis Report</h1>
+            <p>{self.design_info.top_hier} • {self.design_info.ipo} • {datetime.now().strftime("%B %d, %Y %H:%M")}</p>
+        </div>
+        
+        <div class="content">
+            <!-- Summary Card -->
+            <div class="summary-card">
+                <div class="summary-row">
+                    <span class="summary-label">Overall Status:</span>
+                    <span class="status-badge">{status_icon} {status}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Design:</span>
+                    <span class="summary-value">{self.design_info.top_hier}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">IPO:</span>
+                    <span class="summary-value">{self.design_info.ipo}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Number of Clocks:</span>
+                    <span class="summary-value">{num_clocks}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Max Clock Latency:</span>
+                    <span class="summary-value" style="color: {status_color};">{max_latency_ps:.1f} ps ({max_latency_ps/1000:.3f} ns)</span>
+                </div>
+            </div>
+            
+            <!-- Threshold Legend -->
+            <div class="info-box">
+                <h3>🎯 Latency Thresholds</h3>
+                <div class="threshold-legend">
+                    <div class="threshold-item">
+                        <div class="threshold-dot" style="background-color: #27ae60;"></div>
+                        <span><strong>PASS:</strong> ≤ 550 ps (0.55 ns)</span>
+                    </div>
+                    <div class="threshold-item">
+                        <div class="threshold-dot" style="background-color: #f39c12;"></div>
+                        <span><strong>WARN:</strong> 550 ps - 580 ps</span>
+                    </div>
+                    <div class="threshold-item">
+                        <div class="threshold-dot" style="background-color: #e74c3c;"></div>
+                        <span><strong>FAIL:</strong> ≥ 580 ps</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Clock Latency Table -->
+            <div class="section">
+                <h2>📊 Clock Latency Details</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Clock Name</th>
+                            <th>Max Latency</th>
+                            <th>Skew</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+{clock_rows}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Source Reports -->
+            {f'''
+            <div class="section">
+                <h2>📁 Source Reports</h2>
+                <div style="padding: 10px 0;">
+{file_links_html}
+                </div>
+            </div>
+            ''' if file_links_html else ''}
+            
+            <!-- Analysis Notes -->
+            <div class="info-box">
+                <h3>ℹ️ Analysis Notes</h3>
+                <p>This report shows the combined clock latency data from both Innovus and PrimeTime analysis.</p>
+                <p>For each clock, the maximum latency value is displayed. Latency values are color-coded based on design thresholds.</p>
+                <p><strong>Scenario:</strong> func.std_tt_0c_0p6v.setup.typical</p>
+            </div>
+        </div>
+        
+        <!-- Copyright Footer -->
+        <div class="footer">
+            <p><strong>AVICE Clock Analysis Report</strong></p>
+            <p>Copyright (c) 2025 Alon Vice (avice)</p>
+            <p>Contact: avice@nvidia.com</p>
+        </div>
+    </div>
+    
+    <!-- Back to Top Button -->
+    <button id="backToTopBtn" style="display: none; position: fixed; bottom: 30px; right: 30px; 
+            z-index: 99; border: none; outline: none; background-color: #667eea; color: white; 
+            cursor: pointer; padding: 15px 20px; border-radius: 50px; font-size: 16px; 
+            font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease;"
+            onmouseover="this.style.backgroundColor='#5568d3'; this.style.transform='scale(1.1)';"
+            onmouseout="this.style.backgroundColor='#667eea'; this.style.transform='scale(1)';">
+        ↑ Top
+    </button>
+    
+    <script>
+        // Back to top button functionality
+        const backToTopBtn = document.getElementById('backToTopBtn');
+        if (backToTopBtn) {{
+            window.addEventListener('scroll', function() {{
+                if (window.pageYOffset > 300) {{
+                    backToTopBtn.style.display = 'block';
+                }} else {{
+                    backToTopBtn.style.display = 'none';
+                }}
+            }});
+            
+            backToTopBtn.addEventListener('click', function() {{
+                window.scrollTo({{ top: 0, behavior: 'smooth' }});
+            }});
+        }}
+    </script>
+</body>
+</html>
+"""
+            
+            # Write HTML file
+            with open(html_filename, 'w') as f:
+                f.write(html)
+            
+            print(f"\n  {Color.GREEN}[OK] Clock HTML Report Generated{Color.RESET}")
+            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{html_filename}{Color.RESET} &")
+            
+            return os.path.abspath(html_filename)
+            
+        except Exception as e:
+            print(f"  Error generating clock HTML report: {e}")
+            return ""
+    
+    def run_clock_analysis(self) -> None:
         """Run clock analysis"""
         self.print_header(FlowStage.CLOCK_ANALYSIS)
         
@@ -7303,6 +9999,7 @@ class WorkareaReviewer:
         # Innovus clock analysis
         clock_skew_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/SUMMARY/{self.design_info.top_hier}.{self.design_info.ipo}.postroute.clock_tree.skew_and_latency.from_clock_root_source.rpt*"
         clock_files = self.file_utils.find_files(clock_skew_pattern, self.workarea)
+        innovus_clock_file = clock_files[0] if clock_files else ""
         
         if clock_files:
             self.print_file_info(clock_files[0], "Innovus Clock Analysis")
@@ -7329,6 +10026,8 @@ class WorkareaReviewer:
                         combined_clock_data[clock] = (latency, skew if skew > 0 else existing_skew)
                 else:
                     combined_clock_data[clock] = (latency, skew)
+        else:
+            pt_clock_file = ""  # Not found
         
         # Print combined clock summary for regression parsing
         if combined_clock_data:
@@ -7355,6 +10054,15 @@ class WorkareaReviewer:
         else:
             key_metrics["Design"] = self.design_info.top_hier
         
+        # Generate HTML report
+        html_file = self._generate_clock_html_report(
+            combined_clock_data=combined_clock_data,
+            max_latency_ps=max_latency_ps,
+            innovus_clock_file=innovus_clock_file,
+            pt_clock_file=pt_clock_file,
+            status=status
+        )
+        
         # Add section summary for master dashboard
         self._add_section_summary(
             section_name="Clock Analysis",
@@ -7362,13 +10070,13 @@ class WorkareaReviewer:
             stage=FlowStage.CLOCK_ANALYSIS,
             status=status,
             key_metrics=key_metrics,
-            html_file="",
+            html_file=html_file,
             priority=3,
             issues=issues,
             icon="[Clock]"
         )
     
-    def run_formal_verification(self):
+    def run_formal_verification(self) -> None:
         """Run formal verification analysis"""
         self.print_header(FlowStage.FORMAL_VERIFICATION)
         
@@ -7388,6 +10096,10 @@ class WorkareaReviewer:
             except (OSError, UnicodeDecodeError):
                 pass
         
+        # Check multibit mapping files (critical for formal verification)
+        print(f"\n{Color.CYAN}Multibit Mapping Files Check:{Color.RESET}")
+        multibit_status, multibit_issues, multibit_results = self._check_multibit_mapping_files()
+        
         formal_log_pattern = "formal_flow/*_vs_*_fm/log/*_vs_*_fm.log"
         formal_files = self.file_utils.find_files(formal_log_pattern, self.workarea)
         
@@ -7395,10 +10107,14 @@ class WorkareaReviewer:
         formal_results = []
         overall_status = "NOT_RUN"
         issues = []
+        latest_formal_end = 0  # Initialize before use
+        
+        # Add multibit mapping issues to overall issues
+        if multibit_issues:
+            issues.extend(multibit_issues)
         
         if formal_files:
             # Get latest formal end time for comparison with ECO
-            latest_formal_end = 0
             
             for log_file in formal_files:
                 self.print_file_info(log_file, "Formal Log")
@@ -7416,9 +10132,12 @@ class WorkareaReviewer:
             # Determine overall status based on all formal results
             statuses = [result[1] for result in formal_results]
             
-            # Check for CRASHED flows first (highest priority - tool error)
-            crashed_flows = [f"{r[0]}: {r[1]}" for r in formal_results if "CRASHED" in r[1]]
-            if crashed_flows:
+            # Check multibit status first (critical for formal to succeed)
+            if multibit_status == "FAIL":
+                overall_status = "FAIL"
+            # Check for CRASHED flows (highest priority - tool error)
+            elif any("CRASHED" in s for s in statuses):
+                crashed_flows = [f"{r[0]}: {r[1]}" for r in formal_results if "CRASHED" in r[1]]
                 overall_status = "FAIL"
                 issues.extend(crashed_flows)
             elif "FAILED" in statuses:
@@ -7430,6 +10149,8 @@ class WorkareaReviewer:
                             issues.append(f"{r[0]}: FAILED ({r[4]} failing points)")
                         else:
                             issues.append(f"{r[0]}: FAILED")
+            elif multibit_status == "WARN":
+                overall_status = "WARN"
             elif "UNRESOLVED" in statuses:
                 overall_status = "WARN"
                 unresolved_flows = [f"{r[0]}: UNRESOLVED" for r in formal_results if r[1] == "UNRESOLVED"]
@@ -7441,7 +10162,13 @@ class WorkareaReviewer:
                 issues.append("Formal verification still running")
         else:
             print("No formal verification logs found")
-            overall_status = "NOT_RUN"
+            # Even without formal logs, multibit status matters
+            if multibit_status == "FAIL":
+                overall_status = "FAIL"
+            elif multibit_status == "WARN":
+                overall_status = "WARN"
+            else:
+                overall_status = "NOT_RUN"
         
         # Build key metrics
         key_metrics = {"Design": self.design_info.top_hier, "RTL Tag": rtl_tag}
@@ -7453,12 +10180,12 @@ class WorkareaReviewer:
         
         # Generate comprehensive HTML report for formal verification
         html_path = ""
-        if formal_results:
-            html_path = self._generate_formal_html_report(formal_results, rtl_tag, latest_formal_end)
+        if formal_results or multibit_results:
+            html_path = self._generate_formal_html_report(formal_results, rtl_tag, latest_formal_end, multibit_results)
             if html_path:
                 html_filename = os.path.basename(html_path)
                 print(f"\n  {Color.CYAN}Formal Verification HTML Report:{Color.RESET}")
-                print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+                print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{html_filename}{Color.RESET} &")
         
         # Add section summary for master dashboard
         self._add_section_summary(
@@ -7473,8 +10200,18 @@ class WorkareaReviewer:
             icon="[Formal]"
         )
     
-    def _generate_formal_html_report(self, formal_results, rtl_tag, latest_formal_end):
-        """Generate comprehensive HTML report for Formal Verification"""
+    def _generate_formal_html_report(self, formal_results: List[Dict[str, Any]], rtl_tag: str, latest_formal_end: str, multibit_results=None) -> Optional[str]:
+        """Generate comprehensive HTML report for Formal Verification
+        
+        Args:
+            formal_results: List of formal verification result dictionaries
+            rtl_tag: RTL tag string
+            latest_formal_end: Latest formal end timestamp
+            multibit_results: Optional multibit mapping results
+            
+        Returns:
+            HTML filename if generated successfully, None otherwise
+        """
         try:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             username = os.environ.get('USER', 'avice')
@@ -7482,7 +10219,7 @@ class WorkareaReviewer:
             html_path = os.path.abspath(html_filename)
             
             # Determine overall status
-            statuses = [result[1] for result in formal_results]
+            statuses = [result[1] for result in formal_results] if formal_results else []
             overall_status = "PASS"
             if any("CRASHED" in s for s in statuses):
                 overall_status = "CRASHED"
@@ -7505,7 +10242,7 @@ class WorkareaReviewer:
             
             # Generate HTML content
             html_content = self._generate_formal_html_content(
-                formal_results, rtl_tag, overall_status, status_color, html_filename
+                formal_results, rtl_tag, overall_status, status_color, html_filename, multibit_results
             )
             
             # Write HTML file
@@ -7520,8 +10257,20 @@ class WorkareaReviewer:
             traceback.print_exc()
             return ""
     
-    def _generate_formal_html_content(self, formal_results, rtl_tag, overall_status, status_color, html_filename):
-        """Generate HTML content for formal verification report"""
+    def _generate_formal_html_content(self, formal_results: List[Dict[str, Any]], rtl_tag: str, overall_status: str, status_color: str, html_filename: str, multibit_results=None) -> str:
+        """Generate HTML content for formal verification report
+        
+        Args:
+            formal_results: List of formal verification results
+            rtl_tag: RTL tag string
+            overall_status: Overall verification status
+            status_color: Color for status display
+            html_filename: Output HTML filename
+            multibit_results: Optional multibit mapping results
+            
+        Returns:
+            Complete HTML string for formal verification report
+        """
         
         # Load and encode logo
         logo_data = ""
@@ -8330,6 +11079,8 @@ class WorkareaReviewer:
             </div>
         </div>
         
+        {self._generate_multibit_mapping_html_section(multibit_results)}
+        
         <div class="content">
             <h2 class="section-title">Formal Verification Flows</h2>
             {flow_cards_html}
@@ -8449,7 +11200,106 @@ class WorkareaReviewer:
 """
         return html
     
-    def run_parasitic_extraction(self):
+    def _generate_multibit_mapping_html_section(self, multibit_results: Dict[str, Any]) -> str:
+        """Generate HTML section for multibit mapping file check results
+        
+        Args:
+            multibit_results: Dictionary containing multibit mapping data
+            
+        Returns:
+            HTML string for the multibit section
+        """
+        if not multibit_results:
+            return ""
+        
+        # Count total checks and passed checks
+        total_checks = 0
+        passed_checks = 0
+        
+        # Build table rows
+        table_rows = ""
+        for ipo, ipo_data in multibit_results.items():
+            for loc_name, loc_info in ipo_data["locations"].items():
+                files_status = loc_info["files_exist"]
+                total_checks += 1
+                
+                # Determine status and color
+                if all(files_status):
+                    status_label = "✓ OK"
+                    status_color = "#28a745"
+                    passed_checks += 1
+                else:
+                    status_label = "✗ MISSING"
+                    status_color = "#dc3545"
+                
+                # Create file status string
+                file1_icon = "✓" if files_status[0] else "✗"
+                file2_icon = "✓" if files_status[1] else "✗"
+                file_status_str = f"{file1_icon} multibitMapping.gz<br>{file2_icon} multibitMapping_for_gen_mbff_scandef.gz"
+                
+                table_rows += f"""
+                <tr>
+                    <td>{ipo}</td>
+                    <td>{loc_name}</td>
+                    <td style="font-family: monospace; font-size: 12px;">{file_status_str}</td>
+                    <td style="font-weight: bold; color: {status_color};">{status_label}</td>
+                </tr>
+                """
+        
+        # Determine overall section status
+        if passed_checks == total_checks:
+            section_status = "✓ PASS"
+            section_color = "#28a745"
+            section_bg = "#d4edda"
+            section_icon = "✅"
+        else:
+            section_status = "✗ FAIL"
+            section_color = "#dc3545"
+            section_bg = "#f8d7da"
+            section_icon = "❌"
+        
+        html = f"""
+        <div class="content" style="margin-top: 30px; background: {section_bg}; border-left: 4px solid {section_color};">
+            <h2 class="section-title" style="color: {section_color};">
+                {section_icon} Multibit Mapping Files Check
+                <span style="float: right; font-size: 18px; font-weight: bold;">{section_status}</span>
+            </h2>
+            <div style="padding: 15px;">
+                <p style="margin-bottom: 15px; color: #333;">
+                    <strong>Purpose:</strong> Multibit mapping files are critical for formal verification to prevent non-equivalence points.
+                    These files are generated during PnR flow and must be copied to export_innovus and nv_gate_eco directories.
+                </p>
+                <p style="margin-bottom: 20px; color: #666; font-size: 14px;">
+                    <strong>Flow:</strong> PnR generates files → Copied to export_innovus → Copied to nv_gate_eco during ECO → 
+                    Copied back to export_innovus after each ECO loop
+                </p>
+                
+                <table style="width: 100%; border-collapse: collapse; background: white;">
+                    <thead>
+                        <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                            <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">IPO</th>
+                            <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">Location</th>
+                            <th style="padding: 12px; text-align: left; border: 1px solid #dee2e6;">File Status</th>
+                            <th style="padding: 12px; text-align: center; border: 1px solid #dee2e6;">Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {table_rows}
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 5px;">
+                    <p style="margin: 5px 0;"><strong>Summary:</strong> {passed_checks}/{total_checks} location checks passed</p>
+                    {f'<p style="margin: 5px 0; color: #dc3545;"><strong>⚠ Warning:</strong> Missing files may cause formal verification non-equivalence points!</p>' if passed_checks < total_checks else ''}
+                    {f'<p style="margin: 5px 0; color: #666;"><strong>Action:</strong> Verify files were copied correctly during PnR/ECO flows. Re-run copy steps if needed.</p>' if passed_checks < total_checks else ''}
+                </div>
+            </div>
+        </div>
+        """
+        
+        return html
+    
+    def run_parasitic_extraction(self) -> None:
         """Run parasitic extraction analysis"""
         self.print_header(FlowStage.PARASITIC_EXTRACTION)
         
@@ -8711,8 +11561,18 @@ class WorkareaReviewer:
             icon="[Star]"
         )
     
-    def _generate_star_html_report(self, star_runs, spef_files, spef_info_file, shorts_file):
-        """Generate comprehensive HTML report for Star extraction analysis"""
+    def _generate_star_html_report(self, star_runs: List[str], spef_files: List[str], spef_info_file: Optional[str], shorts_file: Optional[str]) -> Optional[str]:
+        """Generate comprehensive HTML report for Star extraction analysis
+        
+        Args:
+            star_runs: List of Star run summary files
+            spef_files: List of SPEF files found
+            spef_info_file: Path to SPEF info file
+            shorts_file: Path to shorts file
+            
+        Returns:
+            HTML filename if generated successfully, None otherwise
+        """
         try:
             # Generate timestamp for filename
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -9273,7 +12133,7 @@ class WorkareaReviewer:
                 f.write(html_content)
             
             print(f"\n{Color.CYAN}  Star Extraction HTML Report:{Color.RESET}")
-            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{html_filename}{Color.RESET} &")
             
             return os.path.abspath(html_path)
             
@@ -9283,7 +12143,7 @@ class WorkareaReviewer:
             traceback.print_exc()
             return None
     
-    def run_signoff_timing(self):
+    def run_signoff_timing(self) -> None:
         """Run signoff timing analysis"""
         self.print_header(FlowStage.SIGNOFF_TIMING)
         
@@ -9503,8 +12363,12 @@ class WorkareaReviewer:
             icon="[PT]"
         )
     
-    def _extract_timing_data_from_work_areas(self):
-        """Extract timing data from all auto_pt work areas with dual-scenario support"""
+    def _extract_timing_data_from_work_areas(self) -> Dict[str, Any]:
+        """Extract timing data from all auto_pt work areas with dual-scenario support
+        
+        Returns:
+            Dictionary containing timing data from all work areas
+        """
         
         # Find all work directories (exclude .html files)
         work_pattern = os.path.join(self.workarea, "signoff_flow/auto_pt/work_*")
@@ -9515,23 +12379,24 @@ class WorkareaReviewer:
         timing_data = []
         
         # Define scenarios to extract: setup and hold
-        # Default scenarios - will auto-detect if these don't exist
+        # Dynamically discover ALL available corners for both setup and hold
+        # This ensures we always check ALL voltage/temperature combinations, not just a hardcoded subset
         scenarios_to_check = {
-            'setup': [
-                'func.std_tt_0c_0p6v.setup.typical',
-                'func.std_tt_25c_0p6v.setup.typical',
-                'func.std_tt_85c_0p6v.setup.typical',
-                'func.std_tt_125c_0p6v.setup.typical'
-            ],
-            'hold': [
-                'func.std_ffg_125c_0p825v.hold.typical',
-                'func.std_ffg_0c_0p825v.hold.typical',
-                'func.std_tt_0c_0p6v.hold.typical',
-                'func.std_tt_125c_0p6v.hold.typical'
-            ]
+            'setup': [],  # Will be populated dynamically per work directory
+            'hold': []    # Will be populated dynamically per work directory
         }
         
         for work_dir in work_dirs:
+            # Dynamically discover ALL setup corners in this work directory
+            setup_pattern = os.path.join(work_dir, "func.std_*.setup.typical")
+            setup_dirs = glob.glob(setup_pattern)
+            scenarios_to_check['setup'] = [os.path.basename(d) for d in setup_dirs if os.path.isdir(d)]
+            
+            # Dynamically discover ALL hold corners in this work directory
+            # This ensures we check ALL voltage/temperature combinations, not just a hardcoded subset
+            hold_pattern = os.path.join(work_dir, "func.std_*.hold.typical")
+            hold_dirs = glob.glob(hold_pattern)
+            scenarios_to_check['hold'] = [os.path.basename(d) for d in hold_dirs if os.path.isdir(d)]
             # Extract work directory name (e.g., work_16.09.25_19:53)
             work_name = os.path.basename(work_dir)
             
@@ -9693,8 +12558,15 @@ class WorkareaReviewer:
         
         return timing_data
     
-    def _generate_timing_summary_html(self, timing_data):
-        """Generate HTML report with dual-scenario timing summary table and DSR skew tracking"""
+    def _generate_timing_summary_html(self, timing_data: Dict[str, Any]) -> str:
+        """Generate HTML report with dual-scenario timing summary table and DSR skew tracking
+        
+        Args:
+            timing_data: Dictionary containing timing analysis data
+            
+        Returns:
+            HTML string containing timing summary
+        """
         
         if not timing_data:
             return None
@@ -10338,8 +13210,12 @@ class WorkareaReviewer:
         
         return os.path.abspath(html_path)
     
-    def _generate_timing_summary_report(self):
-        """Generate timing summary report with dual-scenario and DSR skew tracking"""
+    def _generate_timing_summary_report(self) -> Optional[str]:
+        """Generate timing summary report with dual-scenario and DSR skew tracking
+        
+        Returns:
+            HTML filename if generated successfully, None otherwise
+        """
         
         # Extract timing data from all work areas
         timing_data = self._extract_timing_data_from_work_areas()
@@ -10350,7 +13226,7 @@ class WorkareaReviewer:
             
             if html_filename:
                 print(f"\n  {Color.CYAN}PT Timing Summary (Dual-Scenario):{Color.RESET}")
-                print(f"    Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{os.path.basename(html_filename)}{Color.RESET} &")
+                print(f"    Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{os.path.basename(html_filename)}{Color.RESET} &")
                 
                 # Show brief summary
                 print(f"\n  {Color.CYAN}Work Areas Summary:{Color.RESET}")
@@ -10506,7 +13382,7 @@ class WorkareaReviewer:
         
         return None, None
     
-    def run_physical_verification(self):
+    def run_physical_verification(self) -> None:
         """Run physical verification analysis"""
         self.print_header(FlowStage.PHYSICAL_VERIFICATION)
         
@@ -10659,7 +13535,7 @@ class WorkareaReviewer:
         if pv_html_path:
             html_filename = os.path.basename(pv_html_path)
             print(f"\n  {Color.CYAN}Physical Verification HTML Report:{Color.RESET}")
-            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{html_filename}{Color.RESET} &")
         
         # Determine status based on violation counts
         # Thresholds: LVS > 5, DRC > 100, Antenna > 10 → FAIL
@@ -10707,8 +13583,13 @@ class WorkareaReviewer:
             icon="[PV]"
         )
     
-    def _show_flow_timeline(self, flow_name: str, local_flow_dirs: list):
-        """Show flow start and end timestamps for any flow type"""
+    def _show_flow_timeline(self, flow_name: str, local_flow_dirs: List[str]) -> None:
+        """Show flow start and end timestamps for any flow type
+        
+        Args:
+            flow_name: Name of the flow
+            local_flow_dirs: List of flow directory paths
+        """
         for local_flow_dir_pattern in local_flow_dirs:
             # Handle glob patterns in directory paths
             if '*' in local_flow_dir_pattern:
@@ -10802,12 +13683,12 @@ class WorkareaReviewer:
         
         return None, None  # No timeline found
     
-    def _show_pv_flow_timestamps(self):
+    def _show_pv_flow_timestamps(self) -> None:
         """Show PV flow start and end timestamps"""
         local_flow_dir = os.path.join(self.workarea, f"pv_flow/nv_flow/{self.design_info.top_hier}/local_flow")
         return self._show_flow_timeline("PV", [local_flow_dir])
     
-    def _analyze_pv_flow(self):
+    def _analyze_pv_flow(self) -> None:
         """Analyze PV flow configuration and status"""
         prc_pattern = f"pv_flow/nv_flow/pv_{self.design_info.top_hier}.prc"
         prc_status_pattern = f"pv_flow/nv_flow/pv_{self.design_info.top_hier}.prc.status"
@@ -10829,8 +13710,12 @@ class WorkareaReviewer:
         else:
             print(f"\n{Color.YELLOW}No PV flow status files found{Color.RESET}")
     
-    def _analyze_pv_flow_with_data(self):
-        """Wrapper for _analyze_pv_flow that returns structured data for HTML generation"""
+    def _analyze_pv_flow_with_data(self) -> Optional[Dict[str, Any]]:
+        """Wrapper for _analyze_pv_flow that returns structured data for HTML generation
+        
+        Returns:
+            Dictionary with PV flow data or None if not found
+        """
         prc_pattern = f"pv_flow/nv_flow/pv_{self.design_info.top_hier}.prc"
         prc_status_pattern = f"pv_flow/nv_flow/pv_{self.design_info.top_hier}.prc.status"
         
@@ -10920,8 +13805,15 @@ class WorkareaReviewer:
         
         return pv_flow_data
     
-    def _parse_pv_flow_status(self, status_file: str):
-        """Parse PV flow status file and display runtime information"""
+    def _parse_pv_flow_status(self, status_file: str) -> Dict[str, Any]:
+        """Parse PV flow status file and display runtime information
+        
+        Args:
+            status_file: Path to PV flow status file
+            
+        Returns:
+            Dictionary with parsed status data
+        """
         try:
             with open(status_file, 'r') as f:
                 content = f.read()
@@ -11004,8 +13896,12 @@ class WorkareaReviewer:
         except Exception as e:
             print(f"  Error parsing PV flow status: {e}")
     
-    def _parse_pv_flow_config(self, config_file: str):
-        """Parse PV flow configuration file and display key settings"""
+    def _parse_pv_flow_config(self, config_file: str) -> None:
+        """Parse PV flow configuration file and display key settings
+        
+        Args:
+            config_file: Path to PV flow configuration file
+        """
         try:
             with open(config_file, 'r') as f:
                 content = f.read()
@@ -11029,8 +13925,12 @@ class WorkareaReviewer:
         except Exception as e:
             print(f"  Error parsing PV flow config: {e}")
     
-    def _extract_flow_sequences(self, content: str):
-        """Extract and display flow sequences from PRC YAML content"""
+    def _extract_flow_sequences(self, content: str) -> None:
+        """Extract and display flow sequences from PRC YAML content
+        
+        Args:
+            content: YAML content string
+        """
         try:
             # Extract local_flow sequence using a simpler approach
             local_steps = self._extract_flow_sequence_simple(content, 'local_flow')
@@ -11051,8 +13951,16 @@ class WorkareaReviewer:
         except Exception as e:
             print(f"    Error extracting flow sequences: {e}")
     
-    def _extract_flow_sequence_simple(self, content: str, flow_type: str):
-        """Extract flow sequence using a simpler line-by-line approach"""
+    def _extract_flow_sequence_simple(self, content: str, flow_type: str) -> Optional[List[str]]:
+        """Extract flow sequence using a simpler line-by-line approach
+        
+        Args:
+            content: YAML content string
+            flow_type: Type of flow (e.g., 'pnr', 'sta')
+            
+        Returns:
+            List of flow stages or None if not found
+        """
         lines = content.split('\n')
         steps = []
         in_flow_sequence = False
@@ -11088,8 +13996,12 @@ class WorkareaReviewer:
         return steps
     
     
-    def _analyze_drc_errors(self, drc_file: str):
-        """Analyze DRC errors file and provide detailed breakdown"""
+    def _analyze_drc_errors(self, drc_file: str) -> None:
+        """Analyze DRC errors file and provide detailed breakdown
+        
+        Args:
+            drc_file: Path to DRC report file
+        """
         try:
             with open(drc_file, 'r') as f:
                 content = f.read()
@@ -11108,7 +14020,7 @@ class WorkareaReviewer:
             # Find all violation lines in ERROR SUMMARY
             # Pattern to match rule violations that may span multiple lines
             # Format: RULE_NAME : description text ... X violations found.
-            violation_pattern = r'^\s*([A-Z0-9._]+)\s*:\s*(.*?)(\d+)\s+violations?\s+found\.'
+            violation_pattern = r'^\s*([A-Za-z0-9._]+)\s*:\s*(.*?)(\d+)\s+violations?\s+found\.'
             matches = re.findall(violation_pattern, content, re.MULTILINE | re.DOTALL)
             
             for rule, description, count in matches:
@@ -11182,8 +14094,15 @@ class WorkareaReviewer:
             print(f"  Error analyzing DRC file: {e}")
             return 0
     
-    def _analyze_drc_errors_with_data(self, drc_file: str):
-        """Wrapper for _analyze_drc_errors that returns both count and violations list for HTML generation"""
+    def _analyze_drc_errors_with_data(self, drc_file: str) -> Optional[Dict[str, Any]]:
+        """Wrapper for _analyze_drc_errors that returns both count and violations list for HTML generation
+        
+        Args:
+            drc_file: Path to DRC report file
+            
+        Returns:
+            Dictionary with DRC error data or None if not found
+        """
         try:
             with open(drc_file, 'r') as f:
                 content = f.read()
@@ -11198,7 +14117,7 @@ class WorkareaReviewer:
                 return 0, []
             
             # Extract violation details
-            violation_pattern = r'^\s*([A-Z0-9._]+)\s*:\s*(.*?)(\d+)\s+violations?\s+found\.'
+            violation_pattern = r'^\s*([A-Za-z0-9._]+)\s*:\s*(.*?)(\d+)\s+violations?\s+found\.'
             matches = re.findall(violation_pattern, content, re.MULTILINE | re.DOTALL)
             
             for rule, description, count in matches:
@@ -11222,8 +14141,15 @@ class WorkareaReviewer:
             print(f"  Error analyzing DRC file: {e}")
             return 0, []
     
-    def _analyze_antenna_errors(self, antenna_file: str):
-        """Analyze antenna errors file and provide detailed information"""
+    def _analyze_antenna_errors(self, antenna_file: str) -> Optional[Dict[str, Any]]:
+        """Analyze antenna errors file and provide detailed information
+        
+        Args:
+            antenna_file: Path to antenna violations file
+            
+        Returns:
+            Dictionary with antenna violation data or None if not found
+        """
         try:
             with open(antenna_file, 'r') as f:
                 content = f.read()
@@ -11271,8 +14197,16 @@ class WorkareaReviewer:
             print(f"  Error analyzing antenna file: {e}")
             return 0
     
-    def _analyze_gl_check_errors(self, waived_file, non_waived_file):
-        """Analyze GL Check error files and show waived vs non-waived counts per checker"""
+    def _analyze_gl_check_errors(self, waived_file: str, non_waived_file: str) -> tuple:
+        """Analyze GL Check error files and show waived vs non-waived counts per checker
+        
+        Args:
+            waived_file: Path to waived errors file
+            non_waived_file: Path to non-waived errors file
+            
+        Returns:
+            Tuple of (waived_checkers, non_waived_checkers, non_waived_errors_detail)
+        """
         try:
             # Parse waived errors
             waived_checkers = {}
@@ -11388,11 +14322,34 @@ class WorkareaReviewer:
             print(f"  Error analyzing GL Check errors: {e}")
             return 0, 0, 0
     
-    def _generate_gl_check_html_content(self, waived_checkers, non_waived_checkers, non_waived_errors_detail,
-                                        sorted_checkers, total_errors, total_waived, total_non_waived,
-                                        allowed_clktree_cells, dont_use_cells, key_reports, main_logs, timestamped_dirs,
-                                        waived_file, non_waived_file, checker_rules=None, executed_checkers=None, skipped_checkers=None):
-        """Generate the HTML content for GL Check report with filterable checker rules dictionary and executed/skipped lists"""
+    def _generate_gl_check_html_content(self, waived_checkers: Dict[str, int], non_waived_checkers: Dict[str, int], non_waived_errors_detail: Dict[str, List[str]],
+                                        sorted_checkers: List[tuple], total_errors: int, total_waived: int, total_non_waived: int,
+                                        allowed_clktree_cells: List[str], dont_use_cells: List[str], key_reports: Dict[str, str], main_logs: Dict[str, str], timestamped_dirs: List[str],
+                                        waived_file: str, non_waived_file: str, checker_rules: Optional[Dict[str, Dict[str, str]]] = None, executed_checkers: Optional[List[str]] = None, skipped_checkers: Optional[List[str]] = None) -> str:
+        """Generate the HTML content for GL Check report with filterable checker rules dictionary and executed/skipped lists
+        
+        Args:
+            waived_checkers: Dictionary of waived checker counts
+            non_waived_checkers: Dictionary of non-waived checker counts
+            non_waived_errors_detail: Dictionary of detailed non-waived errors
+            sorted_checkers: List of sorted checker tuples
+            total_errors: Total error count
+            total_waived: Total waived count
+            total_non_waived: Total non-waived count
+            allowed_clktree_cells: List of allowed clock tree cells
+            dont_use_cells: List of dont_use cells
+            key_reports: Dictionary of key report paths
+            main_logs: Dictionary of main log paths
+            timestamped_dirs: List of timestamped directory paths
+            waived_file: Path to waived errors file
+            non_waived_file: Path to non-waived errors file
+            checker_rules: Optional dictionary of checker rules
+            executed_checkers: Optional list of executed checkers
+            skipped_checkers: Optional list of skipped checkers
+            
+        Returns:
+            HTML content string
+        """
         
         # Handle defaults
         if executed_checkers is None:
@@ -12679,9 +15636,12 @@ class WorkareaReviewer:
         
         return html
     
-    def _parse_gl_check_rules(self, gl_check_log_path):
+    def _parse_gl_check_rules(self, gl_check_log_path: str) -> tuple:
         """Parse checker rules and descriptions from gl-check.log
         
+        Args:
+            gl_check_log_path: Path to GL Check log file
+            
         Returns:
             tuple: (checker_rules, executed_checkers, skipped_checkers)
                 checker_rules: Dictionary mapping checker names to their descriptions
@@ -12786,8 +15746,18 @@ class WorkareaReviewer:
         
         return checker_rules, executed_checkers, skipped_checkers
     
-    def _generate_gl_check_html_report(self, gl_check_dir, waived_file, non_waived_file, timestamped_dirs):
-        """Generate comprehensive HTML report for GL Check analysis"""
+    def _generate_gl_check_html_report(self, gl_check_dir: str, waived_file: str, non_waived_file: str, timestamped_dirs: List[str]) -> Optional[str]:
+        """Generate comprehensive HTML report for GL Check analysis
+        
+        Args:
+            gl_check_dir: Path to GL check directory
+            waived_file: Path to waived errors file
+            non_waived_file: Path to non-waived errors file
+            timestamped_dirs: List of timestamped directory paths
+            
+        Returns:
+            HTML filename if generated successfully, None otherwise
+        """
         try:
             import yaml
             from datetime import datetime
@@ -12932,7 +15902,7 @@ class WorkareaReviewer:
             with open(html_path, 'w') as f:
                 f.write(html_content)
             
-            print(f"\n  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+            print(f"\n  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{html_filename}{Color.RESET} &")
             
             return os.path.abspath(html_path)
             
@@ -12942,8 +15912,19 @@ class WorkareaReviewer:
             traceback.print_exc()
             return ""
     
-    def _generate_pv_html_report(self, lvs_data, drc_data, antenna_data, pv_flow_data, timeline_data):
-        """Generate comprehensive HTML report for Physical Verification"""
+    def _generate_pv_html_report(self, lvs_data: Optional[Dict[str, Any]], drc_data: Optional[Dict[str, Any]], antenna_data: Optional[Dict[str, Any]], pv_flow_data: Optional[Dict[str, Any]], timeline_data: Optional[tuple]) -> Optional[str]:
+        """Generate comprehensive HTML report for Physical Verification
+        
+        Args:
+            lvs_data: LVS error data or None
+            drc_data: DRC error data or None
+            antenna_data: Antenna violation data or None
+            pv_flow_data: PV flow status data or None
+            timeline_data: Timeline data tuple or None
+            
+        Returns:
+            Path to generated HTML file or None if generation fails
+        """
         try:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             username = os.environ.get('USER', 'avice')
@@ -12981,9 +15962,23 @@ class WorkareaReviewer:
             traceback.print_exc()
             return ""
     
-    def _generate_pv_html_content(self, lvs_data, drc_data, antenna_data, pv_flow_data, timeline_data,
-                                   overall_status, status_color, html_filename):
-        """Generate HTML content for PV report"""
+    def _generate_pv_html_content(self, lvs_data: Optional[Dict[str, Any]], drc_data: Optional[Dict[str, Any]], antenna_data: Optional[Dict[str, Any]], pv_flow_data: Optional[Dict[str, Any]], timeline_data: Optional[tuple],
+                                   overall_status: str, status_color: str, html_filename: str) -> str:
+        """Generate HTML content for PV report
+        
+        Args:
+            lvs_data: LVS error data or None
+            drc_data: DRC error data or None
+            antenna_data: Antenna violation data or None
+            pv_flow_data: PV flow status data or None
+            timeline_data: Timeline data tuple or None
+            overall_status: Overall status string
+            status_color: Status color string
+            html_filename: Name of HTML file
+            
+        Returns:
+            HTML content string
+        """
         
         # Load and encode logo
         logo_data = ""
@@ -13665,7 +16660,7 @@ class WorkareaReviewer:
         
         return html
     
-    def run_gl_check(self):
+    def run_gl_check(self) -> None:
         """Run GL check analysis"""
         self.print_header(FlowStage.GL_CHECK)
         
@@ -13789,8 +16784,12 @@ class WorkareaReviewer:
             icon="[GL]"
         )
     
-    def _find_beflow_path(self):
-        """Find the beflow path from PnR flow configuration or common locations"""
+    def _find_beflow_path(self) -> Optional[str]:
+        """Find the beflow path from PnR flow configuration or common locations
+        
+        Returns:
+            BeFlow path or None if not found
+        """
         try:
             # Method 1: Look in PnR logs for NETWORK_FLOW_PATH
             log_files = glob.glob(os.path.join(self.workarea, "pnr_flow/nv_flow/*/ipo*/*.log"))
@@ -13827,8 +16826,344 @@ class WorkareaReviewer:
             pass
         return None
     
-    def _check_eco_for_dont_use_cells(self, eco_file, eco_commands):
-        """Check if ECO file contains any dont_use cells (ultra-optimized using set lookup)"""
+    def _parse_clock_tree_cells(self) -> set:
+        """Parse ClockTree.rpt to get set of all clock tree instance names
+        
+        Returns:
+            Set of instance names that are part of the clock tree
+        """
+        clock_tree_instances = set()
+        try:
+            # Look for ClockTree.rpt in gl-check reports directory
+            clock_tree_rpt = None
+            for gl_dir in ["signoff_flow/gl-check", "signoff_flow/gl_check", "gl_check", "gl-check"]:
+                test_path = os.path.join(self.workarea, gl_dir, "reports", "ClockTree.rpt")
+                if os.path.exists(test_path):
+                    clock_tree_rpt = test_path
+                    break
+            
+            if not clock_tree_rpt:
+                return clock_tree_instances
+            
+            # Parse ClockTree.rpt
+            # Format: [lnd]:instance_path/pin(CELL_TYPE)
+            with open(clock_tree_rpt, 'r') as f:
+                for line in f:
+                    # Match pattern: [design]:instance_path/pin(CELL_TYPE)
+                    match = re.match(r'\s*\[[^\]]+\]:([^/\(]+)', line)
+                    if match:
+                        instance_name = match.group(1).strip()
+                        if instance_name:
+                            clock_tree_instances.add(instance_name)
+            
+            return clock_tree_instances
+            
+        except Exception as e:
+            return clock_tree_instances
+    
+    def _get_allowed_clock_cell_patterns(self) -> List:
+        """Extract and compile allowed clock tree cell regex patterns from beflow_config.yaml
+        
+        Returns:
+            List of compiled regex patterns for allowed clock tree cells
+        """
+        compiled_patterns = []
+        try:
+            # Look for beflow_config.yaml in gl-check directory
+            beflow_config = None
+            for gl_dir in ["signoff_flow/gl-check", "signoff_flow/gl_check", "gl_check", "gl-check"]:
+                test_path = os.path.join(self.workarea, gl_dir, "beflow_config.yaml")
+                if os.path.exists(test_path):
+                    beflow_config = test_path
+                    break
+            
+            if not beflow_config:
+                return compiled_patterns
+            
+            # Parse beflow_config.yaml for allowed_clktree_cells_rex
+            with open(beflow_config, 'r') as f:
+                content = f.read()
+            
+            # Extract allowed_clktree_cells_rex
+            # Format: glc allowed_clktree_cells_rex(lnd): ['PATTERN1', 'PATTERN2', ...]
+            for line in content.split('\n'):
+                if 'allowed_clktree_cells_rex' in line:
+                    match = re.search(r'\[(.*)\]', line)
+                    if match:
+                        cells_str = match.group(1)
+                        patterns = [cell.strip().strip("'\"") for cell in re.findall(r"'([^']*)'", cells_str)]
+                        
+                        # Compile each pattern
+                        for pattern in patterns:
+                            # Convert TCL regex to Python regex
+                            # TCL uses (CS[1-3])? which is already valid Python regex
+                            try:
+                                # Add word boundaries for exact matching
+                                regex_pattern = r'^' + pattern + r'$'
+                                compiled_patterns.append(re.compile(regex_pattern))
+                            except re.error:
+                                pass  # Skip invalid patterns
+                    break
+            
+            return compiled_patterns
+            
+        except Exception as e:
+            return compiled_patterns
+    
+    def _check_eco_for_clock_violations(self, eco_file: str, eco_commands: List[str]) -> None:
+        """Check if ECO modifies clock tree cells with non-allowed cell types
+        
+        Args:
+            eco_file: Path to ECO file
+            eco_commands: List of ECO commands
+        
+        This implements the 'instNotAllowedOnClocks' check:
+        1. Extract instance_name and cell_type from each ECO command
+        2. Check if instance_name is in clock tree (from ClockTree.rpt)
+        3. If yes, check if cell_type matches allowed patterns (from beflow_config.yaml)
+        4. If no match, report violation
+        
+        Args:
+            eco_file: Path to ECO file
+            eco_commands: List of ECO commands (non-comment lines)
+        """
+        try:
+            # Get clock tree instance names
+            clock_tree_instances = self._parse_clock_tree_cells()
+            if not clock_tree_instances:
+                print(f"    {Color.YELLOW}[SKIP] ClockTree.rpt not found - cannot check instNotAllowedOnClocks{Color.RESET}")
+                return
+            
+            # Get allowed clock cell patterns
+            allowed_patterns = self._get_allowed_clock_cell_patterns()
+            if not allowed_patterns:
+                print(f"    {Color.YELLOW}[SKIP] No allowed clock cell patterns found - cannot check instNotAllowedOnClocks{Color.RESET}")
+                return
+            
+            print(f"    {Color.CYAN}Checking instNotAllowedOnClocks: {len(clock_tree_instances)} clock instances, {len(allowed_patterns)} allowed patterns{Color.RESET}")
+            
+            # Check each ECO command
+            violations = []
+            for command_line in eco_commands:
+                # Parse ECO command to extract instance and cell type
+                # Common formats:
+                #   ecoChangeCell -inst {INSTANCE} -cell {CELLTYPE}          (NV Gate ECO)
+                #   ecoAddRepeater ... -cell {CELLTYPE} -inst {INSTANCE}      (NV Gate ECO)
+                #   size_cell INSTANCE CELLTYPE                                (PT ECO)
+                #   insert_buffer NET CELLTYPE INSTANCE                        (PT ECO)
+                #   eco_insert_buffer NET CELLTYPE -cells INSTANCE             (PT ECO)
+                
+                # Try to extract instance and cell type
+                instance_name = None
+                cell_type = None
+                
+                # Pattern 1: ecoChangeCell -inst {INSTANCE} -cell {CELLTYPE}
+                match = re.search(r'ecoChangeCell\s+-inst\s+\{([^}]+)\}\s+-cell\s+\{([^}]+)\}', command_line)
+                if match:
+                    instance_name = match.group(1)
+                    cell_type = match.group(2)
+                
+                # Pattern 2: ecoAddRepeater ... -cell {CELLTYPE} -inst {INSTANCE}
+                if not instance_name:
+                    match = re.search(r'ecoAddRepeater.*-cell\s+\{([^}]+)\}.*-inst\s+\{([^}]+)\}', command_line)
+                    if match:
+                        cell_type = match.group(1)
+                        instance_name = match.group(2)
+                
+                # Pattern 3: size_cell INSTANCE CELLTYPE
+                if not instance_name:
+                    match = re.match(r'size_cell\s+(\S+)\s+(\S+)', command_line)
+                    if match:
+                        instance_name = match.group(1)
+                        cell_type = match.group(2)
+                
+                # Pattern 4: insert_buffer NET CELLTYPE INSTANCE (or variations)
+                if not instance_name:
+                    # Look for any command with multiple uppercase words (potential cell types)
+                    words = command_line.split()
+                    uppercase_words = [w for w in words if re.match(r'^[A-Z][A-Z0-9_]+$', w)]
+                    
+                    # If we have uppercase words, the last one is likely instance, others might be cell type
+                    if len(uppercase_words) >= 2:
+                        # Heuristic: cell type usually has T6 or similar suffix
+                        for i, word in enumerate(uppercase_words):
+                            if re.search(r'T6|T8|MT6|LVT|HVT', word):
+                                cell_type = word
+                                # Instance could be before or after
+                                if i + 1 < len(uppercase_words):
+                                    instance_name = uppercase_words[i + 1]
+                                elif i > 0:
+                                    instance_name = uppercase_words[i - 1]
+                                break
+                
+                # If we found both instance and cell type, check for violations
+                if instance_name and cell_type:
+                    # Check if instance is in clock tree
+                    if instance_name in clock_tree_instances:
+                        # Check if cell type matches any allowed pattern
+                        is_allowed = False
+                        for pattern in allowed_patterns:
+                            if pattern.match(cell_type):
+                                is_allowed = True
+                                break
+                        
+                        if not is_allowed:
+                            violations.append((instance_name, cell_type, command_line))
+            
+            # Report violations
+            if violations:
+                print(f"  {Color.RED}[WARN] Found {len(violations)} instNotAllowedOnClocks violations:{Color.RESET}")
+                print(f"    {Color.CYAN}Instances on clock tree using non-allowed cell types:{Color.RESET}")
+                
+                # Group by cell type for better reporting
+                violations_by_type = {}
+                for inst, cell_type, cmd in violations:
+                    if cell_type not in violations_by_type:
+                        violations_by_type[cell_type] = []
+                    violations_by_type[cell_type].append((inst, cmd))
+                
+                # Show violations grouped by cell type
+                for cell_type, instances in sorted(violations_by_type.items(), key=lambda x: len(x[1]), reverse=True):
+                    print(f"      {Color.YELLOW}Cell Type '{cell_type}': {len(instances)} instance(s){Color.RESET}")
+                    for inst, cmd in instances[:3]:  # Show first 3 examples
+                        print(f"        Instance: {inst}")
+                        print(f"        Command:  {cmd[:80]}...")
+                    if len(instances) > 3:
+                        print(f"        ... and {len(instances) - 3} more instances")
+            else:
+                print(f"  {Color.GREEN}[OK] No instNotAllowedOnClocks violations found{Color.RESET}")
+                
+        except Exception as e:
+            print(f"  {Color.YELLOW}[WARN] Error checking instNotAllowedOnClocks: {e}{Color.RESET}")
+    
+    def _check_eco_for_clock_cells_on_data(self, eco_file: str, eco_commands: List[str]) -> None:
+        """Check if ECO uses clock cells on data paths (informational)
+        
+        Args:
+            eco_file: Path to ECO file
+            eco_commands: List of ECO commands
+        
+        Clock cells are allowed on data paths but they're larger/stronger cells,
+        so tracking their usage helps identify potential area optimization opportunities.
+        
+        Logic:
+        1. Extract instance_name and cell_type from ECO command
+        2. Check if cell_type matches any allowed clock cell pattern
+        3. If yes, check if instance_name is in ClockTree.rpt
+        4. If NOT in ClockTree → clock cell on data path (report as info)
+        
+        Args:
+            eco_file: Path to ECO file
+            eco_commands: List of ECO commands (non-comment lines)
+        """
+        try:
+            # Get clock tree instance names
+            clock_tree_instances = self._parse_clock_tree_cells()
+            if not clock_tree_instances:
+                print(f"    {Color.YELLOW}[SKIP] ClockTree.rpt not found - cannot check clock cells on data paths{Color.RESET}")
+                return
+            
+            # Get allowed clock cell patterns
+            allowed_patterns = self._get_allowed_clock_cell_patterns()
+            if not allowed_patterns:
+                print(f"    {Color.YELLOW}[SKIP] No allowed clock cell patterns found{Color.RESET}")
+                return
+            
+            print(f"    {Color.CYAN}Checking for clock cells on data paths (area optimization info)...{Color.RESET}")
+            
+            # Track clock cells used on data paths
+            clock_cells_on_data = []
+            
+            for command_line in eco_commands:
+                # Parse ECO command to extract instance and cell type
+                # (Reuse same parsing logic as instNotAllowedOnClocks check)
+                instance_name = None
+                cell_type = None
+                
+                # Pattern 1: ecoChangeCell -inst {INSTANCE} -cell {CELLTYPE}
+                match = re.search(r'ecoChangeCell\s+-inst\s+\{([^}]+)\}\s+-cell\s+\{([^}]+)\}', command_line)
+                if match:
+                    instance_name = match.group(1)
+                    cell_type = match.group(2)
+                
+                # Pattern 2: ecoAddRepeater ... -cell {CELLTYPE} -inst {INSTANCE}
+                if not instance_name:
+                    match = re.search(r'ecoAddRepeater.*-cell\s+\{([^}]+)\}.*-inst\s+\{([^}]+)\}', command_line)
+                    if match:
+                        cell_type = match.group(1)
+                        instance_name = match.group(2)
+                
+                # Pattern 3: size_cell INSTANCE CELLTYPE
+                if not instance_name:
+                    match = re.match(r'size_cell\s+(\S+)\s+(\S+)', command_line)
+                    if match:
+                        instance_name = match.group(1)
+                        cell_type = match.group(2)
+                
+                # Pattern 4: insert_buffer NET CELLTYPE INSTANCE
+                if not instance_name:
+                    words = command_line.split()
+                    uppercase_words = [w for w in words if re.match(r'^[A-Z][A-Z0-9_]+$', w)]
+                    
+                    if len(uppercase_words) >= 2:
+                        for i, word in enumerate(uppercase_words):
+                            if re.search(r'T6|T8|MT6|LVT|HVT', word):
+                                cell_type = word
+                                if i + 1 < len(uppercase_words):
+                                    instance_name = uppercase_words[i + 1]
+                                elif i > 0:
+                                    instance_name = uppercase_words[i - 1]
+                                break
+                
+                # If we found both instance and cell type, check if it's a clock cell on data path
+                if instance_name and cell_type:
+                    # Check if cell type is a clock cell (matches allowed clock patterns)
+                    is_clock_cell = False
+                    for pattern in allowed_patterns:
+                        if pattern.match(cell_type):
+                            is_clock_cell = True
+                            break
+                    
+                    if is_clock_cell:
+                        # Check if instance is NOT in clock tree (i.e., it's on data path)
+                        if instance_name not in clock_tree_instances:
+                            clock_cells_on_data.append((instance_name, cell_type, command_line))
+            
+            # Report findings
+            if clock_cells_on_data:
+                print(f"  {Color.CYAN}[INFO] Found {len(clock_cells_on_data)} ECO commands using clock cells on data paths:{Color.RESET}")
+                print(f"    {Color.CYAN}Clock cells on data signals (larger cells, consider for area optimization):{Color.RESET}")
+                
+                # Group by cell type
+                cells_by_type = {}
+                for inst, cell_type, cmd in clock_cells_on_data:
+                    if cell_type not in cells_by_type:
+                        cells_by_type[cell_type] = []
+                    cells_by_type[cell_type].append((inst, cmd))
+                
+                # Show grouped by cell type (most used first)
+                for cell_type, instances in sorted(cells_by_type.items(), key=lambda x: len(x[1]), reverse=True)[:10]:  # Top 10 cell types
+                    print(f"      {cell_type}: {len(instances)} instance(s)")
+                    for inst, cmd in instances[:2]:  # Show first 2 examples per type
+                        print(f"        - {inst}")
+                    if len(instances) > 2:
+                        print(f"        ... and {len(instances) - 2} more")
+                
+                if len(cells_by_type) > 10:
+                    print(f"      ... and {len(cells_by_type) - 10} more cell types")
+            else:
+                print(f"  {Color.GREEN}[INFO] No clock cells used on data paths{Color.RESET}")
+                
+        except Exception as e:
+            print(f"  {Color.YELLOW}[WARN] Error checking clock cells on data: {e}{Color.RESET}")
+    
+    def _check_eco_for_dont_use_cells(self, eco_file: str, eco_commands: List[str]) -> None:
+        """Check if ECO file contains any dont_use cells (ultra-optimized using set lookup)
+        
+        Args:
+            eco_file: Path to ECO file
+            eco_commands: List of ECO commands
+        """
         try:
             # OPTIMIZATION: Try to use dont_use_cell_patterns.tcl from gl-check results (much faster)
             # This file contains actual cell names (not regex patterns) that can be used for O(1) set lookup
@@ -14085,7 +17420,7 @@ class WorkareaReviewer:
         except Exception as e:
             pass  # Silently skip if check fails
     
-    def run_eco_analysis(self):
+    def run_eco_analysis(self) -> None:
         """Run ECO analysis"""
         self.print_header(FlowStage.ECO_ANALYSIS)
         
@@ -14133,9 +17468,62 @@ class WorkareaReviewer:
                 
                 # Check for dont_use cells in ECO file
                 self._check_eco_for_dont_use_cells(eco_file, eco_commands)
+                
+                # Check for instNotAllowedOnClocks violations
+                self._check_eco_for_clock_violations(eco_file, eco_commands)
+                
+                # Check for clock cells on data paths (informational)
+                self._check_eco_for_clock_cells_on_data(eco_file, eco_commands)
                         
         else:
             print("Didn't run PT ECO")
+        
+        # Unit Script ECO - check unit_scripts/${b}_eco.tcl
+        if self.design_info and self.design_info.top_hier:
+            unit_eco_file = os.path.join(self.workarea, f"unit_scripts/{self.design_info.top_hier}_eco.tcl")
+            if os.path.exists(unit_eco_file):
+                print(f"\n{Color.CYAN}Checking unit script ECO file:{Color.RESET}")
+                self.print_file_info(unit_eco_file, "Unit Script ECO")
+                
+                # Parse unit script ECO file
+                try:
+                    with open(unit_eco_file, 'r', encoding='utf-8') as f:
+                        lines = f.readlines()
+                    
+                    # Filter out comments and empty lines
+                    eco_commands = []
+                    for line in lines:
+                        line = line.strip()
+                        if line and not line.startswith('#') and line != 'current_instance':
+                            eco_commands.append(line)
+                    
+                    print(f"  Total ECO commands: {len(eco_commands)}")
+                    
+                    # Count commands by type
+                    command_types = {}
+                    for command_line in eco_commands:
+                        # Extract command type (first word)
+                        command = command_line.split()[0] if command_line.split() else ""
+                        if command:
+                            command_types[command] = command_types.get(command, 0) + 1
+                    
+                    # Display command breakdown
+                    if command_types:
+                        print(f"  Command breakdown:")
+                        for cmd_type, count in sorted(command_types.items(), key=lambda x: x[1], reverse=True):
+                            print(f"    {cmd_type}: {count}")
+                    
+                    # Check for dont_use cells in unit script ECO file
+                    self._check_eco_for_dont_use_cells(unit_eco_file, eco_commands)
+                    
+                    # Check for instNotAllowedOnClocks violations
+                    self._check_eco_for_clock_violations(unit_eco_file, eco_commands)
+                    
+                    # Check for clock cells on data paths (informational)
+                    self._check_eco_for_clock_cells_on_data(unit_eco_file, eco_commands)
+                    
+                except Exception as e:
+                    print(f"  Error reading unit script ECO file: {e}")
         
         # NV Gate ECO - handled in run_nv_gate_eco method
         nv_eco_dir = os.path.join(self.workarea, "signoff_flow/nv_gate_eco")
@@ -14159,8 +17547,15 @@ class WorkareaReviewer:
             icon="[ECO]"
         )
     
-    def _extract_block_release_info(self, release_log: str):
-        """Extract block release information focusing on umake block_release commands"""
+    def _extract_block_release_info(self, release_log: str) -> Optional[Dict[str, Any]]:
+        """Extract block release information focusing on umake block_release commands
+        
+        Args:
+            release_log: Path to release log file
+            
+        Returns:
+            Dictionary with release information or None if not found
+        """
         release_to_path = None
         try:
             # Use grep to extract only the line we need instead of reading entire file
@@ -14179,10 +17574,23 @@ class WorkareaReviewer:
             print(f"  Error reading block release log: {e}")
             return None, release_to_path
     
-    def _extract_umake_block_release_commands(self):
+    def _extract_umake_block_release_commands(self, search_base_path: str = None) -> Dict[str, Any]:
         """Extract comprehensive block release information from umake logs
         
-        Returns: dict with release attempts, status, flags, and custom links
+        Args:
+            search_base_path: Base path to search for umake logs (for NBU signoff support)
+                             If None, defaults to workarea root
+        
+        Returns:
+            Dictionary with release attempts, status, flags, and custom links:
+            - 'attempts': List[Dict] - List of release attempt details
+            - 'overall_status': str - Overall status (PASS/WARN/FAIL/NOT_RUN)
+            - 'custom_links': List[str] - Custom link names
+            - 'custom_links_with_dates': Dict[str, str] - Link names to dates
+            - 'automatic_links': List[str] - Automatic link names
+            - 'total_attempts': int - Total number of attempts
+            - 'successful_attempts': int - Number of successful attempts
+            - 'failed_attempts': int - Number of failed attempts
         """
         release_data = {
             'attempts': [],
@@ -14196,8 +17604,13 @@ class WorkareaReviewer:
         }
         
         try:
+            # Use provided path or default to workarea root
+            # For NBU signoff, this will be the nbu_signoff base path
+            if search_base_path is None:
+                search_base_path = self.workarea
+            
             # Search for "-s block_release" in umake logs (matches --step, --step_flags, etc.)
-            umake_pattern = os.path.join(self.workarea, "umake_log/*/*.log")
+            umake_pattern = os.path.join(search_base_path, "umake_log/*/*.log")
             
             # Find all log files that contain block_release commands
             result = self.file_utils.run_command(
@@ -14213,18 +17626,8 @@ class WorkareaReviewer:
             # IMPORTANT: Filter out symlinks (like latest_dir) to avoid duplicates
             # Background: umake_log/latest_dir is a symlink pointing to the most recent log directory
             # This causes duplicate entries if not filtered (e.g., same log appears twice with different paths)
-            # Solution: Use os.path.realpath() to resolve symlinks to their actual files, 
-            # then track which real paths we've already processed to eliminate duplicates
-            real_log_files = []
-            seen_real_paths = set()
-            for log_file in log_files:
-                # Resolve to real path to handle symlinks
-                real_path = os.path.realpath(log_file)
-                if real_path not in seen_real_paths:
-                    seen_real_paths.add(real_path)
-                    real_log_files.append(log_file)
-            
-            log_files = real_log_files
+            # Solution: Use FileUtils.filter_symlinks() to resolve and deduplicate
+            log_files = self.file_utils.filter_symlinks(log_files)
             release_data['total_attempts'] = len(log_files)
             
             print(f"\n  {Color.CYAN}Block Release Attempts: {len(log_files)}{Color.RESET}")
@@ -14284,15 +17687,14 @@ class WorkareaReviewer:
             print(f"  Successful: {release_data['successful_attempts']}")
             print(f"  Failed: {release_data['failed_attempts']}")
             if release_data['custom_links']:
-                # Sort custom links by date (oldest first) for display
+                # Just show count - detailed links shown in "All Custom Links" section below
+                print(f"  Custom Links: {len(release_data['custom_links'])} detected (see details below)")
+                # Print individual custom link details with dates for regression HTML parsing
                 sorted_links = sorted(
                     release_data['custom_links'],
                     key=lambda link: release_data['custom_links_with_dates'].get(link, ''),
                     reverse=False
                 )
-                custom_links_str = ', '.join(sorted_links)
-                print(f"  Custom Links: {custom_links_str}")
-                # Print individual custom link details with dates for regression HTML parsing
                 for link in sorted_links:
                     link_date = release_data['custom_links_with_dates'].get(link, 'Unknown')
                     print(f"  Custom Link Detail: {link}|{link_date}")
@@ -14308,12 +17710,8 @@ class WorkareaReviewer:
                     print(f"  Release Name: {first_attempt['flags']['release_name']}")
             print()
             
-            # Display custom links if found
-            if release_data['custom_links']:
-                print(f"\n  {Color.CYAN}Custom/Pre-defined Links Detected (from workarea logs):{Color.RESET}")
-                for link in release_data['custom_links']:
-                    link_date = release_data['custom_links_with_dates'].get(link, 'Unknown')
-                    print(f"    - {Color.GREEN}{link}{Color.RESET} ({link_date})")
+            # Note: Custom links display consolidated with "All Custom Links in Central Release Area" section
+            # No need to display them here separately to avoid duplication
             
             return release_data
                 
@@ -14321,13 +17719,14 @@ class WorkareaReviewer:
             print(f"  {Color.RED}Error extracting block release commands: {e}{Color.RESET}")
             return release_data
     
-    def _generate_block_release_html_report(self, release_data: dict, release_to_path: str, umake_custom_links: list = None) -> str:
+    def _generate_block_release_html_report(self, release_data: dict, release_to_path: str, umake_custom_links: list = None, all_locations: list = None) -> str:
         """Generate comprehensive HTML report for block release
         
         Args:
             release_data: Dictionary with release attempts and custom links
             release_to_path: Path to central release area
             umake_custom_links: List of custom links created via umake (for manual detection)
+            all_locations: List of tuples with all block_release locations (for NBU signoff)
             
         Returns:
             Path to generated HTML file
@@ -14347,9 +17746,8 @@ class WorkareaReviewer:
                     import base64
                     logo_data = base64.b64encode(logo_file.read()).decode('utf-8')
             
-            # Get central area links (with manual detection)
+            # Get central area links (with target-based duplicate detection)
             central_links = []
-            umake_link_names = set(umake_custom_links) if umake_custom_links else set()
             
             if release_to_path:
                 base_release_dir = os.path.dirname(release_to_path)
@@ -14362,6 +17760,8 @@ class WorkareaReviewer:
                 
                 if os.path.exists(base_release_dir):
                     try:
+                        # PHASE 1: Collect all custom symlinks with metadata
+                        temp_links = []
                         entries = os.listdir(base_release_dir)
                         for entry in entries:
                             entry_path = os.path.join(base_release_dir, entry)
@@ -14372,6 +17772,7 @@ class WorkareaReviewer:
                                         stat_info = os.lstat(entry_path)
                                         link_date = datetime.fromtimestamp(stat_info.st_mtime).strftime('%Y-%m-%d')
                                         link_time = datetime.fromtimestamp(stat_info.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+                                        link_timestamp = stat_info.st_mtime  # Unix timestamp
                                         target = os.readlink(entry_path)
                                         target_basename = os.path.basename(target)
                                         user = "Unknown"
@@ -14384,19 +17785,42 @@ class WorkareaReviewer:
                                                 if user_match:
                                                     user = user_match.group(1)
                                         
-                                        # Check if this is a manual link (not in umake logs)
-                                        is_manual = entry not in umake_link_names
+                                        # Detect if target is NBU signoff
+                                        target_full = os.path.abspath(target)
+                                        is_nbu, nbu_ipo = self._detect_nbu_release_from_target(target_full)
                                         
-                                        central_links.append((entry, link_date, link_time, user, target_basename, os.path.abspath(target), is_manual))
+                                        temp_links.append((entry, link_date, link_time, link_timestamp, user, target_basename, target_full, is_nbu, nbu_ipo))
                                     except:
                                         pass
-                        central_links.sort(key=lambda x: x[2])
+                        
+                        # PHASE 2: Detect manual links by target duplication
+                        target_groups = {}
+                        for entry, link_date, link_time, link_timestamp, user, target_basename, target_full, is_nbu, nbu_ipo in temp_links:
+                            if target_full not in target_groups:
+                                target_groups[target_full] = []
+                            target_groups[target_full].append((entry, link_timestamp, link_date))
+                        
+                        manual_links_set = set()
+                        for target_path, links in target_groups.items():
+                            if len(links) > 1:
+                                links.sort(key=lambda x: x[1])  # Sort by timestamp
+                                # First is AUTO, rest are MANUAL
+                                for i, (link_name, timestamp, link_date) in enumerate(links):
+                                    if i > 0:
+                                        manual_links_set.add(link_name)
+                        
+                        # Build final central_links with manual flag
+                        for entry, link_date, link_time, link_timestamp, user, target_basename, target_full, is_nbu, nbu_ipo in temp_links:
+                            is_manual = entry in manual_links_set
+                            central_links.append((entry, link_date, link_time, user, target_basename, target_full, is_manual, is_nbu, nbu_ipo))
+                        
+                        central_links.sort(key=lambda x: x[2])  # Sort by link_time
                     except:
                         pass
             
             # Generate HTML content
             html_content = self._generate_block_release_html_content(
-                release_data, release_to_path, central_links, logo_data
+                release_data, release_to_path, central_links, logo_data, all_locations
             )
             
             with open(html_path, 'w', encoding='utf-8') as f:
@@ -14408,8 +17832,74 @@ class WorkareaReviewer:
             print(f"  {Color.RED}Error generating block release HTML report: {e}{Color.RESET}")
             return ""
     
-    def _generate_block_release_html_content(self, release_data: dict, release_to_path: str, central_links: list, logo_data: str) -> str:
-        """Generate HTML content for block release report"""
+    def _generate_block_release_html_content(self, release_data: dict, release_to_path: str, central_links: list, logo_data: str, all_locations: list = None) -> str:
+        """Generate HTML content for block release report with multi-location support"""
+        
+        # Build multi-location section HTML (if NBU signoff detected)
+        locations_html = ""
+        if all_locations and len(all_locations) > 1:
+            locations_table = ""
+            for idx, (path, ipo, is_nbu, metadata) in enumerate(all_locations, 1):
+                rel_path = os.path.relpath(path, self.workarea)
+                location_type = f"NBU ({ipo})" if is_nbu else "ROOT"
+                user_display = metadata['user']
+                date_display = metadata['date_str']
+                
+                # Style based on USER match
+                if metadata['user'] == self.workarea_owner:
+                    row_style = "background-color: #d5f4e6; border-left: 4px solid #27ae60;"  # Green
+                    status_badge = '<span style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">ACTIVE</span>'
+                else:
+                    row_style = "background-color: #fff3cd; border-left: 4px solid #f39c12; opacity: 0.7;"  # Yellow
+                    status_badge = '<span style="background: #f39c12; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em;">STALE</span>'
+                
+                locations_table += f"""
+                <tr style="{row_style}">
+                    <td style="padding: 12px;"><strong>{idx}</strong></td>
+                    <td style="padding: 12px;"><strong>{location_type}</strong></td>
+                    <td style="padding: 12px; font-family: monospace; font-size: 0.9em;">{rel_path}</td>
+                    <td style="padding: 12px;">{user_display}</td>
+                    <td style="padding: 12px;">{date_display}</td>
+                    <td style="padding: 12px; text-align: center;">{status_badge}</td>
+                </tr>
+                """
+            
+            locations_html = f"""
+            <div class="section-card" style="margin-top: 30px; border-left: 4px solid #9b59b6;">
+                <h2 style="color: #9b59b6; margin-bottom: 20px;">
+                    <span style="font-size: 1.5em;">📍</span> Block Release Locations Detected
+                </h2>
+                <p style="color: #7f8c8d; margin-bottom: 15px;">
+                    This workarea uses <strong style="color: #9b59b6;">NBU Signoff mode</strong>. 
+                    Multiple block_release locations were found. The <span style="color: #27ae60;"><strong>ACTIVE</strong></span> location 
+                    is selected based on USER field matching the workarea owner.
+                </p>
+                <table style="width: 100%; border-collapse: collapse; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                            <th style="padding: 12px; text-align: left;">#</th>
+                            <th style="padding: 12px; text-align: left;">Type</th>
+                            <th style="padding: 12px; text-align: left;">Path</th>
+                            <th style="padding: 12px; text-align: left;">USER</th>
+                            <th style="padding: 12px; text-align: left;">Date</th>
+                            <th style="padding: 12px; text-align: center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {locations_table}
+                    </tbody>
+                </table>
+                <div style="margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid #3498db;">
+                    <strong style="color: #3498db;">Selection Logic:</strong> 
+                    The ACTIVE release is selected based on:
+                    <ol style="margin: 8px 0 0 20px; color: #555;">
+                        <li>USER field matches workarea owner (highest priority)</li>
+                        <li>Newest timestamp (tiebreaker)</li>
+                        <li>Prefer NBU location if timestamps tied (newer workflow)</li>
+                    </ol>
+                </div>
+            </div>
+            """
         
         # Calculate statistics
         total_attempts = release_data.get('total_attempts', 0)
@@ -14507,7 +17997,7 @@ class WorkareaReviewer:
             total_links = len(sorted_links)
             
             # Show top 3 with color coding
-            for idx, (link_name, link_date, link_time, user, target_basename, target_full_path, is_manual) in enumerate(sorted_links[:3]):
+            for idx, (link_name, link_date, link_time, user, target_basename, target_full_path, is_manual, is_nbu, nbu_ipo) in enumerate(sorted_links[:3]):
                 # Color code: 1st=green, 2nd=orange, 3rd=gray
                 if idx == 0:
                     row_color = "#d5f4e6"  # Light green
@@ -14518,11 +18008,20 @@ class WorkareaReviewer:
                 
                 manual_badge = '<span class="manual-badge">Manual</span>' if is_manual else ''
                 
+                # Determine source display
+                if is_nbu and nbu_ipo:
+                    source_display = f'<span style="color: #9b59b6; font-weight: bold;">NBU ({nbu_ipo})</span>'
+                elif is_nbu:
+                    source_display = '<span style="color: #9b59b6; font-weight: bold;">NBU</span>'
+                else:
+                    source_display = '<span style="color: #27ae60;">ROOT</span>'
+                
                 central_links_html += f"""
                 <tr style="background-color: {row_color};">
                     <td><strong>{link_name}</strong> {manual_badge}</td>
                     <td>{link_date}</td>
                     <td>{user}</td>
+                    <td>{source_display}</td>
                     <td><a href="file://{target_full_path}" class="path-link" title="{target_full_path}">{target_basename}</a></td>
                 </tr>
                 """
@@ -14530,20 +18029,30 @@ class WorkareaReviewer:
             # Build older links (expandable)
             if total_links > 3:
                 older_links_html = ""
-                for link_name, link_date, link_time, user, target_basename, target_full_path, is_manual in sorted_links[3:]:
+                for link_name, link_date, link_time, user, target_basename, target_full_path, is_manual, is_nbu, nbu_ipo in sorted_links[3:]:
                     manual_badge = '<span class="manual-badge">Manual</span>' if is_manual else ''
+                    
+                    # Determine source display
+                    if is_nbu and nbu_ipo:
+                        source_display = f'<span style="color: #9b59b6; font-weight: bold;">NBU ({nbu_ipo})</span>'
+                    elif is_nbu:
+                        source_display = '<span style="color: #9b59b6; font-weight: bold;">NBU</span>'
+                    else:
+                        source_display = '<span style="color: #27ae60;">ROOT</span>'
+                    
                     older_links_html += f"""
                     <tr>
                         <td><strong>{link_name}</strong> {manual_badge}</td>
                         <td>{link_date}</td>
                         <td>{user}</td>
+                        <td>{source_display}</td>
                         <td><a href="file://{target_full_path}" class="path-link" title="{target_full_path}">{target_basename}</a></td>
                     </tr>
                     """
                 
                 central_links_html += f"""
                 <tr>
-                    <td colspan="4" style="text-align: center; padding: 10px;">
+                    <td colspan="5" style="text-align: center; padding: 10px;">
                         <button class="expand-btn" onclick="toggleSection('olderLinks')" style="margin: 0 auto;">
                             <span id="olderLinksToggle">▼</span> Show {total_links - 3} more older link(s)
                         </button>
@@ -14554,7 +18063,7 @@ class WorkareaReviewer:
                 </tbody>
                 """
         else:
-            central_links_html = "<tr><td colspan='4' class='no-data'>No custom links found in central release area</td></tr>"
+            central_links_html = "<tr><td colspan='5' class='no-data'>No custom links found in central release area</td></tr>"
         
         # Build timeline HTML
         timeline_html = ""
@@ -14568,8 +18077,18 @@ class WorkareaReviewer:
                 'user': attempt['user'],
                 'details': f"Release attempt #{attempt['attempt_num']}"
             })
-        for link_name, link_date, link_time, user, target_basename, target_full_path, is_manual in central_links:
-            link_type = "Manual custom link" if is_manual else "Custom link"
+        for link_name, link_date, link_time, user, target_basename, target_full_path, is_manual, is_nbu, nbu_ipo in central_links:
+            # Determine link type with NBU source
+            if is_manual:
+                link_type = "Manual custom link"
+            else:
+                link_type = "Custom link"
+            
+            if is_nbu and nbu_ipo:
+                link_type += f" (NBU {nbu_ipo})"
+            elif is_nbu:
+                link_type += " (NBU)"
+            
             all_events.append({
                 'date': link_date,
                 'time': link_time,
@@ -15057,6 +18576,9 @@ class WorkareaReviewer:
             </div>
         </div>
         
+        <!-- Multi-Location Detection (NBU Signoff) -->
+        {locations_html}
+        
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-value">{total_attempts}</div>
@@ -15094,6 +18616,7 @@ class WorkareaReviewer:
                             <th>Link Name</th>
                             <th>Date Created</th>
                             <th>User</th>
+                            <th>Source</th>
                             <th>Target Workarea</th>
                         </tr>
                     </thead>
@@ -15176,16 +18699,20 @@ class WorkareaReviewer:
 """
         return html
     
-    def _check_central_block_release_links(self, release_to_path: str, automatic_link_names: list, umake_custom_links: list = None):
+    def _check_central_block_release_links(self, release_to_path: str, automatic_link_names: List[str], umake_custom_links: Optional[List[str]] = None) -> List[str]:
         """Check central block release area for all custom links with metadata
+        
+        Uses symlink target deduplication to detect manual links:
+        - Multiple symlinks pointing to the same target → oldest is AUTO, rest are MANUAL
+        - Single symlink per target → AUTO
         
         Args:
             release_to_path: Path from 'Release to:' line (e.g., /home/agur_backend_blockRelease/block/prt/...)
-            automatic_link_names: List of known automatic link names
-            umake_custom_links: List of custom links found in umake logs (for comparison)
-        
+            automatic_link_names: List of automatic link names
+            umake_custom_links: Optional list of custom link names (kept for backward compatibility, not used)
+            
         Returns:
-            list: Manually created custom links (in central but not in umake logs)
+            list: Manually created custom links (detected by target duplication)
         """
         try:
             # Extract base path (e.g., /home/agur_backend_blockRelease/block/prt/)
@@ -15209,10 +18736,9 @@ class WorkareaReviewer:
                 return []
             
             custom_links_found = []
-            manually_created_links = []  # Links in central but not in umake logs
-            umake_links_set = set(umake_custom_links) if umake_custom_links else set()
+            manually_created_links = []  # Links detected as manual duplicates
             
-            # Check each entry
+            # PHASE 1: Collect all custom symlinks with their metadata
             for entry in sorted(entries):
                 entry_path = os.path.join(base_release_dir, entry)
                 
@@ -15232,6 +18758,7 @@ class WorkareaReviewer:
                             # Get modification time (when symlink was created)
                             link_date = datetime.fromtimestamp(stat_info.st_mtime).strftime('%Y-%m-%d')
                             link_time = datetime.fromtimestamp(stat_info.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+                            link_timestamp = stat_info.st_mtime  # Unix timestamp for sorting
                             
                             # Get target path
                             target = os.readlink(entry_path)
@@ -15249,35 +18776,104 @@ class WorkareaReviewer:
                                     if user_match:
                                         user = user_match.group(1)
                             
-                            # Check if this link is manually created (not in umake logs)
-                            is_manual = (umake_custom_links is not None) and (entry not in umake_links_set)
+                            # Detect if target is NBU signoff
+                            is_nbu, nbu_ipo = self._detect_nbu_release_from_target(target_full)
                             
-                            custom_links_found.append((entry, link_date, link_time, user, target_full, is_manual))
+                            # Store with timestamp for later duplicate detection
+                            custom_links_found.append((entry, link_date, link_time, link_timestamp, user, target_full, is_nbu, nbu_ipo))
                             
-                            if is_manual:
-                                manually_created_links.append((entry, link_date))
                         except Exception as e:
-                            custom_links_found.append((entry, 'Unknown', 'Unknown', 'Unknown', '', False))
+                            # Store with dummy data if metadata extraction fails
+                            custom_links_found.append((entry, 'Unknown', 'Unknown', 0, 'Unknown', '', False, None))
+            
+            # PHASE 2: Group symlinks by target and detect manual duplicates
+            # Build a mapping: target_path -> list of (link_name, timestamp, link_date)
+            target_groups = {}
+            for entry, link_date, link_time, link_timestamp, user, target_full, is_nbu, nbu_ipo in custom_links_found:
+                if target_full not in target_groups:
+                    target_groups[target_full] = []
+                target_groups[target_full].append((entry, link_timestamp, link_date))
+            
+            # Determine which links are manual based on target duplication
+            manual_links_set = set()
+            for target_path, links in target_groups.items():
+                if len(links) > 1:
+                    # Multiple symlinks point to same target
+                    # Sort by timestamp (oldest first)
+                    links.sort(key=lambda x: x[1])  # x[1] is timestamp
+                    
+                    # First (oldest) is AUTO, rest are MANUAL
+                    for i, (link_name, timestamp, link_date) in enumerate(links):
+                        if i > 0:  # Skip first (oldest)
+                            manual_links_set.add(link_name)
+                            manually_created_links.append((link_name, link_date))
+                # If only 1 link per target, it's AUTO (no action needed)
+            
+            # Count NBU vs ROOT links
+            nbu_count = sum(1 for item in custom_links_found if item[6])  # item[6] is is_nbu
+            root_count = len(custom_links_found) - nbu_count
             
             if custom_links_found:
-                # Sort by date (oldest first)
-                custom_links_found.sort(key=lambda x: x[2])  # x[2] is link_time (full timestamp)
+                # Sort by date (oldest first) - using timestamp for accurate sorting
+                custom_links_found.sort(key=lambda x: x[3])  # x[3] is link_timestamp
                 
-                # Display in a table format
-                print(f"    {'Link Name':<30} {'Date':<12} {'User':<15} {'Target':<80} {'Status'}")
-                print(f"    {'-'*30} {'-'*12} {'-'*15} {'-'*80} {'-'*20}")
-                for link_name, link_date, link_time, user, target, is_manual in custom_links_found:
-                    status_str = f"{Color.CYAN}Manual{Color.RESET}" if is_manual else ""
-                    # Show full target path (no truncation)
-                    print(f"    {Color.GREEN}{link_name:<30}{Color.RESET} {link_date:<12} {user:<15} {target:<80} {status_str}")
+                # Display in a table format with Source and Target columns
+                print(f"    {'Link Name':<30} {'Date':<12} {'User':<15} {'Source':<16} {'Target':<60} {'Status'}")
+                print(f"    {'-'*30} {'-'*12} {'-'*15} {'-'*16} {'-'*60} {'-'*20}")
                 
-                print(f"\n    {Color.CYAN}Total custom links found: {len(custom_links_found)}{Color.RESET}")
+                # Track if current link matches workarea owner for highlighting
+                latest_nbu_link = None
+                for entry, link_date, link_time, link_timestamp, user, target_full, is_nbu, nbu_ipo in custom_links_found:
+                    # Check if this link is manual (based on target duplication)
+                    is_manual = entry in manual_links_set
+                    
+                    # Determine source display
+                    if is_nbu and nbu_ipo:
+                        source_str = f"NBU ({nbu_ipo})"
+                    elif is_nbu:
+                        source_str = "NBU"
+                    else:
+                        source_str = "ROOT"
+                    
+                    # Check if this is old owner (not matching current workarea owner)
+                    if user != self.workarea_owner and not is_nbu:
+                        source_str += " [old]"
+                    
+                    # Extract shortened target (remove /home/agur_backend_blockRelease/block/ prefix)
+                    target_short = os.path.basename(target_full)
+                    if len(target_short) > 60:
+                        target_short = target_short[:57] + "..."
+                    
+                    # Build status string
+                    status_parts = []
+                    if is_manual:
+                        status_parts.append(f"{Color.CYAN}Manual{Color.RESET}")
+                    
+                    # Mark latest NBU link
+                    if is_nbu and user == self.workarea_owner:
+                        status_parts.append(f"{Color.GREEN}[LATEST]{Color.RESET}")
+                        latest_nbu_link = (entry, nbu_ipo, link_date)
+                    
+                    status_str = " ".join(status_parts)
+                    
+                    # Color code link name based on source
+                    if is_nbu:
+                        link_display = f"{Color.MAGENTA}{entry:<30}{Color.RESET}"
+                    else:
+                        link_display = f"{Color.GREEN}{entry:<30}{Color.RESET}"
+                    
+                    print(f"    {link_display} {link_date:<12} {user:<15} {source_str:<16} {target_short:<60} {status_str}")
                 
-                # Print manually created links for regression parsing
-                if manually_created_links:
-                    print(f"\n  {Color.CYAN}Manually Created Custom Links (no release log):{Color.RESET}")
-                    for link_name, link_date in manually_created_links:
-                        print(f"  Manual Custom Link Detail: {link_name}|{link_date}")
+                # Summary line with duplicate detection statistics
+                manual_count = len(manual_links_set)
+                auto_count = len(custom_links_found) - manual_count
+                print(f"\n    {Color.CYAN}Total: {len(custom_links_found)} custom links ({nbu_count} from NBU signoff, {root_count} from ROOT){Color.RESET}")
+                print(f"    {Color.CYAN}Classification: {auto_count} auto-created, {manual_count} manual (duplicate targets){Color.RESET}")
+                if latest_nbu_link:
+                    print(f"    {Color.GREEN}Latest NBU release: {latest_nbu_link[0]} ({latest_nbu_link[1]}, {latest_nbu_link[2]}){Color.RESET}")
+                
+                # Note: Link data is available in the table above for script parsing
+                # No separate output needed - run_agur_regression.sh parses the visual table
             else:
                 print(f"    {Color.YELLOW}No custom links found in central release area{Color.RESET}")
             
@@ -15287,7 +18883,12 @@ class WorkareaReviewer:
             print(f"  {Color.YELLOW}Unable to check central block release area: {e}{Color.RESET}")
             return []
     
-    def _parse_release_log_file(self, log_file: str, automatic_link_names: list, attempt_num: int) -> dict:
+    def _parse_release_log_file(
+        self, 
+        log_file: str, 
+        automatic_link_names: List[str], 
+        attempt_num: int
+    ) -> Optional[Dict[str, Any]]:
         """Parse a single release log file to extract all relevant information
         
         Args:
@@ -15296,7 +18897,16 @@ class WorkareaReviewer:
             attempt_num: Sequential attempt number
             
         Returns:
-            dict with attempt details (timestamp, command, flags, status, links)
+            Dictionary with attempt details or None if parsing fails:
+            - 'attempt_num': int - Sequential attempt number
+            - 'timestamp': str - Release timestamp
+            - 'date': str - Release date
+            - 'command': str - Full umake command
+            - 'flags': Dict[str, bool] - Release flags (Sta, Fcl, Pnr, etc.)
+            - 'status': str - Release status (SUCCESS/FAILED)
+            - 'custom_links': List[str] - Custom link names
+            - 'automatic_links': List[str] - Automatic link names
+            Returns None if log file cannot be parsed
         """
         attempt = {
             'log_file': log_file,
@@ -15380,14 +18990,20 @@ class WorkareaReviewer:
             print(f"  {Color.RED}Error parsing log {log_file}: {e}{Color.RESET}")
             return None
     
-    def _parse_release_flags(self, command: str) -> dict:
+    def _parse_release_flags(self, command: str) -> Dict[str, bool]:
         """Parse umake block_release command flags
         
         Args:
-            command: Command line string
+            command: Full umake command line string
             
         Returns:
-            dict mapping flag names to their values
+            Dictionary mapping flag names to boolean values:
+            - 'Sta': bool - Static timing analysis release
+            - 'Fcl': bool - Functional/Layout release
+            - 'Pnr': bool - Place and route release
+            - 'DC': bool - Design compiler release
+            - 'FE_DCT': bool - Front-end DCT release
+            - 'Full': bool - Full release (all components)
         """
         flags = {}
         
@@ -15434,9 +19050,19 @@ class WorkareaReviewer:
         
         return flags
     
-    def run_nv_gate_eco(self):
+    def run_nv_gate_eco(self) -> None:
         """Run NV Gate ECO analysis"""
         self.print_header(FlowStage.NV_GATE_ECO)
+        
+        # Initialize tracking variables for dashboard
+        total_eco_changes = 0
+        inst_additions = 0
+        inst_swaps = 0
+        net_connections = 0
+        cells_moved = 0
+        drc_violations = None
+        open_nets_status = "PASS"
+        status = "NOT_RUN"
         
         # Show NV Gate ECO flow timeline
         nv_gate_eco_local_flow_dirs = [
@@ -15471,7 +19097,7 @@ class WorkareaReviewer:
                         if 'OBJECT' in line and 'CHANGE' in line and 'COUNT' in line:
                             in_table = True
                             table_lines.append(line)
-                        continue
+                            continue
                         # End of table
                         if in_table and line.startswith('---') and 'TOTAL' in line:
                             table_lines.append(line)
@@ -15504,26 +19130,36 @@ class WorkareaReviewer:
                                     pass
                         
                         if eco_data:
+                            status = "PASS"
                             print(f"  {Color.CYAN}ECO Changes Summary:{Color.RESET}")
                             # Print formatted table header
                             print(f"    {'Object':<10} {'Change':<15} {'Count':>8}")
                             print(f"    {'-'*10} {'-'*15} {'-'*8}")
                             
-                            # Print data rows
+                            # Print data rows and collect metrics for dashboard
                             for obj_type, change_type, count in eco_data:
                                 if obj_type == 'TOTAL':
+                                    total_eco_changes = count
                                     print(f"    {'-'*10} {'-'*15} {'-'*8}")
                                     print(f"    {'TOTAL':<10} {'':<15} {count:>8}")
                                 else:
                                     print(f"    {obj_type:<10} {change_type:<15} {count:>8}")
+                                    # Track specific metrics for dashboard
+                                    if obj_type == 'INST' and 'ADDITION' in change_type:
+                                        inst_additions = count
+                                    elif obj_type == 'INST' and 'SWAP' in change_type:
+                                        inst_swaps += count
+                                    elif obj_type == 'NET' and 'CONNECTION' in change_type:
+                                        net_connections = count
                     else:
                         print(f"  {Color.YELLOW}No ECO changes found{Color.RESET}")
                 except Exception as e:
                     print(f"  Error reading ECO change summary: {e}")
             
             # Look for timing reports
-            setup_pattern = f"signoff_flow/nv_gate_eco/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/SUMMARY/{self.design_info.top_hier}.{self.design_info.ipo}.eco.timing.setup.rpt.gz"
-            hold_pattern = f"signoff_flow/nv_gate_eco/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/SUMMARY/{self.design_info.top_hier}.{self.design_info.ipo}.eco.timing.hold.rpt.gz"
+            # Note: Use wildcard for IPO as directory may be ipo1000 but files use ipo1400 (actual implementation IPO)
+            setup_pattern = f"signoff_flow/nv_gate_eco/{self.design_info.top_hier}/ipo*/REPs/SUMMARY/{self.design_info.top_hier}.ipo*.eco.timing.setup.rpt.gz"
+            hold_pattern = f"signoff_flow/nv_gate_eco/{self.design_info.top_hier}/ipo*/REPs/SUMMARY/{self.design_info.top_hier}.ipo*.eco.timing.hold.rpt.gz"
             
             setup_files = self.file_utils.find_files(setup_pattern, self.workarea)
             hold_files = self.file_utils.find_files(hold_pattern, self.workarea)
@@ -15591,9 +19227,92 @@ class WorkareaReviewer:
                 except Exception as e:
                     print(f"  Error processing hold timing report: {e}")
             
+            # Look for ECO summary reports (critical validation)
+            summary_pattern = f"signoff_flow/nv_gate_eco/{self.design_info.top_hier}/ipo*/REPs/{self.design_info.top_hier}.ipo*.eco_summary_*.rpt.gz"
+            summary_files = self.file_utils.find_files(summary_pattern, self.workarea)
+            
+            for summary_file in sorted(summary_files):
+                filename = os.path.basename(summary_file)
+                
+                # Critical: Open nets check (any open net = FAIL)
+                if 'open_nets' in filename:
+                    self.print_file_info(summary_file, "ECO Open Nets Check")
+                    try:
+                        result = self.file_utils.run_command(f"zcat {summary_file} | grep -E 'open_nets_left:|open' | head -10")
+                        if result.strip():
+                            # Check for "number_of_open_nets_left: 0" pattern
+                            has_zero_open_nets = 'open_nets_left: 0' in result or 'open_nets_left:0' in result
+                            
+                            if has_zero_open_nets:
+                                print(f"  {Color.GREEN}No open nets found (PASS){Color.RESET}")
+                                for line in result.strip().split('\n'):
+                                    if 'open_nets_left' in line:
+                                        print(f"  {line}")
+                            else:
+                                # Check if actually has open nets
+                                import re
+                                open_count_match = re.search(r'open_nets_left:\s*(\d+)', result)
+                                if open_count_match and int(open_count_match.group(1)) > 0:
+                                    print(f"  {Color.RED}WARNING: {open_count_match.group(1)} open nets detected!{Color.RESET}")
+                                    open_nets_status = "FAIL"
+                                else:
+                                    print(f"  {Color.GREEN}No open nets found (PASS){Color.RESET}")
+                                
+                                for line in result.strip().split('\n'):
+                                    print(f"  {line}")
+                    except Exception as e:
+                        print(f"  Error checking open nets: {e}")
+                
+                # Cell movement summary
+                elif 'cell_movement' in filename and 'eco_in' not in filename:
+                    self.print_file_info(summary_file, "ECO Cell Movement")
+                    try:
+                        result = self.file_utils.run_command(f"zcat {summary_file} | grep -E 'Total|moved|displaced' | head -10")
+                        if result.strip():
+                            for line in result.strip().split('\n'):
+                                print(f"  {line}")
+                                # Try to extract number of moved cells
+                                if 'moved' in line.lower() or 'total' in line.lower():
+                                    import re
+                                    numbers = re.findall(r'\d+', line)
+                                    if numbers:
+                                        cells_moved = int(numbers[0])
+                    except Exception as e:
+                        print(f"  Error reading cell movement: {e}")
+                
+                # DRC data summary
+                elif 'drc_data' in filename:
+                    self.print_file_info(summary_file, "ECO DRC Summary")
+                    try:
+                        result = self.file_utils.run_command(f"zcat {summary_file} | grep -E 'DRC|violation|Total' | head -10")
+                        if result.strip():
+                            for line in result.strip().split('\n'):
+                                print(f"  {line}")
+                                # Try to extract DRC count
+                                if 'violation' in line.lower() or 'total' in line.lower():
+                                    import re
+                                    numbers = re.findall(r'\d+', line)
+                                    if numbers:
+                                        drc_violations = int(numbers[0])
+                    except Exception as e:
+                        print(f"  Error reading DRC summary: {e}")
+                
+                # Wire length change
+                elif 'wire_length' in filename:
+                    self.print_file_info(summary_file, "ECO Wire Length Change")
+                    try:
+                        result = self.file_utils.run_command(f"zcat {summary_file} | head -20")
+                        if result.strip():
+                            lines = result.strip().split('\n')[:5]  # Show first 5 lines
+                            for line in lines:
+                                if line.strip():
+                                    print(f"  {line}")
+                    except Exception as e:
+                        print(f"  Error reading wire length: {e}")
+            
             # Look for trace reports and worst paths
-            trace_pattern = f"signoff_flow/nv_gate_eco*/{self.design_info.top_hier}/{self.design_info.ipo}/reports/*.traces.rpt"
-            worst_paths_pattern = f"signoff_flow/nv_gate_eco*/{self.design_info.top_hier}/{self.design_info.ipo}/reports/*.worst_paths"
+            trace_pattern = f"signoff_flow/nv_gate_eco*/{self.design_info.top_hier}/ipo*/reports/*.traces.rpt"
+            worst_paths_pattern = f"signoff_flow/nv_gate_eco*/{self.design_info.top_hier}/ipo*/reports/*.worst_paths"
             
             trace_files = self.file_utils.find_files(trace_pattern, self.workarea)
             worst_paths_files = self.file_utils.find_files(worst_paths_pattern, self.workarea)
@@ -15606,23 +19325,41 @@ class WorkareaReviewer:
         else:
             print("  Didn't run NV Gate ECO")
         
+        # Build key metrics for dashboard
+        key_metrics = {"Design": self.design_info.top_hier}
+        if total_eco_changes > 0:
+            key_metrics["Total Changes"] = str(total_eco_changes)
+            if inst_additions > 0:
+                key_metrics["Inst Additions"] = str(inst_additions)
+            if inst_swaps > 0:
+                key_metrics["Inst Swaps"] = str(inst_swaps)
+            if net_connections > 0:
+                key_metrics["Net Connections"] = str(net_connections)
+        
+        # Add new summary report metrics
+        if cells_moved > 0:
+            key_metrics["Cells Moved"] = str(cells_moved)
+        if drc_violations is not None:
+            key_metrics["DRC Violations"] = str(drc_violations)
+        if open_nets_status != "PASS":
+            key_metrics["Open Nets"] = "FAIL"
+            status = "FAIL"  # Override status if open nets detected
+        
         # Add section summary for master dashboard
         self._add_section_summary(
             section_name="NV Gate ECO",
             section_id="nv-gate-eco",
             stage=FlowStage.NV_GATE_ECO,
-            status="PASS",
-            key_metrics={
-                "Design": self.design_info.top_hier
-            },
+            status=status,
+            key_metrics=key_metrics,
             html_file="",
             priority=3,
             issues=[],
             icon="[NV-ECO]"
         )
     
-    def run_block_release(self):
-        """Run comprehensive block release analysis"""
+    def run_block_release(self) -> None:
+        """Run comprehensive block release analysis with NBU signoff multi-location support"""
         self.print_header(FlowStage.BLOCK_RELEASE)
         
         # Initialize tracking variables
@@ -15632,15 +19369,73 @@ class WorkareaReviewer:
         key_metrics = {"Design": self.design_info.top_hier}
         issues = []
         
-        # Block release log
-        release_log = os.path.join(self.workarea, "export/block_release/log/block_release.log")
-        if self.file_utils.file_exists(release_log):
-            self.print_file_info(release_log, "Block Release Log")
-            release_data, release_to_path = self._extract_block_release_info(release_log)
+        # Discover all block_release locations (root + nbu_signoff)
+        all_locations = self._discover_block_release_locations()
+        
+        if all_locations:
+            # Compact display header
+            mode_indicator = " (NBU Signoff Mode)" if len(all_locations) > 1 and any(loc[2] for loc in all_locations) else ""
+            print(f"\n{Color.CYAN}Block Release{mode_indicator} - {len(all_locations)} location(s) detected:{Color.RESET}")
+            
+            # Select the "real" block_release first (for highlighting)
+            selected_path, selected_ipo, selected_is_nbu, selected_meta, selection_reason = \
+                self._select_real_block_release(all_locations)
+            
+            # Display all locations compactly
+            for idx, (path, ipo, is_nbu, metadata) in enumerate(all_locations, 1):
+                location_type = f"NBU ({ipo:>7})" if is_nbu else "ROOT       "
+                user_display = metadata['user']
+                date_display = metadata['date_str']
+                
+                # Determine status badge
+                is_selected = (path == selected_path)
+                if metadata['user'] == self.workarea_owner:
+                    status_badge = f"{Color.GREEN}[ACTIVE-owner]{Color.RESET}"
+                else:
+                    status_badge = f"{Color.YELLOW}[STALE-old owner]{Color.RESET}"
+                
+                # Add SELECTED marker
+                selected_marker = f" {Color.CYAN}[SELECTED]{Color.RESET}" if is_selected else ""
+                
+                # Single-line compact format
+                print(f"  {idx}. {location_type} | USER: {user_display:>12} {status_badge} | {date_display}{selected_marker}")
+            
+            # Show selection reason
+            if selected_path:
+                print(f"  {Color.GREEN}-> Reason:{Color.RESET} {Color.CYAN}{selection_reason}{Color.RESET}")
+                
+                # Extract data from selected location
+                release_log = os.path.join(selected_path, "log/block_release.log")
+                if self.file_utils.file_exists(release_log):
+                    self.print_file_info(release_log, "\nBlock Release Log")
+                    release_data, release_to_path = self._extract_block_release_info(release_log)
+                    
+                    # If no attempts found in log, try umake logs from selected location
+                    if not release_data or release_data.get('total_attempts', 0) == 0:
+                        # Determine search path: NBU base path or workarea root
+                        search_path = selected_is_nbu and selected_ipo in self.nbu_signoff_paths
+                        if search_path:
+                            umake_search_base = self.nbu_signoff_paths[selected_ipo]
+                        else:
+                            umake_search_base = self.workarea
+                        
+                        umake_data = self._extract_umake_block_release_commands(umake_search_base)
+                        if umake_data and umake_data.get('total_attempts', 0) > 0:
+                            release_data = umake_data
+                else:
+                    print(f"  {Color.YELLOW}No block_release.log found in selected location{Color.RESET}")
+                    # Try to extract from umake logs in selected location
+                    search_path = selected_is_nbu and selected_ipo in self.nbu_signoff_paths
+                    if search_path:
+                        umake_search_base = self.nbu_signoff_paths[selected_ipo]
+                    else:
+                        umake_search_base = self.workarea
+                    
+                    release_data = self._extract_umake_block_release_commands(umake_search_base)
         else:
-            print(f"  {Color.YELLOW}No block_release.log found{Color.RESET}")
-            # Still try to extract from umake logs
-            release_data = self._extract_umake_block_release_commands()
+            print(f"  {Color.YELLOW}No block_release locations found{Color.RESET}")
+            # Still try to extract from umake logs in workarea root
+            release_data = self._extract_umake_block_release_commands(self.workarea)
         
         # Process release data
         if release_data:
@@ -15705,11 +19500,17 @@ class WorkareaReviewer:
         html_path = ""
         if release_data:
             umake_custom_links = release_data.get('custom_links', [])
-            html_path = self._generate_block_release_html_report(release_data, release_to_path, umake_custom_links)
+            # Pass location information to HTML generator
+            html_path = self._generate_block_release_html_report(
+                release_data, 
+                release_to_path, 
+                umake_custom_links, 
+                all_locations=all_locations if all_locations else None
+            )
             if html_path:
                 html_filename = os.path.basename(html_path)
                 print(f"\n  {Color.CYAN}Block Release HTML Report:{Color.RESET}")
-                print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+                print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{html_filename}{Color.RESET} &")
         
         # Add section summary for master dashboard
         self._add_section_summary(
@@ -15724,7 +19525,7 @@ class WorkareaReviewer:
             icon="[Release]"
         )
     
-    def run_complete_review(self):
+    def run_complete_review(self) -> None:
         """Run complete workarea review"""
         # Display logo if enabled
         if self.show_logo:
@@ -15757,13 +19558,9 @@ class WorkareaReviewer:
             dashboard_path = self.master_dashboard.generate_html()
             dashboard_filename = os.path.basename(dashboard_path)
             if self.quiet_mode:
-                self.quiet_mode.print_always(f"{Color.GREEN}[OK] Master Dashboard generated: {dashboard_filename}{Color.RESET}")
-                self.quiet_mode.print_always(f"{Color.CYAN}     Open with recommended browser:{Color.RESET}")
-                self.quiet_mode.print_always(f"     /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{dashboard_filename}{Color.RESET} &")
+                self.quiet_mode.print_always(f"Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{dashboard_filename}{Color.RESET} &")
             else:
-                print(f"{Color.GREEN}[OK] Master Dashboard generated: {dashboard_filename}{Color.RESET}")
-                print(f"{Color.CYAN}     Open with recommended browser:{Color.RESET}")
-                print(f"     /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{dashboard_filename}{Color.RESET} &")
+                print(f"Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{dashboard_filename}{Color.RESET} &")
         except Exception as e:
             if self.quiet_mode:
                 self.quiet_mode.print_always(f"{Color.RED}[ERROR] Failed to generate Master Dashboard: {e}{Color.RESET}")
@@ -15773,7 +19570,7 @@ class WorkareaReviewer:
         if not self.quiet:
             print(f"\n{Color.GREEN}Review completed successfully!{Color.RESET}")
 
-    def run_runtime_analysis(self):
+    def run_runtime_analysis(self) -> None:
         """Run runtime analysis"""
         self.print_header(FlowStage.RUNTIME)
         
@@ -16311,8 +20108,12 @@ class WorkareaReviewer:
             icon="[Runtime]"
         )
 
-    def _extract_star_runtime(self):
-        """Extract Star extraction runtime"""
+    def _extract_star_runtime(self) -> Dict[str, Any]:
+        """Extract Star extraction runtime
+        
+        Returns:
+            Dictionary with runtime data
+        """
         try:
             # Look for Star extraction logs in multiple locations
             star_log_patterns = [
@@ -16341,8 +20142,12 @@ class WorkareaReviewer:
             pass
         return None
 
-    def _extract_auto_pt_runtime(self):
-        """Extract Auto PT runtime including elapsed time if currently running"""
+    def _extract_auto_pt_runtime(self) -> Dict[str, Any]:
+        """Extract Auto PT runtime including elapsed time if currently running
+        
+        Returns:
+            Dictionary with runtime data
+        """
         try:
             # Look for Auto PT log
             auto_pt_log = os.path.join(self.workarea, "signoff_flow/auto_pt/log/auto_pt.log")
@@ -16418,8 +20223,12 @@ class WorkareaReviewer:
             pass
         return None
 
-    def _extract_formal_runtime(self):
-        """Extract Formal verification runtime from both formal types separately"""
+    def _extract_formal_runtime(self) -> Dict[str, Any]:
+        """Extract Formal verification runtime from both formal types separately
+        
+        Returns:
+            Dictionary with runtime data
+        """
         try:
             # Look for both types of Formal verification logs
             formal_logs = [
@@ -16502,8 +20311,12 @@ class WorkareaReviewer:
             pass
         return None
 
-    def _extract_gl_check_runtime(self):
-        """Extract GL Check runtime"""
+    def _extract_gl_check_runtime(self) -> Dict[str, Any]:
+        """Extract GL Check runtime
+        
+        Returns:
+            Dictionary with runtime data
+        """
         try:
             # Look for GL Check logs in multiple possible locations
             gl_check_log_patterns = [
@@ -16555,8 +20368,12 @@ class WorkareaReviewer:
             print(f"  Error extracting GL Check runtime: {e}")
         return None
 
-    def _extract_auto_pt_fix_runtime(self):
-        """Extract Auto PT Fix runtime (elapsed/wall-clock time, not CPU time)"""
+    def _extract_auto_pt_fix_runtime(self) -> Dict[str, Any]:
+        """Extract Auto PT Fix runtime (elapsed/wall-clock time, not CPU time)
+        
+        Returns:
+            Dictionary with runtime data
+        """
         try:
             # Look for Auto PT Fix log in auto_pt directory (auto_pt_fix uses auto_pt structure)
             auto_pt_fix_log = os.path.join(self.workarea, "signoff_flow/auto_pt/log/auto_pt_fix.log")
@@ -16580,8 +20397,12 @@ class WorkareaReviewer:
             print(f"  Error extracting Auto PT Fix runtime: {e}")
         return None
 
-    def _extract_gen_eco_runtime(self):
-        """Extract Gen ECO Netlist Innovus runtime"""
+    def _extract_gen_eco_runtime(self) -> Dict[str, Any]:
+        """Extract Gen ECO Netlist Innovus runtime
+        
+        Returns:
+            Dictionary with runtime data
+        """
         try:
             # Look for Gen ECO Netlist logs
             gen_eco_log_pattern = f"signoff_flow/gen_eco_netlist_innovus/{self.design_info.top_hier}/ipo*/LOGs/PRIME/STEP__gen_eco_netlist__*.log"
@@ -16602,8 +20423,12 @@ class WorkareaReviewer:
             pass
         return None
 
-    def _extract_pv_runtime(self):
-        """Extract PV flow runtime including elapsed time of running steps"""
+    def _extract_pv_runtime(self) -> Dict[str, Any]:
+        """Extract PV flow runtime including elapsed time of running steps
+        
+        Returns:
+            Dictionary with runtime data
+        """
         try:
             prc_status_pattern = f"pv_flow/nv_flow/pv_{self.design_info.top_hier}.prc.status"
             prc_status_files = self.file_utils.find_files(prc_status_pattern, self.workarea)
@@ -16676,8 +20501,15 @@ class WorkareaReviewer:
         
         return None
 
-    def _extract_timestamps_from_log(self, log_file: str):
-        """Extract start and end timestamps from a log file"""
+    def _extract_timestamps_from_log(self, log_file: str) -> Dict[str, Optional[float]]:
+        """Extract start and end timestamps from a log file
+        
+        Args:
+            log_file: Path to log file
+            
+        Returns:
+            Dictionary with 'start' and 'end' timestamps (float or None)
+        """
         try:
             if not os.path.exists(log_file):
                 return None, None
@@ -16731,8 +20563,16 @@ class WorkareaReviewer:
         except Exception:
             return None, None
 
-    def _calculate_start_time_from_duration(self, end_time_epoch: float, runtime_str: str):
-        """Calculate start time from end time and runtime duration string"""
+    def _calculate_start_time_from_duration(self, end_time_epoch: float, runtime_str: str) -> Optional[float]:
+        """Calculate start time from end time and runtime duration string
+        
+        Args:
+            end_time_epoch: End time as epoch timestamp
+            runtime_str: Runtime duration string (e.g., "2.5 hours", "45 minutes")
+            
+        Returns:
+            Start time as epoch timestamp or None if calculation fails
+        """
         try:
             # Extract duration in hours from runtime string
             hours_match = re.search(r'(\d+\.?\d*)\s*hours?', runtime_str)
@@ -16748,8 +20588,14 @@ class WorkareaReviewer:
             pass
         return None, None
 
-    def _print_runtime_summary_table(self, runtime_data, pnr_runtimes, runtime_timestamps=None):
-        """Print runtime summary table"""
+    def _print_runtime_summary_table(self, runtime_data: Dict[str, Any], pnr_runtimes: Dict[str, Any], runtime_timestamps: Optional[Dict[str, Any]] = None) -> None:
+        """Print runtime summary table
+        
+        Args:
+            runtime_data: Dictionary of runtime data for each stage
+            pnr_runtimes: Dictionary of PnR stage runtimes
+            runtime_timestamps: Optional dictionary of runtime timestamps
+        """
         print(f"\n{Color.CYAN}Runtime Summary Table:{Color.RESET}")
         
         # Prepare table data with timestamps
@@ -16859,8 +20705,13 @@ class WorkareaReviewer:
         else:
             print("  No runtime data available")
     
-    def _print_runtime_summary_table_advanced(self, runtime_data, pnr_runtimes):
-        """Alternative advanced table printing with more options"""
+    def _print_runtime_summary_table_advanced(self, runtime_data: Dict[str, Any], pnr_runtimes: Dict[str, Any]) -> None:
+        """Alternative advanced table printing with more options
+        
+        Args:
+            runtime_data: Dictionary of runtime data for each stage
+            pnr_runtimes: Dictionary of PnR stage runtimes
+        """
         print(f"\n{Color.CYAN}Runtime Summary Table (Advanced):{Color.RESET}")
         
         # Prepare table data
@@ -16920,8 +20771,18 @@ class WorkareaReviewer:
             
             print(f"  +{'-' * (category_width + 2)}+{'-' * (stage_width + 2)}+{'-' * (runtime_width + 2)}+")
     
-    def _generate_runtime_html_report(self, runtime_data, pnr_runtimes, prc_status_file, runtime_timestamps=None):
-        """Generate comprehensive HTML runtime report"""
+    def _generate_runtime_html_report(self, runtime_data: Dict[str, Any], pnr_runtimes: Dict[str, Any], prc_status_file: str, runtime_timestamps: Optional[Dict[str, Any]] = None) -> Optional[str]:
+        """Generate comprehensive HTML runtime report
+        
+        Args:
+            runtime_data: Dictionary of runtime data for each stage
+            pnr_runtimes: Dictionary of PnR stage runtimes
+            prc_status_file: Path to PRC status file
+            runtime_timestamps: Optional dictionary of runtime timestamps
+            
+        Returns:
+            Path to generated HTML file or None if generation fails
+        """
         try:
             # Get detailed PnR stage data
             pnr_stage_data = self._extract_detailed_pnr_stage_data(prc_status_file)
@@ -16945,7 +20806,7 @@ class WorkareaReviewer:
                 f.write(html_content)
             
             print(f"\n  {Color.CYAN}Runtime HTML Report:{Color.RESET}")
-            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{html_filename}{Color.RESET} &")
+            print(f"  Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{html_filename}{Color.RESET} &")
             
             return os.path.abspath(html_path)
             
@@ -16953,8 +20814,12 @@ class WorkareaReviewer:
             print(f"  Error generating runtime HTML report: {e}")
             return ""
     
-    def _check_rtl_formal_exists(self):
-        """Check if RTL formal verification directories exist"""
+    def _check_rtl_formal_exists(self) -> bool:
+        """Check if RTL formal verification directories exist
+        
+        Returns:
+            True if RTL formal directory exists, False otherwise
+        """
         rtl_formal_dirs = [
             os.path.join(self.workarea, "formal_flow/rtl_vs_pnr_bbox_fm"),
             os.path.join(self.workarea, "formal_flow/rtl_vs_pnr_fm"),
@@ -16966,8 +20831,15 @@ class WorkareaReviewer:
                 return True
         return False
     
-    def _extract_detailed_pnr_stage_data(self, prc_status_file):
-        """Extract detailed PnR stage data for each IPO"""
+    def _extract_detailed_pnr_stage_data(self, prc_status_file: str) -> Dict[str, Any]:
+        """Extract detailed PnR stage data for each IPO
+        
+        Args:
+            prc_status_file: Path to prc.status file
+            
+        Returns:
+            Dictionary with PnR stage data
+        """
         pnr_stage_data = {}
         
         if not os.path.exists(prc_status_file):
@@ -17019,8 +20891,21 @@ class WorkareaReviewer:
         
         return pnr_stage_data
     
-    def _create_runtime_html_content(self, runtime_data, pnr_runtimes, pnr_stage_data, prc_status_file, runtime_timestamps=None, fast_dc_detected=False, rtl_detected=False):
-        """Create HTML content for runtime report"""
+    def _create_runtime_html_content(self, runtime_data: Dict[str, Any], pnr_runtimes: Dict[str, Any], pnr_stage_data: Dict[str, Any], prc_status_file: str, runtime_timestamps: Optional[Dict[str, Any]] = None, fast_dc_detected: bool = False, rtl_detected: bool = False) -> str:
+        """Create HTML content for runtime report
+        
+        Args:
+            runtime_data: Dictionary of runtime data for each stage
+            pnr_runtimes: Dictionary of PnR stage runtimes
+            pnr_stage_data: Dictionary of detailed PnR stage data
+            prc_status_file: Path to PRC status file
+            runtime_timestamps: Optional dictionary of runtime timestamps
+            fast_dc_detected: Whether fast DC mode was detected
+            rtl_detected: Whether RTL formal was detected
+            
+        Returns:
+            HTML content string
+        """
         if runtime_timestamps is None:
             runtime_timestamps = {}
             
@@ -17739,7 +21624,7 @@ class WorkareaReviewer:
         
         return html
 
-    def run_common_analysis(self):
+    def run_common_analysis(self) -> None:
         """Run COMMON TCL files analysis"""
         self.print_header(FlowStage.COMMON)
         
@@ -17845,7 +21730,7 @@ KEY FEATURES:
 OUTPUT:
 -------------------------------------------------------------------------------{RESET}
   {BOLD}TERMINAL:{RESET} Compact, color-coded summaries with ASCII-only characters
-  {BOLD}HTML:{RESET}     Comprehensive reports in current working directory:
+  {BOLD}HTML:{RESET}     Comprehensive reports saved in html/ folder:
             - Clickable log file links (absolute paths)
             - Interactive tables with sorting/filtering
             - Timeline visualizations and flow tracking
@@ -18031,14 +21916,15 @@ OUTPUT:
                 try:
                     dashboard_path = reviewer.master_dashboard.generate_html()
                     dashboard_filename = os.path.basename(dashboard_path)
-                    quiet_mode.print_always(f"{Color.GREEN}[OK] Master Dashboard generated: {dashboard_filename}{Color.RESET}")
-                    quiet_mode.print_always(f"{Color.CYAN}     Open with recommended browser:{Color.RESET}")
-                    quiet_mode.print_always(f"     /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}{dashboard_filename}{Color.RESET} &")
+                    quiet_mode.print_always(f"Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{dashboard_filename}{Color.RESET} &")
                 except Exception as e:
                     quiet_mode.print_always(f"{Color.RED}[ERROR] Failed to generate Master Dashboard: {e}{Color.RESET}")
             else:
                 # Run complete review
                 reviewer.run_complete_review()
+            
+            # Organize HTML files into html/ folder
+            reviewer._organize_html_files()
             
         # Handle output file
         if args.output:
