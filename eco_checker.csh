@@ -49,9 +49,9 @@
 # Date: November 6, 2025
 #===============================================================================
 
-# Get the directory where this script is located
-set SCRIPT_DIR = `dirname $0`
-set SCRIPT_DIR = `cd $SCRIPT_DIR && pwd`
+# Get the directory where this script is ACTUALLY located (resolve symlinks)
+set SCRIPT_PATH = `readlink -f $0`
+set SCRIPT_DIR = `dirname $SCRIPT_PATH`
 
 # Python executable path
 set PYTHON_BIN = "/home/utils/Python/builds/3.11.9-20250715/bin/python3"
