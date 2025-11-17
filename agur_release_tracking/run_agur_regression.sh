@@ -45,7 +45,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UNITS_TABLE="$SCRIPT_DIR/AGUR_UNITS_TABLE.txt"
-AVICE_SCRIPT="/home/avice/scripts/avice_wa_review/avice_wa_review.py"
+AVICE_SCRIPT="/home/scratch.avice_vlsi/cursor/avice_wa_review/avice_wa_review.py"
 PYTHON_BIN="/home/utils/Python/builds/3.11.9-20250715/bin/python3"
 
 # Regression configuration
@@ -2858,11 +2858,11 @@ cat >> "$HTML_FILE" << HEADER_START
     <!-- Logo Modal -->
     <div id="logoModal" class="logo-modal" onclick="closeLogoModal()">
         <span class="logo-modal-close">&times;</span>
-        <img class="logo-modal-content" src="file:///home/avice/scripts/avice_wa_review/images/avice_logo.png" alt="AVICE Logo">
+        <img class="logo-modal-content" src="file:///home/scratch.avice_vlsi/cursor/avice_wa_review/images/avice_logo.png" alt="AVICE Logo">
     </div>
     
     <div class="header">
-        <img class="header-logo" src="file:///home/avice/scripts/avice_wa_review/images/avice_logo.png" alt="AVICE Logo" onclick="showLogoModal()" title="Click to enlarge">
+        <img class="header-logo" src="file:///home/scratch.avice_vlsi/cursor/avice_wa_review/images/avice_logo.png" alt="AVICE Logo" onclick="showLogoModal()" title="Click to enlarge">
         <div class="header-text">
             <h1>🔬 AGUR Multi-Regression Dashboard</h1>
         <div class="subtitle">Generated: $(date '+%Y-%m-%d %H:%M:%S')</div>

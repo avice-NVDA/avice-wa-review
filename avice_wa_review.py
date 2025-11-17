@@ -89,13 +89,13 @@ Description:
                             BASIC USAGE
 ===============================================================================
   RECOMMENDED (C-shell launcher - handles Python path automatically):
-    /home/avice/scripts/avice_wa_review_launcher.csh <workarea_path> [ipo_name]
+    /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh <workarea_path> [ipo_name]
 
   DIRECT PYTHON (requires correct Python version):
     /home/utils/Python/builds/3.11.9-20250715/bin/python3 avice_wa_review.py <workarea_path>
 
   HELP:
-    /home/avice/scripts/avice_wa_review_launcher.csh --help
+    /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh --help
 
 ===============================================================================
                             ARGUMENTS
@@ -176,40 +176,40 @@ Description:
 ===============================================================================
   BASIC ANALYSIS:
     # Full analysis (all 13 sections)
-    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea
+    /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea
 
     # Analyze specific IPO
-    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea ipo1000
+    /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea ipo1000
 
   AGUR UNIT ANALYSIS (automatic workarea lookup):
-    /home/avice/scripts/avice_wa_review_launcher.csh -u prt
-    /home/avice/scripts/avice_wa_review_launcher.csh -u pmux
-    /home/avice/scripts/avice_wa_review_launcher.csh -u fdb
+    /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh -u prt
+    /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh -u pmux
+    /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh -u fdb
 
   SELECTIVE SECTION ANALYSIS (faster):
     # Quick timing check
-    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s runtime pt
+    /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea -s runtime pt
 
     # Pre-release check
-    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s formal pt pv gl-check
+    /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea -s formal pt pv gl-check
 
     # Synthesis and PnR only
-    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s setup synthesis pnr
+    /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea -s setup synthesis pnr
 
   AUTOMATION:
     # No logo for scripts
-    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea --no-logo
+    /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea --no-logo
 
     # Quiet mode (suppress output, only show HTML files)
-    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea --quiet
-    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -q
+    /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea --quiet
+    /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea -q
 
     # Batch processing example
-    /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -q --no-logo
+    /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea -q --no-logo
 
   DOCUMENTATION:
-    /home/avice/scripts/avice_wa_review_launcher.csh --help-docs
-    /home/avice/scripts/avice_wa_review_launcher.csh --open-docs
+    /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh --help-docs
+    /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh --open-docs
 
 ===============================================================================
                           IMPORTANT NOTES
@@ -3695,7 +3695,7 @@ class WorkareaReviewer:
 <body>
     <div class="header">
         <div class="logo">
-            <img src="/home/avice/scripts/avice_wa_review/images/avice_logo.png" alt="AVICE Logo" onclick="expandImage(this)">
+            <img src="/home/scratch.avice_vlsi/cursor/avice_wa_review/images/avice_logo.png" alt="AVICE Logo" onclick="expandImage(this)">
         </div>
     <h1>Place & Route Data Analysis</h1>
     <h2>Design: {self.design_info.top_hier} | IPO: {self.design_info.ipo} | Tag: {self.design_info.tag}</h2>
@@ -25559,7 +25559,7 @@ Contact: avice@nvidia.com
             runtime_timestamps = {}
             
         # Get AVICE logo
-        logo_path = "/home/avice/scripts/avice_wa_review/images/avice_logo.png"
+        logo_path = "/home/scratch.avice_vlsi/cursor/avice_wa_review/images/avice_logo.png"
         logo_data = ""
         if os.path.exists(logo_path):
             with open(logo_path, "rb") as logo_file:
@@ -26310,41 +26310,41 @@ def main():
 
 {GREEN}{BOLD}BASIC EXAMPLES:{RESET}
   # Complete workarea analysis (all 13 sections)
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea
+  /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea
 
   # Analyze specific IPO
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea ipo1000
+  /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea ipo1000
 
   # AGUR unit analysis (automatic workarea lookup)
-  /home/avice/scripts/avice_wa_review_launcher.csh -u prt
-  /home/avice/scripts/avice_wa_review_launcher.csh -u pmux -s runtime pt
+  /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh -u prt
+  /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh -u pmux -s runtime pt
 
   # Quick timing check (fast)
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s runtime pt
+  /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea -s runtime pt
 
 {GREEN}{BOLD}SELECTIVE SECTION ANALYSIS{RESET} (faster than full analysis):
   # Parasitic extraction and signoff timing
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s star pt
+  /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea -s star pt
 
   # Setup, synthesis, and PnR
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s setup synthesis pnr
+  /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea -s setup synthesis pnr
 
   # Pre-release checks
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -s formal pt pv gl-check
+  /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea -s formal pt pv gl-check
 
 {GREEN}{BOLD}AUTOMATION:{RESET}
   # No logo for scripts
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea --no-logo
+  /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea --no-logo
 
   # Quiet mode (suppress output, only show HTML files)
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea --quiet
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -q
+  /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea --quiet
+  /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea -q
 
   # Batch processing example
-  /home/avice/scripts/avice_wa_review_launcher.csh /path/to/workarea -q --no-logo
+  /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh /path/to/workarea -q --no-logo
 
   # Documentation
-  /home/avice/scripts/avice_wa_review_launcher.csh --help-docs
+  /home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh --help-docs
 
 {CYAN}-------------------------------------------------------------------------------
 AVAILABLE SECTIONS (use with -s flag):

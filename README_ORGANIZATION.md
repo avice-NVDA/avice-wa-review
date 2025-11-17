@@ -164,3 +164,10 @@ During the October 2025 organization effort, the following documentation files w
 - **CLEANUP_SUMMARY.md** - File cleanup documentation
 
 See **CLEANUP_SUMMARY.md** for details on removed files and cleanup history.
+
+## Project Location (Updated November 17, 2025)
+- **Current location**: `/home/scratch.avice_vlsi/cursor/avice_wa_review`
+- **User-facing tools**: Accessible via symlinks at `/home/avice/scripts/`
+- **Reason**: Moved to 5TB scratch disk to prevent home directory (5GB) from filling up
+- **Date**: November 17, 2025
+- **Migration notes**: All hardcoded paths updated, symlinks created for backward compatibility

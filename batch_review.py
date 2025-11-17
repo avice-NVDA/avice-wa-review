@@ -123,7 +123,7 @@ def run_review(workarea_path, output_file, ipo=None, skip_validation=False, sect
     # Run the review using the C-shell launcher
     try:
         # Use the C-shell launcher as per architecture standards
-        launcher_path = "/home/avice/scripts/avice_wa_review_launcher.csh"
+        launcher_path = "/home/scratch.avice_vlsi/cursor/avice_wa_review_launcher.csh"
         cmd = [launcher_path, workarea_path]
         if ipo and ipo != 'auto':
             cmd.append(ipo)

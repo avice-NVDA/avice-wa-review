@@ -22,20 +22,20 @@
 #   script.
 #
 # Usage:
-#   /home/avice/scripts/avice_wa_review/eco_checker.csh <eco_file(s)> [options]
+#   /home/scratch.avice_vlsi/cursor/avice_wa_review/eco_checker.csh <eco_file(s)> [options]
 #
 # Examples:
 #   # Check single ECO file (workarea auto-detected)
-#   /home/avice/scripts/avice_wa_review/eco_checker.csh my_eco.tcl
+#   /home/scratch.avice_vlsi/cursor/avice_wa_review/eco_checker.csh my_eco.tcl
 #
 #   # Check multiple ECO files
-#   /home/avice/scripts/avice_wa_review/eco_checker.csh *.tcl
+#   /home/scratch.avice_vlsi/cursor/avice_wa_review/eco_checker.csh *.tcl
 #
 #   # Check external ECOs with explicit workarea
-#   /home/avice/scripts/avice_wa_review/eco_checker.csh /path/to/*.tcl --workarea /path/to/wa
+#   /home/scratch.avice_vlsi/cursor/avice_wa_review/eco_checker.csh /path/to/*.tcl --workarea /path/to/wa
 #
 #   # Verbose mode
-#   /home/avice/scripts/avice_wa_review/eco_checker.csh my_eco.tcl --verbose
+#   /home/scratch.avice_vlsi/cursor/avice_wa_review/eco_checker.csh my_eco.tcl --verbose
 #
 # Prerequisites:
 #   - Python 3.6+ (uses 3.11.9 build at /home/utils/Python/builds/3.11.9-20250715)

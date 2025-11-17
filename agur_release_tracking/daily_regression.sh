@@ -24,7 +24,7 @@
 #   ./daily_regression.sh
 #
 # Cron Example:
-#   0 9 * * * cd /home/avice/scripts/avice_wa_review/agur_release_tracking && bash daily_regression.sh >> logs/daily_regression_$(date +\%Y\%m\%d).log 2>&1
+#   0 9 * * * cd /home/scratch.avice_vlsi/cursor/avice_wa_review/agur_release_tracking && bash daily_regression.sh >> logs/daily_regression_$(date +\%Y\%m\%d).log 2>&1
 #
 # Output Location:
 #   /home/scratch.avice_vlsi/agur_daily_regression/YYYYMMDD/

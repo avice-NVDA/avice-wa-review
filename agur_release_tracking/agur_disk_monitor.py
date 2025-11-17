@@ -81,10 +81,10 @@ Examples:
 
 Cron Setup:
     # Daily at 8:00 AM
-    0 8 * * * cd /home/avice/scripts/avice_wa_review/agur_release_tracking && /home/utils/Python/builds/3.11.9-20250715/bin/python3 agur_disk_monitor.py >> logs/disk_alert_$(date +\%Y\%m\%d).log 2>&1
+    0 8 * * * cd /home/scratch.avice_vlsi/cursor/avice_wa_review/agur_release_tracking && /home/utils/Python/builds/3.11.9-20250715/bin/python3 agur_disk_monitor.py >> logs/disk_alert_$(date +\%Y\%m\%d).log 2>&1
     
     # Log cleanup (keep 30 days)
-    0 9 * * * find /home/avice/scripts/avice_wa_review/agur_release_tracking/logs/disk_alert_*.log -mtime +30 -delete
+    0 9 * * * find /home/scratch.avice_vlsi/cursor/avice_wa_review/agur_release_tracking/logs/disk_alert_*.log -mtime +30 -delete
 
 Author: Alon Vice (avice@nvidia.com)
 Date: October 30, 2025
@@ -877,7 +877,7 @@ def print_colored_help():
 
 {Color.BOLD}{Color.YELLOW}CRON SETUP:{Color.END}
   {Color.CYAN}# Daily at 8:00 AM{Color.END}
-  0 8 * * * cd /home/avice/scripts/avice_wa_review/agur_release_tracking && \\
+  0 8 * * * cd /home/scratch.avice_vlsi/cursor/avice_wa_review/agur_release_tracking && \\
     /home/utils/Python/builds/3.11.9-20250715/bin/python3 agur_disk_monitor.py \\
     >> logs/disk_alert_$(date +\\%Y\\%m\\%d).log 2>&1
 
