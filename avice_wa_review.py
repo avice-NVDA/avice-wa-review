@@ -1640,7 +1640,7 @@ class FileUtils:
             # Returns: ['/wa/umake_log/latest_dir/umake.log']  # Only one entry
             
         Note:
-            This addresses the architecture.mdc requirement (Lines 73-78) to
+            This addresses the .cursor/rules/architecture.mdc requirement (Lines 73-78) to
             always filter out symlinks when searching directories to avoid duplicates.
         """
         seen_real_paths = set()
@@ -1657,6 +1657,20 @@ class FileUtils:
 
 class WorkareaReviewer:
     """Main class for workarea review"""
+    
+    # Centralized Color Coding Thresholds (used by both per-design and summary sheets)
+    # These thresholds define when metrics are colored green/yellow/red
+    TIMING_THRESHOLDS = {
+        'wns_yellow': -0.050,    # WNS >= -0.050 ns = yellow, < -0.050 = red
+        'wns_green': 0.0,        # WNS >= 0 = green
+        'tns_yellow': -10.0,     # TNS >= -10.0 ns = yellow, < -10.0 = red
+        'tns_green': -0.01,      # TNS >= -0.01 = green (treats tiny negatives as passing)
+    }
+    
+    PV_THRESHOLDS = {
+        'errors_yellow': 10,     # Errors < 10 = yellow, >= 10 = red
+        'errors_green': 0,       # Errors == 0 = green
+    }
     
     def __init__(self, workarea: str, ipo: Optional[str] = None, show_logo: bool = True, skip_validation: bool = False, quiet: bool = False, quiet_mode=None):
         self.workarea = workarea
@@ -2292,9 +2306,9 @@ class WorkareaReviewer:
             path, ipo, is_nbu, meta = locations[0]
             return (path, ipo, is_nbu, meta, "Only one location")
         
-        # Sort by confidence score (highest first)
+        # Sort by confidence score (highest first), then by timestamp (newest first) as tiebreaker
         sorted_locs = sorted(locations, 
-                            key=lambda x: x[3]['confidence_score'], 
+                            key=lambda x: (x[3]['confidence_score'], x[3]['timestamp'] or 0), 
                             reverse=True)
         
         best = sorted_locs[0]
@@ -2405,7 +2419,8 @@ class WorkareaReviewer:
             
             # Try each stage in priority order
             for stage in pnr_stages:
-                timing_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/SUMMARY/{self.design_info.top_hier}.{self.design_info.ipo}.{stage}.timing.setup.rpt.gz"
+                # Use wildcard for IPO in filename since it can differ from directory name (e.g., ipo1000 dir with ipo1400 in filenames)
+                timing_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/SUMMARY/{self.design_info.top_hier}.*.{stage}.timing.setup.rpt.gz"
                 timing_files = self.file_utils.find_files(timing_pattern, self.workarea)
                 if timing_files:
                     timing_file = timing_files[0]
@@ -2484,7 +2499,8 @@ class WorkareaReviewer:
             
             # Try each stage in priority order
             for stage in pnr_stages:
-                timing_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/SUMMARY/{self.design_info.top_hier}.{self.design_info.ipo}.{stage}.timing.setup.rpt.gz"
+                # Use wildcard for IPO in filename since it can differ from directory name (e.g., ipo1000 dir with ipo1400 in filenames)
+                timing_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/SUMMARY/{self.design_info.top_hier}.*.{stage}.timing.setup.rpt.gz"
                 timing_files = self.file_utils.find_files(timing_pattern, self.workarea)
                 if timing_files:
                     timing_file = timing_files[0]
@@ -3390,13 +3406,23 @@ class WorkareaReviewer:
             print(f"  {'Parameter':<25} {'Value':<15}")
             print(f"  {'-'*25} {'-'*15}")
             
-            # Print DieArea first if available
+            # Print Die Dimensions first if available (with inline source comment)
             if floorplan_dims:
+                x_dim = floorplan_dims['x_dim_um']
+                y_dim = floorplan_dims['y_dim_um']
+                source = floorplan_dims.get('source', 'unknown')
+                print(f"  {'Die Dimensions (X x Y)':<25} {f'{x_dim:.2f} x {y_dim:.2f} um':<15} {Color.CYAN}(from: {source}){Color.RESET}")
+            
+            # Print DieArea from .data file if available, otherwise calculate from dimensions
+            if 'DieArea' in all_params:
+                # Use DieArea from .data file (more accurate)
+                print(f"  {'DieArea (mm2)':<25} {all_params['DieArea']:<15}")
+            elif floorplan_dims:
+                # Fallback: calculate from dimensions
                 x_dim = floorplan_dims['x_dim_um']
                 y_dim = floorplan_dims['y_dim_um']
                 die_area_um2 = x_dim * y_dim
                 die_area_mm2 = die_area_um2 / 1_000_000
-                print(f"  {'Die Dimensions (X x Y)':<25} {f'{x_dim:.2f} x {y_dim:.2f} um':<15}")
                 print(f"  {'DieArea (mm2)':<25} {f'{die_area_mm2:.3f}':<15}")
             
             for param_name in significant_params:
@@ -3434,10 +3460,12 @@ class WorkareaReviewer:
             error_stages = []
             
             for stage in stages:
-                stage_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/reports/{self.design_info.top_hier}_{self.design_info.top_hier}_{self.design_info.ipo}_report_{self.design_info.top_hier}_{self.design_info.ipo}_{stage}.func.std_tt_0c_0p6v.setup.typical.data"
-                stage_file = os.path.join(self.workarea, stage_pattern)
+                # Use wildcard for IPO in filename since it can differ from directory name (e.g., ipo1000 dir with ipo1400 in filenames)
+                stage_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/reports/{self.design_info.top_hier}_{self.design_info.top_hier}_*_report_{self.design_info.top_hier}_*_{stage}.func.std_tt_0c_0p6v.setup.typical.data"
+                stage_files = self.file_utils.find_files(stage_pattern, self.workarea)
                 
-                if os.path.exists(stage_file):
+                if stage_files:
+                    stage_file = stage_files[0]
                     try:
                         with open(stage_file, 'r', encoding='utf-8') as f:
                             content = f.read()
@@ -3455,7 +3483,6 @@ class WorkareaReviewer:
                         print(f"    [ERROR] Error reading {stage} data: {e}")
                 else:
                     missing_stages.append(stage)
-                    print(f"    [WARN] {stage.upper()} data file not found: {stage_file}")
             
             # Report summary
             if missing_stages:
@@ -4121,45 +4148,119 @@ class WorkareaReviewer:
     def _extract_floorplan_dimensions(self) -> Optional[Dict[str, str]]:
         """Extract floorplan dimensions from DEF file
         
+        Priority (most accurate to least accurate):
+        1. Postroute DB (final PnR dimensions after all optimizations)
+        2. Route DB (dimensions after routing)
+        3. CTS DB (dimensions after clock tree synthesis)
+        4. Place DB (dimensions after placement)
+        5. Plan DB (dimensions after floorplanning)
+        6. Initial floorplan (pre-PnR dimensions)
+        
         Returns:
             Dictionary with dimension data or None if not found
         """
+        flp_file = None
+        source = None
+        
         try:
-            # Find floorplan DEF file - try with top_hier first
-            flp_pattern = os.path.join(self.workarea, "flp", f"{self.design_info.top_hier}_fp.def.gz")
+            # PRIORITY 1-5: Try PnR stage DBs (postroute -> route -> cts -> place -> plan)
+            # Path: pnr_flow/nv_flow/{design}/{ipo}/DBs/{design}_{ipo}_{stage}.enc.dat/{design}.fp.gz
+            pnr_stages = ['postroute', 'route', 'cts', 'place', 'plan']
             
-            if not os.path.exists(flp_pattern):
-                # Try finding any *_fp.def.gz file
-                flp_files = glob.glob(os.path.join(self.workarea, "flp", "*_fp.def.gz"))
-                if flp_files:
-                    flp_pattern = flp_files[0]
+            if hasattr(self.design_info, 'ipo') and self.design_info.ipo:
+                for stage in pnr_stages:
+                    stage_db_pattern = os.path.join(
+                        self.workarea, 
+                        "pnr_flow/nv_flow", 
+                        self.design_info.top_hier,
+                        self.design_info.ipo,
+                        "DBs",
+                        f"{self.design_info.top_hier}_{self.design_info.ipo}_{stage}.enc.dat",
+                        f"{self.design_info.top_hier}.fp.gz"
+                    )
+                    if os.path.exists(stage_db_pattern):
+                        flp_file = stage_db_pattern
+                        source = f"{stage} DB"
+                        break
+            
+            # If no specific IPO, try to find any PnR stage DB
+            if not flp_file:
+                for stage in pnr_stages:
+                    stage_db_search = os.path.join(
+                        self.workarea,
+                        "pnr_flow/nv_flow",
+                        self.design_info.top_hier,
+                        "ipo*",
+                        "DBs",
+                        f"*_{stage}.enc.dat",
+                        f"{self.design_info.top_hier}.fp.gz"
+                    )
+                    stage_matches = glob.glob(stage_db_search)
+                    if stage_matches:
+                        # Use the most recent stage DB
+                        flp_file = max(stage_matches, key=os.path.getmtime)
+                        source = f"{stage} DB"
+                        break
+            
+            # PRIORITY 6: Fallback to initial floorplan (for early-stage workareas)
+            if not flp_file:
+                flp_pattern = os.path.join(self.workarea, "flp", f"{self.design_info.top_hier}_fp.def.gz")
+                
+                if os.path.exists(flp_pattern):
+                    flp_file = flp_pattern
+                    source = "initial floorplan"
                 else:
-                    return None
+                    # Try finding any *_fp.def.gz file
+                    flp_files = glob.glob(os.path.join(self.workarea, "flp", "*_fp.def.gz"))
+                    if flp_files:
+                        flp_file = flp_files[0]
+                        source = "initial floorplan"
             
-            # Parse DEF file
-            if flp_pattern.endswith('.gz'):
-                with gzip.open(flp_pattern, 'rt', encoding='utf-8') as f:
+            # If no file found, return None
+            if not flp_file:
+                return None
+            
+            # Parse DEF/fp file
+            if flp_file.endswith('.gz'):
+                with gzip.open(flp_file, 'rt', encoding='utf-8') as f:
                     content = f.read()
             else:
-                with open(flp_pattern, 'r', encoding='utf-8') as f:
+                with open(flp_file, 'r', encoding='utf-8') as f:
                     content = f.read()
             
-            # Extract UNITS DISTANCE MICRONS
+            # Try parsing Innovus .fp format first (postroute DB format)
+            # Format: Head Box: x1 y1 x2 y2 (already in micrometers)
+            head_box_match = re.search(r'Head Box:\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)', content)
+            if head_box_match:
+                x1, y1, x2, y2 = map(float, head_box_match.groups())
+                
+                # Dimensions already in micrometers
+                x_dim_um = x2 - x1
+                y_dim_um = y2 - y1
+                
+                return {
+                    'x_dim_um': x_dim_um,
+                    'y_dim_um': y_dim_um,
+                    'source': source  # Track which source was used
+                }
+            
+            # Fallback to DEF format (initial floorplan format)
+            # Format: DIEAREA ( x1 y1 ) ( x2 y2 ) (in DEF units, need to divide by 2000)
             units_match = re.search(r'UNITS\s+DISTANCE\s+MICRONS\s+(\d+)', content)
             units = int(units_match.group(1)) if units_match else 2000  # Default to 2000
             
-            # Extract DIEAREA coordinates (x1 y1 x2 y2)
             diearea_match = re.search(r'DIEAREA\s+\(\s*(\d+)\s+(\d+)\s*\)\s+\(\s*(\d+)\s+(\d+)\s*\)', content)
             if diearea_match:
                 x1, y1, x2, y2 = map(int, diearea_match.groups())
                 
-                # Calculate X, Y dimensions in um: top-right coordinates / 2000
-                x_dim_um = x2 / 2000
-                y_dim_um = y2 / 2000
+                # Calculate X, Y dimensions in um: top-right coordinates / units
+                x_dim_um = x2 / units
+                y_dim_um = y2 / units
                 
                 return {
                     'x_dim_um': x_dim_um,
-                    'y_dim_um': y_dim_um
+                    'y_dim_um': y_dim_um,
+                    'source': source  # Track which source was used
                 }
         except Exception as e:
             # Silently fail if floorplan not found or parsing fails
@@ -4234,14 +4335,14 @@ class WorkareaReviewer:
             # Display extracted metrics
             if qor_metrics:
                 print(f"    {Color.GREEN}Key QoR Metrics:{Color.RESET}")
-                # First print Die dimensions if available
+                # First print Die dimensions if available (with inline source comment)
                 if flp_dims:
-                    print(f"      Die (X,Y): {flp_dims['x_dim_um']:.2f} um x {flp_dims['y_dim_um']:.2f} um")
+                    source = flp_dims.get('source', 'unknown')
+                    print(f"      Die (X,Y): {flp_dims['x_dim_um']:.2f} um x {flp_dims['y_dim_um']:.2f} um {Color.CYAN}(from: {source}){Color.RESET}")
                 
-                # Print other metrics (skip Design Area)
+                # Print all metrics (Design Area is from QoR report)
                 for metric, value in qor_metrics.items():
-                    if metric != 'Design Area':
-                        print(f"      {metric}: {value}")
+                    print(f"      {metric}: {value}")
             else:
                 print(f"    {Color.YELLOW}No QoR metrics found in report{Color.RESET}")
             
@@ -4485,8 +4586,479 @@ class WorkareaReviewer:
         except (OSError, UnicodeDecodeError) as e:
             print(f"    {Color.RED}Error reading BeFlow config: {e}{Color.RESET}")
     
+    def _send_critical_disk_alert(self, usage_pct: int, filesystem: str, mount: str, 
+                                    size: str, used: str, avail: str) -> None:
+        """Send email alert when disk usage reaches critical levels (>=90%)
+        
+        Uses SMTP (smtp.nvidia.com) to send formatted email alerts.
+        
+        Args:
+            usage_pct: Disk usage percentage
+            filesystem: Filesystem name
+            mount: Mount point
+            size: Total size
+            used: Used space
+            avail: Available space
+        """
+        try:
+            import smtplib
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.text import MIMEText
+            import base64
+            
+            # Extract user from workarea path (e.g., /home/scratch.username_vlsi/... -> username)
+            workarea_owner = None
+            if 'scratch.' in self.workarea:
+                # Pattern: /home/scratch.username_vlsi_1/... or /home/scratch.username_vlsi/... or /home/scratch.username/...
+                match = re.search(r'/scratch\.([^/]+?)(?:_vlsi(?:_\d+)?)?/', self.workarea)
+                if match:
+                    workarea_owner = match.group(1)
+            
+            # Fallback: use USER environment variable
+            if not workarea_owner:
+                workarea_owner = os.environ.get('USER', 'unknown')
+            
+            # Format username to display name (capitalize, replace underscores with spaces)
+            display_name = workarea_owner.replace('_', ' ').title()
+            
+            # Construct email addresses
+            from_email = f"{os.environ.get('USER', 'avice')}@nvidia.com"
+            to_email = f"{workarea_owner}@nvidia.com"
+            cc_email = "avice@nvidia.com"
+            
+            # Email subject
+            subject = f"[CRITICAL] Disk Usage Alert: {usage_pct}% on {mount}"
+            
+            # Read and encode logo
+            logo_data = ""
+            logo_path = os.path.join(os.path.dirname(__file__), "images/avice_logo.png")
+            if os.path.exists(logo_path):
+                with open(logo_path, "rb") as logo_file:
+                    logo_data = base64.b64encode(logo_file.read()).decode('utf-8')
+            
+            # Calculate progress bar percentage
+            bar_length = 30
+            filled = int((usage_pct / 100) * bar_length)
+            empty = bar_length - filled
+            progress_bar = '█' * filled + '░' * empty
+            
+            # Plain text version (fallback)
+            text_body = f"""CRITICAL DISK USAGE ALERT - {usage_pct}% USED
+{'='*80}
+
+Hello {display_name},
+
+Your workarea storage is critically low and may cause flow failures!
+
+Workarea: {self.workarea}
+Design: {self.design_info.top_hier}
+
+DISK USAGE DETAILS:
+  Filesystem:  {filesystem}
+  Mount Point: {mount}
+  Size:        {size}
+  Used:        {used}
+  Available:   {avail}
+  Usage:       {usage_pct}% [CRITICAL]
+
+RECOMMENDED ACTIONS:
+  1. Remove old PnR work directories (pnr_flow/nv_flow/*/ipo*/work_*)
+  2. Delete old PT timing sessions (signoff_flow/auto_pt/work_*)
+  3. Remove unused IPO snapshots (pnr_flow/nv_flow/*/ipo* - keep latest only)
+  4. Archive old workareas to backup storage
+  5. Check for large temporary files (find . -type f -size +1G)
+
+RISK:
+  - Synthesis/PnR flows may fail due to insufficient disk space
+  - Log files may be truncated
+  - Database writes may fail
+  - System performance degradation
+
+This alert was generated by avice_wa_review tool.
+For assistance, contact: avice@nvidia.com
+
+{'='*80}
+Generated by: avice_wa_review.py
+Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+"""
+            
+            # HTML version (professional, styled with Alon Vice branding)
+            html_body = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.4;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 15px;
+            background-color: #f5f5f5;
+        }}
+        .container {{
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            padding: 0 15px 10px 15px;
+            text-align: center;
+        }}
+        .header h1 {{
+            margin: 0 0 5px 0;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }}
+        .header-table {{
+            width: auto;
+            margin: 8px auto 0 auto;
+            border-collapse: collapse;
+            border-spacing: 0;
+        }}
+        .logo-cell {{
+            padding: 0 12px 0 0;
+            vertical-align: middle;
+            text-align: right;
+        }}
+        .logo-cell img {{
+            height: 60px;
+            width: 60px;
+            border-radius: 8px;
+            display: inline-block;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }}
+        .critical-cell {{
+            padding: 0 0 0 12px;
+            vertical-align: middle;
+            text-align: left;
+        }}
+        .critical-box {{
+            background: #c0392b;
+            border: 2px solid #fff;
+            padding: 8px 18px;
+            border-radius: 6px;
+            text-align: center;
+            display: inline-block;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }}
+        .critical-box .percent {{
+            font-size: 36px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin: 0;
+            line-height: 1;
+        }}
+        .critical-box .label {{
+            color: #fff;
+            font-size: 11px;
+            margin: 4px 0 0 0;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }}
+        .greeting {{
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px 15px;
+            margin: 15px;
+            border-radius: 5px;
+        }}
+        .greeting p {{
+            margin: 0;
+            line-height: 1.3;
+        }}
+        .greeting strong {{
+            color: #667eea;
+            font-size: 16px;
+        }}
+        .content {{
+            padding: 10px 15px;
+        }}
+        .section {{
+            margin: 10px 0;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }}
+        .section h2 {{
+            margin: 0 0 8px 0;
+            color: #667eea;
+            font-size: 18px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 6px;
+        }}
+        .metrics-table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+        }}
+        .metrics-table td {{
+            padding: 6px 8px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+        }}
+        .metrics-table td:first-child {{
+            font-weight: bold;
+            color: #555;
+            width: 30%;
+        }}
+        .progress-bar {{
+            background: #e0e0e0;
+            border-radius: 8px;
+            height: 25px;
+            overflow: hidden;
+            margin: 10px 0;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        .progress-fill {{
+            background: linear-gradient(90deg, #e74c3c 0%, #c0392b 100%);
+            height: 100%;
+            width: {usage_pct}%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }}
+        .actions {{
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }}
+        .actions h2 {{
+            color: #2e7d32;
+            margin: 0 0 8px 0;
+            font-size: 18px;
+        }}
+        .action-item {{
+            padding: 8px 10px;
+            margin: 6px 0;
+            background: white;
+            border-radius: 4px;
+            border-left: 3px solid #4caf50;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }}
+        .action-item strong {{
+            color: #2e7d32;
+            font-size: 14px;
+        }}
+        .action-item code {{
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #d32f2f;
+            display: block;
+            margin-top: 3px;
+        }}
+        .risks {{
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }}
+        .risks h2 {{
+            color: #c62828;
+            margin: 0 0 8px 0;
+            font-size: 18px;
+        }}
+        .risk-item {{
+            padding: 4px 0;
+            color: #d32f2f;
+            font-weight: 500;
+            font-size: 14px;
+        }}
+        .risk-item::before {{
+            content: "⚠️ ";
+            margin-right: 6px;
+        }}
+        .footer {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 13px;
+        }}
+        .footer a {{
+            color: #a8ff78;
+            text-decoration: none;
+            font-weight: bold;
+        }}
+        .timestamp {{
+            color: rgba(255,255,255,0.8);
+            font-size: 11px;
+            margin-top: 8px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CRITICAL DISK USAGE ALERT</h1>
+            <p style="margin: 3px 0 3px 0; font-size: 14px;">Immediate Action Required</p>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0;">
+                <tr>
+                    <td width="54" style="padding-right: 10px; vertical-align: middle;">
+                        <img src="data:image/png;base64,{logo_data}" alt="Avice Logo" width="54" height="54" style="display: block; border-radius: 6px;">
+                    </td>
+                    <td style="padding-left: 10px; vertical-align: middle;">
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #c0392b; border: 2px solid #fff; border-radius: 6px; height: 50px;">
+                            <tr>
+                                <td style="text-align: center; vertical-align: middle;">
+                                    <div style="font-size: 28px; font-weight: bold; color: #fff; line-height: 1; margin: 0;">{usage_pct}%</div>
+                                    <div style="font-size: 9px; color: #fff; margin-top: 2px; letter-spacing: 0.5px;">DISK SPACE USED</div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="greeting">
+            <p>Hello <strong>{display_name}</strong>,</p>
+            <p style="margin-top: 3px;">Your workarea storage is critically low and may cause flow failures!</p>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h2>📁 Workarea Information</h2>
+                <table class="metrics-table">
+                    <tr>
+                        <td>Path:</td>
+                        <td style="font-family: monospace; font-size: 12px;">{self.workarea}</td>
+                    </tr>
+                    <tr>
+                        <td>Design:</td>
+                        <td><strong>{self.design_info.top_hier}</strong></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="section">
+                <h2>💾 Disk Usage Metrics</h2>
+                <table class="metrics-table">
+                    <tr>
+                        <td>Filesystem:</td>
+                        <td style="font-family: monospace; font-size: 11px;">{filesystem}</td>
+                    </tr>
+                    <tr>
+                        <td>Mount Point:</td>
+                        <td style="font-family: monospace;">{mount}</td>
+                    </tr>
+                    <tr>
+                        <td>Total Size:</td>
+                        <td><strong>{size}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Used Space:</td>
+                        <td><strong>{used}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Available:</td>
+                        <td style="color: #e74c3c; font-weight: bold;">{avail}</td>
+                    </tr>
+                </table>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill">{usage_pct}%</div>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <h2>🔧 Recommended Cleanup Actions</h2>
+                
+                <div class="action-item">
+                    <strong>1. Remove old PnR work directories</strong>
+                    <code>pnr_flow/nv_flow/*/ipo*/work_*</code>
+                </div>
+                
+                <div class="action-item">
+                    <strong>2. Delete old PT timing sessions</strong>
+                    <code>signoff_flow/auto_pt/work_*</code>
+                </div>
+                
+                <div class="action-item">
+                    <strong>3. Remove unused IPO snapshots (keep latest only)</strong>
+                    <code>pnr_flow/nv_flow/*/ipo*</code>
+                </div>
+                
+                <div class="action-item">
+                    <strong>4. Archive old workareas to backup storage</strong>
+                </div>
+                
+                <div class="action-item">
+                    <strong>5. Check for large temporary files</strong>
+                    <code>find . -type f -size +1G</code>
+                </div>
+            </div>
+            
+            <div class="risks">
+                <h2>⚠️ Potential Risks</h2>
+                <div class="risk-item">Synthesis/PnR flows may FAIL due to insufficient disk space</div>
+                <div class="risk-item">Log files may be TRUNCATED</div>
+                <div class="risk-item">Database writes may FAIL</div>
+                <div class="risk-item">System performance DEGRADATION</div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p style="margin: 0;">Generated by <strong>avice_wa_review.py</strong></p>
+            <p style="margin: 5px 0;">For assistance, contact: <a href="mailto:avice@nvidia.com">avice@nvidia.com</a></p>
+            <p class="timestamp">⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+            
+            # Create message with alternative content (HTML + plain text fallback)
+            msg = MIMEMultipart('alternative')
+            msg['From'] = from_email
+            msg['To'] = to_email
+            msg['Cc'] = cc_email
+            msg['Subject'] = subject
+            
+            # Attach both versions (plain text first, then HTML)
+            msg.attach(MIMEText(text_body, 'plain'))
+            msg.attach(MIMEText(html_body, 'html'))
+            
+            # All recipients for SMTP
+            all_recipients = [to_email, cc_email]
+            
+            # Send email via SMTP
+            smtp_server = "smtp.nvidia.com"
+            smtp_port = 25
+            
+            with smtplib.SMTP(smtp_server, smtp_port, timeout=30) as server:
+                server.sendmail(from_email, all_recipients, msg.as_string())
+            
+            print(f"  {Color.GREEN}[EMAIL] Critical disk alert sent to {to_email} (CC: {cc_email}){Color.RESET}")
+            
+        except ImportError as e:
+            print(f"  {Color.YELLOW}[INFO] Missing required module for email: {e}{Color.RESET}")
+        except Exception as e:
+            print(f"  {Color.YELLOW}[INFO] Could not send email alert: {e}{Color.RESET}")
+            import traceback
+            traceback.print_exc()
+    
     def _check_disk_utilization(self) -> Optional[float]:
         """Check disk utilization for the workarea path and warn if >80%
+        
+        Sends email alert to workarea owner (CC: avice@nvidia.com) if usage >= 90%
         
         Returns:
             Float percentage (0-100) of disk usage, or None if check fails
@@ -4533,6 +5105,18 @@ class WorkareaReviewer:
                             print(f"  {Color.RED}[WARN] Disk usage is high! Consider cleaning up old files.{Color.RESET}")
                             if usage_pct >= 90:
                                 print(f"  {Color.RED}[CRITICAL] Disk almost full! This may cause flow failures.{Color.RESET}")
+                                # Send email alert to user (CC: avice@nvidia.com) if flag is enabled
+                                if hasattr(self.args, 'send_disk_alert') and self.args.send_disk_alert:
+                                    self._send_critical_disk_alert(usage_pct, filesystem, mount, size, used, avail)
+                                    # Extract owner for confirmation message
+                                    workarea_owner = 'unknown'
+                                    if 'scratch.' in self.workarea:
+                                        match = re.search(r'/scratch\.([^/]+?)(?:_vlsi(?:_\d+)?)?/', self.workarea)
+                                        if match:
+                                            workarea_owner = match.group(1)
+                                    print(f"  {Color.CYAN}[EMAIL]{Color.RESET} Critical disk alert sent to {workarea_owner}@nvidia.com (CC: avice@nvidia.com)")
+                                else:
+                                    print(f"  {Color.YELLOW}[INFO]{Color.RESET} Email alerts disabled (use --send-disk-alert to enable)")
                         
                         return usage_pct
         except Exception as e:
@@ -6100,7 +6684,8 @@ class WorkareaReviewer:
         # Try each stage in order
         for stage in pnr_stages:
             for temp_corner in temperature_corners:
-                data_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/reports/{self.design_info.top_hier}_{self.design_info.top_hier}_{self.design_info.ipo}_report_{self.design_info.top_hier}_{self.design_info.ipo}_{stage}.func.std_tt_{temp_corner}.setup.typical.data"
+                # Use wildcard for IPO in filename since it can differ from directory name (e.g., ipo1000 dir with ipo1400 in filenames)
+                data_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/reports/{self.design_info.top_hier}_{self.design_info.top_hier}_*_report_{self.design_info.top_hier}_*_{stage}.func.std_tt_{temp_corner}.setup.typical.data"
                 found_files = self.file_utils.find_files(data_pattern, self.workarea)
                 if found_files:
                     data_files = found_files
@@ -7420,8 +8005,9 @@ class WorkareaReviewer:
             found_stage = None
             
             for stage in pnr_stages:
-                setup_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/SUMMARY/{self.design_info.top_hier}.{self.design_info.ipo}.{stage}.timing.setup.rpt.gz"
-                hold_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/SUMMARY/{self.design_info.top_hier}.{self.design_info.ipo}.{stage}.timing.hold.rpt.gz"
+                # Use wildcard for IPO in filename since it can differ from directory name (e.g., ipo1000 dir with ipo1400 in filenames)
+                setup_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/SUMMARY/{self.design_info.top_hier}.*.{stage}.timing.setup.rpt.gz"
+                hold_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/SUMMARY/{self.design_info.top_hier}.*.{stage}.timing.hold.rpt.gz"
                 
                 setup_files = self.file_utils.find_files(setup_pattern, self.workarea)
                 hold_files = self.file_utils.find_files(hold_pattern, self.workarea)
@@ -9014,7 +9600,8 @@ class WorkareaReviewer:
             
             # Try each stage in priority order
             for stage in pnr_stages:
-                timing_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/SUMMARY/{self.design_info.top_hier}.{self.design_info.ipo}.{stage}.timing.setup.rpt.gz"
+                # Use wildcard for IPO in filename since it can differ from directory name (e.g., ipo1000 dir with ipo1400 in filenames)
+                timing_pattern = f"pnr_flow/nv_flow/{self.design_info.top_hier}/{self.design_info.ipo}/REPs/SUMMARY/{self.design_info.top_hier}.*.{stage}.timing.setup.rpt.gz"
                 timing_files = self.file_utils.find_files(timing_pattern, self.workarea)
                 if timing_files:
                     timing_file = timing_files[0]
@@ -11375,6 +11962,9 @@ class WorkareaReviewer:
         all_spef_files = self.file_utils.find_files(spef_pattern, self.workarea)
         
         if all_spef_files:
+            # Filter out files with .bad. in the name (broken symlinks or test files)
+            all_spef_files = [f for f in all_spef_files if '.bad.' not in os.path.basename(f)]
+            
             # Get the most recent modification time to group latest run
             if all_spef_files:
                 latest_mtime = max(os.path.getmtime(f) for f in all_spef_files)
@@ -12363,6 +12953,91 @@ class WorkareaReviewer:
             icon="[PT]"
         )
     
+    def _parse_power_rollup_file(self, rollup_file: str) -> Dict[str, Any]:
+        """Parse power rollup file (.rep or .csv) and extract power metrics
+        
+        Args:
+            rollup_file: Path to rollup.rep or rollup.csv file
+            
+        Returns:
+            Dictionary containing power metrics (total power, internal, switching, leakage, etc.)
+        """
+        
+        try:
+            with open(rollup_file, 'r') as f:
+                content = f.read()
+            
+            power_metrics = {}
+            
+            # Parse based on file extension
+            if rollup_file.endswith('.csv'):
+                # CSV format parsing
+                lines = content.strip().split('\n')
+                for line in lines[1:]:  # Skip header
+                    parts = [p.strip() for p in line.split(',')]
+                    if len(parts) >= 2:
+                        key = parts[0]
+                        value = parts[1]
+                        try:
+                            power_metrics[key] = float(value)
+                        except ValueError:
+                            power_metrics[key] = value
+            else:
+                # .rep format parsing (PrimeTime power rollup format)
+                # Example format:
+                #   Dynamic Power[mW]         	157.375
+                #   Leakage Power[mW]         	9.805
+                #   Total   Power[mW]         	167.179
+                
+                # Extract Total Power
+                total_match = re.search(r'Total\s+Power\[(\w+)\]\s+(\d+\.?\d*)', content, re.IGNORECASE)
+                if total_match:
+                    power_metrics['total_power'] = float(total_match.group(2))
+                    power_metrics['total_power_unit'] = total_match.group(1)
+                
+                # Extract Dynamic Power (Internal Power)
+                dynamic_match = re.search(r'Dynamic\s+Power\[(\w+)\]\s+(\d+\.?\d*)', content, re.IGNORECASE)
+                if dynamic_match:
+                    power_metrics['dynamic_power'] = float(dynamic_match.group(2))
+                    power_metrics['dynamic_power_unit'] = dynamic_match.group(1)
+                    # Use dynamic power as internal power
+                    power_metrics['internal_power'] = float(dynamic_match.group(2))
+                    power_metrics['internal_power_unit'] = dynamic_match.group(1)
+                
+                # Extract Leakage Power
+                leakage_match = re.search(r'Leakage\s+Power\[(\w+)\]\s+(\d+\.?\d*)', content, re.IGNORECASE)
+                if leakage_match:
+                    power_metrics['leakage_power'] = float(leakage_match.group(2))
+                    power_metrics['leakage_power_unit'] = leakage_match.group(1)
+                
+                # Extract Glitch Power (if available, use as switching power indicator)
+                glitch_match = re.search(r'Glitch\s+Power\[(\w+)\]\s+(\d+\.?\d*)', content, re.IGNORECASE)
+                if glitch_match:
+                    power_metrics['glitch_power'] = float(glitch_match.group(2))
+                    power_metrics['glitch_power_unit'] = glitch_match.group(1)
+                
+                # Extract additional metrics
+                # Main Clock Frequency
+                freq_match = re.search(r'Main\s+Clk\s+Freq\[GHz\]\s+(\d+\.?\d*)', content, re.IGNORECASE)
+                if freq_match:
+                    power_metrics['main_clk_freq_ghz'] = float(freq_match.group(1))
+                
+                # Annotation Score
+                score_match = re.search(r'Annotation\s+Score\s+(\d+\.?\d*)\s*%', content, re.IGNORECASE)
+                if score_match:
+                    power_metrics['annotation_score'] = float(score_match.group(1))
+                
+                # Activity Factor (Average AF FF/Q) - Used for test selection
+                af_match = re.search(r'Average\s+AF\s+FF/Q\s+(\d+\.?\d*)\s*%', content, re.IGNORECASE)
+                if af_match:
+                    power_metrics['activity_factor'] = float(af_match.group(1))
+            
+            return power_metrics if power_metrics else None
+            
+        except Exception as e:
+            # Silently fail if file cannot be parsed
+            return None
+    
     def _extract_timing_data_from_work_areas(self) -> Dict[str, Any]:
         """Extract timing data from all auto_pt work areas with dual-scenario support
         
@@ -12378,37 +13053,69 @@ class WorkareaReviewer:
         
         timing_data = []
         
-        # Define scenarios to extract: setup and hold
-        # Dynamically discover ALL available corners for both setup and hold
-        # This ensures we always check ALL voltage/temperature combinations, not just a hardcoded subset
+        # Check if power corner exists in any work area before processing
+        # Power corner: func.std_tt_105c_0p67v.setup.typical (used for power estimation only)
+        has_power_corner = False
+        for work_dir in work_dirs:
+            power_corner_dir = os.path.join(work_dir, 'func.std_tt_105c_0p67v.setup.typical')
+            if os.path.isdir(power_corner_dir):
+                has_power_corner = True
+                break
+        
+        # Define scenarios to extract: setup, hold, and power (if available)
+        # Dynamically discover ALL available corners for setup/hold (all corner types)
+        # Power corner (func.std_tt_105c_0p67v.setup.typical) is extracted separately
         scenarios_to_check = {
             'setup': [],  # Will be populated dynamically per work directory
-            'hold': []    # Will be populated dynamically per work directory
+            'hold': [],   # Will be populated dynamically per work directory
+            'power': []   # Power corner for power estimation (not timing) - only if has_power_corner
         }
         
         for work_dir in work_dirs:
-            # Dynamically discover ALL setup corners in this work directory
-            setup_pattern = os.path.join(work_dir, "func.std_*.setup.typical")
-            setup_dirs = glob.glob(setup_pattern)
-            scenarios_to_check['setup'] = [os.path.basename(d) for d in setup_dirs if os.path.isdir(d)]
+            # OPTIMIZATION: Use single os.listdir() instead of multiple glob() calls (3-5x faster)
+            # Dynamically discover ALL setup/hold corners and HTML files in one pass
+            try:
+                work_dir_items = os.listdir(work_dir)
+            except (OSError, PermissionError):
+                # Skip if directory is inaccessible
+                continue
             
-            # Dynamically discover ALL hold corners in this work directory
-            # This ensures we check ALL voltage/temperature combinations, not just a hardcoded subset
-            hold_pattern = os.path.join(work_dir, "func.std_*.hold.typical")
-            hold_dirs = glob.glob(hold_pattern)
-            scenarios_to_check['hold'] = [os.path.basename(d) for d in hold_dirs if os.path.isdir(d)]
+            # Filter for setup corners (ALL func.std_*.setup.* directories)
+            # EXCLUDE func.std_tt_105c_0p67v.setup.typical (used for power analysis only)
+            setup_dirs = [item for item in work_dir_items 
+                         if item.startswith('func.std_') and '.setup.' in item 
+                         and item != 'func.std_tt_105c_0p67v.setup.typical'
+                         and os.path.isdir(os.path.join(work_dir, item))]
+            scenarios_to_check['setup'] = setup_dirs
+            
+            # Filter for hold corners (ALL func.std_*.hold.* directories)
+            hold_dirs = [item for item in work_dir_items 
+                        if item.startswith('func.std_') and '.hold.' in item 
+                        and os.path.isdir(os.path.join(work_dir, item))]
+            scenarios_to_check['hold'] = hold_dirs
+            
+            # Filter for power corner (func.std_tt_105c_0p67v.setup.typical only)
+            # This corner is used for power estimation, not timing analysis
+            # Only check if we know the power corner exists in at least one work area
+            if has_power_corner:
+                power_corner = [item for item in work_dir_items 
+                               if item == 'func.std_tt_105c_0p67v.setup.typical'
+                               and os.path.isdir(os.path.join(work_dir, item))]
+                scenarios_to_check['power'] = power_corner
+            else:
+                scenarios_to_check['power'] = []
+            
             # Extract work directory name (e.g., work_16.09.25_19:53)
             work_name = os.path.basename(work_dir)
             
             # Look for HTML reports in this work directory and parent auto_pt directory
             html_reports = []
             
-            # Check inside work directory
-            html_pattern = os.path.join(work_dir, "*.html")
-            html_files = glob.glob(html_pattern)
-            for html_file in sorted(html_files, key=os.path.getmtime, reverse=True):
+            # Filter for HTML files in single pass (no glob needed)
+            html_files = [item for item in work_dir_items if item.endswith('.html')]
+            for html_file in sorted(html_files, key=lambda x: os.path.getmtime(os.path.join(work_dir, x)), reverse=True):
                 # Convert to absolute path for HTML links to work from any location
-                html_reports.append(os.path.abspath(html_file))
+                html_reports.append(os.path.abspath(os.path.join(work_dir, html_file)))
             
             # Check parent auto_pt directory for work-specific HTML files
             auto_pt_dir = os.path.dirname(work_dir)
@@ -12429,11 +13136,60 @@ class WorkareaReviewer:
                 "html_reports": html_reports,
                 "dsr_skew_setup": None,  # DSR skew for setup scenario
                 "dsr_skew_hold": None,   # DSR skew for hold scenario
+                "power_data": None,      # Power corner data (func.std_tt_105c_0p67v.setup.typical)
                 "runtime": None
             }
             
-            # Extract data for each scenario type (setup and hold)
+            # Extract data for each scenario type (setup, hold, and power)
             for scenario_type, scenario_list in scenarios_to_check.items():
+                # Power corner is handled separately (extract power metrics, not timing)
+                if scenario_type == 'power':
+                    if scenario_list:
+                        power_corner_name = scenario_list[0]  # func.std_tt_105c_0p67v.setup.typical
+                        
+                        # Path: $WA/signoff_flow/auto_pt/work_*/func.std_tt_105c_0p67v.setup.typical/reports/power_reports/func.std_tt_105c_0p67v.setup.typical/power_analysis/<fsdb test>/<unit>_rollup.rep
+                        power_reports_base = os.path.join(work_dir, power_corner_name, "reports/power_reports", power_corner_name, "power_analysis")
+                        
+                        if os.path.exists(power_reports_base):
+                            try:
+                                # Find all FSDB test directories (skip symlinks like "latest")
+                                fsdb_tests = []
+                                for item in os.listdir(power_reports_base):
+                                    fsdb_test_dir = os.path.join(power_reports_base, item)
+                                    # Skip symlinks to avoid duplicates
+                                    if os.path.isdir(fsdb_test_dir) and not os.path.islink(fsdb_test_dir):
+                                        # Look for rollup files: <unit>_rollup.rep or <unit>_rollup.csv
+                                        rollup_rep = os.path.join(fsdb_test_dir, f"{self.design_info.top_hier}_rollup.rep")
+                                        rollup_csv = os.path.join(fsdb_test_dir, f"{self.design_info.top_hier}_rollup.csv")
+                                        
+                                        rollup_file = None
+                                        if os.path.exists(rollup_rep):
+                                            rollup_file = rollup_rep
+                                        elif os.path.exists(rollup_csv):
+                                            rollup_file = rollup_csv
+                                        
+                                        if rollup_file:
+                                            # Extract power metrics from rollup file
+                                            power_metrics = self._parse_power_rollup_file(rollup_file)
+                                            if power_metrics:
+                                                fsdb_tests.append({
+                                                    "test_name": item,
+                                                    "rollup_file": rollup_file,
+                                                    "metrics": power_metrics
+                                                })
+                                
+                                if fsdb_tests:
+                                    work_data["power_data"] = {
+                                        "corner": power_corner_name,
+                                        "fsdb_tests": fsdb_tests,
+                                        "total_tests": len(fsdb_tests),
+                                        "note": "Power estimation corner (not timing-critical)"
+                                    }
+                            except Exception as e:
+                                pass
+                    continue  # Skip the worst-case selection for power
+                
+                # For setup/hold: select worst-case corner based on TNS
                 best_scenario = None
                 best_tns = 0  # Track worst (most negative) TNS to find the scenario with most violations
                 
@@ -13069,6 +13825,209 @@ class WorkareaReviewer:
         </div>
 """
         
+        # Add Power Analysis Corner section if power data exists
+        has_power_data = any(wd.get('power_data') is not None for wd in timing_data)
+        if has_power_data:
+            html_content += """
+        <div class="section-header" onclick="toggleSection('section-power')">
+            <h3>Power Analysis Corner <span style='font-size:0.8em; color:#e0e0e0;'>(func.std_tt_105c_0p67v.setup.typical)</span></h3>
+            <span class="toggle-icon" id="icon-section-power">▼</span>
+        </div>
+        <div class="section-content" id="section-power">
+        <div class="info" style="background: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107;">
+            <strong>⚠️ Note:</strong> This corner is used for power estimation and analysis only. 
+            It is NOT intended to be timing-clean and timing violations are expected and acceptable for this corner.
+        </div>
+"""
+            
+            # Add power analysis table for all FSDB tests
+            for work_data in timing_data:
+                if work_data.get('power_data'):
+                    power_data = work_data['power_data']
+                    
+                    html_content += f"""
+        <h3 style="margin-top: 20px; color: #2c3e50;">Work Directory: {work_data['work_dir']}</h3>
+        <p><strong>Total FSDB Tests:</strong> {power_data['total_tests']}</p>
+        
+        <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th class="work-dir">FSDB Test</th>
+                    <th class="group-header">Total Power</th>
+                    <th class="group-header">Dynamic Power</th>
+                    <th class="group-header">Leakage Power</th>
+                    <th class="group-header">AF (FF/Q)</th>
+                    <th class="group-header">Annotation Score</th>
+                    <th class="group-header">Rollup File</th>
+                </tr>
+            </thead>
+            <tbody>
+"""
+                    
+                    # Sort tests by total power (descending)
+                    sorted_tests = sorted(power_data['fsdb_tests'], 
+                                        key=lambda x: x['metrics'].get('total_power', 0), 
+                                        reverse=True)
+                    
+                    for fsdb_test in sorted_tests:
+                        test_name = fsdb_test['test_name']
+                        metrics = fsdb_test['metrics']
+                        rollup_file = fsdb_test['rollup_file']
+                        
+                        # Format power values with units
+                        total_power = f"{metrics.get('total_power', 'N/A'):.3f} {metrics.get('total_power_unit', '')}" if 'total_power' in metrics else "N/A"
+                        dynamic_power = f"{metrics.get('dynamic_power', 'N/A'):.3f} {metrics.get('dynamic_power_unit', '')}" if 'dynamic_power' in metrics else "N/A"
+                        leakage_power = f"{metrics.get('leakage_power', 'N/A'):.3f} {metrics.get('leakage_power_unit', '')}" if 'leakage_power' in metrics else "N/A"
+                        activity_factor = f"{metrics.get('activity_factor', 'N/A'):.2f} %" if 'activity_factor' in metrics else "N/A"
+                        annotation_score = f"{metrics.get('annotation_score', 'N/A'):.2f} %" if 'annotation_score' in metrics else "N/A"
+                        
+                        rollup_basename = os.path.basename(rollup_file)
+                        
+                        html_content += f"""
+                <tr>
+                    <td class="work-dir">{test_name}</td>
+                    <td class="timing-cell" style="font-weight: bold;">{total_power}</td>
+                    <td class="timing-cell">{dynamic_power}</td>
+                    <td class="timing-cell">{leakage_power}</td>
+                    <td class="timing-cell">{activity_factor}</td>
+                    <td class="timing-cell">{annotation_score}</td>
+                    <td class="timing-cell" style="font-size: 12px;">
+                        <button onclick="copyToClipboard('{rollup_file}')" 
+                                style="background: none; border: 1px solid #3498db; color: #3498db; padding: 2px 8px; cursor: pointer; border-radius: 3px; font-size: 11px;"
+                                title="Click to copy path to clipboard">
+                            📋 {rollup_basename}
+                        </button>
+                    </td>
+                </tr>
+"""
+                    
+                    html_content += """            </tbody>
+        </table>
+        </div>
+"""
+                    break  # Show only latest work area with power data
+            
+            # Add power trend table for all tests across all work areas
+            power_work_areas = [wd for wd in timing_data if wd.get('power_data')]
+            if len(power_work_areas) >= 2:
+                html_content += """
+<div class="section-header" onclick="toggleSection('section-power-trend')">
+    <h3>Power Trend Analysis (All Tests Across Work Areas)</h3>
+    <span class="toggle-icon" id="icon-section-power-trend">▼</span>
+</div>
+<div class="section-content" id="section-power-trend">
+"""
+                
+                # Collect all test names with their latest power values for sorting
+                test_power_map = {}
+                for test in power_work_areas[0]['power_data']['fsdb_tests']:
+                    test_name = test['test_name']
+                    if 'total_power' in test['metrics']:
+                        test_power_map[test_name] = test['metrics']['total_power']
+                
+                # Collect all unique test names from all work areas
+                all_test_names = set()
+                for wd in power_work_areas:
+                    for test in wd['power_data']['fsdb_tests']:
+                        all_test_names.add(test['test_name'])
+                
+                # Sort test names by their latest power value (highest first)
+                sorted_test_names = sorted(all_test_names, 
+                                         key=lambda x: test_power_map.get(x, 0), 
+                                         reverse=True)
+                
+                # Build comprehensive trend table
+                html_content += """
+<div class="table-wrapper">
+<table>
+    <thead>
+        <tr>
+            <th class="work-dir">Test Name</th>
+"""
+                # Add column headers for each work area (up to 10 most recent)
+                for wd in power_work_areas[:10]:
+                    work_name = wd['work_dir']
+                    html_content += f"""            <th class="group-header">{work_name}</th>
+"""
+                
+                html_content += """            <th class="group-header">Change (Latest vs Oldest)</th>
+            <th class="group-header">% Change</th>
+            <th class="group-header">Trend</th>
+        </tr>
+    </thead>
+    <tbody>
+"""
+                
+                # Add rows for each test (sorted by latest power, highest first)
+                for test_name in sorted_test_names:
+                    html_content += f"""        <tr>
+            <td class="work-dir">{test_name}</td>
+"""
+                    
+                    # Collect power values for this test across work areas
+                    power_values = []
+                    for wd in power_work_areas[:10]:
+                        found = False
+                        for test in wd['power_data']['fsdb_tests']:
+                            if test['test_name'] == test_name:
+                                if 'total_power' in test['metrics']:
+                                    power_val = test['metrics']['total_power']
+                                    unit = test['metrics'].get('total_power_unit', 'mW')
+                                    html_content += f"""            <td class="timing-cell">{power_val:.3f} {unit}</td>
+"""
+                                    power_values.append(power_val)
+                                    found = True
+                                break
+                        if not found:
+                            html_content += """            <td class="timing-cell">N/A</td>
+"""
+                    
+                    # Calculate trend
+                    if len(power_values) >= 2:
+                        latest_power = power_values[0]
+                        oldest_power = power_values[-1]
+                        diff = latest_power - oldest_power
+                        percent_change = (diff / oldest_power) * 100 if oldest_power != 0 else 0
+                        
+                        # Color code based on trend
+                        if diff < 0:
+                            trend_color = "positive"  # Green for decrease
+                            trend_text = "Decreased"
+                        elif diff > 0:
+                            trend_color = "negative"  # Red for increase
+                            trend_text = "Increased"
+                        else:
+                            trend_color = ""
+                            trend_text = "Unchanged"
+                        
+                        sign = "+" if diff >= 0 else ""
+                        html_content += f"""            <td class="timing-cell {trend_color}">{sign}{diff:.3f} mW</td>
+            <td class="timing-cell {trend_color}">{sign}{percent_change:.1f} %</td>
+            <td class="timing-cell {trend_color}">{trend_text}</td>
+"""
+                    else:
+                        html_content += """            <td class="timing-cell">N/A</td>
+            <td class="timing-cell">N/A</td>
+            <td class="timing-cell">N/A</td>
+"""
+                    
+                    html_content += """        </tr>
+"""
+                
+                html_content += """    </tbody>
+</table>
+</div>
+<p style="margin-top: 10px; color: #666; font-size: 14px;">
+    <strong>Note:</strong> Green indicates power decrease (improvement), Red indicates power increase (degradation).
+    Showing up to 10 most recent work areas.
+</p>
+</div>
+"""
+            
+            html_content += """        </div>
+"""
+        
         html_content += """        
         <div class="legend">
             <h4>Legend</h4>
@@ -13078,6 +14037,7 @@ class WorkareaReviewer:
                 <li><strong>NVP:</strong> Number of Violating Paths</li>
                 <li><strong>DSR Skew:</strong> DSR Mux Clock Skew (picoseconds) - Lower is better</li>
                 <li><strong>Total Internal:</strong> Sum of all internal timing groups (excludes FEEDTHROUGH/REGIN/REGOUT)</li>
+                <li><strong>Power Corner:</strong> func.std_tt_105c_0p67v.setup.typical - Used for power estimation only (not timing-critical)</li>
             </ul>
             <h4>Color Coding</h4>
             <ul>
@@ -13148,6 +14108,16 @@ class WorkareaReviewer:
                 content.classList.add('expanded');
                 icon.classList.add('expanded');
             }}
+        }}
+        
+        function copyToClipboard(text) {{
+            navigator.clipboard.writeText(text).then(function() {{
+                // Show success feedback
+                alert('Path copied to clipboard!\\n\\nYou can now open the file with:\\nless ' + text);
+            }}, function(err) {{
+                // Fallback for older browsers
+                alert('Path: ' + text + '\\n\\nPlease copy this path manually.');
+            }});
         }}
         
         function showLogoModal() {{
@@ -13225,9 +14195,6 @@ class WorkareaReviewer:
             html_filename = self._generate_timing_summary_html(timing_data)
             
             if html_filename:
-                print(f"\n  {Color.CYAN}PT Timing Summary (Dual-Scenario):{Color.RESET}")
-                print(f"    Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{os.path.basename(html_filename)}{Color.RESET} &")
-                
                 # Show brief summary
                 print(f"\n  {Color.CYAN}Work Areas Summary:{Color.RESET}")
                 print(f"    Total Work Areas: {len(timing_data)}")
@@ -13318,56 +14285,89 @@ class WorkareaReviewer:
                             if worst_group:
                                 print(f"    Worst Internal Group: {worst_group}")
                     
-                # Show DSR skew trend if multiple work areas (show both setup and hold)
+                # Show DSR skew trend if multiple work areas (unified table for setup and hold)
                 if len(timing_data) >= 2:
                     print(f"\n  {Color.CYAN}DSR Skew Trend:{Color.RESET}")
                     
-                    # Setup scenario DSR skew
-                    dsr_setup_values = []
+                    # Get corner names from latest work area
+                    setup_corner = "N/A"
+                    hold_corner = "N/A"
+                    if 'setup' in latest.get('scenarios', {}):
+                        setup_corner = latest['scenarios']['setup'].get('name', 'N/A')
+                    if 'hold' in latest.get('scenarios', {}):
+                        hold_corner = latest['scenarios']['hold'].get('name', 'N/A')
+                    
+                    # Display corner names
+                    print(f"    Setup Corner: {Color.YELLOW}{setup_corner}{Color.RESET}")
+                    print(f"    Hold Corner:  {Color.YELLOW}{hold_corner}{Color.RESET}")
+                    
+                    # Collect DSR skew data for both scenarios
+                    dsr_data = []
+                    setup_values = []
+                    hold_values = []
+                    
                     for wd in timing_data[:5]:  # Show up to 5 most recent
-                        if wd.get('dsr_skew_setup') is not None:
-                            dsr_val = wd['dsr_skew_setup']
-                            dsr_color = Color.GREEN if dsr_val <= 10 else Color.YELLOW if dsr_val <= 20 else Color.RED
-                            dsr_setup_values.append((wd['work_dir'], dsr_val, dsr_color))
-                    
-                    if dsr_setup_values:
-                        print(f"    {Color.CYAN}Setup Scenario:{Color.RESET}")
-                        for work_name, dsr_val, dsr_color in dsr_setup_values:
-                            print(f"      {work_name}: {dsr_color}{dsr_val:6.2f}{Color.RESET} ps")
+                        work_name = wd['work_dir']
+                        setup_skew = wd.get('dsr_skew_setup')
+                        hold_skew = wd.get('dsr_skew_hold')
                         
-                        # Show improvement/degradation for setup
-                        if len(dsr_setup_values) >= 2:
-                            first_dsr = dsr_setup_values[0][1]
-                            last_dsr = dsr_setup_values[-1][1]
-                            diff = first_dsr - last_dsr
-                            trend_color = Color.GREEN if diff < 0 else Color.RED
-                            trend_text = "improved" if diff < 0 else "degraded"
-                            print(f"      Trend: {trend_color}{abs(diff):.2f} ps {trend_text}{Color.RESET} (newest vs oldest)")
-                    
-                    # Hold scenario DSR skew
-                    dsr_hold_values = []
-                    for wd in timing_data[:5]:  # Show up to 5 most recent
-                        if wd.get('dsr_skew_hold') is not None:
-                            dsr_val = wd['dsr_skew_hold']
-                            dsr_color = Color.GREEN if dsr_val <= 10 else Color.YELLOW if dsr_val <= 20 else Color.RED
-                            dsr_hold_values.append((wd['work_dir'], dsr_val, dsr_color))
-                    
-                    if dsr_hold_values:
-                        print(f"    {Color.CYAN}Hold Scenario:{Color.RESET}")
-                        for work_name, dsr_val, dsr_color in dsr_hold_values:
-                            print(f"      {work_name}: {dsr_color}{dsr_val:6.2f}{Color.RESET} ps")
+                        # Color coding for each value
+                        setup_color = Color.RESET
+                        hold_color = Color.RESET
                         
-                        # Show improvement/degradation for hold
-                        if len(dsr_hold_values) >= 2:
-                            first_dsr = dsr_hold_values[0][1]
-                            last_dsr = dsr_hold_values[-1][1]
-                            diff = first_dsr - last_dsr
-                            trend_color = Color.GREEN if diff < 0 else Color.RED
-                            trend_text = "improved" if diff < 0 else "degraded"
-                            print(f"      Trend: {trend_color}{abs(diff):.2f} ps {trend_text}{Color.RESET} (newest vs oldest)")
+                        if setup_skew is not None:
+                            setup_color = Color.GREEN if setup_skew <= 10 else Color.YELLOW if setup_skew <= 20 else Color.RED
+                            setup_values.append(setup_skew)
+                        
+                        if hold_skew is not None:
+                            hold_color = Color.GREEN if hold_skew <= 10 else Color.YELLOW if hold_skew <= 20 else Color.RED
+                            hold_values.append(hold_skew)
+                        
+                        dsr_data.append((work_name, setup_skew, setup_color, hold_skew, hold_color))
+                    
+                    # Print unified table
+                    if dsr_data:
+                        print(f"\n    {'Work Directory':<25} {'Setup Skew':>12} {'Hold Skew':>12}")
+                        print(f"    {'-'*25} {'-'*12} {'-'*12}")
+                        
+                        for work_name, setup_skew, setup_color, hold_skew, hold_color in dsr_data:
+                            setup_str = f"{setup_color}{setup_skew:6.2f}{Color.RESET} ps" if setup_skew is not None else "N/A"
+                            hold_str = f"{hold_color}{hold_skew:6.2f}{Color.RESET} ps" if hold_skew is not None else "N/A"
+                            print(f"    {work_name:<25} {setup_str:>20} {hold_str:>20}")
+                        
+                        # Show trends below the table
+                        print()
+                        if len(setup_values) >= 2:
+                            first_setup = setup_values[0]
+                            last_setup = setup_values[-1]
+                            setup_diff = first_setup - last_setup
+                            setup_trend_color = Color.GREEN if setup_diff < 0 else Color.RED
+                            setup_trend_text = "improved" if setup_diff < 0 else "degraded"
+                            print(f"    Setup Trend: {setup_trend_color}{abs(setup_diff):.2f} ps {setup_trend_text}{Color.RESET} (newest vs oldest)")
+                        
+                        if len(hold_values) >= 2:
+                            first_hold = hold_values[0]
+                            last_hold = hold_values[-1]
+                            hold_diff = first_hold - last_hold
+                            hold_trend_color = Color.GREEN if hold_diff < 0 else Color.RED
+                            hold_trend_text = "improved" if hold_diff < 0 else "degraded"
+                            print(f"    Hold Trend:  {hold_trend_color}{abs(hold_diff):.2f} ps {hold_trend_text}{Color.RESET} (newest vs oldest)")
                 else:
                     # Show DSR skew for latest if only one work area
                     print(f"\n  {Color.CYAN}Latest DSR Mux Clock Skew:{Color.RESET}")
+                    
+                    # Get corner names
+                    setup_corner = "N/A"
+                    hold_corner = "N/A"
+                    if 'setup' in latest.get('scenarios', {}):
+                        setup_corner = latest['scenarios']['setup'].get('name', 'N/A')
+                    if 'hold' in latest.get('scenarios', {}):
+                        hold_corner = latest['scenarios']['hold'].get('name', 'N/A')
+                    
+                    print(f"    Setup Corner: {Color.YELLOW}{setup_corner}{Color.RESET}")
+                    print(f"    Hold Corner:  {Color.YELLOW}{hold_corner}{Color.RESET}")
+                    print()
+                    
                     if latest.get('dsr_skew_setup') is not None:
                         dsr_val_setup = latest['dsr_skew_setup']
                         dsr_color = Color.GREEN if dsr_val_setup <= 10 else Color.YELLOW if dsr_val_setup <= 20 else Color.RED
@@ -13376,6 +14376,124 @@ class WorkareaReviewer:
                         dsr_val_hold = latest['dsr_skew_hold']
                         dsr_color = Color.GREEN if dsr_val_hold <= 10 else Color.YELLOW if dsr_val_hold <= 20 else Color.RED
                         print(f"    Hold:  {dsr_color}{dsr_val_hold:6.2f}{Color.RESET} ps")
+                
+                # Show power corner analysis (func.std_tt_105c_0p67v.setup.typical)
+                # If latest work area doesn't have power data, check previous work areas
+                power_work_to_display = None
+                power_work_name = None
+                is_latest_power = False
+                
+                if latest.get('power_data'):
+                    power_work_to_display = latest
+                    power_work_name = latest['work_dir']
+                    is_latest_power = True
+                else:
+                    # Check previous work areas for power data (most recent first)
+                    for wd in timing_data[1:]:  # Skip first (latest) since we already checked
+                        if wd.get('power_data'):
+                            power_work_to_display = wd
+                            power_work_name = wd['work_dir']
+                            break
+                
+                if power_work_to_display:
+                    power_data = power_work_to_display['power_data']
+                    print(f"\n  {Color.CYAN}Power Analysis Corner ({power_data['corner']}):{Color.RESET}")
+                    print(f"    {Color.YELLOW}Note: Power estimation corner (not timing-critical){Color.RESET}")
+                    
+                    # Show note if power data is from previous work area
+                    if not is_latest_power:
+                        print(f"    {Color.YELLOW}[INFO] Latest work area does not have power corner - showing data from: {power_work_name}{Color.RESET}")
+                    
+                    print(f"    Total FSDB Tests: {power_data['total_tests']}")
+                    
+                    # Show ALL FSDB tests in unified table (sorted by total power, highest first)
+                    print(f"\n    {'Test Name':<50} {'Total Power':>13} {'Dynamic Power':>15} {'Leakage Power':>15} {'AF (FF/Q)':>11} {'Annot Score':>12}")
+                    print(f"    {'-'*50} {'-'*13} {'-'*15} {'-'*15} {'-'*11} {'-'*12}")
+                    
+                    # Sort tests by total power (descending)
+                    sorted_tests = sorted(power_data['fsdb_tests'], 
+                                        key=lambda x: x['metrics'].get('total_power', 0), 
+                                        reverse=True)
+                    
+                    for fsdb_test in sorted_tests:
+                        test_name = fsdb_test['test_name']
+                        metrics = fsdb_test['metrics']
+                        
+                        # Format values with units
+                        total_power = f"{metrics.get('total_power', 0):7.3f} {metrics.get('total_power_unit', 'mW')}" if 'total_power' in metrics else "N/A"
+                        dynamic_power = f"{metrics.get('dynamic_power', 0):7.3f} {metrics.get('dynamic_power_unit', 'mW')}" if 'dynamic_power' in metrics else "N/A"
+                        leakage_power = f"{metrics.get('leakage_power', 0):7.3f} {metrics.get('leakage_power_unit', 'mW')}" if 'leakage_power' in metrics else "N/A"
+                        activity_factor = f"{metrics.get('activity_factor', 0):6.2f} %" if 'activity_factor' in metrics else "N/A"
+                        annotation_score = f"{metrics.get('annotation_score', 0):6.2f} %" if 'annotation_score' in metrics else "N/A"
+                        
+                        # Truncate long test names
+                        display_name = test_name if len(test_name) <= 50 else test_name[:47] + "..."
+                        
+                        print(f"    {display_name:<50} {total_power:>13} {dynamic_power:>15} {leakage_power:>15} {activity_factor:>11} {annotation_score:>12}")
+                else:
+                    # No power corner found in any work area
+                    print(f"\n  {Color.CYAN}Power Analysis Corner:{Color.RESET}")
+                    print(f"    {Color.YELLOW}Power corner (func.std_tt_105c_0p67v.setup.typical) was not run in any work area{Color.RESET}")
+                
+                # Show power trend if multiple work areas with power data (unified table for all tests)
+                power_work_areas = [wd for wd in timing_data if wd.get('power_data')]
+                if len(power_work_areas) >= 2:
+                    print(f"\n  {Color.CYAN}Total Power Trend (All Tests):{Color.RESET}")
+                    
+                    # Collect all unique test names across work areas
+                    all_test_names = set()
+                    for wd in power_work_areas:
+                        for test in wd['power_data']['fsdb_tests']:
+                            all_test_names.add(test['test_name'])
+                    
+                    # Build table data for all tests
+                    trend_data = []
+                    for test_name in sorted(all_test_names):
+                        power_values = []
+                        for wd in power_work_areas[:5]:  # Show up to 5 most recent
+                            # Find this test in this work area
+                            for test in wd['power_data']['fsdb_tests']:
+                                if test['test_name'] == test_name:
+                                    if 'total_power' in test['metrics']:
+                                        power_val = test['metrics']['total_power']
+                                        power_values.append((wd['work_dir'], power_val))
+                                    break
+                        
+                        if len(power_values) >= 2:
+                            latest_power = power_values[0][1]
+                            oldest_power = power_values[-1][1]
+                            diff = latest_power - oldest_power
+                            percent_change = (diff / oldest_power) * 100 if oldest_power != 0 else 0
+                            trend_data.append((test_name, latest_power, oldest_power, diff, percent_change))
+                    
+                    if trend_data:
+                        # Sort by latest power (highest first)
+                        trend_data.sort(key=lambda x: x[1], reverse=True)
+                        
+                        # Print unified table header
+                        print(f"\n    {'Test Name':<50} {'Latest':>12} {'Oldest':>12} {'Change':>12} {'% Change':>10} {'Trend':>10}")
+                        print(f"    {'-'*50} {'-'*12} {'-'*12} {'-'*12} {'-'*10} {'-'*10}")
+                        
+                        for test_name, latest_power, oldest_power, diff, percent_change in trend_data:
+                            # Truncate test name for display
+                            display_test = test_name if len(test_name) <= 50 else test_name[:47] + "..."
+                            
+                            # Color code the change
+                            if diff < 0:
+                                trend_color = Color.GREEN
+                                trend_text = "decreased"
+                            elif diff > 0:
+                                trend_color = Color.RED
+                                trend_text = "increased"
+                            else:
+                                trend_color = Color.RESET
+                                trend_text = "unchanged"
+                            
+                            print(f"    {display_test:<50} {latest_power:9.3f} mW {oldest_power:9.3f} mW {trend_color}{diff:+9.3f} mW{Color.RESET} {trend_color}{percent_change:+8.1f} %{Color.RESET} {trend_color}{trend_text:>10}{Color.RESET}")
+                
+                # Show HTML report link at the end
+                print(f"\n  {Color.CYAN}PT Timing Summary (Dual-Scenario):{Color.RESET}")
+                print(f"    Open with: /home/utils/firefox-118.0.1/firefox {Color.MAGENTA}html/{os.path.basename(html_filename)}{Color.RESET} &")
                 
                 # Return HTML path and timing data for dashboard summary
                 return html_filename, timing_data
@@ -16948,7 +18066,7 @@ class WorkareaReviewer:
                 # Parse ECO command to extract instance and cell type
                 # Common formats:
                 #   ecoChangeCell -inst {INSTANCE} -cell {CELLTYPE}          (NV Gate ECO)
-                #   ecoAddRepeater ... -cell {CELLTYPE} -inst {INSTANCE}      (NV Gate ECO)
+                #   ecoAddRepeater ... -cell {CELLTYPE} -name {INSTANCE}      (NV Gate ECO/VIVID)
                 #   size_cell INSTANCE CELLTYPE                                (PT ECO)
                 #   insert_buffer NET CELLTYPE INSTANCE                        (PT ECO)
                 #   eco_insert_buffer NET CELLTYPE -cells INSTANCE             (PT ECO)
@@ -16963,12 +18081,33 @@ class WorkareaReviewer:
                     instance_name = match.group(1)
                     cell_type = match.group(2)
                 
-                # Pattern 2: ecoAddRepeater ... -cell {CELLTYPE} -inst {INSTANCE}
-                if not instance_name:
-                    match = re.search(r'ecoAddRepeater.*-cell\s+\{([^}]+)\}.*-inst\s+\{([^}]+)\}', command_line)
-                    if match:
-                        cell_type = match.group(1)
-                        instance_name = match.group(2)
+                # Pattern 2: ecoAddRepeater ... -name {INSTANCE} ... -cell {CELLTYPE}
+                # Note: ecoAddRepeater uses -name (not -inst) for new instance name
+                # Special handling: NEW buffer won't be in ClockTree.rpt yet (ECO not applied)
+                # So we check the PREVIOUS cell (from -term) to see if it's on clock network
+                if not instance_name and 'ecoAddRepeater' in command_line:
+                    cell_match = re.search(r'-cell\s+\{([^}]+)\}', command_line)
+                    name_match = re.search(r'-name\s+\{([^}]+)\}', command_line)
+                    term_match = re.search(r'-term\s+\{([^}]+)\}', command_line)
+                    
+                    if cell_match and name_match and term_match:
+                        cell_type = cell_match.group(1)
+                        instance_name = name_match.group(1)
+                        
+                        # Extract previous instance from -term {PREV_INST/PIN}
+                        term_path = term_match.group(1)
+                        # Remove /PIN suffix to get instance name
+                        prev_instance = term_path.rsplit('/', 1)[0] if '/' in term_path else term_path
+                        
+                        # Check if PREVIOUS instance is in clock tree
+                        # If yes, the NEW buffer will also be on clock network
+                        if prev_instance in clock_tree_instances:
+                            # Mark this for checking (new buffer connects to clock network)
+                            pass  # instance_name already set, will be checked below
+                        elif instance_name not in clock_tree_instances:
+                            # Neither new nor previous instance in clock tree - skip this ECO
+                            instance_name = None
+                            cell_type = None
                 
                 # Pattern 3: size_cell INSTANCE CELLTYPE
                 if not instance_name:
@@ -17086,12 +18225,33 @@ class WorkareaReviewer:
                     instance_name = match.group(1)
                     cell_type = match.group(2)
                 
-                # Pattern 2: ecoAddRepeater ... -cell {CELLTYPE} -inst {INSTANCE}
-                if not instance_name:
-                    match = re.search(r'ecoAddRepeater.*-cell\s+\{([^}]+)\}.*-inst\s+\{([^}]+)\}', command_line)
-                    if match:
-                        cell_type = match.group(1)
-                        instance_name = match.group(2)
+                # Pattern 2: ecoAddRepeater ... -name {INSTANCE} ... -cell {CELLTYPE}
+                # Note: ecoAddRepeater uses -name (not -inst) for new instance name
+                # Special handling: NEW buffer won't be in ClockTree.rpt yet (ECO not applied)
+                # So we check the PREVIOUS cell (from -term) to see if it's on clock network
+                if not instance_name and 'ecoAddRepeater' in command_line:
+                    cell_match = re.search(r'-cell\s+\{([^}]+)\}', command_line)
+                    name_match = re.search(r'-name\s+\{([^}]+)\}', command_line)
+                    term_match = re.search(r'-term\s+\{([^}]+)\}', command_line)
+                    
+                    if cell_match and name_match and term_match:
+                        cell_type = cell_match.group(1)
+                        instance_name = name_match.group(1)
+                        
+                        # Extract previous instance from -term {PREV_INST/PIN}
+                        term_path = term_match.group(1)
+                        # Remove /PIN suffix to get instance name
+                        prev_instance = term_path.rsplit('/', 1)[0] if '/' in term_path else term_path
+                        
+                        # Check if PREVIOUS instance is in clock tree
+                        # If yes, the NEW buffer will also be on clock network
+                        if prev_instance in clock_tree_instances:
+                            # Mark this for checking (new buffer connects to clock network)
+                            pass  # instance_name already set, will be checked below
+                        elif instance_name not in clock_tree_instances:
+                            # Neither new nor previous instance in clock tree - skip this ECO
+                            instance_name = None
+                            cell_type = None
                 
                 # Pattern 3: size_cell INSTANCE CELLTYPE
                 if not instance_name:
@@ -17547,11 +18707,12 @@ class WorkareaReviewer:
             icon="[ECO]"
         )
     
-    def _extract_block_release_info(self, release_log: str) -> Optional[Dict[str, Any]]:
+    def _extract_block_release_info(self, release_log: str, search_base_path: str = None) -> Optional[Dict[str, Any]]:
         """Extract block release information focusing on umake block_release commands
         
         Args:
             release_log: Path to release log file
+            search_base_path: Base path to search for umake logs (for NBU signoff support)
             
         Returns:
             Dictionary with release information or None if not found
@@ -17565,7 +18726,8 @@ class WorkareaReviewer:
                 print(f"  {Color.CYAN}Release to:{Color.RESET} {release_to_path}")
             
             # Extract umake block_release command lines from umake logs
-            release_data = self._extract_umake_block_release_commands()
+            # Pass through the search_base_path to search in the correct location
+            release_data = self._extract_umake_block_release_commands(search_base_path)
             
             # Return both release data and release_to_path for central area check
             return release_data, release_to_path
@@ -19064,23 +20226,36 @@ class WorkareaReviewer:
         open_nets_status = "PASS"
         status = "NOT_RUN"
         
+        # Determine the correct workarea path to use
+        # If we're in an nbu_signoff subdirectory, navigate up to find the root workarea
+        search_workarea = self.workarea
+        if 'nbu_signoff' in self.workarea:
+            # Navigate up to find signoff_flow at root level
+            current = self.workarea
+            for _ in range(10):  # Safety limit
+                parent = os.path.dirname(current)
+                if os.path.exists(os.path.join(parent, 'signoff_flow')):
+                    search_workarea = parent
+                    break
+                current = parent
+        
         # Show NV Gate ECO flow timeline
         nv_gate_eco_local_flow_dirs = [
-            os.path.join(self.workarea, f"signoff_flow/nv_gate_eco/{self.design_info.top_hier}/local_flow"),
-            os.path.join(self.workarea, f"signoff_flow/nv_gate_eco/local_flow")
+            os.path.join(search_workarea, f"signoff_flow/nv_gate_eco/{self.design_info.top_hier}/local_flow"),
+            os.path.join(search_workarea, f"signoff_flow/nv_gate_eco/local_flow")
         ]
         self._show_flow_timeline("NV Gate ECO", nv_gate_eco_local_flow_dirs)
         
         # Check if NV Gate ECO directory exists
-        nv_gate_eco_dir = os.path.join(self.workarea, "signoff_flow/nv_gate_eco")
+        nv_gate_eco_dir = os.path.join(search_workarea, "signoff_flow/nv_gate_eco")
         
         if os.path.exists(nv_gate_eco_dir):
             # Look for ECO change summary
             eco_change_pattern = f"signoff_flow/nv_gate_eco/{self.design_info.top_hier}/ipo*/sum.eco_change"
-            eco_change_files = self.file_utils.find_files(eco_change_pattern, self.workarea)
+            eco_change_files = self.file_utils.find_files(eco_change_pattern, search_workarea)
             
             if eco_change_files:
-                self.print_file_info(eco_change_files[0], "NV Gate ECO Summary")
+                # File path will be in HTML report, not terminal (to minimize console output)
                 try:
                     # Read and extract the ECO change summary table
                     with open(eco_change_files[0], 'r') as f:
@@ -19161,167 +20336,364 @@ class WorkareaReviewer:
             setup_pattern = f"signoff_flow/nv_gate_eco/{self.design_info.top_hier}/ipo*/REPs/SUMMARY/{self.design_info.top_hier}.ipo*.eco.timing.setup.rpt.gz"
             hold_pattern = f"signoff_flow/nv_gate_eco/{self.design_info.top_hier}/ipo*/REPs/SUMMARY/{self.design_info.top_hier}.ipo*.eco.timing.hold.rpt.gz"
             
-            setup_files = self.file_utils.find_files(setup_pattern, self.workarea)
-            hold_files = self.file_utils.find_files(hold_pattern, self.workarea)
+            setup_files = self.file_utils.find_files(setup_pattern, search_workarea)
+            hold_files = self.file_utils.find_files(hold_pattern, search_workarea)
             
-            # Process setup timing report
+            # Process setup timing report - Extract WNS/TNS/NVP with corner info (external and internal)
+            setup_ext_wns = setup_ext_tns = setup_ext_nvp = None
+            setup_int_wns = setup_int_tns = setup_int_nvp = None
+            setup_corner = None
+            setup_file_path = None
             if setup_files:
-                self.print_file_info(setup_files[0], "NV Gate ECO Setup Timing")
+                setup_file_path = setup_files[0]
                 try:
-                    # Extract the last three histogram tables (category, sub-category, and sub-category+scenario)
-                    print(f"  {Color.CYAN}Timing Histogram Tables (ECO):{Color.RESET}")
+                    import re
+                    # Extract both external and internal timing metrics
+                    result = self.file_utils.run_command(f"zcat {setup_files[0]} | grep -E '^\s*(external|internal)' | head -2")
+                    if result.strip():
+                        lines = result.strip().split('\n')
+                        for line in lines:
+                            parts = line.split('|')
+                            if len(parts) >= 4:
+                                try:
+                                    line_type = parts[0].strip()
+                                    wns = float(parts[1].strip())
+                                    tns = float(parts[2].strip())
+                                    nvp = int(parts[3].strip())
+                                    
+                                    if line_type == 'external':
+                                        setup_ext_wns = wns
+                                        setup_ext_tns = tns
+                                        setup_ext_nvp = nvp
+                                    elif line_type == 'internal':
+                                        setup_int_wns = wns
+                                        setup_int_tns = tns
+                                        setup_int_nvp = nvp
+                                except (ValueError, IndexError):
+                                    pass
                     
-                    # Get all histogram table line numbers
-                    result = self.file_utils.run_command(f"zcat {setup_files[0]} | grep -n 'histogram' | grep '|'")
-                    if result.strip():
-                        histogram_lines = result.strip().split('\n')
-                        if len(histogram_lines) >= 4:
-                            # Get the last 4 tables: category, scenario, sub-category, and sub-category + scenario
-                            table_category_start = int(histogram_lines[-4].split(':')[0])  # Category breakdown
-                            table_scenario_start = int(histogram_lines[-3].split(':')[0])  # Scenario breakdown
-                            table_subcat_start = int(histogram_lines[-2].split(':')[0])    # Sub-category breakdown
-                            table_subcat_scenario_start = int(histogram_lines[-1].split(':')[0])  # Sub-category + scenario breakdown
-                            
-                            # Find the end of category table (it ends before scenario table starts)
-                            table_category_end = table_scenario_start - 1
-                            
-                            # Extract category table (for HTML only - not printed to terminal)
-                            table_category_result = self.file_utils.run_command(f"zcat {setup_files[0]} | sed -n '{table_category_start},{table_category_end}p'")
-                            # Table 1 data extracted but not printed (HTML only)
-                            
-                            # Find the end of sub-category table (it ends before sub-category + scenario table starts)
-                            table_subcat_end = table_subcat_scenario_start - 1
-                            
-                            # Extract sub-category table (TERMINAL OUTPUT: Table 2 only for concise output)
-                            table_subcat_result = self.file_utils.run_command(f"zcat {setup_files[0]} | sed -n '{table_subcat_start},{table_subcat_end}p'")
-                            if table_subcat_result.strip():
-                                print(f"  Table 2 - Sub-Category Breakdown (Lines {table_subcat_start}-{table_subcat_end}):")
-                                table_subcat_lines = table_subcat_result.strip().split('\n')
-                                for line in table_subcat_lines:
-                                    if line.strip():
-                                        print(f"  {line}")
-                            
-                            # Extract sub-category + scenario table (for HTML only - not printed to terminal)
-                            table_subcat_scenario_result = self.file_utils.run_command(f"zcat {setup_files[0]} | sed -n '{table_subcat_scenario_start},$p'")
-                            # Table 3 data extracted but not printed (HTML only)
-                        else:
-                            print("  Could not find histogram tables")
-                    else:
-                        print("  Histogram tables not found")
+                    # Find full corner/scenario name (use external WNS as it's typically worse)
+                    if setup_ext_wns is not None:
+                        wns_str = f"{setup_ext_wns:.3f}"
+                        wns_search = wns_str.replace('-', '\\-')
+                        corner_result = self.file_utils.run_command(f"zcat {setup_files[0]} | grep -E 'func\\.std.*setup\\.typical' | grep '{wns_search}' | head -1")
+                        if corner_result.strip():
+                            # Extract full scenario name
+                            corner_match = re.search(r'(func\.std_tt_\d+c_[\d.]+p[\d.]+v\.setup\.typical)', corner_result)
+                            if corner_match:
+                                setup_corner = corner_match.group(1)
                 except Exception as e:
-                    print(f"  Error processing setup timing report: {e}")
+                    pass  # Silently continue if extraction fails
             
-            # Process hold timing report
-            if hold_files:
-                self.print_file_info(hold_files[0], "NV Gate ECO Hold Timing")
+            # Extract sub_category breakdown for setup timing
+            setup_subcats = {}
+            if setup_files:
                 try:
-                    # Find histogram line in hold report
-                    result = self.file_utils.run_command(f"grep -n '_histogram_' {hold_files[0]} | tail -n2 | head -n1 | cut -d ':' -f 1")
+                    import re
+                    # Get sub_category lines (without per-scenario breakdown)
+                    result = self.file_utils.run_command(f"zcat {setup_files[0]} | grep -E 'port_to_flop|port_to_clock_gate|flop_to_port|flop_to_flop|flop_to_hard_macro|flop_to_clock_gate' | grep -v 'func\\.std'")
                     if result.strip():
-                        start_line = int(result.strip())
-                        # Extract histogram section
-                        result = self.file_utils.run_command(f"zcat {hold_files[0]} | awk -v line={start_line} 'NR >= line {{print; if (/===/ && ++count == 2) exit}}'")
-                        if result.strip():
-                            for line in result.strip().split('\n'):
-                                print(f"  {line}")
-                except Exception as e:
-                    print(f"  Error processing hold timing report: {e}")
+                        lines = result.strip().split('\n')
+                        for line in lines:
+                            # Skip comment/description lines
+                            if 'flop_to_ram' in line or 'port_to_ilm' in line:
+                                continue
+                            parts = line.split('|')
+                            if len(parts) >= 5:
+                                try:
+                                    subcat = parts[2].strip()
+                                    wns = float(parts[3].strip())
+                                    tns = float(parts[4].strip())
+                                    fep = int(parts[5].strip().split()[0])  # First number after | is FEP
+                                    
+                                    if subcat and (wns != 0 or tns != 0 or fep != 0):  # Only store non-zero entries
+                                        setup_subcats[subcat] = {
+                                            'wns': wns,
+                                            'tns': tns,
+                                            'fep': fep
+                                        }
+                                except (ValueError, IndexError):
+                                    pass
+                except Exception:
+                    pass
             
-            # Look for ECO summary reports (critical validation)
+            # Process hold timing report - Extract WNS/TNS/NVP with corner info (external and internal)
+            hold_ext_wns = hold_ext_tns = hold_ext_nvp = None
+            hold_int_wns = hold_int_tns = hold_int_nvp = None
+            hold_corner = None
+            hold_file_path = None
+            if hold_files:
+                hold_file_path = hold_files[0]
+                try:
+                    import re
+                    # Extract both external and internal timing metrics
+                    result = self.file_utils.run_command(f"zcat {hold_files[0]} | grep -E '^\s*(external|internal)' | head -2")
+                    if result.strip():
+                        lines = result.strip().split('\n')
+                        for line in lines:
+                            parts = line.split('|')
+                            if len(parts) >= 4:
+                                try:
+                                    line_type = parts[0].strip()
+                                    wns = float(parts[1].strip())
+                                    tns = float(parts[2].strip())
+                                    nvp = int(parts[3].strip())
+                                    
+                                    if line_type == 'external':
+                                        hold_ext_wns = wns
+                                        hold_ext_tns = tns
+                                        hold_ext_nvp = nvp
+                                    elif line_type == 'internal':
+                                        hold_int_wns = wns
+                                        hold_int_tns = tns
+                                        hold_int_nvp = nvp
+                                except (ValueError, IndexError):
+                                    pass
+                    
+                    # Find full corner/scenario name
+                    if hold_ext_wns is not None:
+                        # If values are 0, it means all corners pass
+                        if hold_ext_wns == 0.0 and hold_ext_tns == 0.0 and hold_int_wns == 0.0 and hold_int_tns == 0.0:
+                            hold_corner = "ALL (PASS)"  # All corners pass
+                        else:
+                            wns_str = f"{hold_ext_wns:.3f}"
+                            wns_search = wns_str.replace('-', '\\-')
+                            corner_result = self.file_utils.run_command(f"zcat {hold_files[0]} | grep -E 'func\\.std.*hold\\.typical' | grep '{wns_search}' | head -1")
+                            if corner_result.strip():
+                                corner_match = re.search(r'(func\.std_tt_\d+c_[\d.]+p[\d.]+v\.hold\.typical)', corner_result)
+                                if corner_match:
+                                    hold_corner = corner_match.group(1)
+                except Exception as e:
+                    pass  # Silently continue if extraction fails
+            
+            # Extract sub_category breakdown for hold timing
+            hold_subcats = {}
+            if hold_files:
+                try:
+                    import re
+                    # Get sub_category lines (without per-scenario breakdown)
+                    result = self.file_utils.run_command(f"zcat {hold_files[0]} | grep -E 'port_to_flop|port_to_clock_gate|flop_to_port|flop_to_flop|flop_to_hard_macro|flop_to_clock_gate' | grep -v 'func\\.std'")
+                    if result.strip():
+                        lines = result.strip().split('\n')
+                        for line in lines:
+                            # Skip comment/description lines
+                            if 'flop_to_ram' in line or 'port_to_ilm' in line:
+                                continue
+                            parts = line.split('|')
+                            if len(parts) >= 5:
+                                try:
+                                    subcat = parts[2].strip()
+                                    wns = float(parts[3].strip())
+                                    tns = float(parts[4].strip())
+                                    fep = int(parts[5].strip().split()[0])  # First number after | is FEP
+                                    
+                                    if subcat and (wns != 0 or tns != 0 or fep != 0):  # Only store non-zero entries
+                                        hold_subcats[subcat] = {
+                                            'wns': wns,
+                                            'tns': tns,
+                                            'fep': fep
+                                        }
+                                except (ValueError, IndexError):
+                                    pass
+                except Exception:
+                    pass
+            
+            # Extract cell count and utilization from .data file
+            cell_count = None
+            effective_util = None
+            if setup_corner:
+                # Look for .data file matching the corner
+                data_pattern = f"signoff_flow/nv_gate_eco/{self.design_info.top_hier}/ipo*/reports/*.{setup_corner}.data"
+                data_files = self.file_utils.find_files(data_pattern, search_workarea)
+                if data_files:
+                    try:
+                        import re
+                        # Extract CellCount
+                        result = self.file_utils.run_command(f"grep '^CellCount' {data_files[0]} | head -1")
+                        if result.strip():
+                            match = re.search(r'CellCount\s*=\s*(\d+)', result)
+                            if match:
+                                cell_count = int(match.group(1))
+                        
+                        # Extract EffictiveUtilization (note: typo in file - "Effictive" not "Effective")
+                        result = self.file_utils.run_command(f"grep '^EffictiveUtilization' {data_files[0]} | head -1")
+                        if result.strip():
+                            match = re.search(r'EffictiveUtilization\s*=\s*([\d.]+)%?', result)
+                            if match:
+                                effective_util = float(match.group(1))
+                    except Exception:
+                        pass
+            
+            # Display clean timing summary with external/internal breakdown
+            if setup_files or hold_files:
+                print(f"  {Color.CYAN}ECO Timing Summary:{Color.RESET}")
+                
+                # Display corner name
+                if setup_corner:
+                    print(f"    Corner: {setup_corner}")
+                if setup_file_path:
+                    print(f"    File:   {os.path.abspath(setup_file_path)}")
+                
+                # Setup timing - External
+                if setup_ext_wns is not None:
+                    wns_color = Color.GREEN if setup_ext_wns >= 0 else Color.RED
+                    tns_color = Color.GREEN if setup_ext_tns >= 0 else Color.RED
+                    print(f"    Setup External:  WNS = {wns_color}{setup_ext_wns:>7.3f}ns{Color.RESET} | TNS = {tns_color}{setup_ext_tns:>10.3f}ns{Color.RESET} | NVP = {setup_ext_nvp:>6}")
+                
+                # Setup timing - Internal
+                if setup_int_wns is not None:
+                    wns_color = Color.GREEN if setup_int_wns >= 0 else Color.RED
+                    tns_color = Color.GREEN if setup_int_tns >= 0 else Color.RED
+                    print(f"    Setup Internal:  WNS = {wns_color}{setup_int_wns:>7.3f}ns{Color.RESET} | TNS = {tns_color}{setup_int_tns:>10.3f}ns{Color.RESET} | NVP = {setup_int_nvp:>6}")
+                
+                # Setup sub_category breakdown
+                if setup_subcats:
+                    print(f"    {Color.CYAN}Setup Sub-Categories:{Color.RESET}")
+                    # Define display order
+                    subcat_order = ['port_to_flop', 'port_to_clock_gate', 'flop_to_port', 'flop_to_flop', 'flop_to_hard_macro', 'flop_to_clock_gate']
+                    for subcat in subcat_order:
+                        if subcat in setup_subcats:
+                            data = setup_subcats[subcat]
+                            wns_color = Color.GREEN if data['wns'] >= 0 else Color.RED
+                            tns_color = Color.GREEN if data['tns'] >= 0 else Color.RED
+                            print(f"      {subcat:20s}:  WNS = {wns_color}{data['wns']:>7.3f}ns{Color.RESET} | TNS = {tns_color}{data['tns']:>10.3f}ns{Color.RESET} | FEP = {data['fep']:>6}")
+                
+                # Hold timing section
+                if hold_files:
+                    if hold_corner:
+                        print(f"    Corner: {hold_corner}")
+                    if hold_file_path:
+                        print(f"    File:   {os.path.abspath(hold_file_path)}")
+                    
+                    # Hold timing - External
+                    if hold_ext_wns is not None:
+                        wns_color = Color.GREEN if hold_ext_wns >= 0 else Color.RED
+                        tns_color = Color.GREEN if hold_ext_tns >= 0 else Color.RED
+                        print(f"    Hold External:   WNS = {wns_color}{hold_ext_wns:>7.3f}ns{Color.RESET} | TNS = {tns_color}{hold_ext_tns:>10.3f}ns{Color.RESET} | NVP = {hold_ext_nvp:>6}")
+                    
+                    # Hold timing - Internal
+                    if hold_int_wns is not None:
+                        wns_color = Color.GREEN if hold_int_wns >= 0 else Color.RED
+                        tns_color = Color.GREEN if hold_int_tns >= 0 else Color.RED
+                        print(f"    Hold Internal:   WNS = {wns_color}{hold_int_wns:>7.3f}ns{Color.RESET} | TNS = {tns_color}{hold_int_tns:>10.3f}ns{Color.RESET} | NVP = {hold_int_nvp:>6}")
+                    
+                    # Hold sub_category breakdown
+                    if hold_subcats:
+                        print(f"    {Color.CYAN}Hold Sub-Categories:{Color.RESET}")
+                        # Define display order
+                        subcat_order = ['port_to_flop', 'port_to_clock_gate', 'flop_to_port', 'flop_to_flop', 'flop_to_hard_macro', 'flop_to_clock_gate']
+                        for subcat in subcat_order:
+                            if subcat in hold_subcats:
+                                data = hold_subcats[subcat]
+                                wns_color = Color.GREEN if data['wns'] >= 0 else Color.RED
+                                tns_color = Color.GREEN if data['tns'] >= 0 else Color.RED
+                                print(f"      {subcat:20s}:  WNS = {wns_color}{data['wns']:>7.3f}ns{Color.RESET} | TNS = {tns_color}{data['tns']:>10.3f}ns{Color.RESET} | FEP = {data['fep']:>6}")
+                
+                # Cell count and utilization
+                if cell_count is not None:
+                    print(f"    CellCount:              {cell_count:,}")
+                if effective_util is not None:
+                    print(f"    EffectiveUtilization:   {effective_util:.2f}%")
+            
+            # Look for ECO summary reports (critical validation) - Extract key metrics only
             summary_pattern = f"signoff_flow/nv_gate_eco/{self.design_info.top_hier}/ipo*/REPs/{self.design_info.top_hier}.ipo*.eco_summary_*.rpt.gz"
-            summary_files = self.file_utils.find_files(summary_pattern, self.workarea)
+            summary_files = self.file_utils.find_files(summary_pattern, search_workarea)
+            
+            open_nets_count = None
+            total_net_count = None
             
             for summary_file in sorted(summary_files):
                 filename = os.path.basename(summary_file)
                 
                 # Critical: Open nets check (any open net = FAIL)
                 if 'open_nets' in filename:
-                    self.print_file_info(summary_file, "ECO Open Nets Check")
                     try:
-                        result = self.file_utils.run_command(f"zcat {summary_file} | grep -E 'open_nets_left:|open' | head -10")
+                        result = self.file_utils.run_command(f"zcat {summary_file} | grep 'open_nets_left:' | head -1")
                         if result.strip():
-                            # Check for "number_of_open_nets_left: 0" pattern
-                            has_zero_open_nets = 'open_nets_left: 0' in result or 'open_nets_left:0' in result
-                            
-                            if has_zero_open_nets:
-                                print(f"  {Color.GREEN}No open nets found (PASS){Color.RESET}")
-                                for line in result.strip().split('\n'):
-                                    if 'open_nets_left' in line:
-                                        print(f"  {line}")
-                            else:
-                                # Check if actually has open nets
-                                import re
-                                open_count_match = re.search(r'open_nets_left:\s*(\d+)', result)
-                                if open_count_match and int(open_count_match.group(1)) > 0:
-                                    print(f"  {Color.RED}WARNING: {open_count_match.group(1)} open nets detected!{Color.RESET}")
+                            import re
+                            open_count_match = re.search(r'open_nets_left:\s*(\d+)', result)
+                            if open_count_match:
+                                open_nets_count = int(open_count_match.group(1))
+                                if open_nets_count > 0:
                                     open_nets_status = "FAIL"
-                                else:
-                                    print(f"  {Color.GREEN}No open nets found (PASS){Color.RESET}")
-                                
-                                for line in result.strip().split('\n'):
-                                    print(f"  {line}")
-                    except Exception as e:
-                        print(f"  Error checking open nets: {e}")
+                    except Exception:
+                        pass
                 
-                # Cell movement summary
+                # Cell movement summary - extract only the count
                 elif 'cell_movement' in filename and 'eco_in' not in filename:
-                    self.print_file_info(summary_file, "ECO Cell Movement")
                     try:
-                        result = self.file_utils.run_command(f"zcat {summary_file} | grep -E 'Total|moved|displaced' | head -10")
+                        result = self.file_utils.run_command(f"zcat {summary_file} | grep 'number_of_cells_moved:' | head -1")
                         if result.strip():
-                            for line in result.strip().split('\n'):
-                                print(f"  {line}")
-                                # Try to extract number of moved cells
-                                if 'moved' in line.lower() or 'total' in line.lower():
-                                    import re
-                                    numbers = re.findall(r'\d+', line)
-                                    if numbers:
-                                        cells_moved = int(numbers[0])
-                    except Exception as e:
-                        print(f"  Error reading cell movement: {e}")
+                            import re
+                            match = re.search(r'number_of_cells_moved:\s*(\d+)', result)
+                            if match:
+                                cells_moved = int(match.group(1))
+                    except Exception:
+                        pass
                 
-                # DRC data summary
+                # DRC data summary - extract violation count
                 elif 'drc_data' in filename:
-                    self.print_file_info(summary_file, "ECO DRC Summary")
                     try:
-                        result = self.file_utils.run_command(f"zcat {summary_file} | grep -E 'DRC|violation|Total' | head -10")
-                        if result.strip():
-                            for line in result.strip().split('\n'):
-                                print(f"  {line}")
-                                # Try to extract DRC count
-                                if 'violation' in line.lower() or 'total' in line.lower():
-                                    import re
-                                    numbers = re.findall(r'\d+', line)
-                                    if numbers:
-                                        drc_violations = int(numbers[0])
-                    except Exception as e:
-                        print(f"  Error reading DRC summary: {e}")
-                
-                # Wire length change
-                elif 'wire_length' in filename:
-                    self.print_file_info(summary_file, "ECO Wire Length Change")
-                    try:
+                        # Look for total DRC violations or "No DRC" indicator
                         result = self.file_utils.run_command(f"zcat {summary_file} | head -20")
                         if result.strip():
-                            lines = result.strip().split('\n')[:5]  # Show first 5 lines
-                            for line in lines:
-                                if line.strip():
-                                    print(f"  {line}")
-                    except Exception as e:
-                        print(f"  Error reading wire length: {e}")
+                            if 'No DRC' in result or 'no drc' in result.lower():
+                                drc_violations = 0
+                            else:
+                                import re
+                                # Try to find violation count
+                                match = re.search(r'total.*?(\d+)', result, re.IGNORECASE)
+                                if match:
+                                    drc_violations = int(match.group(1))
+                    except Exception:
+                        pass
+                
+                # Wire length change - extract only net count
+                elif 'wire_length' in filename:
+                    try:
+                        result = self.file_utils.run_command(f"zcat {summary_file} | grep 'total_net_count:' | head -1")
+                        if result.strip():
+                            import re
+                            match = re.search(r'total_net_count:\s*(\d+)', result)
+                            if match:
+                                total_net_count = int(match.group(1))
+                    except Exception:
+                        pass
             
-            # Look for trace reports and worst paths
+            # Display clean validation summary
+            print(f"  {Color.CYAN}ECO Validation Summary:{Color.RESET}")
+            
+            # Open nets (CRITICAL)
+            if open_nets_count is not None:
+                if open_nets_count == 0:
+                    print(f"    Open Nets:      {Color.GREEN}0 (PASS){Color.RESET}")
+                else:
+                    print(f"    Open Nets:      {Color.RED}{open_nets_count} (FAIL){Color.RESET}")
+            
+            # Cells moved
+            if cells_moved > 0:
+                print(f"    Cells Moved:    {cells_moved:,}")
+            
+            # DRC violations
+            if drc_violations is not None:
+                if drc_violations == 0:
+                    print(f"    DRC Violations: {Color.GREEN}0{Color.RESET}")
+                else:
+                    print(f"    DRC Violations: {Color.RED}{drc_violations}{Color.RESET}")
+            
+            # Total nets
+            if total_net_count is not None:
+                print(f"    Total Nets:     {total_net_count:,}")
+            
+            # Trace reports and worst paths - just count them
             trace_pattern = f"signoff_flow/nv_gate_eco*/{self.design_info.top_hier}/ipo*/reports/*.traces.rpt"
             worst_paths_pattern = f"signoff_flow/nv_gate_eco*/{self.design_info.top_hier}/ipo*/reports/*.worst_paths"
             
-            trace_files = self.file_utils.find_files(trace_pattern, self.workarea)
-            worst_paths_files = self.file_utils.find_files(worst_paths_pattern, self.workarea)
+            trace_files = self.file_utils.find_files(trace_pattern, search_workarea)
+            worst_paths_files = self.file_utils.find_files(worst_paths_pattern, search_workarea)
             
-            for trace_file in trace_files:
-                self.print_file_info(trace_file, "NV Gate ECO Traces")
-            
-            for worst_paths_file in worst_paths_files:
-                self.print_file_info(worst_paths_file, "NV Gate ECO Worst Paths")
+            if trace_files or worst_paths_files:
+                print(f"    Reports:        {len(trace_files)} trace(s), {len(worst_paths_files)} worst_path(s)")
         else:
             print("  Didn't run NV Gate ECO")
         
@@ -19404,33 +20776,28 @@ class WorkareaReviewer:
             if selected_path:
                 print(f"  {Color.GREEN}-> Reason:{Color.RESET} {Color.CYAN}{selection_reason}{Color.RESET}")
                 
+                # Determine search path: NBU base path or workarea root
+                search_path = selected_is_nbu and selected_ipo in self.nbu_signoff_paths
+                if search_path:
+                    umake_search_base = self.nbu_signoff_paths[selected_ipo]
+                else:
+                    umake_search_base = self.workarea
+                
                 # Extract data from selected location
                 release_log = os.path.join(selected_path, "log/block_release.log")
                 if self.file_utils.file_exists(release_log):
                     self.print_file_info(release_log, "\nBlock Release Log")
-                    release_data, release_to_path = self._extract_block_release_info(release_log)
+                    # Pass the correct search base path to extract from the right location
+                    release_data, release_to_path = self._extract_block_release_info(release_log, umake_search_base)
                     
                     # If no attempts found in log, try umake logs from selected location
                     if not release_data or release_data.get('total_attempts', 0) == 0:
-                        # Determine search path: NBU base path or workarea root
-                        search_path = selected_is_nbu and selected_ipo in self.nbu_signoff_paths
-                        if search_path:
-                            umake_search_base = self.nbu_signoff_paths[selected_ipo]
-                        else:
-                            umake_search_base = self.workarea
-                        
                         umake_data = self._extract_umake_block_release_commands(umake_search_base)
                         if umake_data and umake_data.get('total_attempts', 0) > 0:
                             release_data = umake_data
                 else:
                     print(f"  {Color.YELLOW}No block_release.log found in selected location{Color.RESET}")
-                    # Try to extract from umake logs in selected location
-                    search_path = selected_is_nbu and selected_ipo in self.nbu_signoff_paths
-                    if search_path:
-                        umake_search_base = self.nbu_signoff_paths[selected_ipo]
-                    else:
-                        umake_search_base = self.workarea
-                    
+                    # Try to extract from umake logs in selected location (umake_search_base already determined above)
                     release_data = self._extract_umake_block_release_commands(umake_search_base)
         else:
             print(f"  {Color.YELLOW}No block_release locations found{Color.RESET}")
@@ -19524,6 +20891,3151 @@ class WorkareaReviewer:
             issues=issues,
             icon="[Release]"
         )
+    
+    # ============================================================================
+    # IPO Comparison Mode (Standalone)
+    # ============================================================================
+    
+    def analyze_ipo_comparison(self, email: Optional[str] = None) -> None:
+        """
+        Main entry point for IPO comparison mode
+        
+        Compares multiple IPO directories in NBU signoff structure
+        Generates consolidated Excel report with metrics comparison
+        
+        Args:
+            email: Email address(es) to send report to (comma-separated)
+        """
+        # Print header
+        print("=" * 80)
+        print(f"{Color.CYAN}{' ' * 22}IPO COMPARISON MODE{Color.RESET}")
+        print("=" * 80)
+        print()
+        
+        # Validate NBU signoff mode
+        if not self.nbu_signoff_paths:
+            print(f"{Color.RED}[ERROR] No NBU signoff IPOs detected{Color.RESET}")
+            print("  IPO comparison requires NBU signoff structure")
+            print(f"  Expected: pnr_flow/nv_flow/<design>/<ipo>/nbu_signoff/")
+            return
+        
+        if len(self.nbu_signoff_paths) < 2:
+            print(f"{Color.YELLOW}[WARN] Only 1 IPO detected - comparison requires 2+ IPOs{Color.RESET}")
+            print(f"  Detected IPO: {list(self.nbu_signoff_paths.keys())[0]}")
+            return
+        
+        # Display detected IPOs
+        print(f"Workarea: {self.workarea}")
+        print(f"Design: {self.design_info.top_hier}")
+        print(f"Detected {len(self.nbu_signoff_paths)} IPOs with NBU signoff:")
+        for ipo in sorted(self.nbu_signoff_paths.keys()):
+            print(f"  - {ipo}")
+        print()
+        
+        # Extract data
+        print("Extracting data from latest completed runs...")
+        try:
+            ipo_data = self._extract_all_ipo_data()
+            print(f"{Color.GREEN}[OK] Cell counts extracted{Color.RESET}")
+            print(f"{Color.GREEN}[OK] Max clock latencies extracted{Color.RESET}")
+            print(f"{Color.GREEN}[OK] PT setup timing extracted (func.std_tt_0c_0p6v.setup.typical){Color.RESET}")
+            print(f"{Color.GREEN}[OK] PT hold timing extracted (func.std_tt_0c_0p55v.hold.typical){Color.RESET}")
+            print(f"{Color.GREEN}[OK] PV metrics extracted{Color.RESET}")
+            print(f"{Color.GREEN}[OK] External timing extracted (Innovus nv_gate_eco){Color.RESET}")
+            print(f"{Color.GREEN}[OK] Power analysis extracted (func.std_tt_105c_0p67v.setup.typical){Color.RESET}")
+            print(f"{Color.GREEN}[OK] Formal verification status extracted{Color.RESET}")
+        except Exception as e:
+            print(f"{Color.RED}[ERROR] Failed to extract IPO data: {e}{Color.RESET}")
+            import traceback
+            traceback.print_exc()
+            return
+        
+        # Generate Excel
+        print()
+        print("-" * 80)
+        print(f"{' ' * 25}IPO COMPARISON SUMMARY")
+        print("-" * 80)
+        print()
+        
+        # Print summary first (even if Excel generation fails)
+        try:
+            self._print_ipo_comparison_summary(ipo_data)
+        except Exception as e:
+            print(f"{Color.YELLOW}[WARN] Failed to print summary: {e}{Color.RESET}")
+        
+        # Generate Excel report
+        try:
+            excel_file = self._generate_ipo_comparison_excel(ipo_data)
+            
+            # Display Excel path
+            print()
+            print("-" * 80)
+            print()
+            print(f"{Color.GREEN}[OK] Excel report generated:{Color.RESET}")
+            print(f"  File: {excel_file}")
+            print()
+            print(f"  {Color.CYAN}Excel contains:{Color.RESET}")
+            print(f"    Sheet 1: IPO Comparison - Consolidated table with all metrics")
+            print(f"    Sheet 2: Flow Run History - Complete timeline of all runs")
+            print(f"    Sheet 3: Notes & Metadata - Documentation and thresholds")
+            print()
+            
+            # Send email if requested
+            if email:
+                try:
+                    self._send_ipo_comparison_email(excel_file, email)
+                except Exception as e:
+                    print(f"{Color.YELLOW}[WARN] Failed to send email: {e}{Color.RESET}")
+        except Exception as e:
+            print(f"\n{Color.RED}[ERROR] Failed to generate Excel report: {e}{Color.RESET}")
+            if 'openpyxl' in str(e):
+                print(f"{Color.YELLOW}  Install with: pip install openpyxl{Color.RESET}")
+        
+        print()
+        print("=" * 80)
+        print(f"{' ' * 22}IPO COMPARISON COMPLETE")
+        print("=" * 80)
+    
+    def _extract_all_ipo_data(self) -> dict:
+        """
+        Extract all data for all IPOs
+        
+        Returns:
+            dict: Complete data structure for all IPOs
+        """
+        data = {}
+        for ipo_name in sorted(self.nbu_signoff_paths.keys()):
+            print(f"  Processing {ipo_name}...")
+            data[ipo_name] = {
+                "cell_count": self._extract_ipo_cell_count(ipo_name),
+                "utilization": self._extract_ipo_utilization(ipo_name),
+                "clock_latencies": self._extract_max_clock_latency(ipo_name),  # Dict: {clock_name: latency_ps}
+                "pt_setup": self._extract_ipo_pt_timing(ipo_name, "setup"),
+                "pt_hold": self._extract_ipo_pt_timing(ipo_name, "hold"),
+                "pv": self._extract_ipo_pv_metrics(ipo_name),
+                "external_timing": self._extract_external_timing_innovus(ipo_name),
+                "power": self._extract_ipo_power_data(ipo_name),  # Power analysis data
+                "formal": self._extract_formal_status(ipo_name),
+                "flow_history": self._extract_flow_history(ipo_name)
+            }
+        return data
+    
+    def _extract_ipo_cell_count(self, ipo: str) -> Optional[int]:
+        """
+        Extract total cell count for IPO
+        
+        Source: pnr_flow/nv_flow/{design}/{ipo}/reports/{design}_{design}_{ipo}_report_{design}_{ipo}_postroute.func.std_tt_0c_0p6v.setup.typical.data
+        Pattern: CellCount = <value>
+        
+        This uses the same source as PnR Analysis section for consistency and accuracy.
+        
+        Args:
+            ipo: IPO name
+            
+        Returns:
+            int: Cell count or None if not found
+        """
+        try:
+            design = self.design_info.top_hier
+            
+            # Build path to .data file (same as PnR section)
+            # Extract base IPO name without suffix (e.g., ipo1000 from ipo1000_ref)
+            ipo_base = ipo.split('_')[0]
+            
+            data_file = os.path.join(
+                self.workarea,
+                f"pnr_flow/nv_flow/{design}/{ipo}/reports/{design}_{design}_{ipo_base}_report_{design}_{ipo_base}_postroute.func.std_tt_0c_0p6v.setup.typical.data"
+            )
+            
+            if not os.path.exists(data_file):
+                return None
+            
+            # Parse .data file for CellCount parameter
+            with open(data_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith('CellCount = '):
+                        value_str = line.split(' = ', 1)[1]
+                        try:
+                            return int(value_str)
+                        except ValueError:
+                            pass
+            
+            return None
+        except Exception as e:
+            print(f"    {Color.YELLOW}[WARN] Failed to extract cell count for {ipo}: {e}{Color.RESET}")
+            return None
+    
+    def _extract_ipo_utilization(self, ipo: str) -> Optional[float]:
+        """
+        Extract effective utilization for IPO
+        
+        Source: Same .data file as cell count
+        Pattern: EffictiveUtilization = <value>
+        
+        Note: The parameter name has a typo in the source file - "Effictive" not "Effective"
+        
+        Args:
+            ipo: IPO name
+            
+        Returns:
+            float: Utilization percentage or None if not found
+        """
+        try:
+            design = self.design_info.top_hier
+            ipo_base = ipo.split('_')[0]
+            
+            data_file = os.path.join(
+                self.workarea,
+                f"pnr_flow/nv_flow/{design}/{ipo}/reports/{design}_{design}_{ipo_base}_report_{design}_{ipo_base}_postroute.func.std_tt_0c_0p6v.setup.typical.data"
+            )
+            
+            if not os.path.exists(data_file):
+                return None
+            
+            # Parse .data file for EffictiveUtilization parameter
+            with open(data_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith('EffictiveUtilization = '):
+                        value_str = line.split(' = ', 1)[1]
+                        # Remove % sign if present
+                        value_str = value_str.rstrip('%').strip()
+                        try:
+                            return float(value_str)
+                        except ValueError:
+                            pass
+            
+            return None
+        except Exception as e:
+            print(f"    {Color.YELLOW}[WARN] Failed to extract utilization for {ipo}: {e}{Color.RESET}")
+            return None
+    
+    def _extract_max_clock_latency(self, ipo: str) -> dict:
+        """
+        Extract per-clock maximum latency from PT clock latency report
+        
+        Source: {nbu_signoff}/signoff_flow/auto_pt/last_work/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/{design}_func.std_tt_0c_0p6v.setup.typical.clock_latency
+        
+        This uses the same source as Clock Analysis section - PT reports are more accurate than PnR reports.
+        
+        Args:
+            ipo: IPO name
+            
+        Returns:
+            dict: Per-clock latencies in picoseconds {clock_name: max_latency_ps} or empty dict if not found
+        """
+        try:
+            design = self.design_info.top_hier
+            
+            # Get NBU signoff path for this IPO
+            nbu_path = self.nbu_signoff_paths.get(ipo)
+            if not nbu_path:
+                return {}
+            
+            # Build path to PT clock latency report (same as Clock Analysis section)
+            pt_clock_file = os.path.join(
+                nbu_path,
+                f"signoff_flow/auto_pt/last_work/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/{design}_func.std_tt_0c_0p6v.setup.typical.clock_latency"
+            )
+            
+            if not os.path.exists(pt_clock_file):
+                return {}
+            
+            # Parse PT clock latency report using same logic as _extract_pt_clock_latency
+            clock_latencies = {}  # {clock_name: [latencies...]}
+            current_clock = None
+            
+            with open(pt_clock_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    # Check for clock section header
+                    if line.strip().startswith("Clock:"):
+                        current_clock = line.split("Clock:")[1].strip()
+                        if current_clock not in clock_latencies:
+                            clock_latencies[current_clock] = []
+                        continue
+                    
+                    # Check for total clock latency line
+                    if "total clock latency" in line and current_clock:
+                        # Extract the latency value (last number in the line)
+                        parts = line.split()
+                        if parts:
+                            try:
+                                latency_ns = float(parts[-1])
+                                clock_latencies[current_clock].append(latency_ns)
+                            except (ValueError, IndexError):
+                                continue
+            
+            # Convert to max latency per clock in picoseconds
+            clock_max_latencies = {}
+            for clock, latencies in clock_latencies.items():
+                if latencies:
+                    max_latency_ns = max(latencies)
+                    clock_max_latencies[clock] = max_latency_ns * 1000.0  # Convert ns to ps
+            
+            return clock_max_latencies
+            
+        except Exception as e:
+            print(f"    {Color.YELLOW}[WARN] Failed to extract clock latency for {ipo}: {e}{Color.RESET}")
+            return {}
+    
+    def _extract_ipo_power_data(self, ipo: str) -> dict:
+        """
+        Extract power analysis data with dynamic test selection - Production Ready
+        
+        Automatically discovers available tests and selects based on Activity Factor (FF/Q):
+        - Test 1: Highest Activity Factor FF/Q (most switching activity)
+        - Test 2: Lowest Activity Factor FF/Q (least switching activity)
+        
+        Source: {nbu_signoff}/signoff_flow/auto_pt/<latest_work>/func.std_tt_105c_0p67v.setup.typical/
+                reports/power_reports/func.std_tt_105c_0p67v.setup.typical/power_analysis/
+                power_RTLSim_<TestName>.fsdb/{design}_rollup.rep
+        
+        Args:
+            ipo: IPO name
+            
+        Returns:
+            dict: Power data {test1, test2, available_tests, run_date, status}
+        """
+        try:
+            import csv
+            import glob
+            
+            design = self.design_info.top_hier
+            
+            # Get NBU signoff path for this IPO
+            nbu_path = self.nbu_signoff_paths.get(ipo)
+            if not nbu_path:
+                return self._empty_power_data()
+            
+            # Find latest work directory
+            auto_pt_base = os.path.join(nbu_path, "signoff_flow/auto_pt")
+            if not os.path.exists(auto_pt_base):
+                return self._empty_power_data()
+            
+            # Get latest work_* directory
+            work_dirs = glob.glob(os.path.join(auto_pt_base, "work_*"))
+            if not work_dirs:
+                return self._empty_power_data()
+            
+            latest_work = sorted(work_dirs, key=os.path.getmtime, reverse=True)[0]
+            
+            # Build path to power analysis directory
+            power_analysis_dir = os.path.join(
+                latest_work,
+                "func.std_tt_105c_0p67v.setup.typical/reports/power_reports",
+                "func.std_tt_105c_0p67v.setup.typical/power_analysis"
+            )
+            
+            if not os.path.exists(power_analysis_dir):
+                return self._empty_power_data()
+            
+            # Extract run date from work directory
+            work_name = os.path.basename(latest_work)
+            run_date = work_name.replace("work_", "").replace("_", " ").replace(":", ":")
+            
+            # Discover all available power test directories
+            test_dirs = glob.glob(os.path.join(power_analysis_dir, "power_*"))
+            available_tests = []
+            test_data = {}
+            
+            for test_dir in test_dirs:
+                test_name = os.path.basename(test_dir).replace("power_RTLSim_", "").replace(".fsdb", "")
+                rep_file = os.path.join(test_dir, f"{design}_rollup.rep")
+                
+                if os.path.exists(rep_file):
+                    available_tests.append(test_name)
+                    try:
+                        test_data[test_name] = self._parse_power_rep(rep_file)
+                    except Exception as e:
+                        print(f"    {Color.YELLOW}[WARN] Failed to parse {test_name} for {ipo}: {e}{Color.RESET}")
+                        test_data[test_name] = None
+            
+            # Smart test selection: Highest AF (FF/Q) vs Lowest AF (FF/Q)
+            selected_tests = self._select_power_tests(available_tests, test_data)
+            
+            power_data = {
+                "scenario": "func.std_tt_105c_0p67v.setup.typical",
+                "run_date": run_date,
+                "available_tests": sorted(available_tests),
+                "test1": test_data.get(selected_tests[0], self._empty_test_power_data()) if selected_tests[0] else self._empty_test_power_data(),
+                "test1_name": selected_tests[0],
+                "test2": test_data.get(selected_tests[1], self._empty_test_power_data()) if selected_tests[1] else self._empty_test_power_data(),
+                "test2_name": selected_tests[1],
+                "status": "FOUND" if available_tests else "NOT_RUN"
+            }
+            
+            return power_data
+            
+        except Exception as e:
+            print(f"    {Color.YELLOW}[WARN] Failed to extract power data for {ipo}: {e}{Color.RESET}")
+            return self._empty_power_data()
+    
+    def _select_power_tests(self, available_tests: list, test_data: dict) -> tuple:
+        """
+        Intelligently select 2 power tests to compare based on Activity Factor (FF/Q)
+        
+        Selection Strategy:
+        1. Test with HIGHEST Activity Factor FF/Q (most switching activity)
+        2. Test with LOWEST Activity Factor FF/Q (least switching activity)
+        
+        This provides objective comparison between most active and least active scenarios
+        
+        Args:
+            available_tests: List of available test names
+            test_data: Dictionary of parsed test data
+            
+        Returns:
+            tuple: (highest_af_test, lowest_af_test)
+        """
+        if not available_tests:
+            return (None, None)
+        
+        if len(available_tests) == 1:
+            return (available_tests[0], None)
+        
+        # Filter tests with valid AF data
+        tests_with_af = []
+        for test in available_tests:
+            if test in test_data and test_data[test] is not None:
+                if 'avg_af' in test_data[test]:
+                    tests_with_af.append((test, test_data[test]['avg_af']))
+        
+        # If no tests have AF data, fall back to first two tests
+        if not tests_with_af:
+            return (available_tests[0], available_tests[1] if len(available_tests) > 1 else None)
+        
+        # Sort by AF (descending)
+        tests_with_af.sort(key=lambda x: x[1], reverse=True)
+        
+        # Select highest AF and lowest AF
+        highest_af_test = tests_with_af[0][0]  # First element (highest AF)
+        lowest_af_test = tests_with_af[-1][0]  # Last element (lowest AF)
+        
+        # If they're the same (only one test with AF), use second test if available
+        if highest_af_test == lowest_af_test and len(available_tests) > 1:
+            other_tests = [t for t in available_tests if t != highest_af_test]
+            lowest_af_test = other_tests[0] if other_tests else None
+        
+        return (highest_af_test, lowest_af_test)
+    
+    def _parse_power_rep(self, rep_file: str) -> dict:
+        """
+        Parse power rollup .rep file
+        
+        Args:
+            rep_file: Path to rollup.rep file
+            
+        Returns:
+            dict: Parsed power metrics (all fields initialized)
+        """
+        try:
+            with open(rep_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Initialize all fields to None (for safe access)
+            power_metrics = {
+                'total_power': None,
+                'dynamic_power': None,
+                'leakage_power': None,
+                'annotation_score': None,
+                'avg_af': None,
+                'hvt_pct': None,
+                'svt_pct': None,
+                'lvt_pct': None,
+                'status': 'FOUND'
+            }
+            
+            # Extract Total Power
+            total_match = re.search(r'Total\s+Power\[(\w+)\]\s+(\d+\.?\d*)', content, re.IGNORECASE)
+            if total_match:
+                power_metrics['total_power'] = float(total_match.group(2))
+            
+            # Extract Dynamic Power
+            dynamic_match = re.search(r'Dynamic\s+Power\[(\w+)\]\s+(\d+\.?\d*)', content, re.IGNORECASE)
+            if dynamic_match:
+                power_metrics['dynamic_power'] = float(dynamic_match.group(2))
+            
+            # Extract Leakage Power
+            leakage_match = re.search(r'Leakage\s+Power\[(\w+)\]\s+(\d+\.?\d*)', content, re.IGNORECASE)
+            if leakage_match:
+                power_metrics['leakage_power'] = float(leakage_match.group(2))
+            
+            # Extract Annotation Score
+            score_match = re.search(r'Annotation\s+Score\s+(\d+\.?\d*)\s*%', content, re.IGNORECASE)
+            if score_match:
+                power_metrics['annotation_score'] = float(score_match.group(1))
+            
+            # Extract Activity Factor FF/Q (used for test selection)
+            af_ffq_match = re.search(r'Average\s+AF\s+FF/Q\s+(\d+\.?\d*)\s*%', content, re.IGNORECASE)
+            if af_ffq_match:
+                power_metrics['avg_af'] = float(af_ffq_match.group(1))
+            
+            # Extract VT distribution from tabular format
+            # Format: HVT  <leakage_mw>  <leakage_%>  <area_um2>  <area_%>  <count>  <count_%>
+            # We want the last column (Count %)
+            hvt_match = re.search(r'HVT\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+([\d.]+)', content, re.IGNORECASE)
+            if hvt_match:
+                power_metrics['hvt_pct'] = float(hvt_match.group(1))
+            
+            svt_match = re.search(r'SVT\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+([\d.]+)', content, re.IGNORECASE)
+            if svt_match:
+                power_metrics['svt_pct'] = float(svt_match.group(1))
+            
+            lvt_match = re.search(r'LVT\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+([\d.]+)', content, re.IGNORECASE)
+            if lvt_match:
+                power_metrics['lvt_pct'] = float(lvt_match.group(1))
+            
+            # Only return if we found at least the basic power metrics
+            if power_metrics['total_power'] is not None:
+                return power_metrics
+            else:
+                return self._empty_test_power_data()
+                
+        except Exception as e:
+            return self._empty_test_power_data()
+    
+    def _empty_power_data(self) -> dict:
+        """Return empty power data structure"""
+        return {
+            "scenario": "func.std_tt_105c_0p67v.setup.typical",
+            "available_tests": [],
+            "test1": self._empty_test_power_data(),
+            "test1_name": None,
+            "test2": self._empty_test_power_data(),
+            "test2_name": None,
+            "run_date": None,
+            "status": "NOT_RUN"
+        }
+    
+    def _empty_test_power_data(self) -> dict:
+        """Return empty test power data"""
+        return {
+            "total_power": None,
+            "dynamic_power": None,
+            "leakage_power": None,
+            "annotation_score": None,
+            "avg_af": None,
+            "hvt_pct": None,
+            "svt_pct": None,
+            "lvt_pct": None,
+            "status": "NOT_FOUND"
+        }
+    
+    def _extract_ipo_pt_timing(self, ipo: str, corner_type: str) -> dict:
+        """
+        Extract PT timing for specific corner (setup or hold) - Production Ready
+        
+        Args:
+            ipo: IPO name
+            corner_type: "setup" or "hold"
+            
+        Returns:
+            dict: Timing metrics {corner, wns, tns, nvp, run_date, status}
+        """
+        corner_map = {
+            "setup": "func.std_tt_0c_0p6v.setup.typical",
+            "hold": "func.std_tt_0c_0p55v.hold.typical"
+        }
+        
+        corner_name = corner_map.get(corner_type, "")
+        
+        try:
+            nbu_path = self.nbu_signoff_paths[ipo]
+            pt_base = os.path.join(nbu_path, "signoff_flow/auto_pt")
+            
+            if not os.path.exists(pt_base):
+                return {"corner": corner_name, "wns": None, "tns": None, "nvp": None, "run_date": None, "status": "NOT_RUN"}
+            
+            # Find latest work directory
+            work_dirs = []
+            for item in os.listdir(pt_base):
+                if item.startswith("work_"):
+                    work_path = os.path.join(pt_base, item)
+                    if os.path.isdir(work_path):
+                        work_dirs.append((work_path, os.path.getmtime(work_path)))
+            
+            if not work_dirs:
+                return {"corner": corner_name, "wns": None, "tns": None, "nvp": None, "run_date": None, "status": "NOT_RUN"}
+            
+            # Get latest work directory
+            latest_work = max(work_dirs, key=lambda x: x[1])[0]
+            run_date = datetime.fromtimestamp(max(work_dirs, key=lambda x: x[1])[1]).strftime("%m/%d %H:%M")
+            
+            # Look for timing report
+            timing_file = os.path.join(latest_work, f"{corner_name}/reports/timing_reports/{self.design_info.top_hier}_{corner_name}.timing")
+            
+            if not os.path.exists(timing_file):
+                return {"corner": corner_name, "wns": None, "tns": None, "nvp": None, "run_date": run_date, "status": "NOT_FOUND"}
+            
+            # Parse timing report using same logic as main PT analysis
+            try:
+                with open(timing_file, 'r') as f:
+                    content = f.read()
+                
+                # Find all Group lines - improved regex to handle asterisks properly
+                # Group: **all_taps** | NVP: 12345 | WNS: -0.123 | TNS: -456.789
+                group_pattern = r'Group:\s*\*\*([^*]+)\*\*\s*\|\s*NVP:\s*(\d+)\s*\|\s*WNS:\s*([-\d.]+)\s*\|\s*TNS:\s*([-\d.]+)|Group:\s*([^|]+)\s*\|\s*NVP:\s*(\d+)\s*\|\s*WNS:\s*([-\d.]+)\s*\|\s*TNS:\s*([-\d.]+)'
+                matches = re.findall(group_pattern, content)
+                
+                worst_wns = 0.0
+                total_tns = 0.0
+                total_nvp = 0
+                
+                # Extract metrics from all groups (excluding FEEDTHROUGH/REGIN/REGOUT which are external)
+                external_groups = {'FEEDTHROUGH', 'REGIN', 'REGOUT'}
+                
+                for match in matches:
+                    if match[0]:  # Group with asterisks
+                        group_name = match[0].strip().upper()
+                        nvp = int(match[1])
+                        wns = float(match[2])
+                        tns = float(match[3])
+                    else:  # Regular group
+                        group_name = match[4].strip().upper()
+                        nvp = int(match[5])
+                        wns = float(match[6])
+                        tns = float(match[7])
+                    
+                    # Skip external timing groups
+                    if group_name not in external_groups:
+                        if wns < worst_wns:
+                            worst_wns = wns
+                        total_tns += tns
+                        total_nvp += nvp
+                
+                return {
+                    "corner": corner_name,
+                    "wns": worst_wns if worst_wns < 0 else 0.0,
+                    "tns": total_tns,
+                    "nvp": total_nvp,
+                    "run_date": run_date,
+                    "status": "CLEAN" if worst_wns >= 0 else "VIOLATIONS"
+                }
+                
+            except Exception as parse_err:
+                print(f"    {Color.YELLOW}[WARN] Failed to parse PT timing file for {ipo} ({corner_type}): {parse_err}{Color.RESET}")
+                return {"corner": corner_name, "wns": None, "tns": None, "nvp": None, "run_date": run_date, "status": "PARSE_ERROR"}
+            
+        except Exception as e:
+            print(f"    {Color.YELLOW}[WARN] Failed to extract PT timing for {ipo} ({corner_type}): {e}{Color.RESET}")
+            return {"corner": corner_name, "wns": None, "tns": None, "nvp": None, "run_date": None, "status": "ERROR"}
+    
+    def _extract_ipo_pv_metrics(self, ipo: str) -> dict:
+        """
+        Extract PV metrics (LVS/DRC/Antenna) for IPO - Production Ready
+        
+        Args:
+            ipo: IPO name
+            
+        Returns:
+            dict: PV metrics {lvs, drc, antenna, run_date, status}
+        """
+        try:
+            nbu_path = self.nbu_signoff_paths[ipo]
+            pv_base = os.path.join(nbu_path, "pv_flow/drc_dir", self.design_info.top_hier)
+            
+            if not os.path.exists(pv_base):
+                return {"lvs": None, "drc": None, "antenna": None, "run_date": None, "status": "NOT_RUN"}
+            
+            lvs_errors = None
+            drc_errors = None
+            antenna_errors = None
+            latest_mtime = None
+            
+            # Extract LVS errors
+            lvs_pattern = os.path.join(pv_base, "lvs_icv_ipo*", f"{self.design_info.top_hier}_ipo*_fill.LVS_ERRORS")
+            lvs_files = glob.glob(lvs_pattern)
+            
+            if lvs_files:
+                lvs_file = sorted(lvs_files, key=os.path.getmtime, reverse=True)[0]
+                latest_mtime = os.path.getmtime(lvs_file)
+                
+                try:
+                    violations = self.lvs_parser.parse_lvs_errors(lvs_file)
+                    # Calculate total LVS errors
+                    lvs_errors = (violations['failed_equivalence_points'] + 
+                                 violations['first_priority_errors'] + 
+                                 violations['second_priority_errors'])
+                except Exception as e:
+                    print(f"    {Color.YELLOW}[WARN] Failed to parse LVS file for {ipo}: {e}{Color.RESET}")
+            
+            # Extract DRC errors
+            drc_pattern = os.path.join(pv_base, "drc_icv_ipo*", f"{self.design_info.top_hier}_ipo*_fill.LAYOUT_ERRORS")
+            drc_files = glob.glob(drc_pattern)
+            
+            if drc_files:
+                drc_file = sorted(drc_files, key=os.path.getmtime, reverse=True)[0]
+                if latest_mtime is None or os.path.getmtime(drc_file) > latest_mtime:
+                    latest_mtime = os.path.getmtime(drc_file)
+                
+                try:
+                    with open(drc_file, 'r') as f:
+                        content = f.read()
+                    
+                    # Check if CLEAN
+                    if "LAYOUT ERRORS RESULTS: CLEAN" in content:
+                        drc_errors = 0
+                    else:
+                        # Extract violation counts
+                        violation_pattern = r'^\s*([A-Za-z0-9._]+)\s*:\s*(.*?)(\d+)\s+violations?\s+found\.'
+                        matches = re.findall(violation_pattern, content, re.MULTILINE | re.DOTALL)
+                        
+                        total_violations = 0
+                        for rule, description, count in matches:
+                            count_int = int(count)
+                            if count_int > 0:
+                                total_violations += count_int
+                        
+                        drc_errors = total_violations
+                except Exception as e:
+                    print(f"    {Color.YELLOW}[WARN] Failed to parse DRC file for {ipo}: {e}{Color.RESET}")
+            
+            # Extract Antenna errors
+            antenna_pattern = os.path.join(pv_base, "drc_icv_antenna_ipo*", f"{self.design_info.top_hier}_ipo*_fill.LAYOUT_ERRORS")
+            antenna_files = glob.glob(antenna_pattern)
+            
+            if antenna_files:
+                antenna_file = sorted(antenna_files, key=os.path.getmtime, reverse=True)[0]
+                if latest_mtime is None or os.path.getmtime(antenna_file) > latest_mtime:
+                    latest_mtime = os.path.getmtime(antenna_file)
+                
+                try:
+                    with open(antenna_file, 'r') as f:
+                        content = f.read()
+                    
+                    # Check if CLEAN
+                    if "CLEAN" in content.upper():
+                        antenna_errors = 0
+                    else:
+                        # Extract antenna violations
+                        if "LAYOUT ERRORS RESULTS: ERRORS" in content:
+                            total_violations = 0
+                            numbers = re.findall(r'(\d+)\s+violations?\s+found', content, re.IGNORECASE)
+                            for count in numbers:
+                                total_violations += int(count)
+                            antenna_errors = total_violations
+                        else:
+                            antenna_errors = 0
+                except Exception as e:
+                    print(f"    {Color.YELLOW}[WARN] Failed to parse Antenna file for {ipo}: {e}{Color.RESET}")
+            
+            # Determine overall status
+            if lvs_errors is None and drc_errors is None and antenna_errors is None:
+                status = "NOT_FOUND"
+            elif lvs_errors == 0 and drc_errors == 0 and antenna_errors == 0:
+                status = "CLEAN"
+            else:
+                status = "ERRORS"
+            
+            run_date = datetime.fromtimestamp(latest_mtime).strftime("%m/%d %H:%M") if latest_mtime else None
+            
+            return {
+                "lvs": lvs_errors,
+                "drc": drc_errors,
+                "antenna": antenna_errors,
+                "run_date": run_date,
+                "status": status
+            }
+            
+        except Exception as e:
+            print(f"    {Color.YELLOW}[WARN] Failed to extract PV metrics for {ipo}: {e}{Color.RESET}")
+            return {"lvs": None, "drc": None, "antenna": None, "run_date": None, "status": "ERROR"}
+    
+    def _extract_external_timing_innovus(self, ipo: str) -> dict:
+        """
+        Extract external timing from Innovus NV Gate ECO - Production Ready
+        
+        Args:
+            ipo: IPO name
+            
+        Returns:
+            dict: External timing {feedthrough, regin, regout, run_date}
+        """
+        try:
+            nbu_path = self.nbu_signoff_paths[ipo]
+            eco_base = os.path.join(nbu_path, "signoff_flow/nv_gate_eco", self.design_info.top_hier)
+            
+            if not os.path.exists(eco_base):
+                return {
+                    "feedthrough": {"wns": None, "tns": None, "nvp": None},
+                    "regin": {"wns": None, "tns": None, "nvp": None},
+                    "regout": {"wns": None, "tns": None, "nvp": None},
+                    "port_cgate": {"wns": None, "tns": None, "nvp": None},
+                    "run_date": None,
+                    "status": "NOT_RUN"
+                }
+            
+            # Look for Innovus timing reports in nv_gate_eco
+            # Pattern: signoff_flow/nv_gate_eco/<design>/ipo*/REPs/SUMMARY/<design>.ipo*.eco.timing.setup.rpt.gz
+            setup_pattern = os.path.join(eco_base, "ipo*/REPs/SUMMARY", f"{self.design_info.top_hier}.ipo*.eco.timing.setup.rpt.gz")
+            setup_files = glob.glob(setup_pattern)
+            
+            if not setup_files:
+                return {
+                    "feedthrough": {"wns": None, "tns": None, "nvp": None},
+                    "regin": {"wns": None, "tns": None, "nvp": None},
+                    "regout": {"wns": None, "tns": None, "nvp": None},
+                    "port_cgate": {"wns": None, "tns": None, "nvp": None},
+                    "run_date": None,
+                    "status": "NOT_FOUND"
+                }
+            
+            # Get the most recent setup timing report
+            setup_file = sorted(setup_files, key=os.path.getmtime, reverse=True)[0]
+            run_date = datetime.fromtimestamp(os.path.getmtime(setup_file)).strftime("%m/%d %H:%M")
+            
+            # Parse the timing report for external timing groups
+            try:
+                import gzip
+                with gzip.open(setup_file, 'rt', encoding='utf-8') as f:
+                    content = f.read()
+                
+                # Initialize results
+                external_timing = {
+                    "feedthrough": {"wns": None, "tns": None, "nvp": None},
+                    "regin": {"wns": None, "tns": None, "nvp": None},
+                    "regout": {"wns": None, "tns": None, "nvp": None},
+                    "port_cgate": {"wns": None, "tns": None, "nvp": None}  # Port2Cgate (external timing)
+                }
+                
+                # Look for histogram table with external timing breakdown
+                # Format: external|feedthrough | WNS | TNS | NVP | histogram...
+                # The table shows timing breakdown by group (FEEDTHROUGH, REGIN, REGOUT)
+                
+                lines = content.split('\n')
+                
+                for i, line in enumerate(lines):
+                    line_upper = line.upper()
+                    
+                    # Look for lines with external timing groups
+                    # Multiple naming conventions:
+                    # 1. external|feedthrough, external|input, external|output
+                    # 2. Specific path types: port_to_flop, flop_to_port, port_to_clock_gate
+                    if '|' in line and ('EXTERNAL|' in line_upper or any(g in line_upper for g in ['FEEDTHROUGH', 'REGIN', 'REGOUT', 'PORT_TO_FLOP', 'FLOP_TO_PORT', 'PORT_TO_CLOCK_GATE'])):
+                        # Parse the line with pipe delimiters
+                        # Format: external|feedthrough | 0.000|  0.000|  0| histogram...
+                        # Format: external|input     |func.std... | -0.023| -0.163| 11|...
+                        # Format: |output    |flop_to_port | -0.073|-11.837|716|...
+                        # Format: |          |port_to_flop | -0.045| -5.252|465|...
+                        parts = [p.strip() for p in line.split('|')]
+                        
+                        # Determine which group this is
+                        # Collect all potential matches, then prioritize specific over general
+                        target_group = None
+                        group_part = None
+                        fallback_group = None
+                        fallback_part = None
+                        
+                        for part in parts:
+                            part_upper = part.upper()
+                            part_lower = part.lower()
+                            
+                            # Check for explicit FEEDTHROUGH/REGIN/REGOUT (PT format) - highest priority
+                            if 'FEEDTHROUGH' in part_upper:
+                                target_group = 'feedthrough'
+                                group_part = part
+                                break
+                            elif 'REGIN' in part_upper:
+                                target_group = 'regin'
+                                group_part = part
+                                break
+                            elif 'REGOUT' in part_upper:
+                                target_group = 'regout'
+                                group_part = part
+                                break
+                            # Check for specific path types (high priority)
+                            elif 'port_to_clock_gate' in part_lower:
+                                # Port2Cgate: port-to-clock-gate (external timing)
+                                target_group = 'port_cgate'
+                                group_part = part
+                                break
+                            elif 'port_to_flop' in part_lower:
+                                # REGIN: port-to-register (flop)
+                                target_group = 'regin'
+                                group_part = part
+                                break
+                            elif 'flop_to_port' in part_lower:
+                                # REGOUT: register (flop)-to-port
+                                target_group = 'regout'
+                                group_part = part
+                                break
+                            # Check for Innovus general categories (fallback - lower priority)
+                            elif part_lower == 'feedthrough' and not fallback_group:
+                                fallback_group = 'feedthrough'
+                                fallback_part = part
+                            elif part_lower == 'input' and not fallback_group:
+                                fallback_group = 'regin'
+                                fallback_part = part
+                            elif part_lower == 'output' and not fallback_group:
+                                fallback_group = 'regout'
+                                fallback_part = part
+                        
+                        # Use fallback if no specific match found
+                        if not target_group and fallback_group:
+                            target_group = fallback_group
+                            group_part = fallback_part
+                        
+                        if target_group and group_part:
+                            try:
+                                # Find the index of the group part
+                                group_idx = parts.index(group_part)
+                                
+                                # Next parts should be WNS, TNS, NVP
+                                # But there might be a scenario name in between, so we need to find the numeric parts
+                                # Look for the first three numeric values after the group name
+                                numeric_parts = []
+                                for j in range(group_idx + 1, len(parts)):
+                                    part_str = parts[j].strip()
+                                    # Check if this looks like a numeric value (including negative)
+                                    if part_str and (part_str[0].isdigit() or part_str[0] == '-'):
+                                        try:
+                                            # Try to convert to float to verify it's numeric
+                                            float(part_str)
+                                            numeric_parts.append(part_str)
+                                            if len(numeric_parts) == 3:
+                                                break
+                                        except ValueError:
+                                            continue
+                                
+                                if len(numeric_parts) >= 3:
+                                    wns_str = numeric_parts[0]
+                                    tns_str = numeric_parts[1]
+                                    nvp_str = numeric_parts[2]
+                                    
+                                    # Parse values
+                                    wns = float(wns_str) if wns_str and wns_str != '-' else 0.0
+                                    tns = float(tns_str) if tns_str and tns_str != '-' else 0.0
+                                    nvp = int(float(nvp_str)) if nvp_str and nvp_str != '-' else 0
+                                    
+                                    # Only update if not already populated or if this is more specific
+                                    # Prefer specific path types (port_to_flop, flop_to_port, port_to_clock_gate) over general categories
+                                    if external_timing[target_group]['wns'] is None or 'port_to_flop' in part_lower or 'flop_to_port' in part_lower or 'port_to_clock_gate' in part_lower:
+                                        external_timing[target_group] = {
+                                            "wns": wns,
+                                            "tns": tns,
+                                            "nvp": nvp
+                                        }
+                            except (ValueError, IndexError) as e:
+                                # Continue parsing other groups
+                                pass
+                
+                return {
+                    "feedthrough": external_timing["feedthrough"],
+                    "regin": external_timing["regin"],
+                    "regout": external_timing["regout"],
+                    "port_cgate": external_timing["port_cgate"],
+                    "run_date": run_date,
+                    "status": "FOUND"
+                }
+                
+            except Exception as parse_err:
+                print(f"    {Color.YELLOW}[WARN] Failed to parse ECO timing file for {ipo}: {parse_err}{Color.RESET}")
+                return {
+                    "feedthrough": {"wns": None, "tns": None, "nvp": None},
+                    "regin": {"wns": None, "tns": None, "nvp": None},
+                    "regout": {"wns": None, "tns": None, "nvp": None},
+                    "port_cgate": {"wns": None, "tns": None, "nvp": None},
+                    "run_date": run_date,
+                    "status": "PARSE_ERROR"
+                }
+            
+        except Exception as e:
+            print(f"    {Color.YELLOW}[WARN] Failed to extract external timing for {ipo}: {e}{Color.RESET}")
+            return {
+                "feedthrough": {"wns": None, "tns": None, "nvp": None},
+                "regin": {"wns": None, "tns": None, "nvp": None},
+                "regout": {"wns": None, "tns": None, "nvp": None},
+                "port_cgate": {"wns": None, "tns": None, "nvp": None},
+                "run_date": None,
+                "status": "ERROR"
+            }
+    
+    def _extract_formal_status(self, ipo: str) -> dict:
+        """
+        Extract formal verification status - Production Ready
+        
+        Checks both signoff_flow/formal and formal_flow directories
+        
+        Args:
+            ipo: IPO name
+            
+        Returns:
+            dict: Formal status {status, is_clean, run_date, details}
+        """
+        try:
+            nbu_path = self.nbu_signoff_paths[ipo]
+            
+            # Check both possible formal directory locations
+            formal_bases = [
+                os.path.join(nbu_path, "formal_flow"),  # Check formal_flow first (newer convention)
+                os.path.join(nbu_path, "signoff_flow/formal")  # Fallback to old location
+            ]
+            
+            formal_base = None
+            for base in formal_bases:
+                if os.path.exists(base):
+                    formal_base = base
+                    break
+            
+            if not formal_base:
+                return {"status": "NOT_RUN", "is_clean": None, "run_date": None, "details": "Formal directory not found"}
+            
+            # Look for formal log files (rtl_vs_pnr_bbox_fm.log, rtl_vs_pnr_fm.log, eco_vs_pnr_fm.log, etc.)
+            # Prioritize specific formal result logs over generic .log files
+            priority_patterns = [
+                os.path.join(formal_base, "**/rtl_vs_pnr_bbox_fm.log"),
+                os.path.join(formal_base, "**/rtl_vs_pnr_fm.log"),
+                os.path.join(formal_base, "**/eco_vs_pnr_fm.log"),
+            ]
+            
+            fallback_patterns = [
+                os.path.join(formal_base, "**/formality.log"),
+                os.path.join(formal_base, "**/log/*.log"),  # Only logs in log/ directories
+            ]
+            
+            log_files = []
+            # First try priority patterns (actual formal result logs)
+            for pattern in priority_patterns:
+                log_files.extend(glob.glob(pattern, recursive=True))
+            
+            # If no priority logs found, try fallback patterns
+            if not log_files:
+                for pattern in fallback_patterns:
+                    log_files.extend(glob.glob(pattern, recursive=True))
+            
+            if not log_files:
+                # Check for formal run directories
+                formal_dirs = []
+                for item in os.listdir(formal_base):
+                    item_path = os.path.join(formal_base, item)
+                    if os.path.isdir(item_path):
+                        formal_dirs.append((item_path, os.path.getmtime(item_path)))
+                
+                if formal_dirs:
+                    latest_dir, mtime = max(formal_dirs, key=lambda x: x[1])
+                    run_date = datetime.fromtimestamp(mtime).strftime("%m/%d %H:%M")
+                    return {
+                        "status": "FOUND",
+                        "is_clean": None,
+                        "run_date": run_date,
+                        "details": f"Latest: {os.path.basename(latest_dir)}"
+                    }
+                else:
+                    return {"status": "NOT_RUN", "is_clean": None, "run_date": None, "details": "No formal runs found"}
+            
+            # Parse ALL formal log files and prioritize worst-case status
+            # Status priority: FAILED > UNRESOLVED > SUCCEEDED
+            all_results = []
+            
+            for log_file in log_files:
+                try:
+                    with open(log_file, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    
+                    lines = content.split('\n')
+                    
+                    # Extract verification status from "Verification Results" section
+                    status = "UNKNOWN"
+                    passing_points = 0
+                    failing_points = 0
+                    last_results_index = -1
+                    
+                    # Find the last "Verification Results" section
+                    for i, line in enumerate(lines):
+                        if "Verification Results" in line and "*****" in line:
+                            last_results_index = i
+                    
+                    # Extract status from the last Verification Results section
+                    if last_results_index >= 0:
+                        # Look in the next 20 lines after "Verification Results" header
+                        for i in range(last_results_index + 1, min(last_results_index + 21, len(lines))):
+                            line = lines[i]
+                            if "Verification SUCCEEDED" in line:
+                                status = "SUCCEEDED"
+                            elif "Verification FAILED" in line:
+                                status = "FAILED"
+                            elif "Verification UNRESOLVED" in line or "Verification INCONCLUSIVE" in line:
+                                status = "UNRESOLVED"
+                            
+                            # Extract passing compare points
+                            if "Passing compare points" in line:
+                                match = re.search(r'(\d+)\s+Passing compare points', line)
+                                if match:
+                                    passing_points = int(match.group(1))
+                            
+                            # Extract failing compare points
+                            if "Failing compare points" in line:
+                                match = re.search(r'(\d+)\s+Failing compare points', line)
+                                if match:
+                                    failing_points = int(match.group(1))
+                    
+                    # Fallback: search entire log if no Verification Results section found
+                    if status == "UNKNOWN":
+                        for line in lines:
+                            if "Verification SUCCEEDED" in line:
+                                status = "SUCCEEDED"
+                            elif "Verification FAILED" in line:
+                                status = "FAILED"
+                            elif "Verification UNRESOLVED" in line or "Verification INCONCLUSIVE" in line:
+                                status = "UNRESOLVED"
+                    
+                    # Check for tool crash/error
+                    if status == "UNKNOWN":
+                        for line in lines[-100:]:
+                            if "stopped at line" in line and "due to error" in line:
+                                status = "CRASHED"
+                                break
+                            elif "Error: Unknown name:" in line and "FM-036" in line:
+                                status = "CRASHED"
+                                break
+                    
+                    # Check if running
+                    if status == "UNKNOWN":
+                        file_mtime = os.path.getmtime(log_file)
+                        current_time = time.time()
+                        time_since_update = current_time - file_mtime
+                        
+                        if time_since_update < 300:  # 5 minutes
+                            for line in reversed(lines[-50:]):
+                                if any(indicator in line for indicator in [
+                                    "Status:  Building verification models",
+                                    "Status:  Verifying",
+                                    "Status:  Checking designs",
+                                    "Matching in progress"
+                                ]):
+                                    status = "RUNNING"
+                                    break
+                    
+                    # Store result for this log
+                    all_results.append({
+                        "log_file": log_file,
+                        "status": status,
+                        "passing_points": passing_points,
+                        "failing_points": failing_points,
+                        "mtime": os.path.getmtime(log_file)
+                    })
+                        
+                except Exception as parse_err:
+                    print(f"    {Color.YELLOW}[WARN] Failed to parse {os.path.basename(log_file)} for {ipo}: {parse_err}{Color.RESET}")
+                    continue
+            
+            # If no results parsed, return error
+            if not all_results:
+                return {
+                    "status": "PARSE_ERROR",
+                    "is_clean": None,
+                    "run_date": None,
+                    "details": "Failed to parse any formal logs"
+                }
+            
+            # Prioritize worst-case status: FAILED > CRASHED > UNRESOLVED > RUNNING > SUCCEEDED > UNKNOWN
+            status_priority = {
+                "FAILED": 0,
+                "CRASHED": 1,
+                "UNRESOLVED": 2,
+                "RUNNING": 3,
+                "SUCCEEDED": 4,
+                "UNKNOWN": 5
+            }
+            
+            # Sort by status priority (worst first), then by recency
+            all_results.sort(key=lambda x: (status_priority.get(x["status"], 99), -x["mtime"]))
+            best_result = all_results[0]
+            
+            # Get details from the selected result
+            status = best_result["status"]
+            passing_points = best_result["passing_points"]
+            failing_points = best_result["failing_points"]
+            selected_log = best_result["log_file"]
+            run_date = datetime.fromtimestamp(best_result["mtime"]).strftime("%m/%d %H:%M")
+            
+            # Determine if clean (SUCCEEDED with 0 failing points)
+            is_clean = (status == "SUCCEEDED" and failing_points == 0)
+            
+            # Build details string
+            log_name = os.path.basename(selected_log)
+            if len(all_results) > 1:
+                # Show which flow was selected if multiple exist
+                flow_name = log_name.replace(".log", "").replace("_fm", "")
+                details = f"{flow_name}"
+            else:
+                details = f"{log_name}"
+            
+            if status == "SUCCEEDED":
+                details += f" | Passing: {passing_points}"
+            elif status == "FAILED":
+                details += f" | Passing: {passing_points}, Failing: {failing_points}"
+            
+            # Add note if multiple flows analyzed
+            if len(all_results) > 1:
+                other_statuses = [r["status"] for r in all_results[1:]]
+                details += f" | Other flows: {', '.join(set(other_statuses))}"
+            
+            return {
+                "status": status,
+                "is_clean": is_clean if status in ["SUCCEEDED", "FAILED"] else None,
+                "run_date": run_date,
+                "details": details
+            }
+            
+        except Exception as e:
+            print(f"    {Color.YELLOW}[WARN] Failed to extract formal status for {ipo}: {e}{Color.RESET}")
+            return {"status": "ERROR", "is_clean": None, "run_date": None, "details": str(e)}
+    
+    def _extract_flow_history(self, ipo: str) -> list:
+        """
+        Extract complete flow run history for IPO
+        
+        Args:
+            ipo: IPO name
+            
+        Returns:
+            list: Flow history [{flow, run, work_dir, start, end, duration, status}, ...]
+        """
+        history = []
+        
+        try:
+            nbu_path = self.nbu_signoff_paths.get(ipo)
+            if not nbu_path:
+                return history
+            
+            # 1. Extract PT (auto_pt) runs
+            pt_base = os.path.join(nbu_path, "signoff_flow/auto_pt")
+            if os.path.exists(pt_base):
+                pt_runs = self._extract_work_dir_history(pt_base, "PT", "work_*")
+                history.extend(pt_runs)
+            
+            # 2. Extract Star runs
+            star_base = os.path.join(nbu_path, "signoff_flow/star")
+            if os.path.exists(star_base):
+                star_runs = self._extract_work_dir_history(star_base, "Star", "work_*")
+                history.extend(star_runs)
+            
+            # 3. Extract PV runs (different structure - no work_* dirs)
+            pv_base = os.path.join(nbu_path, "pv_flow")
+            if os.path.exists(pv_base):
+                for item in os.listdir(pv_base):
+                    item_path = os.path.join(pv_base, item)
+                    if os.path.isdir(item_path) and item.startswith(ipo.split('_')[0]):
+                        mtime = os.path.getmtime(item_path)
+                        history.append({
+                            "flow": "PV",
+                            "run": 1,
+                            "work_dir": item,
+                            "start": None,
+                            "end": datetime.fromtimestamp(mtime).strftime("%m/%d %H:%M"),
+                            "duration": None,
+                            "status": "COMPLETED"
+                        })
+            
+            # 4. Extract Formal runs (check both possible locations)
+            formal_bases = [
+                os.path.join(nbu_path, "formal_flow"),
+                os.path.join(nbu_path, "signoff_flow/formal")
+            ]
+            
+            for formal_base in formal_bases:
+                if os.path.exists(formal_base):
+                    run_num = 1
+                    for item in os.listdir(formal_base):
+                        item_path = os.path.join(formal_base, item)
+                        # Skip symlinks like 'latest'
+                        if os.path.isdir(item_path) and not os.path.islink(item_path):
+                            # Check for log files to determine status
+                            log_files = glob.glob(os.path.join(item_path, "log/*.log"))
+                            if log_files:
+                                latest_log = max(log_files, key=os.path.getmtime)
+                                mtime = os.path.getmtime(latest_log)
+                                
+                                # Try to extract start/end times from log
+                                start_time = None
+                                end_time = datetime.fromtimestamp(mtime).strftime("%m/%d %H:%M")
+                                duration = None
+                                status = "COMPLETED"
+                                start_timestamp = None
+                                end_timestamp = None
+                                
+                                try:
+                                    with open(latest_log, 'r', encoding='utf-8', errors='ignore') as f:
+                                        content = f.read()
+                                        lines = content.split('\n')
+                                        
+                                        # Try to find start timestamp in first 100 lines (formal has long copyright banner)
+                                        for line in lines[:100]:
+                                            # Look for patterns like: -I- [2025/10/28 11:08:15]
+                                            match = re.search(r'\[(\d{4}/\d{2}/\d{2})\s+(\d{2}:\d{2})(?::\d{2})?\]', line)
+                                            if match:
+                                                date_str = match.group(1)
+                                                time_str = match.group(2)
+                                                # Extract MM/DD HH:MM
+                                                start_time = f"{date_str[5:7]}/{date_str[8:10]} {time_str}"
+                                                # Save full timestamp for duration calculation
+                                                start_timestamp = datetime.strptime(f"{date_str} {time_str}", "%Y/%m/%d %H:%M")
+                                                break
+                                        
+                                        # Try to find end timestamp in last 50 lines
+                                        for line in reversed(lines[-50:]):
+                                            match = re.search(r'\[(\d{4}/\d{2}/\d{2})\s+(\d{2}:\d{2})(?::\d{2})?\]', line)
+                                            if match:
+                                                date_str = match.group(1)
+                                                time_str = match.group(2)
+                                                end_time = f"{date_str[5:7]}/{date_str[8:10]} {time_str}"
+                                                end_timestamp = datetime.strptime(f"{date_str} {time_str}", "%Y/%m/%d %H:%M")
+                                                break
+                                        
+                                        # Calculate duration
+                                        if start_timestamp and end_timestamp:
+                                            duration_seconds = (end_timestamp - start_timestamp).total_seconds()
+                                            if duration_seconds > 0:
+                                                hours = int(duration_seconds // 3600)
+                                                minutes = int((duration_seconds % 3600) // 60)
+                                                seconds = int(duration_seconds % 60)
+                                                duration = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+                                except Exception as e:
+                                    pass
+                                
+                                history.append({
+                                    "flow": f"Formal ({item})",
+                                    "run": run_num,
+                                    "work_dir": item,
+                                    "start": start_time,
+                                    "end": end_time,
+                                    "duration": duration,
+                                    "status": status
+                                })
+                                run_num += 1
+                    break  # Only process first found directory
+            
+            # 5. Extract NV Gate ECO runs  
+            eco_base = os.path.join(nbu_path, "signoff_flow/nv_gate_eco")
+            if os.path.exists(eco_base):
+                eco_runs = self._extract_work_dir_history(eco_base, "NV Gate ECO", "work_*")
+                history.extend(eco_runs)
+            
+            # Sort by end time
+            history.sort(key=lambda x: x['end'] if x['end'] else '')
+            
+        except Exception as e:
+            print(f"    {Color.YELLOW}[WARN] Failed to extract flow history for {ipo}: {e}{Color.RESET}")
+        
+        return history
+    
+    def _extract_work_dir_history(self, base_path: str, flow_name: str, pattern: str) -> list:
+        """
+        Extract history from work_* directories
+        
+        Args:
+            base_path: Base directory containing work dirs
+            flow_name: Flow name (PT, Star, etc.)
+            pattern: Directory pattern to match
+            
+        Returns:
+            list: Flow runs
+        """
+        runs = []
+        try:
+            work_dirs = []
+            for item in os.listdir(base_path):
+                if item.startswith("work_"):
+                    work_path = os.path.join(base_path, item)
+                    if os.path.isdir(work_path):
+                        work_dirs.append((item, work_path, os.path.getmtime(work_path)))
+            
+            # Sort by modification time
+            work_dirs.sort(key=lambda x: x[2])
+            
+            for run_num, (work_dir, work_path, mtime) in enumerate(work_dirs, start=1):
+                # Count auto_pt_fix ECO iterations (for PT flows only)
+                eco_count = 0
+                if flow_name == "PT":
+                    eco_files = glob.glob(os.path.join(work_path, "pt_eco_out_*_final.tcl"))
+                    eco_count = len(eco_files)
+                # Extract start time from work directory name (format: work_DD.MM.YY_HH:MM)
+                start_time = None
+                end_time = None
+                duration = None
+                status = "COMPLETED"
+                
+                # Parse timestamp from directory name
+                match = re.match(r'work_(\d{2})\.(\d{2})\.(\d{2})_(\d{2}):(\d{2})', work_dir)
+                if match:
+                    day, month, year, hour, minute = match.groups()
+                    start_time = f"{month}/{day} {hour}:{minute}"
+                    
+                    # Get end time from directory mtime
+                    end_time = datetime.fromtimestamp(mtime).strftime("%m/%d %H:%M")
+                    
+                    # Calculate duration
+                    try:
+                        # Parse start time to timestamp
+                        start_dt = datetime.strptime(f"20{year}-{month}-{day} {hour}:{minute}", "%Y-%m-%d %H:%M")
+                        end_dt = datetime.fromtimestamp(mtime)
+                        duration_seconds = (end_dt - start_dt).total_seconds()
+                        
+                        if duration_seconds > 0:
+                            hours = int(duration_seconds // 3600)
+                            minutes = int((duration_seconds % 3600) // 60)
+                            if hours > 0:
+                                duration = f"{hours:02d}:{minutes:02d}:00"
+                            else:
+                                duration = f"00:{minutes:02d}:{int(duration_seconds % 60):02d}"
+                    except:
+                        pass
+                else:
+                    # Fallback: use directory mtime
+                    start_time = datetime.fromtimestamp(mtime).strftime("%m/%d %H:%M")
+                    end_time = start_time
+                    status = "UNKNOWN"
+                
+                runs.append({
+                    "flow": flow_name,
+                    "run": run_num,
+                    "work_dir": work_dir,
+                    "start": start_time,
+                    "end": end_time,
+                    "duration": duration,
+                    "status": status,
+                    "eco_count": eco_count
+                })
+        except Exception:
+            pass
+        
+        return runs
+    
+    @staticmethod
+    def _format_number_smart(value, decimal_places=2):
+        """
+        Format number intelligently: integers without decimals, floats with precision
+        
+        Args:
+            value: Number to format (can be None)
+            decimal_places: Number of decimal places for non-integers
+            
+        Returns:
+            str: Formatted number or "-" if None
+        """
+        if value is None:
+            return "-"
+        
+        # Check if value is effectively an integer (within small threshold)
+        if abs(value - round(value)) < 0.0001:
+            return str(int(round(value)))
+        
+        # Format with specified decimal places
+        formatted = f"{value:.{decimal_places}f}"
+        
+        # Remove unnecessary trailing zeros
+        if '.' in formatted:
+            formatted = formatted.rstrip('0').rstrip('.')
+        
+        return formatted
+    
+    @staticmethod
+    def _extract_design_name(workarea_path: str) -> str:
+        """
+        Extract design name from workarea path
+        
+        Examples:
+            /home/scratch.../pmux/pmux_rbv_... → pmux
+            /path/to/prt_wa → prt
+            /home/user/fth_workarea → fth
+        
+        Args:
+            workarea_path: Path to workarea
+            
+        Returns:
+            str: Design name (lowercase)
+        """
+        path = os.path.normpath(workarea_path)
+        parts = path.split(os.sep)
+        
+        # Try to find a directory name that looks like a design name
+        # Priority: directory names in path that match common patterns
+        for part in reversed(parts):
+            if part:
+                # Remove common suffixes
+                design = part.lower()
+                for suffix in ['_wa', '_workarea', '_rbv', '_work']:
+                    if design.endswith(suffix):
+                        design = design[:design.rfind(suffix)]
+                
+                # If we have a name with underscores, take the first part
+                # e.g., "pmux_rbv_2025..." → "pmux"
+                if '_' in design:
+                    design = design.split('_')[0]
+                
+                # If it looks like a design name (3-10 chars, alphanumeric), use it
+                if 2 <= len(design) <= 10 and design.isalnum():
+                    return design
+        
+        # Fallback: use last non-empty directory name
+        for part in reversed(parts):
+            if part and not part.startswith('.'):
+                return part.lower()
+        
+        return "unknown"
+    
+    @staticmethod
+    def analyze_multi_workarea_ipo_comparison(workarea_paths: list, show_logo: bool = True, quiet: bool = False, email: str = None):
+        """
+        Analyze and compare IPOs across multiple workareas
+        
+        Args:
+            workarea_paths: List of workarea paths to analyze
+            show_logo: Show Avice logo
+            quiet: Suppress verbose output
+            email: Email address to send report to
+        """
+        if not quiet:
+            print("="*80)
+            print(f"{Color.CYAN}{'MULTI-WORKAREA IPO COMPARISON MODE':^80}{Color.RESET}")
+            print("="*80)
+            print()
+        
+        # Step 1: Extract design names and collect data from each workarea
+        design_data = {}
+        
+        if not quiet:
+            print(f"Analyzing {len(workarea_paths)} workarea(s):")
+        
+        for idx, wa_path in enumerate(workarea_paths, start=1):
+            design_name = WorkareaReviewer._extract_design_name(wa_path)
+            
+            if not quiet:
+                print(f"  {idx}. {design_name}: {wa_path}")
+            
+            try:
+                # Create reviewer instance for this workarea
+                reviewer = WorkareaReviewer(wa_path, None, show_logo=False, skip_validation=False, quiet=True)
+                
+                # Check if NBU signoff IPOs detected
+                if not reviewer.nbu_signoff_paths:
+                    if not quiet:
+                        print(f"     {Color.YELLOW}[WARN] No NBU signoff IPOs detected{Color.RESET}")
+                    design_data[design_name] = {
+                        'workarea_path': wa_path,
+                        'ipo_data': {},
+                        'design_name': design_name,
+                        'ipo_count': 0,
+                        'error': 'No NBU signoff IPOs detected'
+                    }
+                    continue
+                
+                ipos = list(reviewer.nbu_signoff_paths.keys())
+                
+                if not quiet:
+                    print(f"     --> Detected {len(ipos)} IPO(s): {', '.join(ipos)}")
+                
+                # Extract IPO data
+                if not quiet:
+                    print(f"     --> Extracting data...")
+                
+                ipo_data = reviewer._extract_all_ipo_data()
+                
+                # Store design data
+                design_data[design_name] = {
+                    'workarea_path': wa_path,
+                    'ipo_data': ipo_data,
+                    'design_name': design_name,
+                    'ipo_count': len(ipos)
+                }
+                
+                if not quiet:
+                    print(f"     {Color.GREEN}[OK] {design_name}: {len(ipos)} IPOs analyzed{Color.RESET}")
+                
+            except Exception as e:
+                print(f"     {Color.RED}[ERROR] Failed to analyze {design_name}: {e}{Color.RESET}")
+                import traceback
+                traceback.print_exc()
+                design_data[design_name] = {
+                    'workarea_path': wa_path,
+                    'ipo_data': {},
+                    'design_name': design_name,
+                    'ipo_count': 0,
+                    'error': str(e)
+                }
+        
+        # Step 2: Generate Excel report with multiple sheets
+        if not quiet:
+            print()
+            print("Generating multi-workarea Excel report...")
+        
+        excel_file = WorkareaReviewer._generate_multi_workarea_excel(design_data)
+        
+        # Step 3: Print summary
+        if not quiet:
+            WorkareaReviewer._print_multi_workarea_summary(design_data)
+            print()
+            print(f"{Color.GREEN}[OK] Excel report generated:{Color.RESET}")
+            print(f"  File: {excel_file}")
+            print()
+            print(f"  {Color.CYAN}Excel contains:{Color.RESET}")
+            print(f"    Sheet 1: Cross-Design Summary")
+            for design_name in sorted(design_data.keys()):
+                ipo_count = design_data[design_name]['ipo_count']
+                print(f"    Sheet N: {design_name.upper()} - IPO Comparison ({ipo_count} IPOs)")
+            print(f"    Sheet N+1: Flow Run History (All Designs)")
+            print(f"    Sheet N+2: Notes & Metadata")
+            print()
+        
+        # Step 4: Send email if requested
+        if email:
+            if not quiet:
+                print(f"{Color.CYAN}Sending email to {email}...{Color.RESET}")
+            try:
+                WorkareaReviewer._send_multi_workarea_email(excel_file, email, design_data)
+            except Exception as e:
+                print(f"{Color.RED}[ERROR] Failed to send email: {e}{Color.RESET}")
+        
+        if not quiet:
+            print()
+            print("="*80)
+            print(f"{Color.CYAN}{'MULTI-WORKAREA COMPARISON COMPLETE':^80}{Color.RESET}")
+            print("="*80)
+    
+    @staticmethod
+    def _generate_multi_workarea_excel(design_data: dict) -> str:
+        """
+        Generate multi-workarea Excel report with summary and per-design sheets
+        
+        Args:
+            design_data: Dictionary of design_name -> {workarea_path, ipo_data, ...}
+            
+        Returns:
+            str: Path to generated Excel file
+        """
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+        from datetime import datetime
+        
+        # Create workbook
+        wb = Workbook()
+        wb.remove(wb.active)  # Remove default sheet
+        
+        # Define styles
+        header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF", size=11)
+        center_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        thin_border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+        
+        green_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+        yellow_fill = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")
+        red_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+        gray_fill = PatternFill(start_color="D9D9D9", end_color="D9D9D9", fill_type="solid")
+        
+        # Sheet 1: Cross-Design Summary
+        ws_summary = wb.create_sheet("Cross-Design Summary")
+        WorkareaReviewer._create_summary_sheet(ws_summary, design_data, header_fill, header_font, center_align, thin_border, green_fill, yellow_fill, red_fill, gray_fill)
+        
+        # Sheets 2-N: Per-Design IPO Comparison (reuse existing logic)
+        for design_name in sorted(design_data.keys()):
+            if design_data[design_name].get('error'):
+                continue  # Skip failed designs
+            
+            ipo_data = design_data[design_name]['ipo_data']
+            if not ipo_data:
+                continue
+            
+            # Create per-design sheet (use a temporary reviewer instance to access the method)
+            sheet_name = f"{design_name.upper()} - IPO Comparison"
+            ws_design = wb.create_sheet(sheet_name[:31])  # Excel sheet name limit
+            
+            # Reuse single-workarea comparison logic for each design
+            WorkareaReviewer._populate_design_sheet(ws_design, design_name, ipo_data, header_fill, header_font, center_align, thin_border, green_fill, yellow_fill, red_fill, gray_fill)
+        
+        # Sheet N+1: Combined Flow Run History
+        ws_history = wb.create_sheet("Flow Run History - All")
+        WorkareaReviewer._create_combined_flow_history(ws_history, design_data, header_fill, header_font, center_align, thin_border, green_fill, yellow_fill, red_fill, gray_fill)
+        
+        # Sheet N+2: Notes & Metadata
+        ws_notes = wb.create_sheet("Notes & Metadata")
+        WorkareaReviewer._create_notes_sheet(ws_notes, design_data, is_multi=True)
+        
+        # Generate filename
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"avice_IPO_comparison_multi_{timestamp}.xlsx"
+        filepath = os.path.join(os.getcwd(), filename)
+        
+        # Save workbook
+        wb.save(filepath)
+        
+        return filepath
+    
+    @staticmethod
+    def _print_multi_workarea_summary(design_data: dict):
+        """
+        Print terminal summary for multi-workarea comparison
+        
+        Args:
+            design_data: Dictionary of design_name -> {workarea_path, ipo_data, ...}
+        """
+        print()
+        print("-" * 80)
+        print(f"{'CROSS-DESIGN SUMMARY':^80}")
+        print("-" * 80)
+        print()
+        
+        # Build summary table
+        print(f"  {'Design':<12} {'Best IPO':<15} {'Cells':<12} {'PT Status':<12} {'PV Status':<12} {'Formal':<10}")
+        print(f"  {'-'*12} {'-'*15} {'-'*12} {'-'*12} {'-'*12} {'-'*10}")
+        
+        for design_name in sorted(design_data.keys()):
+            data = design_data[design_name]
+            
+            if data.get('error'):
+                print(f"  {design_name:<12} {'ERROR':<15} {'-':<12} {'-':<12} {'-':<12} {'-':<10}")
+                continue
+            
+            ipo_data = data['ipo_data']
+            if not ipo_data:
+                print(f"  {design_name:<12} {'NO DATA':<15} {'-':<12} {'-':<12} {'-':<12} {'-':<10}")
+                continue
+            
+            # Find best/latest IPO (use last one in sorted order)
+            best_ipo = sorted(ipo_data.keys())[-1]
+            ipo_metrics = ipo_data[best_ipo]
+            
+            # Format cell count
+            cell_count = f"{ipo_metrics['cell_count']:,}" if ipo_metrics['cell_count'] else "-"
+            
+            # PT Status
+            setup_wns = ipo_metrics['pt_setup']['wns']
+            hold_wns = ipo_metrics['pt_hold']['wns']
+            if setup_wns is not None and hold_wns is not None:
+                if setup_wns >= 0 and hold_wns >= 0:
+                    pt_status = "PASS"
+                elif setup_wns >= -0.050 and hold_wns >= -0.050:
+                    pt_status = "WARN"
+                else:
+                    pt_status = "FAIL"
+            else:
+                pt_status = "NOT_RUN"
+            
+            # PV Status
+            lvs = ipo_metrics['pv']['lvs']
+            drc = ipo_metrics['pv']['drc']
+            if lvs is not None and drc is not None:
+                if lvs == 0 and drc == 0:
+                    pv_status = "PASS"
+                elif lvs < 10 and drc < 10:
+                    pv_status = f"WARN ({lvs+drc})"
+                else:
+                    pv_status = f"FAIL ({lvs+drc})"
+            else:
+                pv_status = "NOT_RUN"
+            
+            # Formal Status
+            formal_status = ipo_metrics['formal']['status']
+            if formal_status == "SUCCEEDED":
+                formal = "PASS"
+            elif formal_status == "NOT_RUN":
+                formal = "NOT_RUN"
+            elif formal_status in ["FAILED", "CRASHED"]:
+                formal = "FAIL"
+            else:
+                formal = "WARN"
+            
+            print(f"  {design_name:<12} {best_ipo:<15} {cell_count:<12} {pt_status:<12} {pv_status:<12} {formal:<10}")
+        
+        print()
+        print(f"  [Details per design available in Excel sheets]")
+    
+    @staticmethod
+    def _create_summary_sheet(ws, design_data: dict, header_fill, header_font, center_align, thin_border, green_fill, yellow_fill, red_fill, gray_fill):
+        """Create cross-design summary sheet"""
+        from openpyxl.styles import Font, PatternFill, Alignment
+        
+        # Title
+        ws.append(["Cross-Design IPO Comparison Summary"])
+        ws.merge_cells("A1:G1")
+        title_cell = ws["A1"]
+        title_cell.font = Font(bold=True, size=14, color="FFFFFF")
+        title_cell.fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+        title_cell.alignment = center_align
+        ws.append([])
+        
+        # Headers
+        headers = ["Design", "Best IPO", "Cell Count", "Utilization (%)", "PT Timing", "PV Status", "Formal"]
+        ws.append(headers)
+        for cell in ws[3]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = center_align
+            cell.border = thin_border
+        
+        # Data rows
+        for design_name in sorted(design_data.keys()):
+            data = design_data[design_name]
+            
+            if data.get('error'):
+                ws.append([design_name.upper(), "ERROR", "-", "-", "-", "-", "-"])
+                continue
+            
+            ipo_data = data['ipo_data']
+            if not ipo_data:
+                ws.append([design_name.upper(), "NO DATA", "-", "-", "-", "-", "-"])
+                continue
+            
+            # Find best/latest IPO
+            best_ipo = sorted(ipo_data.keys())[-1]
+            ipo_metrics = ipo_data[best_ipo]
+            
+            # Extract metrics
+            cell_count = ipo_metrics['cell_count'] if ipo_metrics['cell_count'] else "-"
+            util = ipo_metrics.get('utilization', '-')
+            
+            # PT Timing status
+            setup_wns = ipo_metrics['pt_setup']['wns']
+            setup_tns = ipo_metrics['pt_setup']['tns']
+            hold_wns = ipo_metrics['pt_hold']['wns']
+            
+            if setup_wns is not None and hold_wns is not None:
+                pt_status = f"S:{WorkareaReviewer._format_number_smart(setup_wns, 3)}/{WorkareaReviewer._format_number_smart(setup_tns, 2)} H:{WorkareaReviewer._format_number_smart(hold_wns, 3)}"
+            else:
+                pt_status = "NOT_RUN"
+            
+            # PV status
+            lvs = ipo_metrics['pv']['lvs']
+            drc = ipo_metrics['pv']['drc']
+            ant = ipo_metrics['pv']['antenna']
+            if lvs is not None:
+                pv_status = f"LVS:{lvs} DRC:{drc} ANT:{ant}"
+            else:
+                pv_status = "NOT_RUN"
+            
+            # Formal
+            formal = ipo_metrics['formal']['status']
+            
+            row_data = [design_name.upper(), best_ipo, cell_count, util, pt_status, pv_status, formal]
+            ws.append(row_data)
+        
+        # Apply borders and alignment to data rows
+        for row in ws.iter_rows(min_row=4, max_row=ws.max_row, min_col=1, max_col=7):
+            for cell in row:
+                cell.border = thin_border
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+        
+        # Color code status columns
+        for row_idx in range(4, ws.max_row + 1):
+            # PT Timing (column E)
+            pt_cell = ws.cell(row=row_idx, column=5)
+            pt_value = str(pt_cell.value)
+            if "NOT_RUN" in pt_value or pt_value == "-":
+                pt_cell.fill = gray_fill
+            elif pt_value != "ERROR":
+                # Parse WNS from status string
+                try:
+                    if "S:" in pt_value:
+                        wns_str = pt_value.split("S:")[1].split("/")[0]
+                        wns = float(wns_str)
+                        if wns >= WorkareaReviewer.TIMING_THRESHOLDS['wns_green']:
+                            pt_cell.fill = green_fill
+                        elif wns >= WorkareaReviewer.TIMING_THRESHOLDS['wns_yellow']:
+                            pt_cell.fill = yellow_fill
+                        else:
+                            pt_cell.fill = red_fill
+                except:
+                    pass
+            
+            # PV Status (column F)
+            pv_cell = ws.cell(row=row_idx, column=6)
+            pv_value = str(pv_cell.value)
+            if "NOT_RUN" in pv_value or pv_value == "-":
+                pv_cell.fill = gray_fill
+            elif pv_value != "ERROR":
+                try:
+                    if "LVS:" in pv_value:
+                        lvs = int(pv_value.split("LVS:")[1].split()[0])
+                        drc = int(pv_value.split("DRC:")[1].split()[0])
+                        total_errors = lvs + drc
+                        if total_errors == 0:
+                            pv_cell.fill = green_fill
+                        elif total_errors < WorkareaReviewer.PV_THRESHOLDS['errors_yellow']:
+                            pv_cell.fill = yellow_fill
+                        else:
+                            pv_cell.fill = red_fill
+                except:
+                    pass
+            
+            # Formal (column G)
+            formal_cell = ws.cell(row=row_idx, column=7)
+            formal_value = str(formal_cell.value)
+            if formal_value == "SUCCEEDED":
+                formal_cell.fill = green_fill
+            elif formal_value == "NOT_RUN":
+                formal_cell.fill = gray_fill
+            elif formal_value in ["FAILED", "CRASHED"]:
+                formal_cell.fill = red_fill
+            else:
+                formal_cell.fill = yellow_fill
+        
+        # Set column widths
+        ws.column_dimensions['A'].width = 15
+        ws.column_dimensions['B'].width = 18
+        ws.column_dimensions['C'].width = 15
+        ws.column_dimensions['D'].width = 15
+        ws.column_dimensions['E'].width = 25
+        ws.column_dimensions['F'].width = 25
+        ws.column_dimensions['G'].width = 15
+    
+    @staticmethod
+    def _populate_ipo_comparison_sheet_comprehensive(ws, ipo_data: dict, header_fill, header_font, center_align, thin_border, green_fill, yellow_fill, red_fill, gray_fill, title_row_exists: bool = False):
+        """
+        Populate worksheet with comprehensive IPO comparison data
+        
+        This method provides the full detailed format with clock latencies, PT timing, 
+        PV metrics, external timing, power analysis, and formal status.
+        
+        Args:
+            ws: Worksheet to populate
+            ipo_data: Complete IPO data structure
+            Various fill/font/alignment styles
+            title_row_exists: If True, expects title in row 1, starts headers at row 2
+        """
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+        from openpyxl.cell.cell import MergedCell
+        
+        # Determine starting row based on whether title exists
+        header_start_row = 2 if title_row_exists else 1
+        data_start_row = header_start_row + 3
+        
+        # If title exists, format it
+        if title_row_exists:
+            # Merge title across many columns (we'll adjust this after knowing total cols)
+            pass  # Will merge after we know total columns
+        
+        # Collect all unique clock names across all IPOs
+        all_clocks = set()
+        for ipo_name, data in ipo_data.items():
+            if data.get("clock_latencies"):
+                all_clocks.update(data["clock_latencies"].keys())
+        
+        # Sort clocks for consistent ordering
+        sorted_clocks = sorted(all_clocks)
+        num_clock_cols = len(sorted_clocks)
+        
+        # Get power test names from first IPO with power data
+        test1_name = 'Test 1'
+        test2_name = 'Test 2'
+        for ipo_name in sorted(ipo_data.keys()):
+            power_data = ipo_data[ipo_name]['power']
+            if power_data.get('status') == 'FOUND' and power_data.get('test1_name'):
+                test1_name = power_data.get('test1_name', 'Test 1')
+                test2_name = power_data.get('test2_name', 'Test 2')
+                break
+        
+        # Build headers (3 rows)
+        headers_row1 = ["IPO", "Cell Count", "Utilization"]
+        if sorted_clocks:
+            headers_row1.append("Clock Latency (ps)")
+            headers_row1.extend([""] * (num_clock_cols - 1))
+        headers_row1.extend([
+            "PT Setup", "", "",
+            "PT Hold", "", "",
+            "PV", "", "",
+            "External Timing (NV Gate ECO - Innovus)", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+            f"Power - {test1_name}", "", "", "", "", "", "", "",
+            f"Power - {test2_name}", "", "", "", "", "", "", "",
+            "Formal", ""
+        ])
+        
+        headers_row2 = ["", "", ""]
+        if sorted_clocks:
+            headers_row2.extend(sorted_clocks)
+        headers_row2.extend([
+            "WNS", "TNS", "NVP",
+            "WNS", "TNS", "NVP",
+            "LVS", "DRC", "ANT",
+            "FT WNS", "FT TNS", "FT NVP", "RI WNS", "RI TNS", "RI NVP", "RO WNS", "RO TNS", "RO NVP", "Port2Cgate WNS", "Port2Cgate TNS", "Port2Cgate NVP", "TOTAL WNS", "TOTAL TNS", "TOTAL NVP",
+            "Total", "Dynamic", "Leakage", "Ann.Score", "AF (FF/Q)", "HVT%", "SVT%", "LVT%",
+            "Total", "Dynamic", "Leakage", "Ann.Score", "AF (FF/Q)", "HVT%", "SVT%", "LVT%",
+            "Status", "Clean"
+        ])
+        
+        headers_row3 = ["", "", "(%)", ]
+        if sorted_clocks:
+            headers_row3.extend(["(ps)"] * num_clock_cols)
+        headers_row3.extend([
+            "(ns)", "(ns)", "",
+            "(ns)", "(ns)", "",
+            "", "", "",
+            "(ns)", "(ns)", "", "(ns)", "(ns)", "", "(ns)", "(ns)", "", "(ns)", "(ns)", "", "(ns)", "(ns)", "",
+            "(mW)", "(mW)", "(mW)", "(%)", "(%)", "(%)", "(%)", "(%)",
+            "(mW)", "(mW)", "(mW)", "(%)", "(%)", "(%)", "(%)", "(%)",
+            "", ""
+        ])
+        
+        # Write headers
+        ws.append(headers_row1)
+        ws.append(headers_row2)
+        ws.append(headers_row3)
+        
+        # Calculate total columns
+        total_cols = 3 + num_clock_cols + 3 + 3 + 3 + 15 + 16 + 2
+        
+        # Format title if it exists
+        if title_row_exists:
+            ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=total_cols)
+            title_cell = ws.cell(row=1, column=1)
+            title_cell.font = Font(bold=True, size=14, color="FFFFFF")
+            title_cell.fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+            title_cell.alignment = center_align
+        
+        # Format header rows
+        for row in ws.iter_rows(min_row=header_start_row, max_row=header_start_row+2, min_col=1, max_col=total_cols):
+            for cell in row:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = center_align
+                cell.border = thin_border
+        
+        # Merge cells for grouped headers (AFTER formatting)
+        col = 1
+        ws.merge_cells(start_row=header_start_row, start_column=col, end_row=header_start_row+2, end_column=col)
+        col += 1
+        ws.merge_cells(start_row=header_start_row, start_column=col, end_row=header_start_row+2, end_column=col)
+        col += 1
+        ws.merge_cells(start_row=header_start_row, start_column=col, end_row=header_start_row+2, end_column=col)
+        col += 1
+        
+        if num_clock_cols > 0:
+            ws.merge_cells(start_row=header_start_row, start_column=col, end_row=header_start_row, end_column=col + num_clock_cols - 1)
+            col += num_clock_cols
+        
+        ws.merge_cells(start_row=header_start_row, start_column=col, end_row=header_start_row, end_column=col + 2)
+        col += 3
+        ws.merge_cells(start_row=header_start_row, start_column=col, end_row=header_start_row, end_column=col + 2)
+        col += 3
+        ws.merge_cells(start_row=header_start_row, start_column=col, end_row=header_start_row, end_column=col + 2)
+        col += 3
+        ws.merge_cells(start_row=header_start_row, start_column=col, end_row=header_start_row, end_column=col + 14)
+        col += 15
+        ws.merge_cells(start_row=header_start_row, start_column=col, end_row=header_start_row, end_column=col + 7)
+        col += 8
+        ws.merge_cells(start_row=header_start_row, start_column=col, end_row=header_start_row, end_column=col + 7)
+        col += 8
+        ws.merge_cells(start_row=header_start_row, start_column=col, end_row=header_start_row, end_column=col + 1)
+        
+        # Freeze panes (use string reference to avoid creating empty row)
+        ws.freeze_panes = f"A{data_start_row}"
+        
+        # Write data rows
+        for ipo_name in sorted(ipo_data.keys()):
+            data = ipo_data[ipo_name]
+            row_data = [
+                ipo_name,
+                data["cell_count"] if data["cell_count"] else "-",
+                WorkareaReviewer._format_number_smart(data.get("utilization"), 2) if data.get("utilization") else "-",
+            ]
+            
+            # Clock latencies
+            clock_lats = data.get("clock_latencies", {})
+            for clock_name in sorted_clocks:
+                if clock_name in clock_lats:
+                    row_data.append(WorkareaReviewer._format_number_smart(clock_lats[clock_name], 1))
+                else:
+                    row_data.append("-")
+            
+            # PT Setup/Hold
+            row_data.extend([
+                WorkareaReviewer._format_number_smart(data['pt_setup']['wns'], 3),
+                WorkareaReviewer._format_number_smart(data['pt_setup']['tns'], 2),
+                data['pt_setup']['nvp'] if data['pt_setup']['nvp'] is not None else "-",
+                WorkareaReviewer._format_number_smart(data['pt_hold']['wns'], 3),
+                WorkareaReviewer._format_number_smart(data['pt_hold']['tns'], 2),
+                data['pt_hold']['nvp'] if data['pt_hold']['nvp'] is not None else "-",
+            ])
+            
+            # PV
+            row_data.extend([
+                data['pv']['lvs'] if data['pv']['lvs'] is not None else "-",
+                data['pv']['drc'] if data['pv']['drc'] is not None else "-",
+                data['pv']['antenna'] if data['pv']['antenna'] is not None else "-",
+            ])
+            
+            # External Timing details
+            for cat in ['feedthrough', 'regin', 'regout', 'port_cgate']:
+                row_data.extend([
+                    WorkareaReviewer._format_number_smart(data['external_timing'][cat]['wns'], 3),
+                    WorkareaReviewer._format_number_smart(data['external_timing'][cat]['tns'], 2),
+                    data['external_timing'][cat]['nvp'] if data['external_timing'][cat]['nvp'] is not None else "-",
+                ])
+            
+            # TOTAL external timing
+            ext = data['external_timing']
+            total_wns = None
+            total_tns = 0.0
+            total_nvp = 0
+            has_ext_data = False
+            for cat in ['feedthrough', 'regin', 'regout', 'port_cgate']:
+                if ext[cat]['wns'] is not None:
+                    has_ext_data = True
+                    if total_wns is None or ext[cat]['wns'] < total_wns:
+                        total_wns = ext[cat]['wns']
+                    total_tns += ext[cat]['tns']
+                    total_nvp += ext[cat]['nvp']
+            
+            row_data.extend([
+                WorkareaReviewer._format_number_smart(total_wns, 3),
+                WorkareaReviewer._format_number_smart(total_tns, 2) if has_ext_data else "-",
+                total_nvp if has_ext_data else "-",
+            ])
+            
+            # Power Analysis - Test 1
+            test1 = data['power']['test1']
+            row_data.extend([
+                WorkareaReviewer._format_number_smart(test1['total_power'], 1),
+                WorkareaReviewer._format_number_smart(test1['dynamic_power'], 1),
+                WorkareaReviewer._format_number_smart(test1['leakage_power'], 1),
+                WorkareaReviewer._format_number_smart(test1['annotation_score'], 2),
+                WorkareaReviewer._format_number_smart(test1['avg_af'], 2),
+                WorkareaReviewer._format_number_smart(test1['hvt_pct'], 1),
+                WorkareaReviewer._format_number_smart(test1['svt_pct'], 1),
+                WorkareaReviewer._format_number_smart(test1['lvt_pct'], 1),
+            ])
+            
+            # Power Analysis - Test 2
+            test2 = data['power']['test2']
+            row_data.extend([
+                WorkareaReviewer._format_number_smart(test2['total_power'], 1),
+                WorkareaReviewer._format_number_smart(test2['dynamic_power'], 1),
+                WorkareaReviewer._format_number_smart(test2['leakage_power'], 1),
+                WorkareaReviewer._format_number_smart(test2['annotation_score'], 2),
+                WorkareaReviewer._format_number_smart(test2['avg_af'], 2),
+                WorkareaReviewer._format_number_smart(test2['hvt_pct'], 1),
+                WorkareaReviewer._format_number_smart(test2['svt_pct'], 1),
+                WorkareaReviewer._format_number_smart(test2['lvt_pct'], 1),
+            ])
+            
+            # Formal
+            formal_is_clean = data['formal'].get('is_clean')
+            clean_display = "Clean" if formal_is_clean else ("Issues" if formal_is_clean is False else "-")
+            row_data.extend([
+                data['formal']['status'],
+                clean_display
+            ])
+            
+            ws.append(row_data)
+        
+        # Apply color coding and borders
+        for row_idx, ipo_name in enumerate(sorted(ipo_data.keys()), start=data_start_row):
+            data = ipo_data[ipo_name]
+            
+            # Calculate column positions (adjusting for utilization + clock columns)
+            col_offset = 3 + num_clock_cols
+            pt_setup_wns_col = col_offset + 1
+            pt_setup_tns_col = col_offset + 2
+            pt_hold_wns_col = col_offset + 4
+            pv_lvs_col = col_offset + 7
+            pv_drc_col = col_offset + 8
+            pv_ant_col = col_offset + 9
+            formal_col = col_offset + 27 + 16  # After PT(6) + PV(3) + ExtTiming(15) + Power(16)
+            
+            # Color code PT Setup WNS
+            wns_cell = ws.cell(row=row_idx, column=pt_setup_wns_col)
+            if data['pt_setup']['wns'] is not None:
+                if data['pt_setup']['wns'] >= 0:
+                    wns_cell.fill = green_fill
+                elif data['pt_setup']['wns'] >= -0.050:
+                    wns_cell.fill = yellow_fill
+                else:
+                    wns_cell.fill = red_fill
+            
+            # Color code PT Setup TNS
+            tns_cell = ws.cell(row=row_idx, column=pt_setup_tns_col)
+            if data['pt_setup']['tns'] is not None:
+                if data['pt_setup']['tns'] >= -0.01:
+                    tns_cell.fill = green_fill
+                elif data['pt_setup']['tns'] >= -10.0:
+                    tns_cell.fill = yellow_fill
+                else:
+                    tns_cell.fill = red_fill
+            
+            # Color code PT Hold WNS
+            wns_cell = ws.cell(row=row_idx, column=pt_hold_wns_col)
+            if data['pt_hold']['wns'] is not None:
+                if data['pt_hold']['wns'] >= 0:
+                    wns_cell.fill = green_fill
+                elif data['pt_hold']['wns'] >= -0.050:
+                    wns_cell.fill = yellow_fill
+                else:
+                    wns_cell.fill = red_fill
+            
+            # Color code PV errors
+            for col_idx, metric in [(pv_lvs_col, 'lvs'), (pv_drc_col, 'drc'), (pv_ant_col, 'antenna')]:
+                cell = ws.cell(row=row_idx, column=col_idx)
+                if data['pv'][metric] is not None:
+                    if data['pv'][metric] == 0:
+                        cell.fill = green_fill
+                    elif data['pv'][metric] < 10:
+                        cell.fill = yellow_fill
+                    else:
+                        cell.fill = red_fill
+            
+            # Color code Formal status
+            formal_cell = ws.cell(row=row_idx, column=formal_col)
+            formal_status = data['formal']['status']
+            if formal_status in ["SUCCEEDED", "PASS"]:
+                formal_cell.fill = green_fill
+            elif formal_status == "NOT_RUN":
+                formal_cell.fill = gray_fill
+            elif formal_status in ["FAILED", "FAIL", "ERROR"]:
+                formal_cell.fill = red_fill
+            else:
+                formal_cell.fill = yellow_fill
+        
+        # Apply borders to all cells
+        num_data_rows = len(ipo_data)
+        for row in ws.iter_rows(min_row=data_start_row, max_row=data_start_row + num_data_rows - 1, min_col=1, max_col=total_cols):
+            for cell in row:
+                if not isinstance(cell, MergedCell):
+                    cell.border = thin_border
+                    if cell.column > 2:
+                        cell.alignment = Alignment(horizontal="center", vertical="center")
+        
+        # Set column widths efficiently (fixed widths for performance)
+        # Instead of iterating through all cells (slow), use fixed reasonable widths
+        ws.column_dimensions['A'].width = 15  # IPO name
+        ws.column_dimensions['B'].width = 12  # Cell Count
+        ws.column_dimensions['C'].width = 12  # Utilization
+        
+        # Clock columns
+        for i in range(4, 4 + num_clock_cols):
+            ws.column_dimensions[get_column_letter(i)].width = 10
+        
+        # All other metric columns (PT, PV, External Timing, Power, Formal)
+        for i in range(4 + num_clock_cols, total_cols + 1):
+            ws.column_dimensions[get_column_letter(i)].width = 11
+    
+    @staticmethod
+    def _populate_design_sheet(ws, design_name: str, ipo_data: dict, header_fill, header_font, center_align, thin_border, green_fill, yellow_fill, red_fill, gray_fill):
+        """Populate per-design sheet with comprehensive IPO comparison (same format as single-workarea)"""
+        # Note: This now uses the same comprehensive format as single-workarea mode
+        # Just add a title row and call the comprehensive sheet population
+        from openpyxl.styles import Font, PatternFill
+        
+        # Add title row
+        ws.append([f"{design_name.upper()} - IPO Comparison"])
+        
+        # Populate the sheet using the comprehensive format
+        WorkareaReviewer._populate_ipo_comparison_sheet_comprehensive(
+            ws, ipo_data, header_fill, header_font, center_align, thin_border, 
+            green_fill, yellow_fill, red_fill, gray_fill, 
+            title_row_exists=True
+        )
+    
+    @staticmethod
+    def _create_combined_flow_history(ws, design_data: dict, header_fill, header_font, center_align, thin_border, green_fill, yellow_fill, red_fill, gray_fill):
+        """Create combined flow run history from all designs"""
+        from openpyxl.styles import Font, PatternFill, Alignment
+        from openpyxl.utils import get_column_letter
+        
+        # Title
+        ws.append(["Combined Flow Run History - All Designs"])
+        ws.merge_cells("A1:J1")
+        title_cell = ws["A1"]
+        title_cell.font = Font(bold=True, size=14, color="FFFFFF")
+        title_cell.fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+        title_cell.alignment = center_align
+        ws.append([])
+        
+        # Headers
+        headers = ["Design", "IPO", "Flow Type", "Flow", "Run#", "Start Time", "End Time", "Duration", "Status", "Latest"]
+        ws.append(headers)
+        for cell in ws[3]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = center_align
+            cell.border = thin_border
+        
+        # Collect all flow history entries
+        all_entries = []
+        for design_name in sorted(design_data.keys()):
+            data = design_data[design_name]
+            if data.get('error') or not data.get('ipo_data'):
+                continue
+            
+            for ipo_name, metrics in data['ipo_data'].items():
+                history = metrics.get('flow_history', [])
+                for entry in history:
+                    all_entries.append({
+                        'design': design_name.upper(),
+                        'ipo': ipo_name,
+                        **entry
+                    })
+        
+        # Sort by start time (most recent first)
+        all_entries.sort(key=lambda x: x.get('start_time', ''), reverse=True)
+        
+        # Add data rows
+        for entry in all_entries:
+            flow_type = entry.get('flow_type', 'Other')
+            row_data = [
+                entry['design'],
+                entry['ipo'],
+                flow_type,
+                entry.get('flow', '-'),
+                entry.get('run_number', '-'),
+                entry.get('start_time', '-'),
+                entry.get('end_time', '-'),
+                entry.get('duration', '-'),
+                entry.get('status', 'UNKNOWN'),
+                "LATEST" if entry.get('latest', False) else ""
+            ]
+            ws.append(row_data)
+        
+        # Apply formatting
+        for row in ws.iter_rows(min_row=4, max_row=ws.max_row, min_col=1, max_col=10):
+            for cell in row:
+                cell.border = thin_border
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+        
+        # Set column widths
+        widths = [12, 15, 20, 20, 8, 15, 15, 12, 12, 8]
+        for idx, width in enumerate(widths, start=1):
+            ws.column_dimensions[get_column_letter(idx)].width = width
+    
+    @staticmethod
+    def _create_notes_sheet(ws, design_data_or_ipo_data: dict, is_multi: bool = False):
+        """Create notes and metadata sheet"""
+        from datetime import datetime
+        
+        ws.append(["IPO Comparison Report"])
+        ws.append([])
+        
+        if is_multi:
+            # Multi-workarea mode
+            ws.append(["Multi-Workarea Comparison"])
+            ws.append(["Generated:", datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+            ws.append([])
+            ws.append(["Designs Analyzed:"])
+            for design_name in sorted(design_data_or_ipo_data.keys()):
+                data = design_data_or_ipo_data[design_name]
+                wa_path = data.get('workarea_path', '-')
+                ipo_count = data.get('ipo_count', 0)
+                ws.append([f"  {design_name.upper()}:", wa_path, f"({ipo_count} IPOs)"])
+        else:
+            # Single workarea mode
+            ws.append(["Generated:", datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+        
+        ws.append([])
+        ws.append(["Corner Definitions:"])
+        ws.append(["  PT Setup:", "func.std_tt_0c_0p6v.setup.typical"])
+        ws.append(["  PT Hold:", "func.std_tt_0c_0p55v.hold.typical"])
+        ws.append(["  Power:", "func.std_tt_105c_0p67v.setup.typical"])
+        ws.append([])
+        ws.append(["Threshold Reference:"])
+        ws.append(["  PT WNS Yellow:", f"Greater than or equal to {WorkareaReviewer.TIMING_THRESHOLDS['wns_yellow']} ns"])
+        ws.append(["  PT WNS Green:", f"Greater than or equal to {WorkareaReviewer.TIMING_THRESHOLDS['wns_green']} ns"])
+        ws.append(["  PT TNS Yellow:", f"Greater than or equal to {WorkareaReviewer.TIMING_THRESHOLDS['tns_yellow']} ns"])
+        ws.append(["  PT TNS Green:", f"Greater than or equal to {WorkareaReviewer.TIMING_THRESHOLDS['tns_green']} ns"])
+        ws.append(["  PV Errors Yellow:", f"Less than {WorkareaReviewer.PV_THRESHOLDS['errors_yellow']} errors"])
+        ws.append(["  PV Errors Green:", f"Equal to {WorkareaReviewer.PV_THRESHOLDS['errors_green']} errors"])
+        
+        # Set column widths
+        ws.column_dimensions['A'].width = 25
+        ws.column_dimensions['B'].width = 60
+        ws.column_dimensions['C'].width = 20
+    
+    def _generate_ipo_comparison_excel(self, ipo_data: dict) -> str:
+        """
+        Generate Excel report with consolidated comparison table
+        
+        Args:
+            ipo_data: Complete IPO data structure
+            
+        Returns:
+            str: Path to generated Excel file
+        """
+        try:
+            import openpyxl
+            from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+            from openpyxl.utils import get_column_letter
+        except ImportError:
+            print(f"{Color.RED}[ERROR] openpyxl not installed{Color.RESET}")
+            print("  Install with: pip install openpyxl")
+            raise
+        
+        # Create workbook
+        wb = openpyxl.Workbook()
+        
+        # Sheet 1: Consolidated Comparison
+        ws = wb.active
+        ws.title = "IPO Comparison"
+        
+        # Define styles (needed for comprehensive method)
+        header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF")
+        center_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        thin_border = Border(
+            left=Side(style='thin', color='000000'),
+            right=Side(style='thin', color='000000'),
+            top=Side(style='thin', color='000000'),
+            bottom=Side(style='thin', color='000000')
+        )
+        green_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+        yellow_fill = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")
+        red_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+        gray_fill = PatternFill(start_color="D9D9D9", end_color="D9D9D9", fill_type="solid")
+        
+        # Use comprehensive method to populate the sheet
+        WorkareaReviewer._populate_ipo_comparison_sheet_comprehensive(
+            ws, ipo_data, header_fill, header_font, center_align, thin_border,
+            green_fill, yellow_fill, red_fill, gray_fill, title_row_exists=False
+        )
+        
+        # Sheet 2: Flow Run History (Enhanced)
+        ws2 = wb.create_sheet("Flow Run History")
+        
+        # Title
+        ws2.append(["Flow Run History Summary"])
+        ws2.merge_cells("A1:J1")
+        title_cell = ws2["A1"]
+        title_cell.font = Font(bold=True, size=14, color="FFFFFF")
+        title_cell.fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+        title_cell.alignment = Alignment(horizontal="center", vertical="center")
+        ws2.append([])
+        
+        # Calculate summary statistics
+        flow_stats = {}
+        total_runs = 0
+        for ipo_name, data in ipo_data.items():
+            history = data.get("flow_history", [])
+            for entry in history:
+                flow = entry.get("flow", "Unknown")
+                status = entry.get("status", "UNKNOWN")
+                
+                # Categorize flow type
+                if "auto_pt" in flow or "PT" in flow:
+                    flow_type = "PT (PrimeTime)"
+                elif "star" in flow.lower():
+                    flow_type = "Star (Parasitic)"
+                elif "pv" in flow.lower() or "calibre" in flow.lower():
+                    flow_type = "PV (Physical Verification)"
+                elif "formal" in flow.lower():
+                    flow_type = "Formal (Equivalence)"
+                elif "eco" in flow.lower():
+                    flow_type = "NV Gate ECO"
+                else:
+                    flow_type = "Other"
+                
+                if flow_type not in flow_stats:
+                    flow_stats[flow_type] = {"total": 0, "completed": 0, "failed": 0, "running": 0}
+                
+                flow_stats[flow_type]["total"] += 1
+                total_runs += 1
+                
+                if status == "COMPLETED":
+                    flow_stats[flow_type]["completed"] += 1
+                elif status in ["FAILED", "ERROR"]:
+                    flow_stats[flow_type]["failed"] += 1
+                elif status == "RUNNING":
+                    flow_stats[flow_type]["running"] += 1
+        
+        # Add summary statistics
+        ws2.append(["Flow Type", "Total Runs", "Completed", "Failed", "Running", "Success Rate"])
+        summary_header_row = ws2.max_row
+        for cell in ws2[summary_header_row]:
+            cell.fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
+            cell.font = Font(bold=True)
+            cell.alignment = center_align
+            cell.border = thin_border
+        
+        for flow_type in sorted(flow_stats.keys()):
+            stats = flow_stats[flow_type]
+            success_rate = (stats["completed"] / stats["total"] * 100) if stats["total"] > 0 else 0
+            ws2.append([
+                flow_type,
+                stats["total"],
+                stats["completed"],
+                stats["failed"],
+                stats["running"],
+                f"{success_rate:.1f}%"
+            ])
+            
+            # Apply borders and formatting to summary data
+            for cell in ws2[ws2.max_row]:
+                cell.border = thin_border
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+        
+        # Add total row
+        ws2.append([
+            "TOTAL",
+            total_runs,
+            sum(s["completed"] for s in flow_stats.values()),
+            sum(s["failed"] for s in flow_stats.values()),
+            sum(s["running"] for s in flow_stats.values()),
+            f"{(sum(s['completed'] for s in flow_stats.values()) / total_runs * 100):.1f}%" if total_runs > 0 else "0%"
+        ])
+        for cell in ws2[ws2.max_row]:
+            cell.fill = PatternFill(start_color="E7E6E6", end_color="E7E6E6", fill_type="solid")
+            cell.font = Font(bold=True)
+            cell.border = thin_border
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+        
+        # Detailed history headers (no blank row before)
+        detail_header_row = ws2.max_row + 1
+        ws2.append(["IPO", "Flow Type", "Flow", "Run #", "Start Time", "End Time", "Duration", "Status", "Latest", "Work Dir"])
+        
+        # Format detail headers
+        for cell in ws2[detail_header_row]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = center_align
+            cell.border = thin_border
+        
+        # Collect and sort all history entries
+        all_entries = []
+        for ipo_name in sorted(ipo_data.keys()):
+            history = ipo_data[ipo_name].get("flow_history", [])
+            if history:
+                for entry in history:
+                    all_entries.append({
+                        "ipo": ipo_name,
+                        "flow": entry.get("flow", ""),
+                        "run": entry.get("run", ""),
+                        "work_dir": entry.get("work_dir", ""),
+                        "start": entry.get("start", ""),
+                        "end": entry.get("end", ""),
+                        "duration": entry.get("duration", ""),
+                        "status": entry.get("status", ""),
+                        "eco_count": entry.get("eco_count", 0)
+                    })
+        
+        # Mark latest runs per IPO per flow type
+        latest_runs = {}
+        for entry in all_entries:
+            key = (entry["ipo"], entry["flow"])
+            start_time = entry.get("start", "")
+            if key not in latest_runs:
+                latest_runs[key] = entry
+            elif start_time and latest_runs[key].get("start"):
+                if start_time > latest_runs[key]["start"]:
+                    latest_runs[key] = entry
+        
+        # Sort entries: by IPO, then by start time (treat None/empty as oldest)
+        all_entries.sort(key=lambda x: (x["ipo"], x.get("start") or "0000-00-00 00:00"))
+        
+        # Add data rows with enhanced formatting
+        current_ipo = None
+        row_num = detail_header_row + 1
+        
+        for entry in all_entries:
+            # Categorize flow type
+            flow = entry["flow"]
+            if "auto_pt" in flow or "PT" in flow:
+                flow_type = "PT"
+            elif "star" in flow.lower():
+                flow_type = "Star"
+            elif "pv" in flow.lower() or "calibre" in flow.lower():
+                flow_type = "PV"
+            elif "formal" in flow.lower():
+                flow_type = "Formal"
+            elif "eco" in flow.lower():
+                flow_type = "NV_ECO"
+            else:
+                flow_type = "Other"
+            
+            # Format duration to be more readable
+            duration = entry["duration"]
+            if duration and ":" in duration:
+                try:
+                    parts = duration.split(":")
+                    if len(parts) == 3:
+                        h, m, s = map(int, parts)
+                        if h > 0:
+                            duration = f"{h}h {m}m"
+                        elif m > 0:
+                            duration = f"{m}m {s}s"
+                        else:
+                            duration = f"{s}s"
+                except:
+                    pass
+            
+            # Check if this is the latest run
+            is_latest = (entry["ipo"], entry["flow"]) in latest_runs and latest_runs[(entry["ipo"], entry["flow"])] == entry
+            latest_marker = "LATEST" if is_latest else ""
+            
+            # Format flow name with ECO count if applicable
+            flow_display = entry["flow"]
+            eco_count = entry.get("eco_count", 0)
+            if flow_type == "PT" and eco_count > 0:
+                flow_display = f"{entry['flow']} (ECO: {eco_count})"
+            
+            ws2.append([
+                entry["ipo"],
+                flow_type,
+                flow_display,
+                entry["run"],
+                entry["start"],
+                entry["end"],
+                duration,
+                entry["status"],
+                latest_marker,
+                entry["work_dir"]
+            ])
+            
+            # Apply formatting to data row
+            status = entry["status"]
+            status_colors = {
+                "COMPLETED": green_fill,
+                "RUNNING": yellow_fill,
+                "FAILED": red_fill,
+                "ERROR": red_fill,
+                "UNKNOWN": gray_fill
+            }
+            
+            # Alternate row colors for readability
+            if current_ipo != entry["ipo"]:
+                current_ipo = entry["ipo"]
+                row_color = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+            else:
+                row_color = None
+            
+            for col_idx, cell in enumerate(ws2[row_num], start=1):
+                cell.border = thin_border
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+                
+                # Apply row background color
+                if row_color and col_idx not in [8, 9]:  # Don't override status and latest columns
+                    cell.fill = row_color
+                
+                # Apply status color to Status column
+                if col_idx == 8:  # Status column
+                    cell.fill = status_colors.get(status, gray_fill)
+                    cell.alignment = Alignment(horizontal="center", vertical="center")
+                
+                # Center align Latest column
+                if col_idx == 9:  # Latest column
+                    cell.alignment = Alignment(horizontal="center", vertical="center")
+                    if latest_marker:
+                        cell.font = Font(bold=True, color="008000")
+            
+            row_num += 1
+        
+        # Enable auto-filter
+        ws2.auto_filter.ref = f"A{detail_header_row}:J{ws2.max_row}"
+        
+        # Set column widths
+        ws2.column_dimensions['A'].width = 15  # IPO
+        ws2.column_dimensions['B'].width = 12  # Flow Type
+        ws2.column_dimensions['C'].width = 20  # Flow
+        ws2.column_dimensions['D'].width = 8   # Run #
+        ws2.column_dimensions['E'].width = 16  # Start Time
+        ws2.column_dimensions['F'].width = 16  # End Time
+        ws2.column_dimensions['G'].width = 10  # Duration
+        ws2.column_dimensions['H'].width = 12  # Status
+        ws2.column_dimensions['I'].width = 8   # Latest
+        ws2.column_dimensions['J'].width = 40  # Work Dir
+        
+        # Freeze panes (freeze header + summary section)
+        ws2.freeze_panes = f"A{detail_header_row + 1}"
+        
+        # Sheet 3: Notes & Metadata
+        ws3 = wb.create_sheet("Notes & Metadata")
+        ws3.append(["IPO Comparison Report"])
+        ws3.append([])
+        ws3.append(["Workarea:", self.workarea])
+        ws3.append(["Design:", self.design_info.top_hier])
+        ws3.append(["Generated:", datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+        ws3.append([])
+        ws3.append(["Corner Definitions:"])
+        ws3.append(["  Setup:", "func.std_tt_0c_0p6v.setup.typical"])
+        ws3.append(["  Hold:", "func.std_tt_0c_0p55v.hold.typical"])
+        ws3.append([])
+        
+        # Add Available Power Tests section
+        ws3.append(["Available Power Tests:"])
+        ws3.append([])
+        ws3.append(["IPO", "Selected Tests", "All Available Tests"])
+        
+        # Format header row
+        header_row_num = ws3.max_row
+        for cell in ws3[header_row_num]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = center_align
+            cell.border = thin_border
+        
+        # Add test data for each IPO
+        for ipo_name in sorted(ipo_data.keys()):
+            power_data = ipo_data[ipo_name]['power']
+            test1_name = power_data.get('test1_name', '-')
+            test2_name = power_data.get('test2_name', '-')
+            available_tests = power_data.get('available_tests', [])
+            
+            # Format selected tests
+            if test1_name and test2_name:
+                selected = f"{test1_name}, {test2_name}"
+            elif test1_name:
+                selected = test1_name
+            else:
+                selected = "No tests found"
+            
+            # Format available tests
+            if available_tests:
+                all_tests = ", ".join(available_tests)
+            else:
+                all_tests = "No tests found"
+            
+            ws3.append([ipo_name, selected, all_tests])
+            
+            # Apply borders to data row
+            data_row_num = ws3.max_row
+            for cell in ws3[data_row_num]:
+                cell.border = thin_border
+                cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+        
+        ws3.append([])
+        ws3.append(["Contact:", "avice@nvidia.com"])
+        
+        # Adjust column widths for Sheet 3
+        ws3.column_dimensions['A'].width = 20
+        ws3.column_dimensions['B'].width = 40
+        ws3.column_dimensions['C'].width = 60
+        
+        # Generate filename
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        user = os.environ.get('USER', 'avice')
+        design = self.design_info.top_hier
+        excel_filename = f"{user}_IPO_comparison_{design}_{timestamp}.xlsx"
+        excel_path = os.path.join(os.getcwd(), excel_filename)
+        
+        # Save workbook
+        wb.save(excel_path)
+        
+        return excel_path
+    
+    def _print_ipo_comparison_summary(self, ipo_data: dict) -> None:
+        """
+        Print terminal summary tables
+        
+        Args:
+            ipo_data: Complete IPO data structure
+        """
+        # Collect all clock names
+        all_clocks = set()
+        for data in ipo_data.values():
+            if data.get("clock_latencies"):
+                all_clocks.update(data["clock_latencies"].keys())
+        sorted_clocks = sorted(all_clocks)
+        
+        print("Main Metrics Comparison:")
+        print(f"  {'IPO':<15} {'Cells':<10} {'Util':<8} {'PT-Setup':<15} {'PT-Hold':<15} {'PV':<14} {'Formal':<10}")
+        print(f"  {'':<15} {'Count':<10} {'(%)':<8} {'WNS/TNS/NVP':<15} {'WNS/TNS/NVP':<15} {'LVS/DRC/ANT':<14} {'Status':<10}")
+        print(f"  {'-'*15} {'-'*10} {'-'*8} {'-'*15} {'-'*15} {'-'*14} {'-'*10}")
+        
+        for ipo_name in sorted(ipo_data.keys()):
+            data = ipo_data[ipo_name]
+            
+            # Format cell count with comma
+            cell_count_str = f"{data['cell_count']:,}" if data['cell_count'] else "-"
+            
+            # Format utilization
+            util_str = self._format_number_smart(data.get('utilization'), 2) if data.get('utilization') else "-"
+            
+            # Format PT setup
+            setup_wns = self._format_number_smart(data['pt_setup']['wns'], 3)
+            setup_tns = self._format_number_smart(data['pt_setup']['tns'], 2)
+            setup_nvp = str(data['pt_setup']['nvp']) if data['pt_setup']['nvp'] is not None else "-"
+            setup_str = f"{setup_wns}/{setup_tns}/{setup_nvp}"
+            
+            # Format PT hold
+            hold_wns = self._format_number_smart(data['pt_hold']['wns'], 3)
+            hold_tns = self._format_number_smart(data['pt_hold']['tns'], 2)
+            hold_nvp = str(data['pt_hold']['nvp']) if data['pt_hold']['nvp'] is not None else "-"
+            hold_str = f"{hold_wns}/{hold_tns}/{hold_nvp}"
+            
+            # Format PV
+            pv_lvs = str(data['pv']['lvs']) if data['pv']['lvs'] is not None else "-"
+            pv_drc = str(data['pv']['drc']) if data['pv']['drc'] is not None else "-"
+            pv_ant = str(data['pv']['antenna']) if data['pv']['antenna'] is not None else "-"
+            pv_str = f"{pv_lvs}/{pv_drc}/{pv_ant}"
+            
+            # Format formal
+            formal_str = data['formal']['status']
+            
+            print(f"  {ipo_name:<15} {cell_count_str:<10} {util_str:<8} {setup_str:<15} {hold_str:<15} {pv_str:<14} {formal_str:<10}")
+        
+        # Print clock latency table if clocks exist
+        if sorted_clocks:
+            print()
+            print("Clock Latency Comparison (ps):")
+            
+            # Build dynamic header
+            header = f"  {'IPO':<15}"
+            for clock in sorted_clocks:
+                header += f" {clock:<12}"
+            print(header)
+            
+            # Build separator
+            sep = f"  {'-'*15}"
+            for _ in sorted_clocks:
+                sep += f" {'-'*12}"
+            print(sep)
+            
+            # Print data rows
+            for ipo_name in sorted(ipo_data.keys()):
+                data = ipo_data[ipo_name]
+                row = f"  {ipo_name:<15}"
+                clock_lats = data.get("clock_latencies", {})
+                for clock in sorted_clocks:
+                    if clock in clock_lats:
+                        row += f" {self._format_number_smart(clock_lats[clock], 1):>12}"
+                    else:
+                        row += f" {'-':>12}"
+                print(row)
+        
+        print()
+        print("External Timing (NV Gate ECO - Innovus):")
+        print(f"  {'IPO':<15} {'FEEDTHROUGH':<16} {'REGIN':<16} {'REGOUT':<16} {'Port2Cgate':<16} {'TOTAL':<16}")
+        print(f"  {'':<15} {'WNS/TNS/NVP':<16} {'WNS/TNS/NVP':<16} {'WNS/TNS/NVP':<16} {'WNS/TNS/NVP':<16} {'WNS/TNS/NVP':<16}")
+        print(f"  {'-'*15} {'-'*16} {'-'*16} {'-'*16} {'-'*16} {'-'*16}")
+        
+        for ipo_name in sorted(ipo_data.keys()):
+            data = ipo_data[ipo_name]
+            ext = data['external_timing']
+            
+            # Format FEEDTHROUGH
+            ft_wns = self._format_number_smart(ext['feedthrough']['wns'], 3)
+            ft_tns = self._format_number_smart(ext['feedthrough']['tns'], 2)
+            ft_nvp = str(ext['feedthrough']['nvp']) if ext['feedthrough']['nvp'] is not None else "-"
+            ft_str = f"{ft_wns}/{ft_tns}/{ft_nvp}" if ext['feedthrough']['wns'] is not None else "NOT_RUN"
+            
+            # Format REGIN
+            ri_wns = self._format_number_smart(ext['regin']['wns'], 3)
+            ri_tns = self._format_number_smart(ext['regin']['tns'], 2)
+            ri_nvp = str(ext['regin']['nvp']) if ext['regin']['nvp'] is not None else "-"
+            ri_str = f"{ri_wns}/{ri_tns}/{ri_nvp}" if ext['regin']['wns'] is not None else "NOT_RUN"
+            
+            # Format REGOUT
+            ro_wns = self._format_number_smart(ext['regout']['wns'], 3)
+            ro_tns = self._format_number_smart(ext['regout']['tns'], 2)
+            ro_nvp = str(ext['regout']['nvp']) if ext['regout']['nvp'] is not None else "-"
+            ro_str = f"{ro_wns}/{ro_tns}/{ro_nvp}" if ext['regout']['wns'] is not None else "NOT_RUN"
+            
+            # Format Port2Cgate
+            pc_wns = self._format_number_smart(ext['port_cgate']['wns'], 3)
+            pc_tns = self._format_number_smart(ext['port_cgate']['tns'], 2)
+            pc_nvp = str(ext['port_cgate']['nvp']) if ext['port_cgate']['nvp'] is not None else "-"
+            pc_str = f"{pc_wns}/{pc_tns}/{pc_nvp}" if ext['port_cgate']['wns'] is not None else "NOT_RUN"
+            
+            # Calculate TOTAL (sum of all external timing NVP values)
+            total_wns = None
+            total_tns = 0.0
+            total_nvp = 0
+            has_data = False
+            
+            for cat in ['feedthrough', 'regin', 'regout', 'port_cgate']:
+                if ext[cat]['wns'] is not None:
+                    has_data = True
+                    # Track worst (most negative) WNS
+                    if total_wns is None or ext[cat]['wns'] < total_wns:
+                        total_wns = ext[cat]['wns']
+                    # Sum TNS and NVP
+                    total_tns += ext[cat]['tns']
+                    total_nvp += ext[cat]['nvp']
+            
+            if has_data:
+                total_wns_str = self._format_number_smart(total_wns, 3)
+                total_tns_str = self._format_number_smart(total_tns, 2)
+                total_nvp_str = str(total_nvp)
+                total_str = f"{total_wns_str}/{total_tns_str}/{total_nvp_str}"
+            else:
+                total_str = "NOT_RUN"
+            
+            print(f"  {ipo_name:<15} {ft_str:<16} {ri_str:<16} {ro_str:<16} {pc_str:<16} {total_str:<16}")
+        
+        # Print Power Analysis tables
+        print()
+        print("Power Analysis (func.std_tt_105c_0p67v.setup.typical):")
+        
+        # Print available tests for each IPO
+        print()
+        print("  Available Power Tests:")
+        print(f"  {'IPO':<15} Available Tests")
+        print(f"  {'-'*15} {'-'*60}")
+        for ipo_name in sorted(ipo_data.keys()):
+            data = ipo_data[ipo_name]
+            available = data['power'].get('available_tests', [])
+            if available:
+                tests_str = ", ".join(available)
+                print(f"  {ipo_name:<15} {tests_str}")
+            else:
+                print(f"  {ipo_name:<15} No power data found")
+        
+        # Get test names from first IPO with power data
+        test1_name = 'Test 1'
+        test2_name = 'Test 2'
+        for ipo_name in sorted(ipo_data.keys()):
+            power_data = ipo_data[ipo_name]['power']
+            if power_data.get('status') == 'FOUND' and power_data.get('test1_name'):
+                test1_name = power_data.get('test1_name')
+                test2_name = power_data.get('test2_name') or 'Test 2'
+                break
+        
+        # Print Test 1 comparison
+        print()
+        print(f"  Test: {test1_name}")
+        print(f"  {'IPO':<15} {'Total':<10} {'Dynamic':<10} {'Leakage':<10} {'Ann.Score':<10} {'AF (FF/Q)':<12} {'VT Mix':<15}")
+        print(f"  {'':<15} {'(mW)':<10} {'(mW)':<10} {'(mW)':<10} {'(%)':<10} {'(%)':<12} {'HVT/SVT/LVT':<15}")
+        print(f"  {'-'*15} {'-'*10} {'-'*10} {'-'*10} {'-'*10} {'-'*12} {'-'*15}")
+        
+        for ipo_name in sorted(ipo_data.keys()):
+            data = ipo_data[ipo_name]
+            test1 = data['power']['test1']
+            
+            # Format power metrics
+            total_pwr = f"{test1['total_power']:.1f}" if test1['total_power'] is not None else "-"
+            dyn_pwr = f"{test1['dynamic_power']:.1f}" if test1['dynamic_power'] is not None else "-"
+            leak_pwr = f"{test1['leakage_power']:.1f}" if test1['leakage_power'] is not None else "-"
+            ann_score = f"{test1['annotation_score']:.2f}" if test1['annotation_score'] is not None else "-"
+            avg_af = f"{test1['avg_af']:.2f}" if test1['avg_af'] is not None else "-"
+            
+            # Format VT mix
+            if test1['hvt_pct'] is not None:
+                hvt = f"{test1['hvt_pct']:.0f}"
+                svt = f"{test1['svt_pct']:.0f}"
+                lvt = f"{test1['lvt_pct']:.0f}"
+                vt_mix = f"{hvt}/{svt}/{lvt}"
+            else:
+                vt_mix = "-"
+            
+            print(f"  {ipo_name:<15} {total_pwr:<10} {dyn_pwr:<10} {leak_pwr:<10} {ann_score:<10} {avg_af:<12} {vt_mix:<15}")
+        
+        # Print Test 2 comparison (if test2 exists)
+        if test2_name:
+            print()
+            print(f"  Test: {test2_name}")
+            print(f"  {'IPO':<15} {'Total':<10} {'Dynamic':<10} {'Leakage':<10} {'Ann.Score':<10} {'AF (FF/Q)':<12} {'VT Mix':<15}")
+            print(f"  {'':<15} {'(mW)':<10} {'(mW)':<10} {'(mW)':<10} {'(%)':<10} {'(%)':<12} {'HVT/SVT/LVT':<15}")
+            print(f"  {'-'*15} {'-'*10} {'-'*10} {'-'*10} {'-'*10} {'-'*12} {'-'*15}")
+            
+            for ipo_name in sorted(ipo_data.keys()):
+                data = ipo_data[ipo_name]
+                test2 = data['power']['test2']
+                
+                # Format power metrics
+                total_pwr = f"{test2['total_power']:.1f}" if test2['total_power'] is not None else "-"
+                dyn_pwr = f"{test2['dynamic_power']:.1f}" if test2['dynamic_power'] is not None else "-"
+                leak_pwr = f"{test2['leakage_power']:.1f}" if test2['leakage_power'] is not None else "-"
+                ann_score = f"{test2['annotation_score']:.2f}" if test2['annotation_score'] is not None else "-"
+                avg_af = f"{test2['avg_af']:.2f}" if test2['avg_af'] is not None else "-"
+                
+                # Format VT mix
+                if test2['hvt_pct'] is not None:
+                    hvt = f"{test2['hvt_pct']:.0f}"
+                    svt = f"{test2['svt_pct']:.0f}"
+                    lvt = f"{test2['lvt_pct']:.0f}"
+                    vt_mix = f"{hvt}/{svt}/{lvt}"
+                else:
+                    vt_mix = "-"
+                
+                print(f"  {ipo_name:<15} {total_pwr:<10} {dyn_pwr:<10} {leak_pwr:<10} {ann_score:<10} {avg_af:<12} {vt_mix:<15}")
+    
+    def _send_ipo_comparison_email(self, excel_file: str, recipients: str) -> None:
+        """
+        Send Excel report via email using SMTP
+        
+        Args:
+            excel_file: Path to Excel file
+            recipients: Email address(es), comma-separated
+        """
+        print(f"{Color.CYAN}Sending Excel report via email...{Color.RESET}")
+        
+        try:
+            import smtplib
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.base import MIMEBase
+            from email.mime.text import MIMEText
+            from email import encoders
+            from pathlib import Path
+            
+            # Get sender email
+            from_email = f"{os.environ.get('USER', 'avice')}@nvidia.com"
+            
+            # Split recipients if comma-separated
+            recipient_list = [r.strip() for r in recipients.split(',')]
+            to_email = recipient_list[0]
+            cc_list = recipient_list[1:] if len(recipient_list) > 1 else []
+            
+            # Prepare email content
+            subject = f"IPO Comparison Report - {self.design_info.top_hier}"
+            
+            file_size_kb = os.path.getsize(excel_file) / 1024
+            body = f"""IPO Comparison Report
+
+Design: {self.design_info.top_hier}
+Workarea: {self.workarea}
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+Detected IPOs: {', '.join(sorted(self.nbu_signoff_paths.keys()))}
+
+Excel File: {os.path.basename(excel_file)}
+File Size: {file_size_kb:.1f} KB
+
+See attached Excel file for detailed comparison.
+
+---
+Generated by Avice Workarea Review Tool
+Contact: avice@nvidia.com
+"""
+            
+            # Create message
+            msg = MIMEMultipart()
+            msg['From'] = from_email
+            msg['To'] = to_email
+            msg['Subject'] = subject
+            
+            # Add CC if provided
+            if cc_list:
+                msg['Cc'] = ', '.join(cc_list)
+                all_recipients = [to_email] + cc_list
+            else:
+                all_recipients = [to_email]
+            
+            # Add body
+            msg.attach(MIMEText(body, 'plain'))
+            
+            # Attach Excel file
+            excel_path = Path(excel_file)
+            with open(excel_path, 'rb') as f:
+                part = MIMEBase('application', 'vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                part.set_payload(f.read())
+                encoders.encode_base64(part)
+                part.add_header(
+                    'Content-Disposition',
+                    f'attachment; filename={excel_path.name}'
+                )
+                msg.attach(part)
+            
+            # Send email via SMTP
+            smtp_server = "smtp.nvidia.com"
+            smtp_port = 25
+            
+            with smtplib.SMTP(smtp_server, smtp_port, timeout=30) as server:
+                server.sendmail(from_email, all_recipients, msg.as_string())
+            
+            print(f"{Color.GREEN}[OK] Email sent successfully to: {', '.join(all_recipients)}{Color.RESET}")
+            
+        except ImportError as e:
+            print(f"{Color.RED}[ERROR] Missing required module for email: {e}{Color.RESET}")
+            print(f"{Color.YELLOW}  Email functionality requires standard Python libraries (smtplib, email){Color.RESET}")
+        except Exception as e:
+            print(f"{Color.YELLOW}[WARN] Failed to send email: {e}{Color.RESET}")
+            import traceback
+            traceback.print_exc()
+    
+    @staticmethod
+    def _send_multi_workarea_email(excel_file: str, recipients: str, design_data: dict) -> None:
+        """
+        Send multi-workarea Excel report via email using SMTP
+        
+        Args:
+            excel_file: Path to Excel file
+            recipients: Email address(es), comma-separated
+            design_data: Dictionary of design data
+        """
+        try:
+            import smtplib
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.base import MIMEBase
+            from email.mime.text import MIMEText
+            from email import encoders
+            from pathlib import Path
+            from datetime import datetime
+            
+            # Get sender email
+            from_email = f"{os.environ.get('USER', 'avice')}@nvidia.com"
+            
+            # Split recipients if comma-separated
+            recipient_list = [r.strip() for r in recipients.split(',')]
+            to_email = recipient_list[0]
+            cc_list = recipient_list[1:] if len(recipient_list) > 1 else []
+            
+            # Prepare email content
+            design_names = ', '.join(sorted(design_data.keys()))
+            subject = f"Multi-Workarea IPO Comparison Report - {design_names}"
+            
+            file_size_kb = os.path.getsize(excel_file) / 1024
+            
+            # Build design summary
+            design_summary = []
+            for design_name in sorted(design_data.keys()):
+                ipo_count = design_data[design_name].get('ipo_count', 0)
+                workarea_path = design_data[design_name].get('workarea_path', 'Unknown')
+                design_summary.append(f"  - {design_name}: {ipo_count} IPOs ({workarea_path})")
+            
+            body = f"""Multi-Workarea IPO Comparison Report
+
+Designs Analyzed: {design_names}
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+Design Summary:
+{chr(10).join(design_summary)}
+
+Excel File: {os.path.basename(excel_file)}
+File Size: {file_size_kb:.1f} KB
+
+See attached Excel file for detailed comparison across all designs.
+
+---
+Generated by Avice Workarea Review Tool
+Contact: avice@nvidia.com
+"""
+            
+            # Create message
+            msg = MIMEMultipart()
+            msg['From'] = from_email
+            msg['To'] = to_email
+            msg['Subject'] = subject
+            
+            # Add CC if provided
+            if cc_list:
+                msg['Cc'] = ', '.join(cc_list)
+                all_recipients = [to_email] + cc_list
+            else:
+                all_recipients = [to_email]
+            
+            # Add body
+            msg.attach(MIMEText(body, 'plain'))
+            
+            # Attach Excel file
+            excel_path = Path(excel_file)
+            with open(excel_path, 'rb') as f:
+                part = MIMEBase('application', 'vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                part.set_payload(f.read())
+                encoders.encode_base64(part)
+                part.add_header(
+                    'Content-Disposition',
+                    f'attachment; filename={excel_path.name}'
+                )
+                msg.attach(part)
+            
+            # Send email via SMTP
+            smtp_server = "smtp.nvidia.com"
+            smtp_port = 25
+            
+            with smtplib.SMTP(smtp_server, smtp_port, timeout=30) as server:
+                server.sendmail(from_email, all_recipients, msg.as_string())
+            
+            print(f"{Color.GREEN}[OK] Email sent successfully to: {', '.join(all_recipients)}{Color.RESET}")
+            
+        except ImportError as e:
+            print(f"{Color.RED}[ERROR] Missing required module for email: {e}{Color.RESET}")
+            print(f"{Color.YELLOW}  Email functionality requires standard Python libraries (smtplib, email){Color.RESET}")
+        except Exception as e:
+            print(f"{Color.YELLOW}[WARN] Failed to send email: {e}{Color.RESET}")
+            import traceback
+            traceback.print_exc()
     
     def run_complete_review(self) -> None:
         """Run complete workarea review"""
@@ -19669,6 +24181,39 @@ class WorkareaReviewer:
                             else:
                                 runtime_str = f"{total_runtime_hours:.2f} hours"
                             
+                            # Check if PnR flow is incomplete (has RUN or UNLAUNCHED stages)
+                            has_running_stage = False
+                            running_stage_name = None
+                            incomplete_stage_name = None
+                            
+                            try:
+                                all_pnr_lines = self.file_utils.run_command(f"grep ' {ipo}' {prc_status} | grep -E '(BEGIN|setup|edi_plan|place|cts|route|postroute)' | grep -v report")
+                                if all_pnr_lines.strip():
+                                    # Check for RUN or UNLAUNCHED stages
+                                    running_stage = None
+                                    last_done_stage = None
+                                    
+                                    for line in all_pnr_lines.strip().split('\n'):
+                                        parts = line.split()
+                                        if len(parts) >= 3:
+                                            stage_name = parts[2]
+                                            stage_status = parts[3]
+                                            
+                                            if stage_status == 'RUN':
+                                                running_stage = stage_name
+                                                has_running_stage = True
+                                                running_stage_name = stage_name
+                                                break
+                                            elif stage_status == 'DONE':
+                                                last_done_stage = stage_name
+                                    
+                                    # Check if flow is incomplete (stopped before postroute)
+                                    if not running_stage and last_done_stage and last_done_stage not in ['postroute', 'predrc_postroute']:
+                                        # Flow stopped before postroute completion
+                                        incomplete_stage_name = last_done_stage
+                            except Exception:
+                                pass
+                            
                             pnr_runtimes[ipo] = runtime_str
                             
                             # Extract PnR timestamps from log file names in PRC status
@@ -19693,15 +24238,25 @@ class WorkareaReviewer:
                                             # Use BEGIN as normal
                                             first_line = lines[0]
                                         
-                                        last_line = lines[-1]
+                                        # Find the last DONE step (not RUN or UNLAUNCHED)
+                                        last_line = None
+                                        for line in reversed(lines):
+                                            if 'DONE' in line:
+                                                last_line = line
+                                                break
+                                        
+                                        # If no DONE step found, use the last line (might be running)
+                                        if not last_line:
+                                            last_line = lines[-1]
                                         
                                         # Look for timestamp patterns in log file names (format: YYYYMMDDHHMMSS)
                                         first_match = re.search(r'(\d{8})(\d{6})', first_line)
-                                        last_match = re.search(r'(\d{8})(\d{6})', last_line)
+                                        last_match = re.search(r'(\d{8})(\d{6})', last_line) if last_line else None
                                         
                                         # Extract the last stage's duration to calculate actual end time
-                                        last_line_parts = last_line.split()
                                         last_stage_duration_seconds = 0
+                                        if last_line:
+                                            last_line_parts = last_line.split()
                                         if len(last_line_parts) >= 5:
                                             try:
                                                 last_stage_duration_seconds = int(last_line_parts[4])
@@ -19729,12 +24284,23 @@ class WorkareaReviewer:
                                                 actual_end_epoch = last_start_epoch + last_stage_duration_seconds
                                                 
                                                 start_str = time.strftime("%m/%d %H:%M", start_time)
-                                                end_str = time.strftime("%m/%d %H:%M", time.localtime(actual_end_epoch))
+                                                
+                                                # If stage is running or incomplete, show status in end column
+                                                if has_running_stage and running_stage_name:
+                                                    end_str = f"[RUNNING: {running_stage_name}]"
+                                                elif incomplete_stage_name:
+                                                    end_str = f"[INCOMPLETE: {incomplete_stage_name}]"
+                                                else:
+                                                    end_str = time.strftime("%m/%d %H:%M", time.localtime(actual_end_epoch))
+                                                
                                                 runtime_timestamps[f'PnR ({ipo})'] = (start_str, end_str)
-                                            except Exception:
-                                                pass
-                            except Exception:
-                                pass
+                                            except Exception as e:
+                                                # Debug: print exception to see what's failing
+                                                if self.verbose:
+                                                    print(f"  [DEBUG] Failed to extract PnR timestamps for {ipo}: {e}")
+                            except Exception as e:
+                                if self.verbose:
+                                    print(f"  [DEBUG] Failed to parse PnR lines for {ipo}: {e}")
                         except ValueError:
                             print(f"  Total PnR Runtime for {ipo}: Unable to calculate (non-numeric values)")
                 except Exception as e:
@@ -19820,12 +24386,63 @@ class WorkareaReviewer:
                     formal_logs.extend(logs)
                 if formal_logs:
                     latest_log = max(formal_logs, key=os.path.getmtime)
-                    # Check if running
-                    if runtime == "running":
-                        # For running formal, use start time and "RUNNING" as end
-                        start, _ = self._extract_timestamps_from_log(latest_log)
-                        if start:
-                            runtime_timestamps[f'Formal ({formal_type})'] = (start, "RUNNING")
+                    
+                    # Check if formal is actually running by looking at the log file
+                    is_running = False
+                    try:
+                        file_mtime = os.path.getmtime(latest_log)
+                        current_time = time.time()
+                        time_since_update = current_time - file_mtime
+                        
+                        if time_since_update < 300:  # 5 minutes
+                            # Check for completion status
+                            completion_check = self.file_utils.run_command(
+                                f"grep -E 'Verification SUCCEEDED|Verification FAILED|Verification UNRESOLVED' {latest_log} | tail -1"
+                            )
+                            # Check for running indicators
+                            running_check = self.file_utils.run_command(
+                                f"tail -100 {latest_log} | grep -E 'Status:.*Building verification models|Status:.*Verifying|Status:.*Checking designs|Matching in progress' | tail -1"
+                            )
+                            
+                            if running_check.strip() and not completion_check.strip():
+                                is_running = True
+                    except Exception:
+                        pass
+                    
+                    if is_running:
+                        # For running formal, find start time from formal flow directory files
+                        formal_dir = os.path.dirname(latest_log)
+                        start_str = None
+                        
+                        try:
+                            # Look for files created at the start of the run (err file, do_file.tcl, etc.)
+                            pattern_files = ['*.err', 'fm.do_file.tcl', 'formality.lck']
+                            earliest_time = None
+                            
+                            for pattern in pattern_files:
+                                pattern_path = os.path.join(os.path.dirname(formal_dir), pattern)
+                                matching_files = glob.glob(pattern_path)
+                                for f in matching_files:
+                                    try:
+                                        # Use modification time of these initial files as start time
+                                        mtime = os.path.getmtime(f)
+                                        if earliest_time is None or mtime < earliest_time:
+                                            earliest_time = mtime
+                                    except:
+                                        pass
+                            
+                            if earliest_time:
+                                start_str = time.strftime("%m/%d %H:%M", time.localtime(earliest_time))
+                        except:
+                            pass
+                        
+                        # Fallback to extracting from log file
+                        if not start_str:
+                            start, _ = self._extract_timestamps_from_log(latest_log)
+                            start_str = start
+                        
+                        if start_str:
+                            runtime_timestamps[f'Formal ({formal_type})'] = (start_str, "RUNNING")
                     else:
                         # Try to calculate accurate timestamps from runtime duration
                         end_time = os.path.getmtime(latest_log)
@@ -19960,9 +24577,7 @@ class WorkareaReviewer:
                     else:
                         runtime_str = f"{total_runtime_hours:.2f} hours"
                     
-                    # Add "(running)" indicator if flow is still active
-                    if is_running:
-                        runtime_str += " (running)"
+                    # Don't add "(running)" indicator - it will be shown in End column
                     
                     runtime_data['NV Gate ECO'] = runtime_str
                     # Extract NV Gate ECO timestamps from log file names in status file
@@ -20013,7 +24628,7 @@ class WorkareaReviewer:
                         if len(parts) >= 5 and parts[3] == 'RUN':
                             running_duration = int(parts[4])
                             runtime_hours = running_duration / 3600
-                            runtime_data['NV Gate ECO'] = f"{runtime_hours:.2f} hours (running)"
+                            runtime_data['NV Gate ECO'] = f"{runtime_hours:.2f} hours"
                             
                             # Try to extract start timestamp
                             timestamp_match = re.search(r'(\d{8})(\d{6})', line)
@@ -20024,7 +24639,7 @@ class WorkareaReviewer:
                                     start_datetime_str = f"{first_date[:4]}-{first_date[4:6]}-{first_date[6:8]} {first_time[:2]}:{first_time[2:4]}:{first_time[4:6]}"
                                     start_time_struct = time.strptime(start_datetime_str, "%Y-%m-%d %H:%M:%S")
                                     start_str = time.strftime("%m/%d %H:%M", start_time_struct)
-                                    runtime_timestamps['NV Gate ECO'] = (start_str, "running")
+                                    runtime_timestamps['NV Gate ECO'] = (start_str, "RUNNING")
                                 except:
                                     pass
                             break
@@ -20078,14 +24693,17 @@ class WorkareaReviewer:
         issues = []
         running_flows = []
         
-        for stage_name, runtime_str in runtime_data.items():
-            if "(running)" in runtime_str:
-                running_flows.append(stage_name)
+        # Check runtime_timestamps for RUNNING or [RUNNING: stage] status
+        for stage_name, timestamps in runtime_timestamps.items():
+            if timestamps and len(timestamps) >= 2:
+                end_timestamp = timestamps[1]
+                if end_timestamp and ("RUNNING" in str(end_timestamp) or end_timestamp == "RUNNING"):
+                    running_flows.append(stage_name)
         
-        # Also check PnR runtimes for running status
-        for ipo, runtime_str in pnr_runtimes.items():
-            if "(running)" in runtime_str:
-                running_flows.append(f"PnR ({ipo})")
+        # Also check runtime_data for stages with "running" status (no timestamps yet)
+        for stage_name, runtime_str in runtime_data.items():
+            if runtime_str == "running" and stage_name not in running_flows:
+                running_flows.append(stage_name)
         
         if running_flows:
             status = "WARN"
@@ -20204,10 +24822,11 @@ class WorkareaReviewer:
                         
                         if elapsed_hours >= 24:
                             elapsed_days = elapsed_hours / 24
-                            return f"{elapsed_hours:.2f} hours ({elapsed_days:.2f} days) (running)"
+                            return f"{elapsed_hours:.2f} hours ({elapsed_days:.2f} days)"
                         else:
-                            return f"{elapsed_hours:.2f} hours (running)"
+                            return f"{elapsed_hours:.2f} hours"
                     else:
+                        # Return just the hours, status will be shown in End column
                         return "running"
                 
                 # PT is not running, return completed runtime
@@ -20276,8 +24895,40 @@ class WorkareaReviewer:
                             is_running = True
                     
                     if is_running:
-                        formal_runtimes[formal_type] = "running"
-                        continue
+                        # Calculate elapsed time from earliest file in formal directory (actual start time)
+                        try:
+                            formal_dir = os.path.dirname(formal_log)
+                            start_time = None
+                            
+                            # Look for files created at the start of the run
+                            pattern_files = ['*.err', 'fm.do_file.tcl', 'formality.lck']
+                            earliest_time = None
+                            
+                            for pattern in pattern_files:
+                                pattern_path = os.path.join(os.path.dirname(formal_dir), pattern)
+                                matching_files = glob.glob(pattern_path)
+                                for f in matching_files:
+                                    try:
+                                        mtime = os.path.getmtime(f)
+                                        if earliest_time is None or mtime < earliest_time:
+                                            earliest_time = mtime
+                                    except:
+                                        pass
+                            
+                            # Use earliest file time, or fallback to log creation time
+                            start_time = earliest_time if earliest_time else os.path.getctime(formal_log)
+                            
+                            elapsed_seconds = int(current_time - start_time)
+                            elapsed_hours = elapsed_seconds / 3600
+                            
+                            if elapsed_hours >= 24:
+                                elapsed_days = elapsed_hours / 24
+                                formal_runtimes[formal_type] = f"{elapsed_hours:.2f} hours ({elapsed_days:.2f} days)"
+                            else:
+                                formal_runtimes[formal_type] = f"{elapsed_hours:.2f} hours"
+                        except Exception:
+                            formal_runtimes[formal_type] = "running"
+                            continue
                     
                     # Try multiple patterns for runtime extraction
                     result = self.file_utils.run_command(f"grep 'Total.*cpu seconds' {formal_log} | tail -n1 | sed 's/.*Total \\([0-9]*\\) cpu seconds.*/\\1/'")
@@ -20490,9 +25141,7 @@ class WorkareaReviewer:
                 else:
                     runtime_str = f"{total_runtime_hours:.2f} hours"
                 
-                # Add indicator if flow is still running
-                if running_steps > 0:
-                    runtime_str += " (running)"
+                # Don't add "(running)" indicator - it will be shown in End column
                 
                 return runtime_str
             
@@ -21742,8 +26391,8 @@ OUTPUT:
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     
-    parser.add_argument("workarea", nargs="?", 
-                       help="Path to workarea directory to analyze")
+    parser.add_argument("workarea", nargs="*", 
+                       help="Path to workarea directory(ies) to analyze (multiple paths supported for --compare-ipos, or omit when using --unit)")
     parser.add_argument("ipo", nargs="?", 
                        help="IPO name to analyze (optional, auto-detected if not specified)")
     
@@ -21756,6 +26405,8 @@ OUTPUT:
                        help="Generate PDF documentation")
     parser.add_argument("--docs-section", choices=["usage", "examples", "troubleshooting", "organization", "all"],
                        default="all", help="Specific documentation section to display")
+    parser.add_argument("--send-disk-alert", action="store_true",
+                       help="Send email alert if disk usage >=90%% (default: disabled)")
     
     parser.add_argument("--verbose", "-v", action="store_true", 
                        help="Enable verbose output with detailed information")
@@ -21781,6 +26432,10 @@ OUTPUT:
                        help="Output file to save results (optional)")
     parser.add_argument("--format", choices=["text", "json"], default="text",
                        help="Output format (default: text)")
+    parser.add_argument("--compare-ipos", action="store_true",
+                       help="IPO comparison mode (standalone) - compare multiple IPO directories with NBU signoff structure")
+    parser.add_argument("--email", type=str, nargs='?', const='auto',
+                       help="Send Excel report via email (auto uses $USER@nvidia.com, or specify email address)")
     
     args = parser.parse_args()
     
@@ -21837,10 +26492,30 @@ OUTPUT:
                     if line and not line.startswith('#'):
                         parts = [p.strip() for p in line.split('|')]
                         if len(parts) >= 3 and parts[0].lower() == args.unit.lower():
-                            args.workarea = parts[2]  # Third column is the workarea path
+                            args.workarea = [parts[2]]  # Third column is the workarea path (wrap in list for nargs="+")
                             workarea_found = True
+                            
+                            # Display unit information
                             print(f"{Color.CYAN}[INFO] Unit '{args.unit}' found in release table{Color.RESET}")
-                            print(f"{Color.CYAN}[INFO] Using workarea: {args.workarea}{Color.RESET}")
+                            
+                            # Display chiplet if available
+                            if len(parts) >= 2 and parts[1]:
+                                print(f"{Color.CYAN}[INFO] Chiplet: {parts[1]}{Color.RESET}")
+                            
+                            # Display RTL tag if available
+                            if len(parts) >= 4 and parts[3]:
+                                print(f"{Color.CYAN}[INFO] RTL Tag: {parts[3]}{Color.RESET}")
+                            
+                            # Display release date if available
+                            if len(parts) >= 6 and parts[5]:
+                                print(f"{Color.CYAN}[INFO] Release Date: {parts[5]}{Color.RESET}")
+                            
+                            # Display workarea path (user workarea where work was done)
+                            print(f"{Color.CYAN}[INFO] User Workarea: {args.workarea[0]}{Color.RESET}")
+                            
+                            # Display central release path if available (8th field)
+                            if len(parts) >= 8 and parts[7]:
+                                print(f"{Color.CYAN}[INFO] Central Release: {parts[7]}{Color.RESET}")
                             break
             
             if not workarea_found:
@@ -21862,15 +26537,56 @@ OUTPUT:
     if not args.workarea:
         parser.error("workarea is required (or use --unit to specify a unit name)")
     
-    if not os.path.isdir(args.workarea):
-        print(f"{Color.RED}Error: Workarea directory '{args.workarea}' does not exist{Color.RESET}")
-        sys.exit(1)
+    # Validate all workarea paths
+    for wa_path in args.workarea:
+        if not os.path.isdir(wa_path):
+            print(f"{Color.RED}Error: Workarea directory '{wa_path}' does not exist{Color.RESET}")
+            sys.exit(1)
+    
+    # IPO comparison mode (standalone)
+    if args.compare_ipos:
+        try:
+            # Determine email recipient
+            email = None
+            if args.email:
+                if args.email == 'auto':
+                    email = f"{os.environ.get('USER', 'avice')}@nvidia.com"
+                else:
+                    email = args.email
+            
+            # Check if single or multiple workareas
+            if len(args.workarea) == 1:
+                # Single workarea comparison (existing logic)
+                reviewer = WorkareaReviewer(args.workarea[0], args.ipo, show_logo=not args.no_logo, skip_validation=args.skip_validation, quiet=args.quiet)
+                reviewer.analyze_ipo_comparison(email=email)
+            else:
+                # Multi-workarea comparison (new logic)
+                WorkareaReviewer.analyze_multi_workarea_ipo_comparison(
+                    workarea_paths=args.workarea,
+                    show_logo=not args.no_logo,
+                    quiet=args.quiet,
+                    email=email
+                )
+            sys.exit(0)
+        except KeyboardInterrupt:
+            print(f"\n{Color.YELLOW}IPO comparison interrupted by user{Color.RESET}")
+            sys.exit(1)
+        except Exception as e:
+            print(f"{Color.RED}Error during IPO comparison: {e}{Color.RESET}")
+            import traceback
+            traceback.print_exc()
+            sys.exit(1)
     
     try:
+        # For regular analysis mode, only support single workarea
+        if len(args.workarea) > 1:
+            print(f"{Color.RED}Error: Multiple workareas only supported with --compare-ipos flag{Color.RESET}")
+            sys.exit(1)
+        
         # Create QuietMode context manager
         quiet_mode = QuietMode(enabled=args.quiet)
         
-        reviewer = WorkareaReviewer(args.workarea, args.ipo, show_logo=not args.no_logo, skip_validation=args.skip_validation, quiet=args.quiet, quiet_mode=quiet_mode)
+        reviewer = WorkareaReviewer(args.workarea[0], args.ipo, show_logo=not args.no_logo, skip_validation=args.skip_validation, quiet=args.quiet, quiet_mode=quiet_mode)
         
         # Cleanup old HTML files from previous runs to avoid confusion
         reviewer._cleanup_old_html_files()

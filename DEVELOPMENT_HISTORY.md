@@ -57,7 +57,7 @@
 
 #### 2. unix_shell_compatibility_guide.md (46 lines)
 
-**Reason**: Merged into architecture.mdc for consolidation
+**Reason**: Merged into `.cursor/rules/architecture.mdc` for consolidation
 
 **What it contained**:
 - Unix shell compatibility guidelines
@@ -70,7 +70,7 @@
 - ✅ Single source of truth for all project rules
 - ✅ Prevents duplication and maintenance overhead
 
-**New location**: `architecture.mdc` (Lines 16-63)
+**New location**: `.cursor/rules/architecture.mdc` (Lines 16-63)
 
 See "Unix Shell Compatibility Consolidation" section below for complete merge details.
 
@@ -310,25 +310,25 @@ When running `avice_wa_review.py`, users now see these numbered sections:
 
 Two files with overlapping Unix shell compatibility guidelines:
 - `unix_shell_compatibility_guide.md` (standalone guide)
-- `architecture.mdc` (project architecture rules)
+- `.cursor/rules/architecture.mdc` (project architecture rules)
 
 This caused duplication and potential inconsistency.
 
 ### Solution
 
-Merged standalone guide into architecture.mdc with enhanced content.
+Merged standalone guide into `.cursor/rules/architecture.mdc` with enhanced content.
 
 ### Changes Made
 
 **Deleted**: `unix_shell_compatibility_guide.md` (46 lines)
 
-**Enhanced**: `architecture.mdc` (Lines 16-63)
+**Enhanced**: `.cursor/rules/architecture.mdc` (Lines 16-63)
 - Added comprehensive substitution table with usage examples
 - Added code examples showing bad vs good practices
 - Added safe Unicode usage guidelines
 - Added testing requirements
 
-### Content Added to architecture.mdc
+### Content Added to .cursor/rules/architecture.mdc
 
 **Comprehensive Substitution Table**:
 
@@ -458,9 +458,9 @@ python extract_timing_summary.py /path/to/workarea
 
 **Old location**: `unix_shell_compatibility_guide.md`
 
-**New location**: `architecture.mdc` (Lines 16-63)
+**New location**: `.cursor/rules/architecture.mdc` (Lines 16-63)
 
-**What to do**: Reference `architecture.mdc` for all Unix shell compatibility rules.
+**What to do**: Reference `.cursor/rules/architecture.mdc` for all Unix shell compatibility rules.
 
 ---
 
@@ -529,7 +529,7 @@ When making organizational changes, always update:
    - Version entries
    - Summary of changes
 
-4. **architecture.mdc** (if relevant)
+4. **.cursor/rules/architecture.mdc** (if relevant)
    - New standards
    - Enhanced guidelines
 

@@ -8,13 +8,13 @@ current_date=$(date '+%Y-%m-%d %H:%M:%S')
 
 # Define all units by chiplet
 declare -A CHIPLET_UNITS
-CHIPLET_UNITS[HIOPL]="ioptca ioptcb ioptcc ioptcd"
+CHIPLET_UNITS[HIOPL]="hiopl ioplca ioplcb ioplcc ioplcd"
 CHIPLET_UNITS[CPORT]="fdb fth lnd pmux prt"
 CHIPLET_UNITS[HPORT]="ccorea ccoreb ccorec ccored ccoree ccoref"
-CHIPLET_UNITS[NDQ]="clt cscore dcmp fdbm fdbs fthm ftos fwam fwas glc iopl ioplm iopx lndm nvrisc pmuxm prtm psca pscb pscc pscd px riba ribs sma yu"
-CHIPLET_UNITS[QNS]="dqaa dqaci dqaco dqai dqamci dqamco dqamdi dqamdo dqap dqavi dqavo dqax dql dqs eds qcorei qcorer tds"
-CHIPLET_UNITS[TCB]="atm bta eri hib tecorei"
-CHIPLET_UNITS[TOP_YC]="yc_clk yc_top yu_rng"
+CHIPLET_UNITS[NDQ]="clt cscore dcmp fdbm fdbs fthm ftos fwam fwas glc iopl ioplm iopx ir lndm nvrisc pmuxm prtm psca pscb pscc pscd px riba ribs sma yu"
+CHIPLET_UNITS[QNS]="dqaa dqaci dqaco dqai dqamci dqamco dqamdi dqamdo dqap dqavi dqavo dqax dql dqs eds qcorel qcorer tecorel tecorer tds"
+CHIPLET_UNITS[TCB]="alm bta eri hib"
+CHIPLET_UNITS[TOP_YC]="top_yc_clock top_yc_gpio yc_clock_macro yc_fuse yc_fuse_macro yu_mng"
 
 # Function to extract RTL tag from workarea rbv/README file
 # The RTL tag is stored in line 2 of $source_wa/rbv/README after "TAG: "
@@ -56,13 +56,13 @@ This document tracks the latest block releases for all units across all chiplets
 **Last Updated**: $current_date
 
 ### Chiplet Breakdown
-- **HIOPL**: 4 units (ioptca, ioptcb, ioptcc, ioptcd)
+- **HIOPL**: 5 units (hiopl, ioplca, ioplcb, ioplcc, ioplcd)
 - **CPORT**: 5 units (fdb, fth, lnd, pmux, prt)
 - **HPORT**: 6 units (ccorea, ccoreb, ccorec, ccored, ccoree, ccoref)
-- **NDQ**: 26 units (clt, cscore, dcmp, fdbm, fdbs, fthm, ftos, fwam, fwas, glc, iopl, ioplm, iopx, lndm, nvrisc, pmuxm, prtm, psca, pscb, pscc, pscd, px, riba, ribs, sma, yu)
-- **QNS**: 18 units (dqaa, dqaci, dqaco, dqai, dqamci, dqamco, dqamdi, dqamdo, dqap, dqavi, dqavo, dqax, dql, dqs, eds, qcorei, qcorer, tds)
-- **TCB**: 5 units (atm, bta, eri, hib, tecorei)
-- **TOP_YC**: 3 units (yc_clk, yc_top, yu_rng)
+- **NDQ**: 27 units (clt, cscore, dcmp, fdbm, fdbs, fthm, ftos, fwam, fwas, glc, iopl, ioplm, iopx, ir, lndm, nvrisc, pmuxm, prtm, psca, pscb, pscc, pscd, px, riba, ribs, sma, yu)
+- **QNS**: 20 units (dqaa, dqaci, dqaco, dqai, dqamci, dqamco, dqamdi, dqamdo, dqap, dqavi, dqavo, dqax, dql, dqs, eds, qcorei, qcorer, tecorel, tecorer, tds)
+- **TCB**: 4 units (alm, bta, eri, hib)
+- **TOP_YC**: 6 units (top_yc_clock, top_yc_gpio, yc_clock_macro, yc_fuse, yc_fuse_macro, yu_mng)
 
 ## Release Tracking Method
 - **STA Releases**: Tracked via \`last_sta_rel\` symbolic link
@@ -105,14 +105,15 @@ for chiplet in HIOPL CPORT HPORT NDQ QNS TCB TOP_YC; do
             # Pattern 1: db_source (CPORT format - PNR/FCL releases)
             source_wa=$(grep -a "db_source.*scratch" "$log" | head -1 | sed 's|.* \(/home/scratch[^/]*/[^/]*/[^/]*/[^ ]*\)/.*|\1|' | sed 's|/export$||' | sed 's|/export/export_innovus$||')
             
-            # Pattern 2: copy_file (STA-only releases)
-            if [ -z "$source_wa" ]; then
-                source_wa=$(grep -a "copy_file /home/scratch" "$log" | head -1 | sed 's|.*copy_file \(/home/scratch[^[:space:]]*/[^[:space:]]*\)/[ep][xn][pr].*|\1|' | sed 's|/export$||')
-            fi
-            
-            # Pattern 3: Create block_release beflow workdir (NDQ/QNS/HPORT format - any /home directory)
+            # Pattern 2: Create block_release beflow workdir (NBU signoff format - most accurate for NBU paths)
+            # Try this BEFORE copy_file pattern since it handles NBU signoff paths correctly
             if [ -z "$source_wa" ]; then
                 source_wa=$(grep -a "Create block_release beflow workdir" "$log" | head -1 | sed 's|.* = \(/home/[^/]*/.*\)/export/block_release.*|\1|')
+            fi
+            
+            # Pattern 3: copy_file (STA-only releases) - fallback for units without beflow workdir
+            if [ -z "$source_wa" ]; then
+                source_wa=$(grep -a "copy_file /home/scratch" "$log" | head -1 | sed 's|.*copy_file \(/home/scratch[^[:space:]]*/[^[:space:]]*\)/.*|\1|' | sed 's|/export$||')
             fi
             
             # Extract RTL tag
@@ -220,14 +221,15 @@ for chiplet in HIOPL CPORT HPORT NDQ QNS TCB TOP_YC; do
             # Pattern 1: db_source (CPORT format - PNR/FCL releases)
             source_wa=$(grep -a "db_source.*scratch" "$log" | head -1 | sed 's|.* \(/home/scratch[^/]*/[^/]*/[^/]*/[^ ]*\)/.*|\1|' | sed 's|/export$||' | sed 's|/export/export_innovus$||')
             
-            # Pattern 2: copy_file (STA-only releases)
-            if [ -z "$source_wa" ]; then
-                source_wa=$(grep -a "copy_file /home/scratch" "$log" | head -1 | sed 's|.*copy_file \(/home/scratch[^[:space:]]*/[^[:space:]]*\)/[ep][xn][pr].*|\1|' | sed 's|/export$||')
-            fi
-            
-            # Pattern 3: Create block_release beflow workdir (NDQ/QNS/HPORT format - any /home directory)
+            # Pattern 2: Create block_release beflow workdir (NBU signoff format - most accurate for NBU paths)
+            # Try this BEFORE copy_file pattern since it handles NBU signoff paths correctly
             if [ -z "$source_wa" ]; then
                 source_wa=$(grep -a "Create block_release beflow workdir" "$log" | head -1 | sed 's|.* = \(/home/[^/]*/.*\)/export/block_release.*|\1|')
+            fi
+            
+            # Pattern 3: copy_file (STA-only releases) - fallback for units without beflow workdir
+            if [ -z "$source_wa" ]; then
+                source_wa=$(grep -a "copy_file /home/scratch" "$log" | head -1 | sed 's|.*copy_file \(/home/scratch[^[:space:]]*/[^[:space:]]*\)/.*|\1|' | sed 's|/export$||')
             fi
             
             # Get active flags
@@ -303,14 +305,15 @@ for chiplet in HIOPL CPORT HPORT NDQ QNS TCB TOP_YC; do
             # Pattern 1: db_source (CPORT format - PNR/FCL releases)
             source_wa=$(grep -a "db_source.*scratch" "$log" | head -1 | sed 's|.* \(/home/scratch[^/]*/[^/]*/[^/]*/[^ ]*\)/.*|\1|' | sed 's|/export$||' | sed 's|/export/export_innovus$||')
             
-            # Pattern 2: copy_file (STA-only releases)
-            if [ -z "$source_wa" ]; then
-                source_wa=$(grep -a "copy_file /home/scratch" "$log" | head -1 | sed 's|.*copy_file \(/home/scratch[^[:space:]]*/[^[:space:]]*\)/[ep][xn][pr].*|\1|' | sed 's|/export$||')
-            fi
-            
-            # Pattern 3: Create block_release beflow workdir (NDQ/QNS/HPORT format - any /home directory)
+            # Pattern 2: Create block_release beflow workdir (NBU signoff format - most accurate for NBU paths)
+            # Try this BEFORE copy_file pattern since it handles NBU signoff paths correctly
             if [ -z "$source_wa" ]; then
                 source_wa=$(grep -a "Create block_release beflow workdir" "$log" | head -1 | sed 's|.* = \(/home/[^/]*/.*\)/export/block_release.*|\1|')
+            fi
+            
+            # Pattern 3: copy_file (STA-only releases) - fallback for units without beflow workdir
+            if [ -z "$source_wa" ]; then
+                source_wa=$(grep -a "copy_file /home/scratch" "$log" | head -1 | sed 's|.*copy_file \(/home/scratch[^[:space:]]*/[^[:space:]]*\)/.*|\1|' | sed 's|/export$||')
             fi
             
             # Extract RTL tag
@@ -329,11 +332,11 @@ for chiplet in HIOPL CPORT HPORT NDQ QNS TCB TOP_YC; do
             [ "$(grep -a "^\-I\-.*Full:" "$log" | head -1 | awk -F': ' '{print $2}')" = "True" ] && flags="${flags}FULL,"
             flags=${flags%,}  # Remove trailing comma
             
-            # Write to TXT (pipe-delimited)
-            echo "$unit | $chiplet | $source_wa | $rtl_tag | $flags | $release_date | $user" >> "$table_txt"
+            # Write to TXT (pipe-delimited) - includes central release path
+            echo "$unit | $chiplet | $source_wa | $rtl_tag | $flags | $release_date | $user | $sta_target" >> "$table_txt"
             
-            # Write to CSV
-            echo "$unit,$chiplet,$source_wa,\"$rtl_tag\",\"$flags\",$user,$timestamp" >> "$table_csv"
+            # Write to CSV - includes central release path
+            echo "$unit,$chiplet,$source_wa,\"$rtl_tag\",\"$flags\",$user,$timestamp,$sta_target" >> "$table_csv"
         fi
     fi
     done  # End unit loop in table generation
@@ -381,14 +384,15 @@ for chiplet in HIOPL CPORT HPORT NDQ QNS TCB TOP_YC; do
             # Pattern 1: db_source (CPORT format - PNR/FCL releases)
             source_wa=$(grep -a "db_source.*scratch" "$log" | head -1 | sed 's|.* \(/home/scratch[^/]*/[^/]*/[^/]*/[^ ]*\)/.*|\1|' | sed 's|/export$||' | sed 's|/export/export_innovus$||')
             
-            # Pattern 2: copy_file (STA-only releases)
-            if [ -z "$source_wa" ]; then
-                source_wa=$(grep -a "copy_file /home/scratch" "$log" | head -1 | sed 's|.*copy_file \(/home/scratch[^[:space:]]*/[^[:space:]]*\)/[ep][xn][pr].*|\1|' | sed 's|/export$||')
-            fi
-            
-            # Pattern 3: Create block_release beflow workdir (NDQ/QNS/HPORT format - any /home directory)
+            # Pattern 2: Create block_release beflow workdir (NBU signoff format - most accurate for NBU paths)
+            # Try this BEFORE copy_file pattern since it handles NBU signoff paths correctly
             if [ -z "$source_wa" ]; then
                 source_wa=$(grep -a "Create block_release beflow workdir" "$log" | head -1 | sed 's|.* = \(/home/[^/]*/.*\)/export/block_release.*|\1|')
+            fi
+            
+            # Pattern 3: copy_file (STA-only releases) - fallback for units without beflow workdir
+            if [ -z "$source_wa" ]; then
+                source_wa=$(grep -a "copy_file /home/scratch" "$log" | head -1 | sed 's|.*copy_file \(/home/scratch[^[:space:]]*/[^[:space:]]*\)/.*|\1|' | sed 's|/export$||')
             fi
             
             # Extract RTL tag

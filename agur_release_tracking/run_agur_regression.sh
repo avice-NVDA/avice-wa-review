@@ -25,7 +25,7 @@
 #   ./run_agur_regression.sh -t TYPE [options]
 #
 # Options:
-#   -t, --type TYPE          Regression type: formal|timing|pv|clock|release (REQUIRED)
+#   -t, --type TYPE          Regression type: formal|timing|pv|clock|release|glcheck (REQUIRED)
 #   -c, --chiplet CHIPLET    Filter by chiplet - case-insensitive (default: all chiplets)
 #   -u, --unit UNIT          Run for specific unit only
 #   -h, --help               Show this help message
@@ -39,6 +39,7 @@
 #   ./run_agur_regression.sh -t formal -c CPORT           # Run formal on CPORT units only
 #   ./run_agur_regression.sh -t timing -u prt             # Run timing regression on prt unit
 #   ./run_agur_regression.sh -t pv                        # Run PV regression on all units
+#   ./run_agur_regression.sh -t glcheck -c CPORT          # Run GL Check regression on CPORT units
 #
 #===============================================================================
 
@@ -48,7 +49,7 @@ AVICE_SCRIPT="/home/avice/scripts/avice_wa_review/avice_wa_review.py"
 PYTHON_BIN="/home/utils/Python/builds/3.11.9-20250715/bin/python3"
 
 # Regression configuration
-REGRESSION_TYPES=()  # Array to store multiple regression types: formal, timing, pv, clock, release
+REGRESSION_TYPES=()  # Array to store multiple regression types: formal, timing, pv, clock, release, glcheck
 
 # Output files (generated in user's current working directory)
 TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
@@ -142,11 +143,12 @@ log_debug() {
 }
 
 # Progress tracking function
-# Args: current, total, unit_name
+# Args: current, total, unit_name, regression_type (optional)
 show_progress() {
     local current=$1
     local total=$2
     local unit_name=$3
+    local regression_type="${4:-}"
     local percentage=$((current * 100 / total))
     local completed_bars=$((percentage / 2))
     local remaining_bars=$((50 - completed_bars))
@@ -171,7 +173,46 @@ show_progress() {
         eta_str=" - ETA: ${eta_min}m ${eta_sec}s"
     fi
     
-    echo -ne "\r${CYAN}Progress:${NC} $bar ${percentage}% (${current}/${total}) - ${unit_name}${eta_str}     "
+    # Add regression type badge with color coding (Option A: before progress bar)
+    # NOTE: ASCII-only characters for Unix terminal compatibility
+    local regression_badge=""
+    if [ -n "$regression_type" ]; then
+        local badge_color=""
+        local badge_text=""
+        case "$regression_type" in
+            formal)
+                badge_color="${CYAN}"
+                badge_text="Formal"
+                ;;
+            timing)
+                badge_color="${MAGENTA}"
+                badge_text="Timing"
+                ;;
+            pv)
+                badge_color="${BLUE}"
+                badge_text="PV"
+                ;;
+            clock)
+                badge_color="${YELLOW}"
+                badge_text="Clock"
+                ;;
+            release)
+                badge_color="${GREEN}"
+                badge_text="Release"
+                ;;
+            glcheck)
+                badge_color="${RED}"
+                badge_text="GL Check"
+                ;;
+            *)
+                badge_color="${CYAN}"
+                badge_text="$regression_type"
+                ;;
+        esac
+        regression_badge="${badge_color}[${badge_text}]${NC} "
+    fi
+    
+    echo -ne "\r${CYAN}Progress:${NC} ${regression_badge}$bar ${percentage}% (${current}/${total}) - ${unit_name}${eta_str}     "
 }
 
 # Load configuration from file
@@ -281,8 +322,9 @@ run_unit_analysis() {
         
         # Use timeout if available
         # NOTE: Do NOT use --quiet here - we need the full output for parser functions to extract data!
+        # NOTE: $analysis_section is intentionally unquoted to allow word splitting for multiple sections
         if command -v timeout &> /dev/null; then
-            timeout 1800 "$PYTHON_BIN" "$AVICE_SCRIPT" "$workarea" -s "$analysis_section" --no-logo > "$output_file" 2>&1
+            timeout 1800 "$PYTHON_BIN" "$AVICE_SCRIPT" "$workarea" -s $analysis_section --no-logo > "$output_file" 2>&1
             local exit_code=$?
             
             if [ $exit_code -eq 124 ]; then
@@ -291,7 +333,7 @@ run_unit_analysis() {
                 continue
             fi
         else
-            "$PYTHON_BIN" "$AVICE_SCRIPT" "$workarea" -s "$analysis_section" --no-logo > "$output_file" 2>&1
+            "$PYTHON_BIN" "$AVICE_SCRIPT" "$workarea" -s $analysis_section --no-logo > "$output_file" 2>&1
             local exit_code=$?
         fi
         
@@ -325,6 +367,9 @@ run_unit_analysis() {
                     ;;
                 release)
                     parse_result=$(parse_release_output "$output_file")
+                    ;;
+                glcheck)
+                    parse_result=$(parse_glcheck_output "$output_file")
                     ;;
                 *)
                     parse_result="ERROR|Unknown regression type|N/A"
@@ -378,6 +423,10 @@ parse_formal_output() {
     local rtl_vs_pnr_bbox_runtime=""
     local rtl_vs_syn_runtime=""
     local rtl_vs_syn_bbox_runtime=""
+    local rtl_vs_pnr_failing_pts=""
+    local rtl_vs_pnr_bbox_failing_pts=""
+    local rtl_vs_syn_failing_pts=""
+    local rtl_vs_syn_bbox_failing_pts=""
     
     # Convert formal section to array for easier processing
     local formal_lines=()
@@ -390,15 +439,24 @@ parse_formal_output() {
     for i in "${!formal_lines[@]}"; do
         line="${formal_lines[$i]}"
         
+        # Strip ANSI color codes from the line before processing
+        line=$(echo "$line" | sed 's/\x1b\[[0-9;]*m//g')
+        
         # Detect which flow this is - look for "Formal Log:" prefix
-        if [[ "$line" == *"Formal Log:"* ]] && [[ "$line" == *"rtl_vs_pnr_bbox_fm/log/rtl_vs_pnr_bbox_fm.log"* ]]; then
-            current_flow="rtl_vs_pnr_bbox"
-        elif [[ "$line" == *"Formal Log:"* ]] && [[ "$line" == *"rtl_vs_pnr_fm/log/rtl_vs_pnr_fm.log"* ]]; then
-            current_flow="rtl_vs_pnr"
-        elif [[ "$line" == *"Formal Log:"* ]] && [[ "$line" == *"rtl_vs_syn_fm/log/rtl_vs_syn_fm.log"* ]]; then
-            current_flow="rtl_vs_syn"
-        elif [[ "$line" == *"Formal Log:"* ]] && [[ "$line" == *"rtl_vs_syn_bbox_fm/log/rtl_vs_syn_bbox_fm.log"* ]]; then
-            current_flow="rtl_vs_syn_bbox"
+        # When we encounter a new flow, reset current_flow first (for the previous flow)
+        if [[ "$line" == *"Formal Log:"* ]]; then
+            # Reset flow when encountering new formal log (end of previous flow's data)
+            current_flow=""
+            
+            if [[ "$line" == *"rtl_vs_pnr_bbox_fm/log/rtl_vs_pnr_bbox_fm.log"* ]]; then
+                current_flow="rtl_vs_pnr_bbox"
+            elif [[ "$line" == *"rtl_vs_pnr_fm/log/rtl_vs_pnr_fm.log"* ]]; then
+                current_flow="rtl_vs_pnr"
+            elif [[ "$line" == *"rtl_vs_syn_fm/log/rtl_vs_syn_fm.log"* ]]; then
+                current_flow="rtl_vs_syn"
+            elif [[ "$line" == *"rtl_vs_syn_bbox_fm/log/rtl_vs_syn_bbox_fm.log"* ]]; then
+                current_flow="rtl_vs_syn_bbox"
+            fi
         fi
         
         # If we have a current flow, check for Status and Runtime
@@ -413,6 +471,25 @@ parse_formal_output() {
                 esac
             fi
             
+            # Extract failing compare points (BEFORE runtime extraction to ensure current_flow is still set)
+            # Format 1: "Failing compare points: 123" (in terminal output)
+            # Format 2: "123 Failing compare points" (in log files)
+            if [[ "$line" =~ Failing[[:space:]]compare[[:space:]]points:[[:space:]]*([0-9]+) ]]; then
+                case "$current_flow" in
+                    rtl_vs_pnr) rtl_vs_pnr_failing_pts="${BASH_REMATCH[1]}" ;;
+                    rtl_vs_pnr_bbox) rtl_vs_pnr_bbox_failing_pts="${BASH_REMATCH[1]}" ;;
+                    rtl_vs_syn) rtl_vs_syn_failing_pts="${BASH_REMATCH[1]}" ;;
+                    rtl_vs_syn_bbox) rtl_vs_syn_bbox_failing_pts="${BASH_REMATCH[1]}" ;;
+                esac
+            elif [[ "$line" =~ ([0-9]+)[[:space:]]Failing[[:space:]]compare[[:space:]]points ]]; then
+                case "$current_flow" in
+                    rtl_vs_pnr) rtl_vs_pnr_failing_pts="${BASH_REMATCH[1]}" ;;
+                    rtl_vs_pnr_bbox) rtl_vs_pnr_bbox_failing_pts="${BASH_REMATCH[1]}" ;;
+                    rtl_vs_syn) rtl_vs_syn_failing_pts="${BASH_REMATCH[1]}" ;;
+                    rtl_vs_syn_bbox) rtl_vs_syn_bbox_failing_pts="${BASH_REMATCH[1]}" ;;
+                esac
+            fi
+            
             # Extract runtime
             if [[ "$line" =~ Runtime:[[:space:]]*([0-9.]+[[:space:]]*(hours?|minutes?)) ]]; then
                 case "$current_flow" in
@@ -421,8 +498,7 @@ parse_formal_output() {
                     rtl_vs_syn) rtl_vs_syn_runtime="${BASH_REMATCH[1]}" ;;
                     rtl_vs_syn_bbox) rtl_vs_syn_bbox_runtime="${BASH_REMATCH[1]}" ;;
                 esac
-                # After runtime, reset current_flow for next flow
-                current_flow=""
+                # Note: Don't reset current_flow here - failing compare points comes after runtime!
             fi
         fi
     done
@@ -492,81 +568,196 @@ parse_formal_output() {
         details="No formal flow logs detected"
     fi
     
-    # Return pipe-delimited string: status|details|runtime
-    echo "${overall_status}|${details}|${runtime}"
+    # Build failing compare points string (colon-delimited per flow to avoid conflict with main pipe delimiter)
+    local failing_pts="${rtl_vs_pnr_bbox_failing_pts:-N/A}:${rtl_vs_pnr_failing_pts:-N/A}:${rtl_vs_syn_failing_pts:-N/A}:${rtl_vs_syn_bbox_failing_pts:-N/A}"
+    
+    # Extract run date from Runtime Summary table for Formal verification
+    # Format: "  Signoff      Formal (rtl_vs_pnr_bbox_fm) 4.07 hours           10/20 08:20 10/20 12:24"
+    local runtime_line=$(grep -A 100 "\[2\] Runtime\|Runtime Summary" "$output_file" | grep -E "Signoff\s+Formal" | sed 's/\x1b\[[0-9;]*m//g' | head -1)
+    
+    # Extract start date/time (format: MM/DD HH:MM)
+    local run_date=$(echo "$runtime_line" | awk '{
+        for (i=1; i<=NF; i++) {
+            if ($i ~ /^[0-9]{1,2}\/[0-9]{1,2}$/) {
+                # Found date, next field is time
+                if (i+1 <= NF) {
+                    print $i, $(i+1)
+                    break
+                }
+            }
+        }
+    }')
+    [ -z "$run_date" ] && run_date="N/A"
+    
+    # Return pipe-delimited string: status|details|runtime|failing_compare_points|run_date
+    echo "${overall_status}|${details}|${runtime}|${failing_pts}|${run_date}"
 }
 
 # Parse timing (PT) output
 # Args: $1 = output file path
-# Returns: status|details|runtime
+# Returns: status|details|runtime|setup_wns|setup_tns|setup_nvp|hold_wns|hold_tns|hold_nvp|dsr_skew_setup|dsr_skew_hold
 parse_timing_output() {
     local output_file="$1"
     local status=""
     local details=""
     local runtime="N/A"
     
+    # Initialize scenario-specific variables
+    local setup_wns="N/A"
+    local setup_tns="N/A"
+    local setup_nvp="N/A"
+    local hold_wns="N/A"
+    local hold_tns="N/A"
+    local hold_nvp="N/A"
+    local dsr_skew_setup="N/A"
+    local dsr_skew_hold="N/A"
+    local setup_scenario="N/A"
+    local hold_scenario="N/A"
+    local pt_work_areas="N/A"
+    
     # Extract PT Signoff Timing section - match actual output format
-    local timing_section=$(grep -A 200 "Signoff Timing (PT)\|PT Timing Summary" "$output_file")
+    local timing_section=$(grep -A 300 "Signoff Timing (PT)\|PT Timing Summary" "$output_file")
     
     if [ -z "$timing_section" ]; then
-        echo "NOT_FOUND|No PT timing analysis found|N/A"
+        echo "NOT_FOUND|No PT timing analysis found|N/A|N/A|N/A|N/A|N/A|N/A|N/A|N/A|N/A"
         return
     fi
     
     # Check for "No PT signoff timing" message
     if echo "$timing_section" | grep -q "No PT signoff timing"; then
-        echo "NOT_FOUND|No PT timing analysis found|N/A"
+        echo "NOT_FOUND|No PT timing analysis found|N/A|N/A|N/A|N/A|N/A|N/A|N/A|N/A|N/A"
         return
     fi
     
-    # Strip ANSI color codes from the section (format: [32m text [0m)
+    # Strip ANSI color codes from the section
     timing_section=$(echo "$timing_section" | sed 's/\x1b\[[0-9;]*m//g')
     
-    # Extract key timing metrics - match actual format with units (ns)
-    # Format: "      WNS:   0.000 ns" or "      WNS:  -1.234 ns"
+    # Extract total work areas count (e.g., "Total Work Areas: 7")
+    pt_work_areas=$(echo "$timing_section" | grep "Total Work Areas:" | grep -oP "Total Work Areas:\s*\K\d+" | head -1)
+    [ -z "$pt_work_areas" ] && pt_work_areas="N/A"
+    
+    # Try to extract Setup and Hold scenario data (dual-scenario format)
+    local setup_section=$(echo "$timing_section" | awk '/Latest Setup Scenario/,/Latest Hold Scenario|DSR Skew Trend/ {print}')
+    local hold_section=$(echo "$timing_section" | awk '/Latest Hold Scenario/,/DSR Skew Trend|^$/ {print}')
+    
+    # Extract scenario names from headers (e.g., "Latest Setup Scenario (func.std_tt_0c_0p6v.setup.typical):")
+    setup_scenario=$(echo "$timing_section" | grep "Latest Setup Scenario" | grep -oP '\([^)]+\)' | tr -d '()')
+    hold_scenario=$(echo "$timing_section" | grep "Latest Hold Scenario" | grep -oP '\([^)]+\)' | tr -d '()')
+    [ -z "$setup_scenario" ] && setup_scenario="N/A"
+    [ -z "$hold_scenario" ] && hold_scenario="N/A"
+    
+    if [ -n "$setup_section" ]; then
+        # Extract Setup scenario timing
+        setup_wns=$(echo "$setup_section" | grep "WNS:" | grep -oP "WNS:\s*\K[-+]?[0-9]*\.?[0-9]+" | head -1)
+        setup_tns=$(echo "$setup_section" | grep "TNS:" | grep -oP "TNS:\s*\K[-+]?[0-9]*\.?[0-9]+" | head -1)
+        setup_nvp=$(echo "$setup_section" | grep "NVP:" | grep -oP "NVP:\s*\K[0-9]+" | head -1)
+        
+        [ -z "$setup_wns" ] && setup_wns="N/A"
+        [ -z "$setup_tns" ] && setup_tns="N/A"
+        [ -z "$setup_nvp" ] && setup_nvp="N/A"
+    fi
+    
+    if [ -n "$hold_section" ]; then
+        # Extract Hold scenario timing
+        hold_wns=$(echo "$hold_section" | grep "WNS:" | grep -oP "WNS:\s*\K[-+]?[0-9]*\.?[0-9]+" | head -1)
+        hold_tns=$(echo "$hold_section" | grep "TNS:" | grep -oP "TNS:\s*\K[-+]?[0-9]*\.?[0-9]+" | head -1)
+        hold_nvp=$(echo "$hold_section" | grep "NVP:" | grep -oP "NVP:\s*\K[0-9]+" | head -1)
+        
+        [ -z "$hold_wns" ] && hold_wns="N/A"
+        [ -z "$hold_tns" ] && hold_tns="N/A"
+        [ -z "$hold_nvp" ] && hold_nvp="N/A"
+    fi
+    
+    # Extract DSR Skew - handle two formats:
+    # Format 1 (multiple PT runs): "DSR Skew Trend: Setup Scenario: work_XXX: N.NN ps"
+    # Format 2 (single PT run): "Latest DSR Mux Clock Skew: Setup: N.NN ps"
+    
+    # Try Format 1 first (multiple PT runs with trend)
+    local dsr_section=$(echo "$timing_section" | awk '/DSR Skew Trend/,/^$/ {print}')
+    if [ -n "$dsr_section" ]; then
+        # Extract setup skew: Find "Setup Scenario:" then get first value (work_XXX: N.NN ps)
+        dsr_skew_setup=$(echo "$dsr_section" | awk '/Setup Scenario:/,/Hold Scenario|Trend:/ {print}' | grep "work_.*ps" | head -1 | grep -oP "[\d.]+\s*ps" | grep -oP "[\d.]+" | head -1)
+        
+        # Extract hold skew: Find "Hold Scenario:" then get first value (work_XXX: N.NN ps)
+        dsr_skew_hold=$(echo "$dsr_section" | awk '/Hold Scenario:/,/^$|Trend:/ {print}' | grep "work_.*ps" | head -1 | grep -oP "[\d.]+\s*ps" | grep -oP "[\d.]+" | head -1)
+        
+        [ -z "$dsr_skew_setup" ] && dsr_skew_setup="N/A"
+        [ -z "$dsr_skew_hold" ] && dsr_skew_hold="N/A"
+    fi
+    
+    # Try Format 2 if Format 1 didn't find values (single PT run)
+    if [ "$dsr_skew_setup" = "N/A" ] && [ "$dsr_skew_hold" = "N/A" ]; then
+        local dsr_latest=$(echo "$timing_section" | awk '/Latest DSR Mux Clock Skew/,/^$/ {print}')
+        if [ -n "$dsr_latest" ]; then
+            # Extract: "Setup:   1.94 ps"
+            dsr_skew_setup=$(echo "$dsr_latest" | grep "Setup:" | grep -oP "[\d.]+\s*ps" | grep -oP "[\d.]+" | head -1)
+            # Extract: "Hold:    4.70 ps"
+            dsr_skew_hold=$(echo "$dsr_latest" | grep "Hold:" | grep -oP "[\d.]+\s*ps" | grep -oP "[\d.]+" | head -1)
+            
+            [ -z "$dsr_skew_setup" ] && dsr_skew_setup="N/A"
+            [ -z "$dsr_skew_hold" ] && dsr_skew_hold="N/A"
+        fi
+    fi
+    
+    # Fallback: If scenarios not found, try simple extraction (old format)
+    if [ "$setup_wns" = "N/A" ] && [ "$hold_wns" = "N/A" ]; then
     local wns=$(echo "$timing_section" | grep -i "WNS:" | grep -oP "WNS:\s*\K[-+]?[0-9]*\.?[0-9]+" | head -1)
     local tns=$(echo "$timing_section" | grep -i "TNS:" | grep -oP "TNS:\s*\K[-+]?[0-9]*\.?[0-9]+" | head -1)
     local nvp=$(echo "$timing_section" | grep -i "NVP:" | grep -oP "NVP:\s*\K[0-9]+" | head -1)
     
-    # Set defaults if extraction failed
-    [ -z "$wns" ] && wns="N/A"
-    [ -z "$tns" ] && tns="N/A"
-    [ -z "$nvp" ] && nvp="N/A"
+        # Use as setup values for backward compatibility
+        [ -n "$wns" ] && setup_wns="$wns"
+        [ -n "$tns" ] && setup_tns="$tns"
+        [ -n "$nvp" ] && setup_nvp="$nvp"
+    fi
     
-    # Determine overall timing status
+    # Determine overall timing status (based on worst case between setup and hold)
     local overall_status="UNKNOWN"
+    local worst_wns="N/A"
+    local worst_tns="N/A"
     
-    if [ "$wns" = "N/A" ] && [ "$tns" = "N/A" ]; then
+    # Find worst WNS
+    if [ "$setup_wns" != "N/A" ] && [ "$hold_wns" != "N/A" ]; then
+        worst_wns=$(echo "$setup_wns $hold_wns" | awk '{if ($1 < $2) print $1; else print $2}')
+        worst_tns=$(echo "$setup_tns $hold_tns" | awk '{if ($1 < $2) print $1; else print $2}')
+    elif [ "$setup_wns" != "N/A" ]; then
+        worst_wns="$setup_wns"
+        worst_tns="$setup_tns"
+    elif [ "$hold_wns" != "N/A" ]; then
+        worst_wns="$hold_wns"
+        worst_tns="$hold_tns"
+    fi
+    
+    if [ "$worst_wns" = "N/A" ]; then
         overall_status="NO_DATA"
         details="No timing data available"
-    elif [ "$wns" != "N/A" ]; then
-        # Convert WNS to float for comparison (bash doesn't handle floats well, use awk)
-        local wns_check=$(echo "$wns 0" | awk '{if ($1 >= $2) print "PASS"; else print "FAIL"}')
+    else
+        # Convert WNS to float for comparison
+        local wns_check=$(echo "$worst_wns 0" | awk '{if ($1 >= $2) print "PASS"; else print "FAIL"}')
         
-        # Format timing values: if < 0.5ns, show in ps for better readability
-        local wns_formatted="$wns"
-        local tns_formatted="$tns"
+        # Format timing values for details
+        local wns_formatted="$worst_wns"
+        local tns_formatted="$worst_tns"
         local wns_unit="ns"
         local tns_unit="ns"
         
-        # Check if WNS absolute value is less than 0.5ns
-        local wns_abs=$(echo "$wns" | tr -d '-')
+        # Check if WNS absolute value is less than 0.5ns (convert to ps)
+        local wns_abs=$(echo "$worst_wns" | tr -d '-')
         if [ $(echo "$wns_abs 0.5" | awk '{if ($1 < $2) print "1"; else print "0"}') -eq 1 ]; then
-            wns_formatted=$(echo "$wns" | awk '{printf "%.0f", $1 * 1000}')
+            wns_formatted=$(echo "$worst_wns" | awk '{printf "%.0f", $1 * 1000}')
             wns_unit="ps"
         fi
         
         # Check if TNS absolute value is less than 0.5ns
-        local tns_abs=$(echo "$tns" | tr -d '-')
+        local tns_abs=$(echo "$worst_tns" | tr -d '-')
         if [ $(echo "$tns_abs 0.5" | awk '{if ($1 < $2) print "1"; else print "0"}') -eq 1 ]; then
-            tns_formatted=$(echo "$tns" | awk '{printf "%.0f", $1 * 1000}')
+            tns_formatted=$(echo "$worst_tns" | awk '{printf "%.0f", $1 * 1000}')
             tns_unit="ps"
         fi
         
         if [ "$wns_check" = "PASS" ]; then
             overall_status="PASSED"
-            details="WNS: ${wns_formatted}${wns_unit}, TNS: ${tns_formatted}${tns_unit}"
-            [ "$nvp" != "N/A" ] && details="${details}, Violating Paths: ${nvp}"
+            details="Setup/Hold WNS: ${wns_formatted}${wns_unit}, TNS: ${tns_formatted}${tns_unit}"
         else
             # Check severity of violation (in nanoseconds)
             # Critical if WNS < -0.05ns (50ps)
@@ -577,20 +768,42 @@ parse_timing_output() {
             else
                 overall_status="WARN"
             fi
-            details="WNS: ${wns_formatted}${wns_unit} (VIOLATION), TNS: ${tns_formatted}${tns_unit}"
-            [ "$nvp" != "N/A" ] && details="${details}, Violating Paths: ${nvp}"
+            details="Setup/Hold WNS: ${wns_formatted}${wns_unit} (VIOLATION), TNS: ${tns_formatted}${tns_unit}"
         fi
-    else
-        overall_status="UNKNOWN"
-        details="Unable to determine timing status"
     fi
     
-    # Extract runtime if available
-    runtime=$(echo "$timing_section" | grep -i "Runtime:" | head -1 | grep -oP "Runtime:\s*\K[0-9.]+ (hours|minutes|seconds)")
+    # Extract PT runtime from Runtime section (not PT section)
+    # Extract runtime and run date from Runtime section (look for Auto PT runtime line)
+    # Format: "  Signoff      Auto PT                     3.90 hours              10/15 23:31 10/16 03:25"
+    local runtime_line=$(grep -A 100 "\[2\] Runtime\|Runtime Summary" "$output_file" | grep -E "Signoff\s+Auto PT" | sed 's/\x1b\[[0-9;]*m//g' | head -1)
+    
+    runtime=$(echo "$runtime_line" | awk '{
+        # Find the column with "hours" or "minutes"
+        for (i=1; i<=NF; i++) {
+            if ($i ~ /hours|minutes|seconds/) {
+                print $(i-1), $i
+                break
+            }
+        }
+    }')
     [ -z "$runtime" ] && runtime="N/A"
     
-    # Return pipe-delimited string
-    echo "${overall_status}|${details}|${runtime}"
+    # Extract start date/time (format: MM/DD HH:MM)
+    local run_date=$(echo "$runtime_line" | awk '{
+        for (i=1; i<=NF; i++) {
+            if ($i ~ /^[0-9]{1,2}\/[0-9]{1,2}$/) {
+                # Found date, next field is time
+                if (i+1 <= NF) {
+                    print $i, $(i+1)
+                    break
+                }
+            }
+        }
+    }')
+    [ -z "$run_date" ] && run_date="N/A"
+    
+    # Return pipe-delimited string with all fields (including scenario names, PT work areas count, and run_date)
+    echo "${overall_status}|${details}|${runtime}|${setup_wns}|${setup_tns}|${setup_nvp}|${hold_wns}|${hold_tns}|${hold_nvp}|${dsr_skew_setup}|${dsr_skew_hold}|${setup_scenario}|${hold_scenario}|${pt_work_areas}|${run_date}"
 }
 
 # Parse PV (Physical Verification) output
@@ -677,12 +890,41 @@ parse_pv_output() {
         fi
     fi
     
-    # Extract runtime if available (look for Duration from PV Flow Timeline)
-    runtime=$(echo "$pv_section" | grep -i "Duration:" | head -1 | grep -oP "Duration:\s*\K.*")
+    # Extract runtime and run date from Runtime section (look for PV runtime line)
+    # Format: "  Signoff      PV                          2.81 hours           10/19 15:30 10/19 18:24"
+    local runtime_line=$(grep -A 100 "\[2\] Runtime\|Runtime Summary" "$output_file" | grep -E "Signoff\s+PV" | sed 's/\x1b\[[0-9;]*m//g' | head -1)
+    
+    runtime=$(echo "$runtime_line" | awk '{
+        for (i=1; i<=NF; i++) {
+            if ($i ~ /hours|minutes|seconds/) {
+                print $(i-1), $i
+                break
+            }
+        }
+    }')
+    
+    # Fallback: If not in Runtime section, try Duration from PV section itself
+    if [ -z "$runtime" ]; then
+        runtime=$(echo "$pv_section" | grep -i "Duration:" | head -1 | grep -oP "Duration:\s*\K.*")
+    fi
     [ -z "$runtime" ] && runtime="N/A"
     
-    # Return pipe-delimited string
-    echo "${overall_status}|${details}|${runtime}"
+    # Extract start date/time (format: MM/DD HH:MM)
+    local run_date=$(echo "$runtime_line" | awk '{
+        for (i=1; i<=NF; i++) {
+            if ($i ~ /^[0-9]{1,2}\/[0-9]{1,2}$/) {
+                # Found date, next field is time
+                if (i+1 <= NF) {
+                    print $i, $(i+1)
+                    break
+                }
+            }
+        }
+    }')
+    [ -z "$run_date" ] && run_date="N/A"
+    
+    # Return pipe-delimited string (added run_date as last field)
+    echo "${overall_status}|${details}|${runtime}|${run_date}"
 }
 
 # Parse clock tree analysis output
@@ -777,8 +1019,13 @@ parse_clock_output() {
     runtime=$(echo "$clock_section" | grep -i "Runtime:" | head -1 | grep -oP "Runtime:\s*\K[0-9.]+ (hours|minutes|seconds)")
     [ -z "$runtime" ] && runtime="N/A"
     
-    # Return pipe-delimited string
-    echo "${overall_status}|${details}|${runtime}"
+    # Extract clock latency file path (contains trace per clock with highest latency path)
+    # Format: "PT Clock Analysis: /path/to/...clock_latency"
+    clock_latency_file=$(echo "$clock_section" | grep "PT Clock Analysis:" | grep -oP "PT Clock Analysis:\s*\K/[^\s]+" | head -1)
+    [ -z "$clock_latency_file" ] && clock_latency_file="N/A"
+    
+    # Return pipe-delimited string (added clock_latency_file as 4th field)
+    echo "${overall_status}|${details}|${runtime}|${clock_latency_file}"
 }
 
 # Parse block release output
@@ -798,11 +1045,8 @@ parse_release_output() {
         return
     fi
     
-    # Check for "No block release attempts found" message
-    if echo "$release_section" | grep -q "No block release attempts found"; then
-        echo "NOT_FOUND|No block release attempts found|N/A"
-        return
-    fi
+    # Don't check for "No block release attempts found" here - it might be in the log
+    # We'll determine based on actual attempt counts below
     
     # Strip ANSI color codes from the section
     release_section=$(echo "$release_section" | sed 's/\x1b\[[0-9;]*m//g')
@@ -818,10 +1062,60 @@ parse_release_output() {
     [ -z "$successful_attempts" ] && successful_attempts=0
     [ -z "$failed_attempts" ] && failed_attempts=0
     
-    # Extract custom links list from the summary section (not from individual attempts)
-    # Format: "Custom Links: SEP_28_FP_eco_01, SEP_28_FP, SEP_10_eco_01, SEP_10_cport_eco_01, SEP_10"
-    # Use awk to extract only from the "Release Attempts from Workarea" summary section
-    local custom_links=$(echo "$release_section" | awk '/Release Attempts from Workarea/,/^[[:space:]]*$/ {print}' | grep -i "Custom Links:" | head -1 | sed 's/.*Custom Links:\s*//')
+    # Extract custom links from "All Custom Links in Central Release Area" table
+    # Parse the table to get link names with their sources (NBU/ROOT)
+    local custom_links=""
+    local nbu_links_count=0
+    local root_links_count=0
+    local has_nbu_signoff=0
+    
+    # Check for NBU Signoff Mode indicator
+    if echo "$release_section" | grep -q "NBU Signoff Mode"; then
+        has_nbu_signoff=1
+    fi
+    
+    # Parse custom links from the comprehensive table
+    # Extract link names from lines between table header and summary line
+    local in_table=0
+    local link_names=()
+    while IFS= read -r line; do
+        # Start of table
+        if [[ "$line" =~ "Link Name".*"Date".*"User".*"Source" ]]; then
+            in_table=1
+            continue
+        fi
+        
+        # End of table (summary line)
+        if [[ "$line" =~ "Total:".*"custom links" ]]; then
+            # Extract NBU and ROOT counts from summary
+            if [[ "$line" =~ ([0-9]+)\ from\ NBU\ signoff ]]; then
+                nbu_links_count="${BASH_REMATCH[1]}"
+            fi
+            if [[ "$line" =~ ([0-9]+)\ from\ ROOT ]]; then
+                root_links_count="${BASH_REMATCH[1]}"
+            fi
+            break
+        fi
+        
+        # Skip separator lines
+        if [[ "$line" =~ ^[[:space:]]*-+[[:space:]]*-+[[:space:]]* ]]; then
+            continue
+        fi
+        
+        # Extract link name (first column, may have color codes)
+        if [ $in_table -eq 1 ]; then
+            # Parse table row: link_name is first field after whitespace
+            local link_name=$(echo "$line" | awk '{print $1}' | tr -d '[:space:]')
+            if [ -n "$link_name" ] && [ "$link_name" != "Link" ]; then
+                link_names+=("$link_name")
+            fi
+        fi
+    done <<< "$release_section"
+    
+    # Build custom_links string
+    if [ ${#link_names[@]} -gt 0 ]; then
+        custom_links=$(IFS=', '; echo "${link_names[*]}")
+    fi
     
     # Determine overall release status based on attempts
     local overall_status="UNKNOWN"
@@ -834,6 +1128,11 @@ parse_release_output() {
         overall_status="PASSED"
         details="${successful_attempts} successful / ${total_attempts} total attempts"
         
+        # Add NBU signoff indicator if detected
+        if [ $has_nbu_signoff -eq 1 ]; then
+            details="${details} [NBU]"
+        fi
+        
         # Add custom links if available
         if [ -n "$custom_links" ]; then
             # Truncate long custom links list for display
@@ -841,6 +1140,11 @@ parse_release_output() {
                 custom_links="${custom_links:0:57}..."
             fi
             details="${details}; Links: ${custom_links}"
+            
+            # Add NBU/ROOT breakdown if available
+            if [ $nbu_links_count -gt 0 ] || [ $root_links_count -gt 0 ]; then
+                details="${details} (${nbu_links_count} NBU, ${root_links_count} ROOT)"
+            fi
         fi
         
     elif [ $successful_attempts -gt 0 ] && [ $failed_attempts -gt 0 ]; then
@@ -848,18 +1152,33 @@ parse_release_output() {
         overall_status="WARN"
         details="${successful_attempts} successful, ${failed_attempts} failed / ${total_attempts} total"
         
+        # Add NBU signoff indicator if detected
+        if [ $has_nbu_signoff -eq 1 ]; then
+            details="${details} [NBU]"
+        fi
+        
         # Add custom links if available
         if [ -n "$custom_links" ]; then
             if [ ${#custom_links} -gt 50 ]; then
                 custom_links="${custom_links:0:47}..."
             fi
             details="${details}; Links: ${custom_links}"
+            
+            # Add NBU/ROOT breakdown if available
+            if [ $nbu_links_count -gt 0 ] || [ $root_links_count -gt 0 ]; then
+                details="${details} (${nbu_links_count} NBU, ${root_links_count} ROOT)"
+            fi
         fi
         
     elif [ $failed_attempts -gt 0 ] && [ $successful_attempts -eq 0 ]; then
         # All attempts failed
         overall_status="FAILED"
         details="All ${failed_attempts} release attempts FAILED"
+        
+        # Add NBU signoff indicator if detected
+        if [ $has_nbu_signoff -eq 1 ]; then
+            details="${details} [NBU]"
+        fi
     else
         # Unknown state
         overall_status="UNKNOWN"
@@ -894,6 +1213,136 @@ parse_release_output() {
     echo "${overall_status}|${details}|${runtime}|${latest_flags}"
 }
 
+# Parse GL Check output
+# Args: $1 = output file path
+# Returns: status|details|runtime|total_errors|waived|non_waived|top_3_checkers
+parse_glcheck_output() {
+    local output_file="$1"
+    local status=""
+    local details=""
+    local runtime="N/A"
+    
+    # Extract GL Check section
+    local glcheck_section=$(grep -A 200 "GL Check\|GL Checks" "$output_file")
+    
+    if [ -z "$glcheck_section" ]; then
+        echo "NOT_FOUND|No GL Check analysis found|N/A|N/A|N/A|N/A|N/A"
+        return
+    fi
+    
+    # Check for "Didn't run GL checks" message
+    if echo "$glcheck_section" | grep -q "Didn't run GL checks"; then
+        echo "NOT_FOUND|GL checks not run|N/A|N/A|N/A|N/A|N/A"
+        return
+    fi
+    
+    # Strip ANSI color codes
+    glcheck_section=$(echo "$glcheck_section" | sed 's/\x1b\[[0-9;]*m//g')
+    
+    # Extract error counts
+    # Format: "Total Errors: 150", "Waived: 100", "Non-Waived: 50"
+    local total_errors=$(echo "$glcheck_section" | grep -i "Total Errors:" | grep -oP "Total Errors:\s*\K[0-9]+" | head -1)
+    local waived=$(echo "$glcheck_section" | grep -i "^\s*Waived:" | grep -oP "Waived:\s*\K[0-9]+" | head -1)
+    local non_waived=$(echo "$glcheck_section" | grep -i "^\s*Non-Waived:" | grep -oP "Non-Waived:\s*\K[0-9]+" | head -1)
+    
+    # Set defaults if extraction failed
+    [ -z "$total_errors" ] && total_errors="N/A"
+    [ -z "$waived" ] && waived="N/A"
+    [ -z "$non_waived" ] && non_waived="N/A"
+    
+    # Determine overall GL Check status based on non-waived count
+    local overall_status="UNKNOWN"
+    
+    if [ "$total_errors" = "N/A" ] && [ "$waived" = "N/A" ] && [ "$non_waived" = "N/A" ]; then
+        overall_status="NO_DATA"
+        details="No GL Check data available"
+    elif [ "$non_waived" = "N/A" ]; then
+        overall_status="NO_DATA"
+        details="Unable to parse GL Check data"
+    else
+        # Convert to number for comparison
+        local non_waived_num=$non_waived
+        
+        if [ $non_waived_num -eq 0 ]; then
+            overall_status="PASSED"
+            details="Total: ${total_errors}, Waived: ${waived}, Non-Waived: ${non_waived} (CLEAN)"
+        elif [ $non_waived_num -lt 50 ]; then
+            overall_status="WARN"
+            details="Total: ${total_errors}, Waived: ${waived}, Non-Waived: ${non_waived} (MINOR)"
+        else
+            overall_status="FAILED"
+            details="Total: ${total_errors}, Waived: ${waived}, Non-Waived: ${non_waived} (CRITICAL)"
+        fi
+    fi
+    
+    # Extract top 3 checkers with highest non-waived counts (for detailed display)
+    # Format: "Checker [Code](Name)    Waived    Non-Waived   Total"
+    # Parse the table, extract all checkers, sort by non-waived count, take top 3
+    local checkers_table=$(echo "$glcheck_section" | awk '/GL Check Results by Checker:/,/^$/ {print}' | grep -E "^\s+\[" | sed 's/\x1b\[[0-9;]*m//g')
+    
+    # Parse all checkers and extract name + non-waived count, then sort by non-waived descending
+    local top_3_checkers=""
+    if [ -n "$checkers_table" ]; then
+        # Parse each line: extract checker name and non-waived count (2nd numeric column)
+        # Then sort by non-waived count (descending) and take top 3
+        local sorted_checkers=$(echo "$checkers_table" | while IFS= read -r line; do
+            if [ -z "$line" ]; then
+                continue
+            fi
+            # Extract checker name (first field with brackets)
+            checker=$(echo "$line" | awk '{print $1}')
+            # Extract non-waived count (2nd numeric column in the table)
+            # Table format: Checker    Waived    Non-Waived    Total
+            #               $1         $2        $3            $4
+            nw=$(echo "$line" | awk '{for(i=1;i<=NF;i++){if($i~/^[0-9]+$/){count++; if(count==2){print $i; break}}}}')
+            
+            if [ -n "$checker" ] && [ -n "$nw" ]; then
+                # Output format: non_waived_count|checker_name (for sorting)
+                echo "${nw}|${checker}"
+            fi
+        done | sort -t'|' -k1,1nr | head -3)
+        
+        # Convert sorted results to semicolon-delimited format
+        while IFS='|' read -r nw checker; do
+            [ -n "$top_3_checkers" ] && top_3_checkers="${top_3_checkers};"
+            top_3_checkers="${top_3_checkers}${checker}:${nw}"
+        done <<< "$sorted_checkers"
+    fi
+    
+    [ -z "$top_3_checkers" ] && top_3_checkers="N/A"
+    
+    # Extract runtime and run date from Runtime section (look for GL Check runtime line)
+    # Format: "  Signoff      GL Check                    0.59 hours           10/20 08:27 10/20 09:02"
+    local runtime_line=$(grep -A 100 "\[2\] Runtime\|Runtime Summary" "$output_file" | grep -E "Signoff\s+GL Check" | sed 's/\x1b\[[0-9;]*m//g' | head -1)
+    
+    runtime=$(echo "$runtime_line" | awk '{
+        for (i=1; i<=NF; i++) {
+            if ($i ~ /hours|minutes|seconds/) {
+                print $(i-1), $i
+                break
+            }
+        }
+    }')
+    [ -z "$runtime" ] && runtime="N/A"
+    
+    # Extract start date/time (format: MM/DD HH:MM)
+    local run_date=$(echo "$runtime_line" | awk '{
+        for (i=1; i<=NF; i++) {
+            if ($i ~ /^[0-9]{1,2}\/[0-9]{1,2}$/) {
+                # Found date, next field is time
+                if (i+1 <= NF) {
+                    print $i, $(i+1)
+                    break
+                }
+            }
+        }
+    }')
+    [ -z "$run_date" ] && run_date="N/A"
+    
+    # Return pipe-delimited string with all fields (added run_date as last field)
+    echo "${overall_status}|${details}|${runtime}|${total_errors}|${waived}|${non_waived}|${top_3_checkers}|${run_date}"
+}
+
 # Export functions and variables for parallel execution
 # Note: Must export AFTER functions are defined to avoid warnings
 export -f run_unit_analysis
@@ -902,6 +1351,7 @@ export -f parse_timing_output
 export -f parse_pv_output
 export -f parse_clock_output
 export -f parse_release_output
+export -f parse_glcheck_output
 export -f save_state
 export -f log_debug
 export -f log_verbose
@@ -911,19 +1361,26 @@ export PYTHON_BIN AVICE_SCRIPT VERBOSE QUIET BLUE MAGENTA NC MAX_RETRIES RETRY_D
 get_analysis_section() {
     case "$REGRESSION_TYPE" in
         formal)
-            echo "formal"
+            # Request both runtime and formal sections to get Formal runtime data
+            echo "runtime formal"
             ;;
         timing)
-            echo "pt"
+            # Request both runtime and pt sections to get PT runtime data
+            echo "runtime pt"
             ;;
         pv)
-            echo "pv"
+            # Request both runtime and pv sections to get PV runtime data
+            echo "runtime pv"
             ;;
         clock)
             echo "clock"
             ;;
         release)
             echo "block-release"
+            ;;
+        glcheck)
+            # Request both runtime and gl-check sections to get GL Check runtime data
+            echo "runtime gl-check"
             ;;
         *)
             echo "ERROR"
@@ -948,6 +1405,9 @@ get_regression_name() {
             ;;
         release)
             echo "Block Release Status"
+            ;;
+        glcheck)
+            echo "GL Check Analysis"
             ;;
         *)
             echo "Analysis"
@@ -1038,19 +1498,19 @@ done
 # Default to all regression types if none specified
 if [ ${#REGRESSION_TYPES[@]} -eq 0 ]; then
     echo -e "${CYAN}No regression type specified - running ALL types${NC}"
-    REGRESSION_TYPES=("formal" "timing" "pv" "clock" "release")
+    REGRESSION_TYPES=("formal" "timing" "pv" "clock" "release" "glcheck")
     echo ""
 fi
 
 # Validate each regression type
 for type in "${REGRESSION_TYPES[@]}"; do
     case "$type" in
-        formal|timing|pv|clock|release)
+        formal|timing|pv|clock|release|glcheck)
             # Valid regression type
             ;;
         *)
             echo -e "${RED}[ERROR]${NC} Invalid regression type: $type"
-            echo "Valid types: formal, timing, pv, clock, release"
+            echo "Valid types: formal, timing, pv, clock, release, glcheck"
             echo ""
             show_help
             ;;
@@ -1099,24 +1559,24 @@ START_TIME=$SECONDS
 
 # Print header only if not in quiet mode
 if [ $QUIET -eq 0 ]; then
-    print_header
-    
-    # Display execution mode information
-    if [ $DRY_RUN -eq 1 ]; then
-        echo -e "${YELLOW}[DRY-RUN MODE]${NC} Preview only - no analyses will be executed"
-        echo ""
-    fi
-    
-    if [ $VERBOSE -eq 1 ]; then
-        echo -e "${BLUE}[VERBOSE MODE]${NC} Debug output enabled"
-        echo ""
-    fi
-    
+print_header
+
+# Display execution mode information
+if [ $DRY_RUN -eq 1 ]; then
+    echo -e "${YELLOW}[DRY-RUN MODE]${NC} Preview only - no analyses will be executed"
+    echo ""
+fi
+
+if [ $VERBOSE -eq 1 ]; then
+    echo -e "${BLUE}[VERBOSE MODE]${NC} Debug output enabled"
+    echo ""
+fi
+
     # Only show parallel mode message if not auto-detected (already shown above)
     if [ $PARALLEL_JOBS -gt 1 ] && [ $AUTO_DETECTED_JOBS -eq 0 ]; then
-        echo -e "${GREEN}[PARALLEL MODE]${NC} Running with $PARALLEL_JOBS parallel jobs"
-        log_verbose "CPU cores available: $(nproc 2>/dev/null || echo 'unknown')"
-        echo ""
+    echo -e "${GREEN}[PARALLEL MODE]${NC} Running with $PARALLEL_JOBS parallel jobs"
+    log_verbose "CPU cores available: $(nproc 2>/dev/null || echo 'unknown')"
+    echo ""
     fi
 fi
 
@@ -1212,7 +1672,7 @@ declare -a RTL_TAGS
 declare -a RELEASE_DATES
 declare -a RELEASE_USERS
 
-while IFS='|' read -r unit chiplet workarea rtl_tag release_types release_date release_user; do
+while IFS='|' read -r unit chiplet workarea rtl_tag release_types release_date release_user release_path; do
     # Skip comments and empty lines
     [[ "$unit" =~ ^#.*$ ]] && continue
     [[ -z "$unit" ]] && continue
@@ -1224,6 +1684,7 @@ while IFS='|' read -r unit chiplet workarea rtl_tag release_types release_date r
     rtl_tag=$(echo "$rtl_tag" | xargs)
     release_date=$(echo "$release_date" | xargs)
     release_user=$(echo "$release_user" | xargs)
+    # Note: release_path (8th field) is read but not used - prevents field overflow into release_user
     
     # Apply filters
     if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
@@ -1290,14 +1751,14 @@ fi
 
 # Print unit count and filters only if not in quiet mode
 if [ $QUIET -eq 0 ]; then
-    echo -e "${GREEN}Found $TOTAL_UNITS unit(s) to analyze${NC}"
-    if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
-        echo "Filter: Chiplet = ${FILTER_CHIPLETS[*]}"
-    fi
-    if [ -n "$FILTER_UNIT" ]; then
-        echo "Filter: Unit = $FILTER_UNIT"
-    fi
-    echo ""
+echo -e "${GREEN}Found $TOTAL_UNITS unit(s) to analyze${NC}"
+if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
+    echo "Filter: Chiplet = ${FILTER_CHIPLETS[*]}"
+fi
+if [ -n "$FILTER_UNIT" ]; then
+    echo "Filter: Unit = $FILTER_UNIT"
+fi
+echo ""
 fi
 
 # Arrays to store results per regression type
@@ -1318,27 +1779,27 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
 
     # Run analysis on each unit
     if [ $QUIET -eq 0 ]; then
-        print_section "Running $REGRESSION_NAME Analysis"
-        echo ""
+    print_section "Running $REGRESSION_NAME Analysis"
+    echo ""
     fi
     
     # Dry-run mode: just preview
     if [ $DRY_RUN -eq 1 ]; then
         if [ $QUIET -eq 0 ]; then
-            echo -e "${YELLOW}[DRY-RUN] Would analyze the following units:${NC}"
-            for i in "${!UNITS[@]}"; do
-                unit="${UNITS[$i]}"
-                chiplet="${CHIPLETS[$i]}"
-                workarea="${WORKAREAS[$i]}"
-                
-                # Check if already processed (for resume)
-                if [ -n "$RESUME_FILE" ] && is_unit_processed "$STATE_FILE" "$REGRESSION_TYPE" "$i"; then
-                    echo "  [$((i+1))/$TOTAL_UNITS] $unit ($chiplet) - ${GREEN}ALREADY COMPLETED (skipped)${NC}"
-                else
-                    echo "  [$((i+1))/$TOTAL_UNITS] $unit ($chiplet) - $workarea"
-                fi
-            done
-            echo ""
+        echo -e "${YELLOW}[DRY-RUN] Would analyze the following units:${NC}"
+        for i in "${!UNITS[@]}"; do
+            unit="${UNITS[$i]}"
+            chiplet="${CHIPLETS[$i]}"
+            workarea="${WORKAREAS[$i]}"
+            
+            # Check if already processed (for resume)
+            if [ -n "$RESUME_FILE" ] && is_unit_processed "$STATE_FILE" "$REGRESSION_TYPE" "$i"; then
+                echo "  [$((i+1))/$TOTAL_UNITS] $unit ($chiplet) - ${GREEN}ALREADY COMPLETED (skipped)${NC}"
+            else
+                echo "  [$((i+1))/$TOTAL_UNITS] $unit ($chiplet) - $workarea"
+            fi
+        done
+        echo ""
         fi
         
         # Initialize empty results for dry-run
@@ -1384,17 +1845,17 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
             if [ $PARALLEL_JOBS -eq 1 ]; then
                 # In sequential mode, show progress bar if quiet, otherwise show detailed info
                 if [ $QUIET -eq 1 ]; then
-                    show_progress "$units_completed" "$TOTAL_UNITS" "$unit"
+                    show_progress "$units_completed" "$TOTAL_UNITS" "$unit" "$REGRESSION_TYPE"
                 else
-                    echo ""
-                    print_section "Unit $((i+1))/$TOTAL_UNITS: $unit ($chiplet)"
-                    echo "Workarea: $workarea"
-                    echo "Released: ${RELEASE_DATES[$i]} by ${RELEASE_USERS[$i]}"
-                    echo ""
-                    echo -e "${CYAN}Running $REGRESSION_NAME analysis...${NC}"
+                echo ""
+                print_section "Unit $((i+1))/$TOTAL_UNITS: $unit ($chiplet)"
+                echo "Workarea: $workarea"
+                echo "Released: ${RELEASE_DATES[$i]} by ${RELEASE_USERS[$i]}"
+                echo ""
+                echo -e "${CYAN}Running $REGRESSION_NAME analysis...${NC}"
                 fi
             else
-                show_progress "$units_completed" "$TOTAL_UNITS" "$unit"
+                show_progress "$units_completed" "$TOTAL_UNITS" "$unit" "$REGRESSION_TYPE"
             fi
             
             # Run analysis (parallel or sequential)
@@ -1419,24 +1880,24 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
                 
                 # Show result in sequential mode (only if not quiet)
                 if [ $QUIET -eq 0 ]; then
-                    result_file="$TEMP_DIR/${unit}_${REGRESSION_TYPE}_result.txt"
-                    if [ -f "$result_file" ]; then
-                        parse_result=$(cat "$result_file")
-                        IFS='|' read -r overall_status details runtime <<< "$parse_result"
-                        
-                        status_color="${YELLOW}"
-                        case "$overall_status" in
-                            PASSED)
-                                status_color="${GREEN}"
-                                ;;
-                            FAILED|CRASHED|ERROR|MISSING)
-                                status_color="${RED}"
-                                ;;
-                        esac
-                        
-                        echo -e "${status_color}Status: $overall_status${NC}"
-                        echo "Details: $details"
-                        echo "Runtime: $runtime"
+                result_file="$TEMP_DIR/${unit}_${REGRESSION_TYPE}_result.txt"
+                if [ -f "$result_file" ]; then
+                    parse_result=$(cat "$result_file")
+                    IFS='|' read -r overall_status details runtime <<< "$parse_result"
+                    
+                    status_color="${YELLOW}"
+                    case "$overall_status" in
+                        PASSED)
+                            status_color="${GREEN}"
+                            ;;
+                        FAILED|CRASHED|ERROR|MISSING)
+                            status_color="${RED}"
+                            ;;
+                    esac
+                    
+                    echo -e "${status_color}Status: $overall_status${NC}"
+                    echo "Details: $details"
+                    echo "Runtime: $runtime"
                     fi
                 fi
             fi
@@ -1446,7 +1907,7 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
         if [ $PARALLEL_JOBS -gt 1 ]; then
             log_verbose "Waiting for remaining parallel jobs to complete..."
             wait
-            show_progress "$TOTAL_UNITS" "$TOTAL_UNITS" "All units completed"
+            show_progress "$TOTAL_UNITS" "$TOTAL_UNITS" "All units completed" "$REGRESSION_TYPE"
             echo ""  # New line after progress bar
         fi
         
@@ -1455,6 +1916,32 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
         ANALYSIS_DETAILS=()
         ANALYSIS_RUNTIMES=()
         ANALYSIS_FLAGS=()
+        ANALYSIS_CLOCK_LATENCY_FILES=()  # Clock-specific: path to clock_latency file
+        
+# Timing-specific arrays
+ANALYSIS_SETUP_WNS=()
+ANALYSIS_SETUP_TNS=()
+ANALYSIS_SETUP_NVP=()
+ANALYSIS_HOLD_WNS=()
+ANALYSIS_HOLD_TNS=()
+ANALYSIS_HOLD_NVP=()
+ANALYSIS_DSR_SKEW_SETUP=()
+ANALYSIS_DSR_SKEW_HOLD=()
+ANALYSIS_SETUP_SCENARIO=()
+ANALYSIS_HOLD_SCENARIO=()
+ANALYSIS_PT_WORK_AREAS=()
+
+# Formal-specific arrays
+ANALYSIS_FAILING_COMPARE_PTS=()
+
+# GL Check-specific arrays
+ANALYSIS_TOTAL_ERRORS=()
+ANALYSIS_WAIVED=()
+ANALYSIS_NON_WAIVED=()
+ANALYSIS_TOP_CHECKERS=()
+
+# Analysis run dates (for GL Check, Formal, PT, PV)
+ANALYSIS_RUN_DATES=()
         
         for i in "${!UNITS[@]}"; do
             unit="${UNITS[$i]}"
@@ -1462,16 +1949,85 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
             
             if [ -f "$result_file" ]; then
                 parse_result=$(cat "$result_file")
-                IFS='|' read -r overall_status details runtime flags <<< "$parse_result"
+                
+                # Timing regression has extra fields (including scenario names, PT work areas count, and run_date)
+                if [ "$REGRESSION_TYPE" = "timing" ]; then
+                    IFS='|' read -r overall_status details runtime setup_wns setup_tns setup_nvp hold_wns hold_tns hold_nvp dsr_skew_setup dsr_skew_hold setup_scenario hold_scenario pt_work_areas run_date <<< "$parse_result"
+                    ANALYSIS_SETUP_WNS+=("$setup_wns")
+                    ANALYSIS_SETUP_TNS+=("$setup_tns")
+                    ANALYSIS_SETUP_NVP+=("$setup_nvp")
+                    ANALYSIS_HOLD_WNS+=("$hold_wns")
+                    ANALYSIS_HOLD_TNS+=("$hold_tns")
+                    ANALYSIS_HOLD_NVP+=("$hold_nvp")
+                    ANALYSIS_DSR_SKEW_SETUP+=("$dsr_skew_setup")
+                    ANALYSIS_DSR_SKEW_HOLD+=("$dsr_skew_hold")
+                    ANALYSIS_SETUP_SCENARIO+=("$setup_scenario")
+                    ANALYSIS_HOLD_SCENARIO+=("$hold_scenario")
+                    ANALYSIS_PT_WORK_AREAS+=("$pt_work_areas")
+                    ANALYSIS_RUN_DATES+=("$run_date")
+                elif [ "$REGRESSION_TYPE" = "formal" ]; then
+                    # Formal regression has extra fields: failing_compare_points (4 flows: bbox|pnr|syn|syn_bbox) and run_date
+                    IFS='|' read -r overall_status details runtime failing_pts run_date <<< "$parse_result"
+                    ANALYSIS_FAILING_COMPARE_PTS+=("$failing_pts")
+                    ANALYSIS_RUN_DATES+=("$run_date")
+                elif [ "$REGRESSION_TYPE" = "pv" ]; then
+                    # PV regression has extra field: run_date
+                    IFS='|' read -r overall_status details runtime run_date <<< "$parse_result"
+                    ANALYSIS_RUN_DATES+=("$run_date")
+                elif [ "$REGRESSION_TYPE" = "clock" ]; then
+                    # Clock regression has extra field: clock_latency_file
+                    IFS='|' read -r overall_status details runtime clock_latency_file <<< "$parse_result"
+                    ANALYSIS_CLOCK_LATENCY_FILES+=("$clock_latency_file")
+                elif [ "$REGRESSION_TYPE" = "glcheck" ]; then
+                    # GL Check regression has extra fields: total_errors, waived, non_waived, top_checkers, run_date
+                    IFS='|' read -r overall_status details runtime total_errors waived non_waived top_checkers run_date <<< "$parse_result"
+                    ANALYSIS_TOTAL_ERRORS+=("$total_errors")
+                    ANALYSIS_WAIVED+=("$waived")
+                    ANALYSIS_NON_WAIVED+=("$non_waived")
+                    ANALYSIS_TOP_CHECKERS+=("$top_checkers")
+                    ANALYSIS_RUN_DATES+=("$run_date")
+                else
+                    IFS='|' read -r overall_status details runtime flags <<< "$parse_result"
+                    ANALYSIS_FLAGS+=("$flags")
+                fi
+                
                 ANALYSIS_STATUS+=("$overall_status")
                 ANALYSIS_DETAILS+=("$details")
                 ANALYSIS_RUNTIMES+=("$runtime")
-                ANALYSIS_FLAGS+=("$flags")
             else
                 ANALYSIS_STATUS+=("ERROR")
                 ANALYSIS_DETAILS+=("Result file not found")
                 ANALYSIS_RUNTIMES+=("N/A")
                 ANALYSIS_FLAGS+=("N/A")
+                
+                # Add N/A for timing fields (including scenario names and PT work areas count)
+                if [ "$REGRESSION_TYPE" = "timing" ]; then
+                    ANALYSIS_SETUP_WNS+=("N/A")
+                    ANALYSIS_SETUP_TNS+=("N/A")
+                    ANALYSIS_SETUP_NVP+=("N/A")
+                    ANALYSIS_HOLD_WNS+=("N/A")
+                    ANALYSIS_HOLD_TNS+=("N/A")
+                    ANALYSIS_HOLD_NVP+=("N/A")
+                    ANALYSIS_DSR_SKEW_SETUP+=("N/A")
+                    ANALYSIS_DSR_SKEW_HOLD+=("N/A")
+                    ANALYSIS_SETUP_SCENARIO+=("N/A")
+                    ANALYSIS_HOLD_SCENARIO+=("N/A")
+                    ANALYSIS_PT_WORK_AREAS+=("N/A")
+                    ANALYSIS_RUN_DATES+=("N/A")
+                elif [ "$REGRESSION_TYPE" = "formal" ]; then
+                    ANALYSIS_FAILING_COMPARE_PTS+=("N/A:N/A:N/A:N/A")
+                    ANALYSIS_RUN_DATES+=("N/A")
+                elif [ "$REGRESSION_TYPE" = "pv" ]; then
+                    ANALYSIS_RUN_DATES+=("N/A")
+                elif [ "$REGRESSION_TYPE" = "clock" ]; then
+                    ANALYSIS_CLOCK_LATENCY_FILES+=("N/A")
+                elif [ "$REGRESSION_TYPE" = "glcheck" ]; then
+                    ANALYSIS_TOTAL_ERRORS+=("N/A")
+                    ANALYSIS_WAIVED+=("N/A")
+                    ANALYSIS_NON_WAIVED+=("N/A")
+                    ANALYSIS_TOP_CHECKERS+=("N/A")
+                    ANALYSIS_RUN_DATES+=("N/A")
+                fi
             fi
         done
     fi
@@ -1484,6 +2040,48 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
         REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_details"]="${ANALYSIS_DETAILS[$result_idx]}"
         REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_runtime"]="${ANALYSIS_RUNTIMES[$result_idx]}"
         REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_flags"]="${ANALYSIS_FLAGS[$result_idx]}"
+        
+        # Store timing-specific fields if this is timing regression (including scenario names and PT work areas count)
+        if [ "$REGRESSION_TYPE" = "timing" ]; then
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_setup_wns"]="${ANALYSIS_SETUP_WNS[$result_idx]}"
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_setup_tns"]="${ANALYSIS_SETUP_TNS[$result_idx]}"
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_setup_nvp"]="${ANALYSIS_SETUP_NVP[$result_idx]}"
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_hold_wns"]="${ANALYSIS_HOLD_WNS[$result_idx]}"
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_hold_tns"]="${ANALYSIS_HOLD_TNS[$result_idx]}"
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_hold_nvp"]="${ANALYSIS_HOLD_NVP[$result_idx]}"
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_dsr_skew_setup"]="${ANALYSIS_DSR_SKEW_SETUP[$result_idx]}"
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_dsr_skew_hold"]="${ANALYSIS_DSR_SKEW_HOLD[$result_idx]}"
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_setup_scenario"]="${ANALYSIS_SETUP_SCENARIO[$result_idx]}"
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_hold_scenario"]="${ANALYSIS_HOLD_SCENARIO[$result_idx]}"
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_pt_work_areas"]="${ANALYSIS_PT_WORK_AREAS[$result_idx]}"
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_run_date"]="${ANALYSIS_RUN_DATES[$result_idx]}"
+        fi
+        
+        # Store formal-specific fields if this is formal regression
+        if [ "$REGRESSION_TYPE" = "formal" ]; then
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_failing_compare_pts"]="${ANALYSIS_FAILING_COMPARE_PTS[$result_idx]}"
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_run_date"]="${ANALYSIS_RUN_DATES[$result_idx]}"
+        fi
+        
+        # Store PV-specific fields if this is PV regression
+        if [ "$REGRESSION_TYPE" = "pv" ]; then
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_run_date"]="${ANALYSIS_RUN_DATES[$result_idx]}"
+        fi
+        
+        # Store clock-specific fields if this is clock regression
+        if [ "$REGRESSION_TYPE" = "clock" ]; then
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_clock_latency_file"]="${ANALYSIS_CLOCK_LATENCY_FILES[$result_idx]}"
+        fi
+        
+        # Store glcheck-specific fields if this is glcheck regression
+        if [ "$REGRESSION_TYPE" = "glcheck" ]; then
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_total_errors"]="${ANALYSIS_TOTAL_ERRORS[$result_idx]}"
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_waived"]="${ANALYSIS_WAIVED[$result_idx]}"
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_non_waived"]="${ANALYSIS_NON_WAIVED[$result_idx]}"
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_top_checkers"]="${ANALYSIS_TOP_CHECKERS[$result_idx]}"
+            REGRESSION_RESULTS["${REGRESSION_TYPE}_${i}_run_date"]="${ANALYSIS_RUN_DATES[$result_idx]}"
+        fi
+        
         ((result_idx++))
     done
     
@@ -1531,9 +2129,9 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
     
     # Print completion message only if not in quiet mode
     if [ $QUIET -eq 0 ]; then
-        echo ""
+    echo ""
         echo -e "${GREEN}[OK] Completed $REGRESSION_NAME analysis${NC}"
-        echo ""
+    echo ""
     fi
 
 done  # End of regression types loop
@@ -1546,7 +2144,7 @@ done  # End of regression types loop
 # - Multiple types: Tab bar is visible, tabs switch between regression types
 
 if [ $QUIET -eq 0 ]; then
-    print_section "Generating HTML Dashboard"
+print_section "Generating HTML Dashboard"
 fi
 
 # Note: Logo will be loaded AFTER HTML generation to avoid "Argument list too long" error
@@ -1806,8 +2404,139 @@ cat > "$HTML_FILE" << 'MULTI_HTML_START'
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
     
+    .chiplet-header.highlighted-passed {
+        background: linear-gradient(135deg, #27ae60 0%, #219a52 100%);
+        box-shadow: 0 0 15px rgba(39, 174, 96, 0.5);
+        animation: pulse-passed 2s ease-in-out infinite;
+    }
+    
+    .chiplet-header.highlighted-failed {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
+        animation: pulse-failed 2s ease-in-out infinite;
+    }
+    
+    .chiplet-header.highlighted-crashed {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
+        animation: pulse-failed 2s ease-in-out infinite;
+    }
+    
+    .chiplet-header.highlighted-warn {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        box-shadow: 0 0 15px rgba(243, 156, 18, 0.5);
+        animation: pulse-warn 2s ease-in-out infinite;
+    }
+    
+    .chiplet-header.highlighted-unresolved {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        box-shadow: 0 0 15px rgba(243, 156, 18, 0.5);
+        animation: pulse-warn 2s ease-in-out infinite;
+    }
+    
+    .chiplet-header.highlighted-not_run {
+        background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        box-shadow: 0 0 15px rgba(149, 165, 166, 0.5);
+        animation: pulse-gray 2s ease-in-out infinite;
+    }
+    
+    .chiplet-header.highlighted-no_data {
+        background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        box-shadow: 0 0 15px rgba(149, 165, 166, 0.5);
+        animation: pulse-gray 2s ease-in-out infinite;
+    }
+    
+    .chiplet-header.highlighted-missing {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
+        animation: pulse-failed 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-passed {
+        0%, 100% { box-shadow: 0 0 15px rgba(39, 174, 96, 0.5); }
+        50% { box-shadow: 0 0 25px rgba(39, 174, 96, 0.8); }
+    }
+    
+    @keyframes pulse-failed {
+        0%, 100% { box-shadow: 0 0 15px rgba(231, 76, 60, 0.5); }
+        50% { box-shadow: 0 0 25px rgba(231, 76, 60, 0.8); }
+    }
+    
+    @keyframes pulse-warn {
+        0%, 100% { box-shadow: 0 0 15px rgba(243, 156, 18, 0.5); }
+        50% { box-shadow: 0 0 25px rgba(243, 156, 18, 0.8); }
+    }
+    
+    @keyframes pulse-gray {
+        0%, 100% { box-shadow: 0 0 15px rgba(149, 165, 166, 0.5); }
+        50% { box-shadow: 0 0 25px rgba(149, 165, 166, 0.8); }
+    }
+    
     .chiplet-header .toggle {
         font-size: 0.8em;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        padding: 15px 20px;
+        background: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .action-btn {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    }
+    
+    .action-btn:active {
+        transform: translateY(0);
+    }
+    
+    /* Back to Top Button */
+    #backToTopBtn {
+        display: block;
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 99;
+        border: none;
+        outline: none;
+        background-color: #667eea;
+        color: white;
+        cursor: pointer;
+        padding: 15px 20px;
+        border-radius: 50px;
+        font-size: 16px;
+        font-weight: bold;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        transition: all 0.3s ease;
+        opacity: 0.3;
+    }
+    
+    #backToTopBtn.visible {
+        opacity: 1;
+    }
+    
+    #backToTopBtn:hover {
+        background-color: #5568d3;
+        transform: scale(1.1);
+        opacity: 1;
     }
     
     .collapsible-content {
@@ -2091,35 +2820,6 @@ cat > "$HTML_FILE" << 'MULTI_HTML_START'
         box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
     }
     
-    .filter-buttons {
-        display: flex;
-        gap: 10px;
-    }
-    
-    .filter-btn {
-        padding: 10px 20px;
-        border: 2px solid #667eea;
-        background: white;
-        color: #667eea;
-        border-radius: 20px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        white-space: nowrap;
-    }
-    
-    .filter-btn:hover {
-        background: #667eea;
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
-    }
-    
-    .filter-btn.active {
-        background: #667eea;
-        color: white;
-    }
-    
     .export-buttons {
         display: flex;
         gap: 10px;
@@ -2165,8 +2865,8 @@ cat >> "$HTML_FILE" << HEADER_START
         <img class="header-logo" src="file:///home/avice/scripts/avice_wa_review/images/avice_logo.png" alt="AVICE Logo" onclick="showLogoModal()" title="Click to enlarge">
         <div class="header-text">
             <h1>🔬 AGUR Multi-Regression Dashboard</h1>
-            <div class="subtitle">Generated: $(date '+%Y-%m-%d %H:%M:%S')</div>
-            <div class="subtitle">Regression Types: ${REGRESSION_TYPES[*]}</div>
+        <div class="subtitle">Generated: $(date '+%Y-%m-%d %H:%M:%S')</div>
+        <div class="subtitle">Regression Types: ${REGRESSION_TYPES[*]}</div>
 HEADER_START
 
 if [ ${#FILTER_CHIPLETS[@]} -gt 0 ]; then
@@ -2198,10 +2898,11 @@ for idx in "${!REGRESSION_TYPES[@]}"; do
     # Get regression name for tab
     case "$regression_type" in
         formal) tab_name="🔍 Formal" ;;
-        timing) tab_name="⏱️ Timing" ;;
+        timing) tab_name="⏱️ Timing (PT)" ;;
         pv) tab_name="✓ PV" ;;
         clock) tab_name="🕒 Clock" ;;
         release) tab_name="📦 Release" ;;
+        glcheck) tab_name="🔧 GL Check" ;;
         *) tab_name="$regression_type" ;;
     esac
     
@@ -2217,11 +2918,9 @@ cat >> "$HTML_FILE" << 'MULTI_FILTER_SECTION'
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="🔍 Search units by name..." onkeyup="filterUnits()">
             </div>
-            <div class="filter-buttons">
-                <button class="filter-btn active" onclick="filterStatus(event, 'all')">All</button>
-                <button class="filter-btn" onclick="filterStatus(event, 'passed')">✅ Passed</button>
-                <button class="filter-btn" onclick="filterStatus(event, 'failed')">❌ Failed</button>
-                <button class="filter-btn" onclick="filterStatus(event, 'warn')">⚠️ Warnings</button>
+            <div class="action-buttons">
+                <button class="action-btn" onclick="expandAll()">Expand All Chiplets</button>
+                <button class="action-btn" onclick="collapseAll()">Collapse All Chiplets</button>
             </div>
             <div class="export-buttons">
                 <button class="export-btn" onclick="exportToCSV()" title="Export results to CSV">📄 Export CSV</button>
@@ -2343,9 +3042,9 @@ TAB_STATS_REST
             <div class="chiplet-section">
                 <div class="chiplet-header" onclick="toggleChiplet('${REGRESSION_TYPE}_$chiplet')">
                     <span>$chiplet Chiplet ($chiplet_unit_count units)</span>
-                    <span class="toggle" id="toggle-${REGRESSION_TYPE}_$chiplet">▼</span>
+                    <span class="toggle" id="toggle-${REGRESSION_TYPE}_$chiplet">▶</span>
                 </div>
-                <div class="collapsible-content active" id="content-${REGRESSION_TYPE}_$chiplet">
+                <div class="collapsible-content" id="content-${REGRESSION_TYPE}_$chiplet">
                     <div class="units-grid">
 CHIPLET_SECTION
         
@@ -2371,54 +3070,63 @@ CHIPLET_SECTION
             release_flags="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_flags]}"
             
             # Determine status class and text
+            # For GL Check: Add non-waived count to status badge for visibility
+            status_suffix=""
+            if [ "$REGRESSION_TYPE" = "glcheck" ]; then
+                nw="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_non_waived]}"
+                if [ "$nw" != "N/A" ] && [ -n "$nw" ] && [[ "$nw" =~ ^[0-9]+$ ]] && [ "$nw" -gt 0 ]; then
+                    status_suffix=" ($nw NW)"
+                fi
+            fi
+            
             case "$status" in
                 PASSED)
                     status_class="status-passed"
-                    status_text="✅ PASSED"
+                    status_text="✅ PASSED${status_suffix}"
                     ;;
                 WARN)
                     status_class="status-unresolved"
-                    status_text="⚠️ WARN"
+                    status_text="⚠️ WARN${status_suffix}"
                     ;;
                 PARTIAL_PASS)
                     status_class="status-partial"
-                    status_text="⚠️ PARTIAL"
+                    status_text="⚠️ PARTIAL${status_suffix}"
                     ;;
                 UNRESOLVED)
                     status_class="status-unresolved"
-                    status_text="⚠️ UNRESOLVED"
+                    status_text="⚠️ UNRESOLVED${status_suffix}"
                     ;;
                 FAILED)
                     status_class="status-failed"
-                    status_text="❌ FAILED"
+                    status_text="❌ FAILED${status_suffix}"
                     ;;
                 CRASHED)
                     status_class="status-crashed"
-                    status_text="💥 CRASHED"
+                    status_text="💥 CRASHED${status_suffix}"
                     ;;
                 RUNNING)
                     status_class="status-running"
-                    status_text="🔄 RUNNING"
+                    status_text="🔄 RUNNING${status_suffix}"
                     ;;
                 ERROR)
                     status_class="status-error"
-                    status_text="⚠️ ERROR"
+                    status_text="⚠️ ERROR${status_suffix}"
                     ;;
                 NOT_FOUND)
                     status_class="status-notfound"
-                    status_text="⏸️ NOT RUN"
+                    status_text="⏸️ NOT RUN${status_suffix}"
                     ;;
                 NO_DATA)
                     status_class="status-notfound"
-                    status_text="📊 NO DATA"
+                    status_text="📊 NO DATA${status_suffix}"
                     ;;
                 MISSING)
                     status_class="status-failed"
-                    status_text="🚫 MISSING"
+                    status_text="🚫 MISSING${status_suffix}"
                     ;;
                 *)
                     status_class="status-notfound"
-                    status_text="❔ UNKNOWN"
+                    status_text="❔ UNKNOWN${status_suffix}"
                     ;;
             esac
             
@@ -2433,13 +3141,13 @@ CHIPLET_SECTION
                     badges="${badges}<span class='release-badge' style='background: #3498db; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='Timing Release'>S</span>"
                 fi
                 if [[ "$release_flags" =~ fcl_release ]]; then
-                    badges="${badges}<span class='release-badge' style='background: #9b59b6; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FCL Release'>F</span>"
+                    badges="${badges}<span class='release-badge' style='background: #9b59b6; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FCL Release'>L</span>"
                 fi
                 if [[ "$release_flags" =~ pnr_release ]]; then
                     badges="${badges}<span class='release-badge' style='background: #e67e22; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='PnR Release'>P</span>"
                 fi
                 if [[ "$release_flags" =~ fe_dct_release ]]; then
-                    badges="${badges}<span class='release-badge' style='background: #27ae60; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FE DCT Release'>D</span>"
+                    badges="${badges}<span class='release-badge' style='background: #27ae60; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FE DCT Release'>FE</span>"
                 fi
                 
                 if [ -n "$badges" ]; then
@@ -2450,44 +3158,67 @@ CHIPLET_SECTION
             cat >> "$HTML_FILE" << UNIT_CARD
                         <div class="unit-card">
                             <div class="unit-header">
-                                <div class="unit-name">$unit</div>
+                                <div class="unit-name">$unit <span style="color: #888; font-size: 0.85em; font-weight: normal;">($release_user)</span></div>
                                 $release_badges_html
                                 <div class="status-badge $status_class">$status_text</div>
                             </div>
                             <div class="unit-info">
-                                <div class="info-row">
-                                    <span class="info-label">Released By:</span>
-                                    <span class="info-value">$release_user</span>
-                                </div>
 UNIT_CARD
             
-            # Calculate release date age and add color coding
-            # Color scheme: <1 week=green, 1-2 weeks=orange, >2 weeks=red
-            release_date_color="#95a5a6"  # Default gray
-            if [ -n "$release_date" ] && [[ "$release_date" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
-                # Calculate age in days
-                current_date=$(date +%s)
-                release_date_epoch=$(date -d "$release_date" +%s 2>/dev/null || echo "0")
+            # For GL Check, Formal, PT, and PV: show combined Run Date + Runtime
+            # For other types: show Release Date with age color coding
+            if [ "$REGRESSION_TYPE" = "glcheck" ] || [ "$REGRESSION_TYPE" = "formal" ] || [ "$REGRESSION_TYPE" = "timing" ] || [ "$REGRESSION_TYPE" = "pv" ]; then
+                # Get run date from REGRESSION_RESULTS associative array (using correct unit index)
+                run_date="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_run_date]}"
+                [ -z "$run_date" ] && run_date="N/A"
                 
-                if [ "$release_date_epoch" != "0" ]; then
-                    age_days=$(( (current_date - release_date_epoch) / 86400 ))
+                # Combine Run Date and Runtime into single line (except for formal which shows runtime per flow)
+                if [ "$REGRESSION_TYPE" != "formal" ]; then
+                    # For GL Check, PT, and PV: show "Run: date (runtime)"
+                    cat >> "$HTML_FILE" << RUN_INFO
+                                <div class="info-row">
+                                    <span class="info-label">Run:</span>
+                                    <span class="info-value" style="color: #3498db; font-weight: 500;">$run_date <span style="color: #7f8c8d; font-weight: normal;">($runtime)</span></span>
+                                </div>
+RUN_INFO
+                else
+                    # For Formal: only show run date (runtime is shown per flow)
+                    cat >> "$HTML_FILE" << RUN_DATE
+                                <div class="info-row">
+                                    <span class="info-label">Run Date:</span>
+                                    <span class="info-value" style="color: #3498db; font-weight: 500;">$run_date</span>
+                                </div>
+RUN_DATE
+                fi
+            else
+                # Calculate release date age and add color coding for release/clock types
+                # Color scheme: <1 week=green, 1-2 weeks=orange, >2 weeks=red
+                release_date_color="#95a5a6"  # Default gray
+                if [ -n "$release_date" ] && [[ "$release_date" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+                    # Calculate age in days
+                    current_date=$(date +%s)
+                    release_date_epoch=$(date -d "$release_date" +%s 2>/dev/null || echo "0")
                     
-                    if [ $age_days -le 7 ]; then
-                        release_date_color="#27ae60"  # Green - fresh (≤1 week)
-                    elif [ $age_days -le 14 ]; then
-                        release_date_color="#f39c12"  # Orange - attention (1-2 weeks)
-                    else
-                        release_date_color="#e74c3c"  # Red - old (>2 weeks)
+                    if [ "$release_date_epoch" != "0" ]; then
+                        age_days=$(( (current_date - release_date_epoch) / 86400 ))
+                        
+                        if [ $age_days -le 7 ]; then
+                            release_date_color="#27ae60"  # Green - fresh (≤1 week)
+                        elif [ $age_days -le 14 ]; then
+                            release_date_color="#f39c12"  # Orange - attention (1-2 weeks)
+                        else
+                            release_date_color="#e74c3c"  # Red - old (>2 weeks)
+                        fi
                     fi
                 fi
-            fi
-            
-            cat >> "$HTML_FILE" << RELEASE_DATE_COLORED
+                
+                cat >> "$HTML_FILE" << RELEASE_DATE_COLORED
                                 <div class="info-row">
                                     <span class="info-label">Release Date:</span>
                                     <span class="info-value" style="color: $release_date_color; font-weight: 500;">$release_date</span>
                                 </div>
 RELEASE_DATE_COLORED
+            fi
             
             # RTL Tag is only relevant for formal and release regressions
             if [ "$REGRESSION_TYPE" = "formal" ] || [ "$REGRESSION_TYPE" = "release" ]; then
@@ -2502,16 +3233,9 @@ RELEASE_DATE_COLORED
 RTL_TAG
             fi
             
-            # Show runtime only for non-formal and non-release types
-            # (formal shows runtime per flow, release shows detailed attempt history)
-            if [ "$REGRESSION_TYPE" != "formal" ] && [ "$REGRESSION_TYPE" != "release" ]; then
-                cat >> "$HTML_FILE" << RUNTIME_SECTION
-                                <div class="info-row">
-                                    <span class="info-label">Runtime:</span>
-                                    <span class="info-value">$runtime</span>
-                                </div>
-RUNTIME_SECTION
-            fi
+            # Runtime is now combined with Run Date for glcheck/timing/pv
+            # Skip separate runtime display for: formal (shows per flow), clock (not relevant), release (detailed history), glcheck/timing/pv (combined above)
+            # This section is no longer needed since runtime is shown combined with run date for analysis types
             
             cat >> "$HTML_FILE" << WORKAREA_SECTION
                                 <div class="info-row workarea-row">
@@ -2525,7 +3249,182 @@ RUNTIME_SECTION
 WORKAREA_SECTION
             
             # Display details based on regression type
-            if [ "$REGRESSION_TYPE" = "pv" ]; then
+            if [ "$REGRESSION_TYPE" = "timing" ]; then
+                # For Timing (PT): Display Setup/Hold scenario breakdown
+                
+                # Get timing-specific data from REGRESSION_RESULTS (including scenario names and PT work areas count)
+                setup_wns="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_setup_wns]}"
+                setup_tns="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_setup_tns]}"
+                setup_nvp="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_setup_nvp]}"
+                hold_wns="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_hold_wns]}"
+                hold_tns="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_hold_tns]}"
+                hold_nvp="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_hold_nvp]}"
+                dsr_skew_setup="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_dsr_skew_setup]}"
+                dsr_skew_hold="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_dsr_skew_hold]}"
+                setup_scenario="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_setup_scenario]}"
+                hold_scenario="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_hold_scenario]}"
+                pt_work_areas="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_pt_work_areas]}"
+                
+                # Show timing breakdown if data is available
+                if [ "$setup_wns" != "N/A" ] || [ "$hold_wns" != "N/A" ]; then
+                    # Create unique ID for this unit's timing breakdown
+                    timing_id="timing-breakdown-${REGRESSION_TYPE}-${idx}"
+                    
+                    # Format PT work areas count for display
+                    pt_runs_text=""
+                    if [ "$pt_work_areas" != "N/A" ] && [ -n "$pt_work_areas" ]; then
+                        if [ "$pt_work_areas" = "1" ]; then
+                            pt_runs_text=" (1 run)"
+                        else
+                            pt_runs_text=" ($pt_work_areas runs)"
+                        fi
+                    fi
+                    
+                    cat >> "$HTML_FILE" << TIMING_START
+                            <div class="formal-flows">
+                                <div class="flow-title" style="color: #667eea; font-weight: bold; margin-bottom: 12px; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px;" onclick="toggleTimingBreakdown('${timing_id}')">
+                                    <span id="${timing_id}-arrow" style="transition: transform 0.3s ease; display: inline-block;">▶</span>
+                                    <span>⏱️ TIMING BREAKDOWN (PT):${pt_runs_text}</span>
+                                </div>
+                                <div id="${timing_id}" style="display: none; margin-top: 8px;">
+TIMING_START
+                    
+                    # Display Setup Scenario if available
+                    if [ "$setup_wns" != "N/A" ]; then
+                        # Color coding for Setup WNS
+                        setup_wns_color="#27ae60"  # Green (passing)
+                        if (( $(echo "$setup_wns < 0" | bc -l 2>/dev/null || echo 0) )); then
+                            # Check if critical violation (< -0.05ns)
+                            if (( $(echo "$setup_wns < -0.05" | bc -l 2>/dev/null || echo 0) )); then
+                                setup_wns_color="#e74c3c"  # Red (critical)
+                            else
+                                setup_wns_color="#f39c12"  # Yellow (minor)
+                            fi
+                        fi
+                        
+                        # Color coding for Setup TNS
+                        setup_tns_color="#27ae60"  # Green (passing)
+                        if (( $(echo "$setup_tns < 0" | bc -l 2>/dev/null || echo 0) )); then
+                            # Check if critical violation (< -10ns)
+                            if (( $(echo "$setup_tns < -10" | bc -l 2>/dev/null || echo 0) )); then
+                                setup_tns_color="#e74c3c"  # Red (critical)
+                            else
+                                setup_tns_color="#f39c12"  # Yellow (minor)
+                            fi
+                        fi
+                        
+                        # Color coding for DSR Skew (Setup)
+                        dsr_skew_setup_color="#27ae60"  # Green (≤10ps)
+                        if [ "$dsr_skew_setup" != "N/A" ]; then
+                            if (( $(echo "$dsr_skew_setup > 10" | bc -l 2>/dev/null || echo 0) )); then
+                                dsr_skew_setup_color="#e74c3c"  # Red (>10ps)
+                            fi
+                        fi
+                        
+                    cat >> "$HTML_FILE" << SETUP_SECTION
+                            <div style="margin-bottom: 15px; padding: 12px; background: #f8f9fa; border-left: 4px solid #667eea; border-radius: 5px;">
+                                <div style="font-weight: 600; color: #667eea; margin-bottom: 8px; font-size: 0.95em;">
+                                    📊 Setup Scenario: 
+                                    <span style="font-size: 0.85em; cursor: help; color: #888;" title="$setup_scenario">ℹ️</span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-size: 0.9em;">
+                                    <span style="color: #666;">• WNS:</span>
+                                    <span style="color: $setup_wns_color; font-weight: 500;">$setup_wns ns</span>
+                                    
+                                    <span style="color: #666;">• TNS:</span>
+                                    <span style="color: $setup_tns_color; font-weight: 500;">$setup_tns ns</span>
+                                    
+                                    <span style="color: #666;">• NVP:</span>
+                                    <span style="color: #555; font-weight: 500;">$setup_nvp paths</span>
+SETUP_SECTION
+                        
+                        # Add DSR Skew only if available
+                        if [ "$dsr_skew_setup" != "N/A" ]; then
+                            cat >> "$HTML_FILE" << SETUP_DSR
+                                        
+                                        <span style="color: #666;">• DSR Skew:</span>
+                                        <span style="color: $dsr_skew_setup_color; font-weight: 500;">$dsr_skew_setup ps</span>
+SETUP_DSR
+                        fi
+                        
+                        cat >> "$HTML_FILE" << SETUP_END
+                                    </div>
+                                </div>
+SETUP_END
+                    fi
+                    
+                    # Display Hold Scenario if available
+                    if [ "$hold_wns" != "N/A" ]; then
+                        # Color coding for Hold WNS
+                        hold_wns_color="#27ae60"  # Green (passing)
+                        if (( $(echo "$hold_wns < 0" | bc -l 2>/dev/null || echo 0) )); then
+                            # Check if critical violation (< -0.05ns)
+                            if (( $(echo "$hold_wns < -0.05" | bc -l 2>/dev/null || echo 0) )); then
+                                hold_wns_color="#e74c3c"  # Red (critical)
+                            else
+                                hold_wns_color="#f39c12"  # Yellow (minor)
+                            fi
+                        fi
+                        
+                        # Color coding for Hold TNS
+                        hold_tns_color="#27ae60"  # Green (passing)
+                        if (( $(echo "$hold_tns < 0" | bc -l 2>/dev/null || echo 0) )); then
+                            # Check if critical violation (< -10ns)
+                            if (( $(echo "$hold_tns < -10" | bc -l 2>/dev/null || echo 0) )); then
+                                hold_tns_color="#e74c3c"  # Red (critical)
+                            else
+                                hold_tns_color="#f39c12"  # Yellow (minor)
+                            fi
+                        fi
+                        
+                        # Color coding for DSR Skew (Hold)
+                        dsr_skew_hold_color="#27ae60"  # Green (≤10ps)
+                        if [ "$dsr_skew_hold" != "N/A" ]; then
+                            if (( $(echo "$dsr_skew_hold > 10" | bc -l 2>/dev/null || echo 0) )); then
+                                dsr_skew_hold_color="#e74c3c"  # Red (>10ps)
+                            fi
+                        fi
+                        
+                    cat >> "$HTML_FILE" << HOLD_SECTION
+                            <div style="margin-bottom: 10px; padding: 12px; background: #f8f9fa; border-left: 4px solid #9b59b6; border-radius: 5px;">
+                                <div style="font-weight: 600; color: #9b59b6; margin-bottom: 8px; font-size: 0.95em;">
+                                    📊 Hold Scenario: 
+                                    <span style="font-size: 0.85em; cursor: help; color: #888;" title="$hold_scenario">ℹ️</span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-size: 0.9em;">
+                                    <span style="color: #666;">• WNS:</span>
+                                    <span style="color: $hold_wns_color; font-weight: 500;">$hold_wns ns</span>
+                                    
+                                    <span style="color: #666;">• TNS:</span>
+                                    <span style="color: $hold_tns_color; font-weight: 500;">$hold_tns ns</span>
+                                    
+                                    <span style="color: #666;">• NVP:</span>
+                                    <span style="color: #555; font-weight: 500;">$hold_nvp paths</span>
+HOLD_SECTION
+                        
+                        # Add DSR Skew only if available
+                        if [ "$dsr_skew_hold" != "N/A" ]; then
+                            cat >> "$HTML_FILE" << HOLD_DSR
+                                        
+                                        <span style="color: #666;">• DSR Skew:</span>
+                                        <span style="color: $dsr_skew_hold_color; font-weight: 500;">$dsr_skew_hold ps</span>
+HOLD_DSR
+                        fi
+                        
+                        cat >> "$HTML_FILE" << HOLD_END
+                                    </div>
+                                </div>
+HOLD_END
+                    fi
+                    
+                    # Note: PT Runtime display removed as requested by user
+                    # Runtime data is still extracted and stored, but not displayed in unit cards
+                    
+                    # Close the expandable content div and the formal-flows div
+                    echo "                                </div>" >> "$HTML_FILE"  # Close expandable content
+                    echo "                            </div>" >> "$HTML_FILE"  # Close formal-flows
+                fi
+            elif [ "$REGRESSION_TYPE" = "pv" ]; then
                 # For PV: Display metrics
                 if [ "$details" != "No PV data available" ] && [ "$details" != "No PV analysis found" ]; then
                     overall_pv_status=$(echo "$details" | grep -oP '\((MINOR|CRITICAL|ALL CLEAN)\)' | tr -d '()')
@@ -2699,7 +3598,7 @@ ATTEMPT_ITEM
                                 echo "                                </div>" >> "$HTML_FILE"
                             else
                                 # Fallback: simple display if parsing fails
-                                cat >> "$HTML_FILE" << RELEASE_METRIC
+                            cat >> "$HTML_FILE" << RELEASE_METRIC
                                 <div class="flow-item">
                                     <span><strong>📊 Attempts</strong></span>
                                     <span>$metric_value</span>
@@ -2707,26 +3606,66 @@ ATTEMPT_ITEM
 RELEASE_METRIC
                             fi
                         elif [[ "$part" =~ ^Links: ]]; then
-                            # Extract both regular and manual custom link details from output file
-                            # Combine and sort them by date (oldest first)
+                            # Extract custom link details by parsing the visual table
+                            # Table format (after stripping ANSI codes):
+                            #   Link Name                      Date         User            Source           Target            Status
+                            #   AUG_07_FP                      2025-09-08   roir            ROOT [old]       ccorea_rbv...     
+                            #   SEP_28_FP                      2025-10-09   raduc           ROOT [old]       ccorea_rbv...     Manual
+                            #   SEP_28_FP_eco_02               2025-10-23   arcohen         NBU (ipo1001)    nbu_signoff...    [LATEST]
                             
-                            # Format: "  Custom Link Detail: LINK_NAME|DATE" (exclude Manual Custom Link Detail)
-                            custom_link_details=$(grep "Custom Link Detail:" "$TEMP_DIR/${unit}_${REGRESSION_TYPE}_output.txt" 2>/dev/null | grep -v "Manual Custom Link Detail:" | sed 's/.*Custom Link Detail:[[:space:]]*//' | sed 's/\x1b\[[0-9;]*m//g')
+                            # Extract table section: strip ANSI codes first, then parse rows
+                            link_details=$(sed 's/\x1b\[[0-9;]*m//g' "$TEMP_DIR/${unit}_${REGRESSION_TYPE}_output.txt" 2>/dev/null | awk '
+                                /All Custom Links in Central Release Area/,/Total:.*custom links/ {
+                                    # Skip header, separator, summary lines, empty lines
+                                    if ($0 ~ /Link Name.*Date.*User/ || $0 ~ /^[[:space:]]*-+[[:space:]]*-+/ || $0 ~ /Total:/ || $0 ~ /Classification:/ || $0 ~ /Latest NBU release:/ || $0 ~ /Location:/ || $0 ~ /All Custom Links/ || NF < 4) {
+                                        next
+                                    }
+                                    
+                                    # Process table rows (lines with actual link data)
+                                    # Fields: $1=LinkName, $2=Date, $3=User, $4=Source, $5+=(ipo or [old] or target)
+                                    if (NF >= 4 && $1 !~ /^[[:space:]]*$/ && $2 ~ /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/) {
+                                        link_name = $1
+                                        date = $2
+                                        user = $3
+                                        source = $4
+                                        
+                                        # Check if source has IPO: "NBU" followed by "(ipo1001)"
+                                        if ($5 ~ /^\(ipo/) {
+                                            # Extract IPO: (ipo1001) -> ipo1001
+                                            ipo = $5
+                                            gsub(/[()]/, "", ipo)
+                                            source = source "(" ipo ")"
+                                        }
+                                        
+                                        # Check for Manual badge anywhere in the line
+                                        link_type = "Auto"
+                                        if ($0 ~ /Manual/) {
+                                            link_type = "Manual"
+                                        }
+                                        
+                                        # Output: LinkName|Date|User|Source|Type
+                                        print link_name "|" date "|" user "|" source "|" link_type
+                                    }
+                                }
+                            ')
                             
-                            # Format: "  Manual Custom Link Detail: LINK_NAME|DATE"
-                            manual_link_details=$(grep "Manual Custom Link Detail:" "$TEMP_DIR/${unit}_${REGRESSION_TYPE}_output.txt" 2>/dev/null | sed 's/.*Manual Custom Link Detail:[[:space:]]*//' | sed 's/\x1b\[[0-9;]*m//g')
-                            
-                            # Combine both types with a marker: LINK_NAME|DATE|TYPE
-                            all_links=""
-                            if [ -n "$custom_link_details" ]; then
-                                while IFS='|' read -r link_name link_date; do
-                                    all_links="${all_links}${link_name}|${link_date}|regular"$'\n'
-                                done <<< "$custom_link_details"
+                            # Extract workarea owner (from "Workarea Owner:" line or from ACTIVE-owner entries)
+                            workarea_owner=$(sed 's/\x1b\[[0-9;]*m//g' "$TEMP_DIR/${unit}_${REGRESSION_TYPE}_output.txt" 2>/dev/null | grep -oP "Workarea Owner:\s*\K\w+" | head -1)
+                            if [ -z "$workarea_owner" ]; then
+                                # Fallback: extract from ACTIVE-owner line in block release locations
+                                workarea_owner=$(sed 's/\x1b\[[0-9;]*m//g' "$TEMP_DIR/${unit}_${REGRESSION_TYPE}_output.txt" 2>/dev/null | grep -oP "USER:\s*\K\w+(?=.*\[ACTIVE-owner\])" | head -1)
                             fi
-                            if [ -n "$manual_link_details" ]; then
-                                while IFS='|' read -r link_name link_date; do
-                                    all_links="${all_links}${link_name}|${link_date}|manual"$'\n'
-                                done <<< "$manual_link_details"
+                            
+                            # Parse into: LINK_NAME|DATE|USER|SOURCE|TYPE format
+                            all_links=""
+                            if [ -n "$link_details" ]; then
+                                while IFS='|' read -r link_name link_date link_user source link_type; do
+                                    # Default values if fields are missing (for backwards compatibility)
+                                    [ -z "$source" ] && source="ROOT"
+                                    [ -z "$link_type" ] && link_type="Auto"
+                                    [ -z "$link_user" ] && link_user="unknown"
+                                    all_links="${all_links}${link_name}|${link_date}|${link_user}|${source}|${link_type}"$'\n'
+                                done <<< "$link_details"
                             fi
                             
                             # Sort by date (column 2) - newest first, then take only top 3
@@ -2745,7 +3684,7 @@ LINKS_HEADER
                                 
                                 # Display top 3 most recent links with color coding
                                 link_num=0
-                                while IFS='|' read -r link_name link_date link_type; do
+                                while IFS='|' read -r link_name link_date link_user source link_type; do
                                     link_num=$((link_num + 1))
                                     
                                     # Color coding: 1st=green, 2nd=orange, 3rd=gray
@@ -2757,15 +3696,33 @@ LINKS_HEADER
                                         link_color="#7f8c8d"  # Gray - 3rd newest
                                     fi
                                     
+                                    # User name display (only if different from workarea owner)
+                                    user_display=""
+                                    if [ -n "$link_user" ] && [ "$link_user" != "$workarea_owner" ] && [ "$link_user" != "unknown" ]; then
+                                        user_display=", <span style=\"color: #7f8c8d; font-size: 0.85em;\">$link_user</span>"
+                                    fi
+                                    
+                                    # Source badge (NBU only - ROOT is default, no badge)
+                                    source_badge=""
+                                    if [[ "$source" == NBU* ]]; then
+                                        # Extract IPO if present: NBU(ipo1001) -> ipo1001
+                                        ipo_name=$(echo "$source" | sed 's/NBU(\(.*\))/\1/')
+                                        if [ "$ipo_name" != "$source" ]; then
+                                            source_badge=" <span style=\"background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;\" title=\"NBU Signoff Release - $ipo_name\">NBU</span>"
+                                        else
+                                            source_badge=" <span style=\"background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;\" title=\"NBU Signoff Release\">NBU</span>"
+                                        fi
+                                    fi
+                                    
                                     # Manual badge if applicable
                                     manual_badge=""
-                                    if [ "$link_type" = "manual" ]; then
-                                        manual_badge=" <span style=\"color: #3498db; font-size: 0.85em;\">Manual</span>"
+                                    if [ "$link_type" = "Manual" ]; then
+                                        manual_badge=" <span style=\"background: #3498db; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;\" title=\"Manual Alias Link\">M</span>"
                                     fi
                                     
                                     cat >> "$HTML_FILE" << COMPACT_LINK
                                     <div style="margin-bottom: 4px;">
-                                        • <span style="color: $link_color; font-weight: 500;">$link_name</span> <span style="color: #95a5a6; font-size: 0.9em;">($link_date)</span>$manual_badge
+                                        • <span style="color: $link_color; font-weight: 500;">$link_name</span> <span style="color: #95a5a6; font-size: 0.9em;">($link_date$user_display)</span>$source_badge$manual_badge
                                     </div>
 COMPACT_LINK
                                 done <<< "$top_3_links"
@@ -2784,16 +3741,34 @@ COMPACT_LINK
 OLDER_LINKS_START
                                     
                                     # Display all older links (all in gray)
-                                    while IFS='|' read -r link_name link_date link_type; do
+                                    while IFS='|' read -r link_name link_date link_user source link_type; do
+                                        # User name display (only if different from workarea owner)
+                                        user_display=""
+                                        if [ -n "$link_user" ] && [ "$link_user" != "$workarea_owner" ] && [ "$link_user" != "unknown" ]; then
+                                            user_display=", <span style=\"color: #7f8c8d; font-size: 0.85em;\">$link_user</span>"
+                                        fi
+                                        
+                                        # Source badge (NBU only - ROOT is default, no badge)
+                                        source_badge=""
+                                        if [[ "$source" == NBU* ]]; then
+                                            # Extract IPO if present: NBU(ipo1001) -> ipo1001
+                                            ipo_name=$(echo "$source" | sed 's/NBU(\(.*\))/\1/')
+                                            if [ "$ipo_name" != "$source" ]; then
+                                                source_badge=" <span style=\"background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;\" title=\"NBU Signoff Release - $ipo_name\">NBU</span>"
+                                            else
+                                                source_badge=" <span style=\"background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;\" title=\"NBU Signoff Release\">NBU</span>"
+                                            fi
+                                        fi
+                                        
                                         # Manual badge if applicable
                                         manual_badge=""
-                                        if [ "$link_type" = "manual" ]; then
-                                            manual_badge=" <span style=\"color: #3498db; font-size: 0.85em;\">Manual</span>"
+                                        if [ "$link_type" = "Manual" ]; then
+                                            manual_badge=" <span style=\"background: #3498db; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;\" title=\"Manual Alias Link\">M</span>"
                                         fi
                                         
                                         cat >> "$HTML_FILE" << OLDER_LINK
                                         <div style="margin-bottom: 4px;">
-                                            • <span style="color: #7f8c8d; font-weight: 500;">$link_name</span> <span style="color: #95a5a6; font-size: 0.9em;">($link_date)</span>$manual_badge
+                                            • <span style="color: #7f8c8d; font-weight: 500;">$link_name</span> <span style="color: #95a5a6; font-size: 0.9em;">($link_date$user_display)</span>$source_badge$manual_badge
                                         </div>
 OLDER_LINK
                                     done <<< "$older_links"
@@ -2826,6 +3801,9 @@ EXPAND_BUTTON
             elif [ "$REGRESSION_TYPE" = "clock" ]; then
                 # For Clock: Display individual clock latencies
                 if [ "$details" != "No clock tree analysis found" ] && [ "$details" != "No clock data available" ]; then
+                    # Get clock latency file path for this unit
+                    clock_latency_file="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_clock_latency_file]}"
+                    
                     cat >> "$HTML_FILE" << CLOCK_START
                             <div class="formal-flows">
                                 <div class="flow-title">Clock Latencies:</div>
@@ -2871,7 +3849,101 @@ CLOCK_ITEM
 CLOCK_SUMMARY
                     fi
                     
+                    # Add link to clock latency file if available (contains trace per clock with highest latency path)
+                    if [ "$clock_latency_file" != "N/A" ] && [ -n "$clock_latency_file" ]; then
+                        cat >> "$HTML_FILE" << CLOCK_LATENCY_LINK
+                                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0e0e0;">
+                                    <a href="file://${clock_latency_file}" target="_blank" 
+                                       style="color: #3498db; text-decoration: none; font-size: 0.9em; display: inline-flex; align-items: center; gap: 6px;">
+                                        📄 View Clock Latency Report
+                                        <span style="font-size: 0.85em; color: #666;">(trace per clock with highest latency path)</span>
+                                    </a>
+                                </div>
+CLOCK_LATENCY_LINK
+                    fi
+                    
                     echo "                                </div>" >> "$HTML_FILE"
+                fi
+            elif [ "$REGRESSION_TYPE" = "glcheck" ]; then
+                # For GL Check: Display error breakdown
+                if [ "$details" != "No GL Check data available" ] && [ "$details" != "No GL Check analysis found" ]; then
+                    # Get GL Check-specific data
+                    total_errors="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_total_errors]}"
+                    waived="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_waived]}"
+                    non_waived="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_non_waived]}"
+                    top_checkers="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_top_checkers]}"
+                    
+                    cat >> "$HTML_FILE" << GLCHECK_START
+                            <div class="formal-flows">
+                                <div class="flow-title">GL Check Results:</div>
+                                <div class="flow-item">
+                                    <span><strong>📊 Total Errors</strong></span>
+                                    <span>$total_errors</span>
+                                </div>
+                                <div class="flow-item flow-succeeded">
+                                    <span>✅ Waived</span>
+                                    <span>$waived</span>
+                                </div>
+GLCHECK_START
+                    
+                    # Color code non-waived based on severity
+                    if [ "$non_waived" != "N/A" ] && [ -n "$non_waived" ] && [[ "$non_waived" =~ ^[0-9]+$ ]]; then
+                        non_waived_num=$non_waived
+                        if [ $non_waived_num -eq 0 ]; then
+                            nw_class="flow-succeeded"
+                            nw_icon="✅"
+                            nw_label="CLEAN"
+                        elif [ $non_waived_num -lt 50 ]; then
+                            nw_class="flow-unresolved"
+                            nw_icon="⚠️"
+                            nw_label="MINOR"
+                        else
+                            nw_class="flow-failed"
+                            nw_icon="❌"
+                            nw_label="CRITICAL"
+                        fi
+                        
+                        cat >> "$HTML_FILE" << GLCHECK_NW
+                                <div class="flow-item $nw_class">
+                                    <span><strong>🔍 Non-Waived</strong></span>
+                                    <span>$nw_icon $non_waived ($nw_label)</span>
+                                </div>
+GLCHECK_NW
+                    fi
+                    
+                    # Show top 3 checkers if available
+                    if [ "$top_checkers" != "N/A" ] && [ -n "$top_checkers" ]; then
+                        echo '                                <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #f0f0f0;">' >> "$HTML_FILE"
+                        echo '                                    <div class="flow-title" style="font-size: 0.9em;">🔝 Top Issues by Checker:</div>' >> "$HTML_FILE"
+                        
+                        IFS=';' read -ra checkers <<< "$top_checkers"
+                        for checker_info in "${checkers[@]}"; do
+                            IFS=':' read -r checker_name nw_count <<< "$checker_info"
+                            
+                            # Color code based on count (stricter thresholds for top issues)
+                            if [ "$nw_count" -eq 0 ]; then
+                                checker_class="flow-succeeded"
+                                checker_icon="✅"
+                            elif [ "$nw_count" -lt 10 ]; then
+                                checker_class="flow-unresolved"
+                                checker_icon="⚠️"
+                            else
+                                checker_class="flow-failed"
+                                checker_icon="❌"
+                            fi
+                            
+                            cat >> "$HTML_FILE" << GLCHECK_CHECKER
+                                    <div class="flow-item $checker_class" style="font-size: 0.85em;">
+                                        <span>$checker_name</span>
+                                        <span>$checker_icon $nw_count violations</span>
+                                    </div>
+GLCHECK_CHECKER
+                        done
+                        
+                        echo '                                </div>' >> "$HTML_FILE"
+                    fi
+                    
+                    echo "                            </div>" >> "$HTML_FILE"
                 fi
             else
                 # For other types: Display as flows
@@ -2881,8 +3953,17 @@ CLOCK_SUMMARY
                                 <div class="flow-title">Formal Flows:</div>
 FLOWS_START
                     
+                    # Get failing compare points for formal regression (format: bbox|pnr|syn|syn_bbox)
+                    failing_compare_pts_data=""
+                    if [ "$REGRESSION_TYPE" = "formal" ]; then
+                        failing_compare_pts_data="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_failing_compare_pts]}"
+                        # Split into array: [0]=bbox, [1]=pnr, [2]=syn, [3]=syn_bbox (colon-delimited)
+                        IFS=':' read -ra failing_pts_arr <<< "$failing_compare_pts_data"
+                    fi
+                    
                     # Parse details string (format: "flow: STATUS (runtime)")
                     IFS=',' read -ra flows <<< "$details"
+                    flow_idx=0
                     for flow_info in "${flows[@]}"; do
                         flow_info=$(echo "$flow_info" | xargs)
                         flow_name=$(echo "$flow_info" | cut -d':' -f1 | xargs)
@@ -2934,12 +4015,38 @@ FLOWS_START
                             flow_display="$flow_icon $flow_status"
                         fi
                         
+                        # Get failing compare points for this specific flow (formal only)
+                        failing_pts_value=""
+                        if [ "$REGRESSION_TYPE" = "formal" ] && [ ${#failing_pts_arr[@]} -gt 0 ]; then
+                            # Map flow name to array index: bbox=0, pnr=1, syn=2, syn_bbox=3
+                            if [[ "$flow_name" == "rtl_vs_pnr_bbox" ]]; then
+                                failing_pts_value="${failing_pts_arr[0]}"
+                            elif [[ "$flow_name" == "rtl_vs_pnr" ]]; then
+                                failing_pts_value="${failing_pts_arr[1]}"
+                            elif [[ "$flow_name" == "rtl_vs_syn" ]]; then
+                                failing_pts_value="${failing_pts_arr[2]}"
+                            elif [[ "$flow_name" == "rtl_vs_syn_bbox" ]]; then
+                                failing_pts_value="${failing_pts_arr[3]}"
+                            fi
+                            
+                            # Add failing compare points to display if available and not N/A
+                            if [ -n "$failing_pts_value" ] && [ "$failing_pts_value" != "N/A" ]; then
+                                # Color code based on value: 0=green, >0=red
+                                if [ "$failing_pts_value" = "0" ]; then
+                                    flow_display="$flow_display <span style=\"font-size: 0.85em; color: #27ae60;\">[0 failing pts]</span>"
+                                else
+                                    flow_display="$flow_display <span style=\"font-size: 0.85em; color: #e74c3c; font-weight: 600;\">[$failing_pts_value failing pts]</span>"
+                                fi
+                            fi
+                        fi
+                        
                         cat >> "$HTML_FILE" << FLOW_ITEM
                                 <div class="flow-item $flow_class">
                                     <span>$flow_name</span>
                                     <span>$flow_display</span>
                                 </div>
 FLOW_ITEM
+                        ((flow_idx++))
                     done
                     
                     echo "                                </div>" >> "$HTML_FILE"
@@ -3063,6 +4170,22 @@ cat >> "$HTML_FILE" << 'MULTI_HTML_END'
         }
     }
     
+    // Toggle timing breakdown expandable section
+    function toggleTimingBreakdown(timingId) {
+        const contentDiv = document.getElementById(timingId);
+        const arrow = document.getElementById(timingId + '-arrow');
+        
+        if (contentDiv.style.display === 'none') {
+            // Expand - show timing details
+            contentDiv.style.display = 'block';
+            arrow.style.transform = 'rotate(90deg)';
+        } else {
+            // Collapse - hide timing details
+            contentDiv.style.display = 'none';
+            arrow.style.transform = 'rotate(0deg)';
+        }
+    }
+    
     // Search and filter functionality
     function filterUnits() {
         const searchInput = document.getElementById('searchInput').value.toLowerCase();
@@ -3087,25 +4210,19 @@ cat >> "$HTML_FILE" << 'MULTI_HTML_END'
     function filterStatus(evt, status) {
         try {
             const unitCards = document.getElementsByClassName('unit-card');
-            const filterButtons = document.getElementsByClassName('filter-btn');
             const statCards = document.getElementsByClassName('stat-card');
-            
-            // Update active button (filter buttons in the bar)
-            for (let btn of filterButtons) {
-                btn.classList.remove('active');
-            }
             
             // Update active stat card (statistics cards at top)
             for (let card of statCards) {
                 card.classList.remove('active');
             }
             
-            // Add active class to clicked element
+            // Add active class to clicked stat card
             if (evt && evt.target) {
                 // If clicked on a child element (like stat-value), find parent stat-card
                 let targetElement = evt.target;
-                if (!targetElement.classList.contains('stat-card') && !targetElement.classList.contains('filter-btn')) {
-                    targetElement = evt.target.closest('.stat-card') || evt.target.closest('.filter-btn');
+                if (!targetElement.classList.contains('stat-card')) {
+                    targetElement = evt.target.closest('.stat-card');
                 }
                 if (targetElement) {
                     targetElement.classList.add('active');
@@ -3144,8 +4261,125 @@ cat >> "$HTML_FILE" << 'MULTI_HTML_END'
         
         // Re-apply search filter
         filterUnits();
+        
+        // Highlight chiplets containing matching units
+        highlightRelevantChiplets(status);
         } catch (e) {
             console.error('Error in filterStatus:', e);
+        }
+    }
+    
+    function highlightRelevantChiplets(status) {
+        try {
+            const chipletHeaders = document.querySelectorAll('.chiplet-header');
+            const chipletSections = document.querySelectorAll('.chiplet-section');
+            
+            // Remove all previous highlights
+            for (let header of chipletHeaders) {
+                header.classList.remove('highlighted-passed', 'highlighted-failed', 'highlighted-crashed', 
+                                        'highlighted-warn', 'highlighted-unresolved', 'highlighted-not_run', 
+                                        'highlighted-no_data', 'highlighted-missing');
+            }
+            
+            // If showing all, don't highlight anything
+            if (status === 'all') {
+                return;
+            }
+            
+            // Determine highlight class based on status
+            const highlightClass = 'highlighted-' + status;
+            
+            // Check each chiplet section for visible units
+            for (let section of chipletSections) {
+                const unitsGrid = section.querySelector('.units-grid');
+                if (!unitsGrid) continue;
+                
+                const unitCards = unitsGrid.querySelectorAll('.unit-card');
+                let hasVisibleUnits = false;
+                
+                // Check if this chiplet has any visible (matching) units
+                for (let card of unitCards) {
+                    if (!card.classList.contains('hidden') && !card.classList.contains('status-filtered')) {
+                        hasVisibleUnits = true;
+                        break;
+                    }
+                }
+                
+                // If chiplet has matching units, highlight and expand it
+                if (hasVisibleUnits) {
+                    const header = section.querySelector('.chiplet-header');
+                    const content = section.querySelector('.collapsible-content');
+                    const toggle = section.querySelector('.toggle');
+                    
+                    if (header) {
+                        header.classList.add(highlightClass);
+                    }
+                    
+                    // Auto-expand chiplets with matching units
+                    if (content && !content.classList.contains('active')) {
+                        content.classList.add('active');
+                        if (toggle) {
+                            toggle.textContent = '▼';
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Error in highlightRelevantChiplets:', e);
+        }
+    }
+    
+    function collapseAll() {
+        try {
+            const chipletHeaders = document.querySelectorAll('.chiplet-header');
+            const chipletContents = document.querySelectorAll('.collapsible-content');
+            const toggles = document.querySelectorAll('.chiplet-header .toggle');
+            
+            // Collapse all chiplet sections
+            for (let content of chipletContents) {
+                content.classList.remove('active');
+            }
+            
+            // Update all toggle icons to collapsed state
+            for (let toggle of toggles) {
+                toggle.textContent = '▶';
+            }
+            
+            // Remove all highlights
+            for (let header of chipletHeaders) {
+                header.classList.remove('highlighted-passed', 'highlighted-failed', 'highlighted-crashed', 
+                                        'highlighted-warn', 'highlighted-unresolved', 'highlighted-not_run', 
+                                        'highlighted-no_data', 'highlighted-missing');
+            }
+        } catch (e) {
+            console.error('Error in collapseAll:', e);
+        }
+    }
+    
+    function expandAll() {
+        try {
+            const chipletHeaders = document.querySelectorAll('.chiplet-header');
+            const chipletContents = document.querySelectorAll('.collapsible-content');
+            const toggles = document.querySelectorAll('.chiplet-header .toggle');
+            
+            // Expand all chiplet sections
+            for (let content of chipletContents) {
+                content.classList.add('active');
+            }
+            
+            // Update all toggle icons to expanded state
+            for (let toggle of toggles) {
+                toggle.textContent = '▼';
+            }
+            
+            // Remove all highlights (clean slate)
+            for (let header of chipletHeaders) {
+                header.classList.remove('highlighted-passed', 'highlighted-failed', 'highlighted-crashed', 
+                                        'highlighted-warn', 'highlighted-unresolved', 'highlighted-not_run', 
+                                        'highlighted-no_data', 'highlighted-missing');
+            }
+        } catch (e) {
+            console.error('Error in expandAll:', e);
         }
     }
     
@@ -3220,13 +4454,37 @@ cat >> "$HTML_FILE" << 'MULTI_HTML_END'
         }
     });
 </script>
+
+<!-- Back to Top Button -->
+<button id="backToTopBtn" title="Go to top">↑ Top</button>
+
+<script>
+    // Back to Top Button functionality (must run after button is in DOM)
+    document.addEventListener('DOMContentLoaded', function() {
+        const backToTopBtn = document.getElementById('backToTopBtn');
+        if (backToTopBtn) {
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    backToTopBtn.classList.add('visible');
+                } else {
+                    backToTopBtn.classList.remove('visible');
+                }
+            });
+            
+            backToTopBtn.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    });
+</script>
+
 </body>
 </html>
 MULTI_HTML_END
 
 # Print HTML generation message based on quiet mode
 if [ $QUIET -eq 0 ]; then
-    echo "HTML dashboard generated: $HTML_FILE"
+echo "HTML dashboard generated: $HTML_FILE"
 fi
 
 # Set regression name for summary
@@ -3243,29 +4501,29 @@ rm -rf "$TEMP_DIR"
 
 # Print summary only if not in quiet mode
 if [ $QUIET -eq 0 ]; then
-    echo ""
-    echo ""
-    print_header
-    echo -e "${GREEN}$REGRESSION_NAME Regression Complete!${NC}"
-    echo ""
-    echo "Results Summary:"
-    echo "  - Total Units: $TOTAL_UNITS"
-    echo -e "  - ${GREEN}Passed: $passed_count${NC}"
-    echo -e "  - ${YELLOW}Warnings: $warn_count${NC}"
-    echo -e "  - ${YELLOW}Partial Pass: $partial_count${NC}"
-    echo -e "  - ${YELLOW}Unresolved: $unresolved_count${NC}"
-    echo -e "  - ${RED}Failed: $failed_count${NC}"
-    echo -e "  - ${RED}Crashed: $crashed_count${NC}"
-    echo -e "  - ${YELLOW}Running: $running_count${NC}"
-    echo -e "  - ${YELLOW}Errors: $error_count${NC}"
-    echo -e "  - ${YELLOW}Not Run: $not_found_count${NC}"
-    echo -e "  - ${YELLOW}No Data: $no_data_count${NC}"
-    echo -e "  - ${RED}Missing WA: $missing_count${NC}"
-    echo ""
-    echo "Output File:"
-    echo "  - HTML Dashboard: $HTML_FILE"
-    echo ""
-    echo -e "${CYAN}===============================================================================${NC}"
+echo ""
+echo ""
+print_header
+echo -e "${GREEN}$REGRESSION_NAME Regression Complete!${NC}"
+echo ""
+echo "Results Summary:"
+echo "  - Total Units: $TOTAL_UNITS"
+echo -e "  - ${GREEN}Passed: $passed_count${NC}"
+echo -e "  - ${YELLOW}Warnings: $warn_count${NC}"
+echo -e "  - ${YELLOW}Partial Pass: $partial_count${NC}"
+echo -e "  - ${YELLOW}Unresolved: $unresolved_count${NC}"
+echo -e "  - ${RED}Failed: $failed_count${NC}"
+echo -e "  - ${RED}Crashed: $crashed_count${NC}"
+echo -e "  - ${YELLOW}Running: $running_count${NC}"
+echo -e "  - ${YELLOW}Errors: $error_count${NC}"
+echo -e "  - ${YELLOW}Not Run: $not_found_count${NC}"
+echo -e "  - ${YELLOW}No Data: $no_data_count${NC}"
+echo -e "  - ${RED}Missing WA: $missing_count${NC}"
+echo ""
+echo "Output File:"
+echo "  - HTML Dashboard: $HTML_FILE"
+echo ""
+echo -e "${CYAN}===============================================================================${NC}"
 else
     # In quiet mode, just print the HTML file location
     echo ""

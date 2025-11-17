@@ -265,7 +265,7 @@ The tool provides colorized output with:
    - Better RUNNING flow detection
 
 5. **Architecture Updates**:
-   - Comprehensive architecture.mdc documentation
+   - Comprehensive `.cursor/rules/architecture.mdc` documentation (auto-loaded)
    - HTML/CSS rendering compatibility updates
    - Cross-directory execution standards
    - Testing and validation guidelines

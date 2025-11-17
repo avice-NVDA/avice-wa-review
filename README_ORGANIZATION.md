@@ -17,7 +17,9 @@ avice_wa_review/
 │   ├── README_avice_wa_review.md       # Main user documentation (360 lines)
 │   ├── README_ORGANIZATION.md          # Organization and structure guide (this file)
 │   ├── INDEX.md                        # Complete script index with line numbers (583 lines)
-│   ├── architecture.mdc                # Architecture rules and standards (1,050 lines - ENHANCED)
+│   ├── .cursor/
+│   │   └── rules/
+│   │       └── architecture.mdc        # Architecture rules and standards (940 lines - AUTO-LOADED)
 │   ├── MASTER_DASHBOARD.md             # Master Dashboard complete documentation (400 lines)
 │   ├── HTML_PORTABILITY_IMPROVEMENTS.md # HTML portability fixes summary (600 lines)
 │   ├── DEVELOPMENT_HISTORY.md          # Development history and changes (350 lines)
@@ -51,7 +53,7 @@ The following files were removed during code cleanup as they were unused or redu
 
 ### October 9, 2025 Cleanup
 - `extract_timing_summary.py` - Standalone PT timing extraction (functionality fully integrated into main script at Lines 3230-3959)
-- `unix_shell_compatibility_guide.md` - Merged into architecture.mdc for better organization
+- `unix_shell_compatibility_guide.md` - Merged into `.cursor/rules/architecture.mdc` for better organization
 
 ### Previous Cleanup
 - `lvs_analyzer.py` - LVS analysis (functionality integrated into main script)
@@ -95,7 +97,7 @@ cd /home/avice/scripts/avice_wa_review
 
 ### Documentation Files
 - **INDEX.md** - Complete script index with all methods and line numbers
-- **architecture.mdc** - Architecture rules, patterns, and standards
+- **.cursor/rules/architecture.mdc** - Architecture rules, patterns, and standards (auto-loaded in Cursor)
 - **SECTION_HEADERS.md** - Section header formatting and numbering
 - **README_avice_wa_review.md** - Main user-facing documentation
 
@@ -143,7 +145,7 @@ All files have been moved from `/home/avice/scripts/` to `/home/avice/scripts/av
 
 ### Regular Maintenance Tasks
 - **Cleanup HTML reports**: Run `cleanup_test_reports.sh` to remove old test files
-- **Update documentation**: When code changes, update INDEX.md and architecture.mdc
+- **Update documentation**: When code changes, update INDEX.md and `.cursor/rules/architecture.mdc`
 - **Track workareas**: Add new test workareas to `workareas.txt`
 - **Review file count**: Periodically verify line counts in documentation
 

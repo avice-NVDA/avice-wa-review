@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Master Dashboard demo and progress tracking
 
 ### Changed
-- Updated `architecture.mdc` with latest standards and patterns
+- Updated `.cursor/rules/architecture.mdc` with latest standards and patterns (auto-loaded in Cursor)
 - Enhanced `avice_image_debug_report.py` with improved error handling
 - Improved HTML generation with better styling and responsiveness
 - Better workarea validation and error messages

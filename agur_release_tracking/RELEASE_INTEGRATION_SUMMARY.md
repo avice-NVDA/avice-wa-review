@@ -315,7 +315,7 @@ Each unit card shows:
   - `_generate_block_release_html_report()` method
 
 ### Documentation
-- `/home/avice/scripts/avice_wa_review/architecture.mdc`
+- `/home/avice/scripts/avice_wa_review/.cursor/rules/architecture.mdc`
   - Symlink filtering guidelines
   - Console output standards
   - HTML report standards

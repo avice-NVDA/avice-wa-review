@@ -4,6 +4,7 @@ Workarea Review Results Summarizer
 ==================================
 
 Analyzes and summarizes results from batch workarea reviews
+Works with batch_review.py output (reads from batch_review_results/)
 """
 
 import os
@@ -103,7 +104,7 @@ def extract_design_info(content):
 
 def analyze_results():
     """Analyze all review results"""
-    results_dir = "review_results"
+    results_dir = "batch_review_results"
     
     if not os.path.exists(results_dir):
         print("❌ No results directory found")

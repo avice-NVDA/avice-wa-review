@@ -56,15 +56,15 @@ def print_help(script_name):
 {c.BOLD}{c.YELLOW}Usage:{c.RESET} {c.BOLD}{c.GREEN}{script_name}{c.RESET} [{c.BOLD}{c.GREEN}-t{c.RESET} TYPE[,TYPE2,...]] [options]
 
 {c.BOLD}Run various analysis regressions on all released AGUR units.{c.RESET}
-{c.YELLOW}If no -t option is specified, runs ALL regression types (formal, timing, pv, clock, release).{c.RESET}
+{c.YELLOW}If no -t option is specified, runs ALL regression types (formal, timing, pv, clock, release, glcheck).{c.RESET}
 
 {c.BOLD}{c.CYAN}-------------------------------------------------------------------------------
 OPTIONS
 -------------------------------------------------------------------------------{c.RESET}
   {c.BOLD}{c.GREEN}-t, --type{c.RESET} TYPE          Regression type (optional - defaults to ALL types)
-                           Options: {c.YELLOW}formal, timing, pv, clock, release{c.RESET}
+                           Options: {c.YELLOW}formal, timing, pv, clock, release, glcheck{c.RESET}
                            Multiple types: comma-separated or multiple -t flags
-                           If omitted: runs all 5 regression types
+                           If omitted: runs all 6 regression types
 
 {c.BOLD}{c.CYAN}FILTERS:{c.RESET}
   {c.BOLD}{c.GREEN}-c, --chiplet{c.RESET} CHIPLET    Filter by chiplet - case-insensitive (e.g., CPORT, cport)
@@ -127,6 +127,7 @@ REGRESSION TYPES
   {c.BOLD}{c.YELLOW}pv{c.RESET}        - Physical verification (DRC, LVS, Antenna)
   {c.BOLD}{c.YELLOW}clock{c.RESET}     - Clock tree analysis (latency, skew)
   {c.BOLD}{c.YELLOW}release{c.RESET}   - Block release status and completeness
+  {c.BOLD}{c.YELLOW}glcheck{c.RESET}   - GL Check error analysis (waived vs non-waived)
 
 {c.BOLD}{c.CYAN}-------------------------------------------------------------------------------
 OUTPUT FILES (generated in current directory)

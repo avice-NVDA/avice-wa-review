@@ -15,6 +15,7 @@ The AGUR regression framework automatically tests all released AGUR unit workare
 | **pv** | ✓ | Physical Verification | DRC, LVS, Antenna violations |
 | **clock** | 🕒 | Clock Tree Analysis | Clock latency, skew, insertion delay |
 | **release** | 📦 | Block Release Status | Release completeness and validation |
+| **glcheck** | 🔧 | GL Check Analysis | Gate-level check errors (waived vs non-waived) |
 
 ---
 
@@ -37,6 +38,9 @@ cd /home/avice/scripts/avice_wa_review/agur_release_tracking
 
 # Run block release status check
 ./run_agur_regression.sh -t release
+
+# Run GL Check regression on all units
+./run_agur_regression.sh -t glcheck
 ```
 
 ---
@@ -49,7 +53,7 @@ cd /home/avice/scripts/avice_wa_review/agur_release_tracking
 |--------|-------------|---------|
 | `-t, --type TYPE` | **Regression type (REQUIRED)** | `-t formal` |
 
-Valid types: `formal`, `timing`, `pv`, `clock`, `release`
+Valid types: `formal`, `timing`, `pv`, `clock`, `release`, `glcheck`
 
 ### Optional Filters
 

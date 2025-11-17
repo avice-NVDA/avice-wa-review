@@ -937,3 +937,176 @@ They are separate tools that happen to live in the same repository for convenien
    - The launcher handles Python path setup automatically
 
 This .mdc file should be referenced for all development work on the workarea review project to ensure consistency and adherence to established patterns.
+
+## Email Implementation Standards
+
+1. **CRITICAL: ALWAYS use SMTP for email functionality**
+   - ✅ CORRECT: Use `smtplib` with `smtp.nvidia.com:25`
+   - ❌ WRONG: Unix `mail` command is unreliable and doesn't work consistently
+   
+2. **Proven SMTP implementation pattern**:
+   ```python
+   import smtplib
+   from email.mime.multipart import MIMEMultipart
+   from email.mime.text import MIMEText
+   
+   # Setup
+   msg = MIMEMultipart()
+   msg['From'] = f"{os.environ.get('USER', 'avice')}@nvidia.com"
+   msg['To'] = to_email
+   msg['Cc'] = cc_email  # Optional
+   msg['Subject'] = subject
+   msg.attach(MIMEText(body, 'plain'))
+   
+   # Send via SMTP
+   smtp_server = "smtp.nvidia.com"
+   smtp_port = 25
+   all_recipients = [to_email, cc_email]  # Include all TO and CC
+   
+   with smtplib.SMTP(smtp_server, smtp_port, timeout=30) as server:
+       server.sendmail(msg['From'], all_recipients, msg.as_string())
+   ```
+
+3. **Email implementation guidelines**:
+   - Use MIMEMultipart for message structure
+   - Use MIMEText for plain text body
+   - Use MIMEBase for file attachments (Excel, etc.)
+   - Always include timeout (30 seconds) in SMTP connection
+   - Include both TO and CC recipients in `all_recipients` list for `sendmail()`
+   - Handle ImportError separately from general exceptions
+   - Print traceback on failure for debugging
+
+4. **Reference implementations** (proven to work):
+   - `_send_ipo_comparison_email()` (Line 22555): IPO comparison reports
+   - `_send_multi_workarea_email()` (Line 22649): Multi-workarea reports
+   - `_send_critical_disk_alert()` (Line 4502): Critical disk usage alerts
+
+5. **Common pitfalls to avoid**:
+   - ❌ Don't use Unix `mail` command: `mail -s "subject" user@nvidia.com`
+   - ❌ Don't use `echo | mail` shell commands
+   - ❌ Don't forget CC recipients in `all_recipients` list
+   - ❌ Don't use shell=True for email commands
+   - ✅ Always use Python's smtplib module
+   - ✅ Always use smtp.nvidia.com:25 (NVIDIA's internal SMTP server)
+
+6. **Testing email functionality**:
+   - Test with actual email recipients
+   - Verify both TO and CC recipients receive email
+   - Check email formatting and headers
+   - Verify attachments if included
+   - Test error handling with invalid recipients
+
+## Critical Disk Alert Feature
+
+### Overview
+Automatically sends email alerts when disk usage reaches critical levels (≥90%) during workarea review.
+
+### Feature Details
+
+**Trigger Condition**:
+- Threshold: Disk usage ≥ 90%
+- Location: Setup section (beginning of analysis)
+- Check: Runs `df -h` on workarea path
+
+**Email Recipients**:
+- TO: Workarea owner (extracted from path: `scratch.username_vlsi` → `username@nvidia.com`)
+- CC: avice@nvidia.com (tool owner, for monitoring)
+
+**Email Content**:
+- Subject: `[CRITICAL] Disk Usage Alert: XX% on /mount/point`
+- Body includes:
+  * Workarea path and design name
+  * Filesystem details (size, used, available, usage %)
+  * Recommended cleanup actions (5 specific steps)
+  * Risk warnings (flow failures, truncated logs, etc.)
+  * Timestamp and contact info
+
+### Implementation
+
+**Methods**:
+- `_send_critical_disk_alert()` (Line 4502): Sends email using SMTP (smtp.nvidia.com:25)
+- `_check_disk_utilization()` (Line 4608): Calls email alert when usage ≥ 90%
+
+**User Extraction Logic**:
+```python
+# From workarea path: /home/scratch.username_vlsi/... → username
+match = re.search(r'/scratch\.([^/]+?)(?:_vlsi)?/', workarea_path)
+# Fallback to $USER environment variable
+```
+
+**Terminal Output**:
+```
+[EMAIL] Critical disk alert sent to username@nvidia.com (CC: avice@nvidia.com)
+```
+
+**Error Handling**:
+- Graceful failure if email cannot be sent
+- Info message displayed to user
+- Does not block workarea analysis
+
+### Testing
+
+Test with workarea having ≥90% disk usage:
+```bash
+/home/utils/Python/builds/3.11.9-20250715/bin/python3 avice_wa_review.py -u pscc -s setup  # 96% usage
+/home/utils/Python/builds/3.11.9-20250715/bin/python3 avice_wa_review.py -u dqaci -s setup # 91% usage
+```
+
+Verify:
+1. ✅ Email received by workarea owner
+2. ✅ avice@nvidia.com in CC
+3. ✅ Proper email formatting
+4. ✅ Accurate disk usage details
+
+### Benefits
+
+1. **Proactive Monitoring**: Alerts users before flow failures
+2. **Centralized Visibility**: avice receives all critical alerts for tracking
+3. **Actionable Guidance**: Email includes specific cleanup recommendations
+4. **Non-Intrusive**: Doesn't block analysis if email fails
+
+### Future Enhancements (Optional)
+
+- Weekly digest of all disk alerts
+- Track alert frequency per user
+- Integration with dashboard for visualization
+- Configurable threshold (default: 90%)
+
+**Implementation Date**: October 30, 2025  
+**Author**: Alon Vice (avice@nvidia.com)
+
+## AGUR Disk Monitor - Automated Daily System
+
+**Status**: ✅ LIVE (Deployed November 2, 2025)
+**Server**: tlv02-cron-01
+**Schedule**: Daily at 8:00 AM
+**Owner**: avice@nvidia.com
+
+### Production Cron Job
+```
+0 8 * * * cd /home/avice/scripts/avice_wa_review/agur_release_tracking && /home/utils/Python/builds/3.11.9-20250715/bin/python3 agur_disk_monitor.py >> logs/disk_alert_$(date +\%Y\%m\%d).log 2>&1 || echo "AGUR Disk Monitor failed on $(date)" | mail -s "[ERROR] AGUR Disk Monitor Failed" avice@nvidia.com
+```
+
+### Overview
+Automated daily monitoring of all 72 AGUR units. Sends consolidated email alerts to workarea owners when disk usage reaches >=90%.
+
+### Key Features
+- Smart email consolidation (one email per owner)
+- Unified email format for single and multi-unit alerts
+- Practical Unix commands for disk analysis (copy-paste ready)
+- Robust error handling with failure notifications
+- Daily logging with disable control
+
+### Files
+- Script: `agur_release_tracking/agur_disk_monitor.py`
+- Docs: `agur_release_tracking/README_DISK_MONITOR.md`
+- Logs: `agur_release_tracking/logs/disk_alert_YYYYMMDD.log`
+
+### Monitoring
+```bash
+ssh tlv02-cron-01
+crontab -l | grep agur_disk_monitor
+tail -50 /home/avice/scripts/avice_wa_review/agur_release_tracking/logs/disk_alert_$(date +%Y%m%d).log
+```
+
+**Implementation Date**: November 2, 2025
