@@ -1,0 +1,93 @@
+================================================================================
+AGUR DISK MONITOR - QUICK REFERENCE CARD
+================================================================================
+
+✅ STATUS: LIVE - Production Deployed (November 2, 2025)
+📍 Server: tlv02-cron-01
+⏰ Schedule: Daily at 8:00 AM
+📧 Contact: avice@nvidia.com
+
+================================================================================
+📋 PRODUCTION CRON JOBS (CURRENTLY ACTIVE):
+================================================================================
+
+# Robust version with email alerts on failure
+0 8 * * * cd /home/avice/scripts/avice_wa_review/agur_release_tracking && /home/utils/Python/builds/3.11.9-20250715/bin/python3 agur_disk_monitor.py >> logs/disk_alert_$(date +\%Y\%m\%d).log 2>&1 || echo "AGUR Disk Monitor failed on $(date)" | mail -s "[ERROR] AGUR Disk Monitor Failed" avice@nvidia.com
+
+================================================================================
+🔧 MODIFY CRON (tlv02-cron-01):
+================================================================================
+
+ssh tlv02-cron-01
+crontab -e
+# Make changes, save and exit
+crontab -l | grep agur_disk_monitor  # Verify
+
+================================================================================
+🧪 TESTING COMMANDS:
+================================================================================
+
+# Dry run (no emails)
+python3 agur_disk_monitor.py --dry-run
+
+# Test mode (all emails to avice only)
+python3 agur_disk_monitor.py --test-mode
+
+# Production run (real emails to owners)
+python3 agur_disk_monitor.py
+
+================================================================================
+🛑 DISABLE/ENABLE:
+================================================================================
+
+# Disable
+touch .disk_monitor_disabled
+
+# Re-enable
+rm .disk_monitor_disabled
+
+================================================================================
+📊 MONITORING:
+================================================================================
+
+# View today's log
+tail -f logs/disk_alert_$(date +%Y%m%d).log
+
+# Check if emails sent
+grep "\[EMAIL\]" logs/disk_alert_$(date +%Y%m%d).log
+
+# Count critical units
+grep "\[CRITICAL\]" logs/disk_alert_$(date +%Y%m%d).log | wc -l
+
+================================================================================
+🔧 TROUBLESHOOTING:
+================================================================================
+
+# Check cron installed
+crontab -l | grep agur_disk_monitor
+
+# Test manually
+cd /home/avice/scripts/avice_wa_review/agur_release_tracking
+python3 agur_disk_monitor.py --dry-run
+
+# Check for errors
+grep ERROR logs/disk_alert_$(date +%Y%m%d).log
+
+================================================================================
+📧 EXPECTED BEHAVIOR (Current):
+================================================================================
+
+Critical Units: ~13 units (≥90%)
+Daily Emails: ~6 emails (grouped by owner)
+  - thadad: 2 units (ftos, ir)
+  - nkahaz: 2 units (psca, pscb)
+  - siddharthasa: 3 units (dqaa, dqaci, dqamco)
+  - abarman: 3 units (dqamdo, dqavi, dqs)
+  - gnarla: 2 units (dqavo, tecorel)
+  - eelgabsi: 1 unit (eds)
+
+All emails CC: avice@nvidia.com
+
+================================================================================
+📞 CONTACT: Alon Vice (avice@nvidia.com)
+================================================================================

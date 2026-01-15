@@ -1,0 +1,256 @@
+===============================================================================
+ECO Checker - Quick Start Guide for AGUR Users
+===============================================================================
+Author: Alon Vice (avice@nvidia.com)
+Date: November 6, 2025
+===============================================================================
+
+WHAT IS IT?
+-----------
+Standalone tool to validate ECO TCL files BEFORE implementation.
+Catches violations early: DontUse cells, illegal clock network operations.
+
+WHY USE IT?
+-----------
+✓ Catch errors BEFORE implementing ECOs
+✓ No need to run full gl-check (takes hours)
+✓ Works on external ECOs (like Radu's VIVID ECOs)
+✓ Smart auto-detection - just point to ECO file(s)
+✓ Fast: checks 15,000+ commands in seconds
+
+===============================================================================
+USAGE (No Setup Required!)
+===============================================================================
+
+Simply run the launcher script - no aliases, no setup needed:
+
+    /home/avice/scripts/avice_wa_review/eco_checker.csh <your_eco_file.tcl>
+
+That's it! The launcher handles everything automatically.
+
+===============================================================================
+BASIC USAGE
+===============================================================================
+
+1. Check Single ECO File (Workarea Auto-Detected)
+   -----------------------------------------------
+   cd /home/scratch.myuser_vlsi/.../my_workarea/signoff_flow/auto_pt/
+   /home/avice/scripts/avice_wa_review/eco_checker.csh my_timing_fixes.tcl
+
+2. Check Multiple ECO Files from Same Workarea
+   --------------------------------------------
+   /home/avice/scripts/avice_wa_review/eco_checker.csh work_*/vivid_eco_*.tcl
+
+3. Check External ECOs (Provide Reference Workarea)
+   -------------------------------------------------
+   /home/avice/scripts/avice_wa_review/eco_checker.csh /path/to/external/*.tcl --workarea /home/scratch.myuser/.../my_workarea/
+
+4. Check Radu's VIVID ECOs (Example)
+   ----------------------------------
+   /home/avice/scripts/avice_wa_review/eco_checker.csh /home/agur_fullchip/.../ECO_VIVID_AND_MANUAL/*.tcl \\
+       --workarea /home/scratch.brachas_vlsi/.../pmux_rbv_.../
+
+===============================================================================
+UNDERSTANDING THE OUTPUT
+===============================================================================
+
+Exit Codes:
+-----------
+  0 = All checks passed (green)
+  1 = Violations found (needs attention)
+  2 = Error (missing files, parse errors)
+
+Checks Performed:
+-----------------
+  [OK] DontUse:                  0 violations
+       → Cells that are prohibited in the design
+
+  [WARN] instNotAllowedOnClocks: 2 violations
+       → Non-clock-safe cells used on clock network
+
+  [INFO] ClockCellsOnData:       5 instances
+       → Clock cells used on data paths (informational, not an error)
+
+Sample Output:
+--------------
+===============================================================================
+ECO Checker - Standalone ECO Validation Utility
+===============================================================================
+Analyzing 3 ECO file(s)...
+
+[1/3] pmux.ipo1000-1001.2025Nov04_03_43_11_Flow_Fixall.fixall.innovus.tcl
+----------------------------------------------------------------------
+  Workarea:     /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_.../
+  Commands:     78 (placeInstance:34, ecoChangeCell:33, ecoAddRepeater:6)
+  [OK] DontUse: 0 violations
+  [WARN] instNotAllowedOnClocks: 1 violations
+  [INFO] ClockCellsOnData: 2 instances
+
+[2/3] fdb.ipo1000-1001.2025Nov04_03_43_11_Flow_Fixall.fixall.innovus.tcl
+----------------------------------------------------------------------
+  Workarea:     /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_.../
+  Commands:     25 (ecoChangeCell:16, placeInstance:4)
+  [OK] DontUse: 0 violations
+  [OK] instNotAllowedOnClocks: 0 violations
+  [INFO] ClockCellsOnData: 1 instances
+
+===============================================================================
+SUMMARY
+===============================================================================
+Total Files:                 2
+Total ECO Commands:          103
+
+Violations by Category:
+  [OK] DontUse Cells:                     0
+  [WARN] instNotAllowedOnClocks:         1 (across 1 files)
+  [INFO] ClockCellsOnData:                3 (informational)
+
+Affected Files:
+  pmux.ipo1000-1001.2025Nov04_03_43_11_Flow_Fixall.fixall.innovus.tcl
+===============================================================================
+Exit code: 1 (violations found)
+
+===============================================================================
+COMMON USE CASES
+===============================================================================
+
+Use Case 1: Quick Feedback During ECO Development
+--------------------------------------------------
+You're writing ECO TCL file and want immediate feedback:
+
+  cd /home/scratch.myuser_vlsi/.../my_workarea/signoff_flow/auto_pt/
+  vim my_eco.tcl
+  /home/avice/scripts/avice_wa_review/eco_checker.csh my_eco.tcl    # Check for violations
+  vim my_eco.tcl                                                     # Fix violations
+  /home/avice/scripts/avice_wa_review/eco_checker.csh my_eco.tcl    # Re-check (repeat until exit code 0)
+
+
+Use Case 2: Check External ECOs Before Implementation
+------------------------------------------------------
+Full-chip STA owner sent you ECOs, validate before applying:
+
+  /home/avice/scripts/avice_wa_review/eco_checker.csh /path/to/external/ECO_files/*.tcl \\
+      --workarea /home/scratch.myuser/.../my_unit_workarea/
+
+  # If exit code = 0 → Safe to implement
+  # If exit code = 1 → Review violations, contact sender
+
+
+Use Case 3: Batch Validation (Multiple Units)
+----------------------------------------------
+You received ECOs for multiple units:
+
+  /home/avice/scripts/avice_wa_review/eco_checker.csh \\
+      /path/to/pmux_eco.tcl \\
+      /path/to/ccorea_eco.tcl \\
+      /path/to/fdb_eco.tcl
+
+  Each ECO auto-detects its own workarea!
+
+
+Use Case 4: Scripting / Automation
+-----------------------------------
+Integrate into your flow scripts:
+
+  #!/bin/bash
+  /home/avice/scripts/avice_wa_review/eco_checker.csh my_eco.tcl --quiet
+  
+  if [ $? -ne 0 ]; then
+      echo "[ERROR] ECO validation failed - aborting!"
+      exit 1
+  fi
+  
+  echo "[OK] ECO is clean - proceeding with implementation..."
+  # ... continue with your flow ...
+
+===============================================================================
+ADVANCED OPTIONS
+===============================================================================
+
+--quiet, -q         Minimal output (summary only, good for scripting)
+--verbose, -v       Detailed violations with instance names
+--no-color          Disable colors (for log files)
+--skip-clock-check  Skip instNotAllowedOnClocks check
+--skip-dontuse      Skip DontUse cells check
+--workarea, -w      Override workarea path (when auto-detection fails)
+
+Full help:
+    /home/avice/scripts/avice_wa_review/eco_checker.csh --help
+
+===============================================================================
+WHEN TO USE THIS TOOL
+===============================================================================
+
+✓ BEFORE implementing any ECO (especially external ECOs)
+✓ During ECO development (quick feedback loop)
+✓ After receiving VIVID ECOs from full-chip STA owners
+✓ Before committing ECO files to version control
+✓ In automated CI/CD pipelines
+
+===============================================================================
+TROUBLESHOOTING
+===============================================================================
+
+Problem: "Could not auto-detect workarea"
+Solution: Provide explicit --workarea path:
+          /home/avice/scripts/avice_wa_review/eco_checker.csh my_eco.tcl --workarea /home/scratch.myuser/.../my_wa/
+
+Problem: "ClockTree.rpt not found"
+Solution: Make sure gl-check has been run at least once in your workarea
+
+Problem: "beflow_config.yaml not found"
+Solution: Check that syn_flow/configs/ exists in your workarea
+
+Problem: Tool shows violations but you think they're correct
+Solution: Use --verbose to see detailed violation info, then verify:
+          /home/avice/scripts/avice_wa_review/eco_checker.csh my_eco.tcl --verbose
+
+===============================================================================
+REAL EXAMPLE: RADU'S ECOs (November 4, 2025)
+===============================================================================
+
+Radu sent 11 VIVID ECO files for CPORT/HPORT units.
+Here's how to validate them:
+
+Step 1: Check all 11 ECOs at once
+----------------------------------
+cd /home/agur_fullchip/chiplets/hport/hport1/fc_func2/signoff_flow/auto_pt/work_31.10.25_11:56/vivid_block_cashing/ECO_VIVID_AND_MANUAL
+
+/home/avice/scripts/avice_wa_review/eco_checker.csh *.tcl --workarea /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_.../
+
+Result:
+  Total Files:         11
+  Total Commands:      15,514
+  Violations:          1 (pmux - BUFFCS1D3T6HVT on clock network)
+  Exit code:           1
+
+
+Step 2: Investigate the violation
+----------------------------------
+/home/avice/scripts/avice_wa_review/eco_checker.csh pmux.ipo1000-1001.2025Nov04_03_43_11_Flow_Fixall.fixall.innovus.tcl \\
+    --workarea /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_.../ \\
+    --verbose
+
+This shows:
+  Cell Type:  BUFFCS1D3T6HVT (not in allowed clock patterns)
+  Instance:   eco2025Nov04_03_43_11_Flow_Fixall_vvd_323611_buf_vvd_hold_2284_0
+  Connected to: eco2025Oct15_10_38_57_Flow_Fixall_vvd_320902_buf_vvd_hold_1019_0
+  Command:    ecoAddRepeater -term {eco2025Oct15_.../I} -name {...} -cell {BUFFCS1D3T6HVT}
+
+
+Step 3: Decision
+-----------------
+Contact Radu about the violation before implementing.
+
+===============================================================================
+QUESTIONS / SUPPORT
+===============================================================================
+
+Contact:  Alon Vice (avice@nvidia.com)
+Location: /home/avice/scripts/avice_wa_review/
+Documentation: /home/avice/scripts/avice_wa_review/README_ECO_CHECKER.md
+
+Slack: #agur-release-tracking (or your team channel)
+
+===============================================================================
+

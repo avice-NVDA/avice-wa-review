@@ -1,0 +1,46 @@
+================================================================================
+AGUR Disk Usage Monitor - 2026-01-05 07:00:06
+================================================================================
+Checking shared infrastructure paths...
+  AGUR Release Area: /home/agur_backend_blockRelease/
+    [OK] 72% used (below 80%)
+  PFNL Unit DB: /home/PFNL_Unit_DB/
+    [OK] 7% used (below 80%)
+
+Checking 73 units...
+
+[CRITICAL] fth             (CPORT     ) - 91% used | Owner: lmustafa
+[CRITICAL] prtm            (NDQ       ) - 91% used | Owner: lmustafa
+[CRITICAL] dqaa            (QNS       ) - 95% used | Owner: siddharthasa
+[CRITICAL] dqamco          (QNS       ) - 95% used | Owner: siddharthasa
+[CRITICAL] dqap            (QNS       ) - 95% used | Owner: drazmizrahi
+
+Grouping by owner...
+  lmustafa: 2 unit(s)
+  siddharthasa: 2 unit(s)
+  drazmizrahi: 1 unit(s)
+
+Building disk summaries and scanning for old workareas...
+  Scanning /home/scratch.lmustafa_vlsi_1 for old workareas...
+    -> Found 2 old workarea(s): 351G, 317G
+  Scanning /home/scratch.siddharthasa_vlsi for old workareas...
+    -> Found 2 old workarea(s): 538G, 472G
+  Scanning /home/scratch.drazmizrahi_vlsi_1 for old workareas...
+    -> No old workareas found (>30 days)
+
+Sending emails...
+[EMAIL] Sent to lmustafa@nvidia.com (2 unit(s))
+[EMAIL] Sent to siddharthasa@nvidia.com (2 unit(s))
+[EMAIL] Sent to drazmizrahi@nvidia.com (1 unit(s))
+
+================================================================================
+SUMMARY:
+  Shared Infrastructure:
+    AGUR Release Area: 72% [OK]
+    PFNL Unit DB: 7% [OK]
+  Total units checked: 73
+  Critical units (>=90%): 5
+  Unique owners: 3
+  Emails sent: 3 successful, 0 failed
+  Execution time: 112.4 seconds
+================================================================================

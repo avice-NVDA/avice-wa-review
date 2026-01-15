@@ -1,0 +1,1112 @@
+---
+alwaysApply: true
+---
+
+# Avice Workarea Review Project - Architecture Rules
+# This file contains all coding standards, patterns, and rules for the workarea review project
+# Based on .cursorrules and project-specific patterns established during development
+
+# Project Context and Communication
+# When this file is part of the AI assistant's context, the assistant should:
+# 1. Address the user as "Sir avice" in all responses
+# 2. Reference this architecture file when making decisions
+# 3. Confirm adherence to these rules when implementing features
+# 4. Use "Sir avice" as a signal that the architecture.mdc is active in context
+
+# Unix Shell Compatibility Rules
+
+When writing code that outputs to Unix shells or terminals, always use ASCII characters instead of Unicode symbols to ensure proper display across all terminal environments.
+
+## Character Substitutions for Console Output
+
+| Unicode Symbol | ASCII Replacement | Usage Example |
+|----------------|-------------------|---------------|
+| `→` (arrow) | `->` | Show progression/change: "10 -> 20" |
+| `✓` (checkmark) | `[OK]` | Success indicators: "[OK] Complete" |
+| `✗` (X mark) | `[ERROR]` | Error indicators: "[ERROR] Failed" |
+| `⚠` (warning) | `[WARN]` | Warning indicators: "[WARN] Check required" |
+| `•` (bullet) | `-` | List items: "- Item 1" |
+| `▶` (triangle right) | `>` | HTML only (safe in web content) |
+| `▼` (triangle down) | `v` | HTML only (safe in web content) |
+
+## Console Output Rules
+
+**Bad:** `print(f"Status: ✓ Complete")` - Unicode breaks in Unix shells  
+**Good:** `print(f"Status: [OK] Complete")` - ASCII works everywhere
+
+**Safe Unicode Usage:** HTML content, Markdown docs, comments/docstrings only  
+**Testing:** Always test console output in actual Unix shells before committing
+
+# File Path and System Compatibility
+
+1. Use absolute paths when possible for reliability
+2. Handle both relative and absolute paths gracefully
+3. Use os.path.join() for path construction
+4. Check file existence before operations
+5. Handle gzipped files (.gz) appropriately
+6. Use proper encoding (utf-8) for file operations
+7. **CRITICAL: Always filter out symlinks when searching directories to avoid duplicates**
+   - Common issue: `umake_log/latest_dir` is a symlink to the most recent log directory
+   - Problem: Without filtering, the same log appears twice (once via symlink, once via real path)
+   - Solution: Use `os.path.realpath()` to resolve symlinks, then track processed real paths in a set
+   - Example affected patterns: `umake_log/*/*.log`, `signoff_flow/*/work_*`, etc.
+   - Always check if a path is a symlink before processing multiple file results
+
+# Error Handling Best Practices
+
+1. Use try-except blocks for file operations
+2. Provide informative error messages
+3. Log errors with context (file path, operation)
+4. Handle common exceptions: OSError, UnicodeDecodeError, FileNotFoundError
+5. Use specific exception types when possible
+6. Include fallback mechanisms for critical operations
+
+# Code Style and Structure
+
+1. Use descriptive variable and function names
+2. Add docstrings to all functions and classes
+3. Use type hints where appropriate
+4. Keep functions focused on single responsibilities
+5. Use meaningful comments for complex logic
+6. Follow PEP 8 style guidelines
+7. **ALWAYS update documentation when making code changes**:
+   - Update main docstring when changing CLI arguments or behavior
+   - Update help text (epilog) to reflect new features or options
+   - Update function/class docstrings when changing signatures or behavior
+   - Update examples to demonstrate new functionality
+   - Keep README files synchronized with actual behavior
+
+# Output Formatting Standards
+
+1. CRITICAL: Minimize Console Output Lines
+   - Every new line printed to Unix shell makes the review longer and harder to read
+   - Combine related metrics into single lines whenever possible
+   - Use separators like "|" or "," to group information compactly
+   - Examples:
+     * Design Area + Die Dimensions in ONE line
+     * DSR Skew trends for multiple work areas in ONE line
+     * Timing path groups as comma-separated list in ONE line
+   - HTML reports can have unlimited detail and lines - be verbose there
+   - Console output should be concise, scannable, and actionable
+
+2. ALWAYS use table formatting for structured data with multiple parameters:
+   - When displaying multiple rows of data with similar columns
+   - When showing numbers, counts, or metrics in a structured way
+   - When presenting parameters, errors, or status information
+   - Tables make data much easier to read and scan
+
+3. Table formatting guidelines:
+   - Use proper column alignment (left for text, right for numbers)
+   - Include clear headers with appropriate spacing
+   - Truncate long descriptions with "..." if needed
+   - Use consistent column widths for readability
+   - Add separators (dashes) between header and data rows
+
+4. Examples of when to use tables:
+   - GL Check results (Checker Name, Count, Error ID, Description)
+   - Runtime summaries (Stage, Category, Runtime, Start, End)
+   - Error listings (Error Type, Count, Description)
+   - Parameter comparisons (Parameter, Value, Status)
+   - Any structured data with 3+ columns of information
+
+5. **Histogram and Multi-Table Output**:
+   - For timing histograms with 3+ tables, print only the most useful table to terminal
+   - Table 2 (Sub-Category Breakdown) provides best balance of detail vs. brevity
+   - Extract all tables for HTML reports (unlimited detail allowed)
+   - Example: PnR timing histograms - Terminal shows Table 2, HTML shows all 3 tables
+   - Reduces console output by ~70% while maintaining HTML completeness
+   - Philosophy: Terminal = scannable summary, HTML = comprehensive deep-dive
+
+## Runtime Display Standards
+
+1. **Color-Coded Runtime Values** (for HTML reports):
+   - Green: < 2 hours (excellent performance)
+   - Yellow: 2-5 hours (acceptable)
+   - Red: > 5 hours (needs optimization)
+   - Apply to both individual stages and total runtime
+   
+2. **Stage Highlighting**:
+   - Highlight maximum runtime stage in bold/colored background
+   - Show percentage of total runtime for context
+   - Help identify bottlenecks quickly in visual reports
+   - Example: "postroute: 3.5h (45% of total)" in bold/red
+   
+3. **Timestamp Display Requirements**:
+   - Always show start/end timestamps for all stages (format: MM/DD HH:MM)
+   - Calculate elapsed time accurately (hours:minutes:seconds)
+   - Detect RUNNING flows: show "RUNNING" status with elapsed time from start
+   - For completed stages: show full timeline (start → end → duration)
+   - Annotate inferred completion times when using output file timestamps
+
+# Performance Considerations
+
+1. Use generators for large data processing
+2. Avoid reading entire files into memory when possible
+3. Use efficient data structures (sets for lookups, etc.)
+4. Cache frequently accessed data
+5. Use appropriate data types for the task
+6. Profile code for bottlenecks
+
+# Security and Safety
+
+1. Validate input paths to prevent directory traversal
+2. Sanitize user input before file operations
+3. Use subprocess safely (avoid shell=True when possible)
+4. Handle sensitive data appropriately
+5. Log security-relevant events
+6. Use proper file permissions
+
+# ASIC/SoC Development Specific
+
+1. Handle large log files efficiently
+2. Parse timing reports with robust regex patterns
+3. Generate HTML reports for complex data visualization
+4. Use appropriate data structures for design metrics
+5. Handle missing or incomplete data gracefully
+6. Provide clear progress indicators for long operations
+
+# Flow Status Detection and Timeline Analysis
+
+1. Flow completion should be determined by both:
+   - Presence/absence of STEP__END__* marker files
+   - Existence of expected output files (primary indicators)
+
+2. Star (Parasitic Extraction) flow status:
+   - Check for SPEF files (*.spef.typical_T0.gz) as primary completion indicator
+   - If SPEF exists but STEP__END is missing, mark as completed with annotation
+   - Use "(inferred from output files)" annotation in yellow when END marker is missing
+   - This handles cases where flows complete but don't write END markers properly
+
+3. PT (PrimeTime) flow status:
+   - Check for timing reports and HTML outputs
+   - Validate completion based on report file timestamps
+
+4. General flow timeline rules:
+   - Always show start/end timestamps from STEP__BEGIN__* and STEP__END__* files
+   - Calculate durations accurately (hours, minutes, seconds)
+   - Mark flows as RUNNING only when: BEGIN exists, END missing, AND output files don't exist
+   - Annotate inferred completion times when using output file timestamps
+
+# Documentation and Branding Standards
+
+1. ALWAYS use the Alon Vice ASCII art logo in script headers:
+   ```
+   #===============================================================================
+   #      +===+ +--+ +--+ +=+ +===+ +===+
+   #      |   | |  | |  | | | |     |    
+   #      |===| |  +-+  | | | |     |=== 
+   #      |   |  |     |  | | |     |    
+   #      |   |   +---+   +=+ +===+ +===+                                 
+   #            ~ Alon Vice Tools ~
+   # Copyright (c) 2025 Alon Vice (avice)
+   # All rights reserved.
+   # This script is the intellectual property of Alon Vice.
+   # For permissions and licensing, contact: avice@nvidia.com
+   #===============================================================================
+   ```
+
+2. Include comprehensive header documentation with:
+   - Script name and purpose
+   - Detailed description
+   - Usage syntax with examples
+   - Arguments explanation
+   - Prerequisites
+   - Output description
+   - Examples section
+
+3. Use consistent formatting:
+   - 80-character width separators (#===============================================================================)
+   - Proper indentation for multi-line descriptions
+   - Clear section headers
+   - Contact information: avice@nvidia.com
+
+4. When generating new scripts or adding headers, always include:
+   - The ASCII art logo
+   - Copyright notice
+   - Intellectual property statement
+   - Contact information
+   - Comprehensive documentation following the established pattern
+
+# Workarea Management Standards
+
+1. **ALWAYS use AGUR_UNITS_TABLE.csv as the authoritative source for test workareas**:
+   - Location: `agur_release_tracking/AGUR_UNITS_TABLE.csv`
+   - Contains 72 units across 7 chiplets (auto-updated daily from central block release)
+   - Each unit has validated workarea path, chiplet assignment, RTL tag, and release metadata
+   - NO manual maintenance required - automatically synchronized with production releases
+   - Use these workareas when testing new code changes
+   - Different workareas reveal different outputs and edge cases
+
+2. **Testing methodology using AGUR database**:
+   - **Single unit testing**: Use `-u <unit_name>` flag with avice_wa_review.py
+   - **Multi-unit testing**: Use `batch_review.py` with filters for targeted testing
+   - **Quick testing**: Use `--random --limit 5` for varied sampling
+   - **Chiplet-specific testing**: Use `--chiplet <CHIPLET_NAME>` filter
+   - **Targeted testing**: Use `--units <unit1> <unit2> ...` for specific units
+
+3. Testing workflow examples:
+   ```bash
+   # Test specific units (interactive)
+   python3 avice_wa_review.py -u prt
+   python3 avice_wa_review.py -u ccorea -s formal
+   
+   # Batch test multiple units (automated)
+   python3 batch_review.py --units prt ccorea fdb
+   python3 batch_review.py --chiplet CPORT
+   python3 batch_review.py --random --limit 5
+   python3 batch_review.py  # Full regression (all 72 units)
+   ```
+
+4. Testing efficiency:
+   - When testing 2+ units, ALWAYS use `batch_review.py` (single approval, organized results)
+   - When testing 1 unit, use `avice_wa_review.py -u <unit>` (direct feedback)
+   - Use filters (`--units`, `--chiplet`, `--random`, `--limit`) for targeted testing
+   - Batch test commands provide structured results in `batch_review_results/`
+   - Report results for all tested workareas in a single summary
+
+# Cross-Directory Execution Standards
+
+1. CRITICAL SECURITY: NEVER write files to storage that doesn't belong to the user
+   - Always generate HTML reports in the current working directory, not the target workarea
+   - Users may not have write permissions to other users' storage directories
+   - This prevents permission errors and security violations
+
+2. **Path handling principles**:
+   - Generate reports in the script's current directory, not the analyzed workarea
+   - **Use absolute paths in HTML content to ensure links work from any location**
+   - Test scripts from multiple different directories to verify functionality
+   - Remember: relative paths are relative to where the script is run, not where the HTML is generated
+   - **See "HTML Report Portability" section for detailed requirements on absolute paths**
+
+3. Testing cross-directory execution:
+   - Always test running scripts from different directories
+   - Verify that generated HTML reports have working links
+   - Test both relative and absolute path scenarios
+   - Document any path-related issues found during testing
+   - **Test HTML portability**: Copy HTML to different locations and verify all links work
+
+4. **HTML Report Organization - REQUIRED for Development/Testing**:
+   - **CRITICAL**: DO NOT change the HTML generation paths in the code (they should remain in current working directory)
+   - **REQUIRED AFTER TESTING**: Move all generated HTML files to `html/` directory for organization
+   - Location: `/home/avice/scripts/avice_wa_review/html/`
+   - This keeps test artifacts organized without changing user-facing behavior
+   - **Why this matters**:
+     * Users generate HTML reports in their own working directories (correct behavior)
+     * Developers testing in the project directory create HTML files that clutter the repository
+     * The `html/` folder is gitignored and keeps the project directory clean
+   - **Procedure after each testing session**:
+     ```bash
+     cd /home/avice/scripts/avice_wa_review
+     mv *.html html/  # Move all HTML files to html folder
+     ```
+   - **DO THIS EVERY TIME** you finish testing to keep the project organized
+
+# Workarea Review Project Specific Rules
+
+## HTML/CSS Rendering Compatibility
+
+**Environment:** Firefox 118.0.1 (recommended) at `/home/utils/firefox-118.0.1/firefox`
+
+**CSS Support:**
+- ✅ Flexbox: Use for simple responsive layouts, summary cards
+- ✅ CSS Grid: Use for complex 2D layouts, dashboards, table structures
+- ✅ Transitions, animations, media queries, transforms, shadows, gradients
+
+**Testing:** Always test layouts in Firefox 118+ or modern browsers
+
+## HTML Report Standards
+
+1. **CRITICAL: HTML/Terminal Output Synchronization**
+   - **ALWAYS update HTML reports when terminal output changes**
+   - HTML reports must contain ALL data displayed in terminal output AND MORE
+   - Terminal output = high-level summary for quick review
+   - HTML output = comprehensive deep-dive with extra functionalities
+   - When adding new features to terminal output, IMMEDIATELY update corresponding HTML generation
+   - HTML should include: timestamps, detailed tables, interactive elements, filterable data, downloadable links
+   - Never let HTML reports become stale or missing recent feature additions
+   - Examples of HTML-exclusive features:
+     * Start/End timestamps for all stages
+     * Clickable log file links
+     * Highlighted max runtime stages
+     * Expandable/collapsible sections
+     * Detailed breakdown tables
+     * Flow timeline visualizations
+     * Fast DC detection indicators
+     * RTL stage indicators
+
+2. **CRITICAL: Copyright Footer - ALWAYS Include in ALL HTML Reports**
+   - Every HTML report MUST include professional copyright footer before `</body>`
+   - Format: `<div class="footer">` with gradient background (blue), green highlights
+   - Include: Report name, "Copyright (c) 2025 Alon Vice (avice)", "Contact: avice@nvidia.com"
+   - Reference existing reports for CSS/HTML code (gradient styling, centered, rounded corners)
+
+2.5. **CRITICAL: Back to Top Button - ALWAYS Include in ALL HTML Reports**
+   - Floating "↑ Top" button: Fixed bottom-right (30px), appears after 300px scroll
+   - Style: Purple theme (#667eea), hover scale effect, smooth scroll behavior
+   - Requires: Button HTML + JavaScript for scroll detection and click handler
+   - Reference existing reports for full implementation code
+
+3. ALWAYS generate HTML reports with timestamps in filenames:
+   - Format: `{USER}_[report_type]_[design]_[ipo]_{timestamp}.html`
+   - Example: `avice_pnr_data_fth_ipo1000_20250930_150418.html`
+   - **CRITICAL**: NEVER hardcode "avice" in HTML filenames - always use `os.environ.get('USER', 'avice')`
+   
+4. **HTML Filename Username Handling**:
+   ```python
+   # ✅ CORRECT - Use environment variable for username
+   html_filename = f"{os.environ.get('USER', 'avice')}_runtime_report_{design}_{timestamp}.html"
+   html_filename = f"{os.environ.get('USER', 'avice')}_MASTER_dashboard_{design}_{date}.html"
+   html_filename = f"{os.environ.get('USER', 'avice')}_DC_comprehensive_{design}_{timestamp}.html"
+   
+   # ❌ WRONG - Hardcoded username breaks cross-user usage
+   html_filename = f"avice_runtime_report_{design}_{timestamp}.html"
+   ```
+   
+   **Why this matters**:
+   - Reports generated by different users should have their username in filename
+   - Master dashboard links to section HTMLs must use relative paths (just filename)
+   - When user "brachas" generates reports, files should be named "brachas_*", not "avice_*"
+   - Enables multiple users to generate reports in shared directories without conflicts
+   - The 'avice' fallback is only used if $USER environment variable is not set
+
+5. HTML report features:
+   - Professional CSS styling with gradients and modern design
+   - Responsive layout for desktop and mobile
+   - Clickable links to log files and reports
+   - Table formatting for structured data
+   - Color-coded status indicators
+   - Alon Vice branding and logo
+   - Interactive elements (modals, tooltips, expandable sections)
+   - Comprehensive data beyond what's shown in terminal
+
+6. HTML report types:
+   - Runtime Report: `avice_runtime_report_[design]_{timestamp}.html`
+   - PnR Data Report: `avice_pnr_data_[design]_[ipo]_{timestamp}.html`
+   - Image Debug Report: `avice_image_debug_report_[design]_{timestamp}.html`
+   - Documentation Manual: `avice_wa_review_manual_{timestamp}.html`
+
+7. Log file viewing integration:
+   - All log file links in HTML reports use the custom tablog viewer: `/home/scratch.avice_vlsi/tablog/tablog`
+   - Clicking "View in tablog" button copies the tablog command to clipboard
+   - Users can paste the command in their terminal to open logs with tablog
+   - Alternative raw file link (📄) provided for direct file access
+   - Toast notifications confirm successful copy to clipboard
+
+8. **CRITICAL: HTML Report Portability - Absolute Paths Required**
+   - **ALWAYS use absolute paths for ALL file links in HTML reports**
+   - HTML reports must work from any location where users open them
+   - Users frequently copy HTML files to their home directories, shared locations, or different mount points
+   - Relative paths break when HTML is opened from a different directory than where it was generated
+   
+   **Path Conversion Requirements**:
+   ```python
+   # ✅ CORRECT - Convert to absolute path before storing for HTML
+   filepath = os.path.abspath(filepath)
+   html_reports.append(os.path.abspath(html_file))
+   key_reports.append((name, os.path.abspath(filepath)))
+   
+   # ✅ CORRECT - Handle paths from external files (e.g., prc.status)
+   abs_path = os.path.abspath(os.path.join(self.workarea, path)) if not os.path.isabs(path) else path
+   
+   # ❌ WRONG - Relative paths break portability
+   html_reports.append(html_file)  # Could be relative!
+   ```
+   
+   **HTML Link Format**:
+   ```html
+   <!-- ✅ CORRECT - Absolute path works from anywhere -->
+   <a href="file:///home/scratch.user/workarea/signoff_flow/auto_pt/work_08.10.25_19:02.html">
+       work_08.10.25_19:02.html
+   </a>
+   
+   <!-- ❌ WRONG - Relative path breaks when HTML opened from different location -->
+   <a href="file://auto_pt/work_08.10.25_19:02.html">work_08.10.25_19:02.html</a>
+   ```
+   
+   **Files That Must Use Absolute Paths**:
+   - Work directory HTML files (PT timing summary)
+   - Log files (GL Check, Runtime, etc.)
+   - Report files (ClockTree.rpt, cellStats.rpt, etc.)
+   - Error files (gl-check.all.waived, gl-check.all.err)
+   - Status files (prc.status)
+   - Any file referenced via `file://` URL in HTML
+   
+   **Testing Protocol**:
+   - Generate HTML report in workarea directory
+   - Copy HTML to user home directory
+   - Open HTML and verify all links work
+   - Test from different mount points
+   - Verify all `file://` URLs open correctly
+   
+   **Impact**: HTML reports are truly portable and work from any location for all users
+
+## Master Dashboard Standards
+
+1. **Unified Dashboard Requirements**:
+   - Single-page overview integrating all workarea analysis sections
+   - Expandable/collapsible section cards with status badges
+   - Smart defaults: FAIL/WARN sections expanded, PASS sections collapsed by default
+   - Overall health aggregation from all section statuses
+   - Quick navigation with attention-required section highlighting problem areas
+   - Generated in current working directory (like all HTML reports)
+   
+2. **Section Card Format**:
+   - Index number corresponding to analysis flow (matches terminal output)
+   - Status badge (PASS/WARN/FAIL/NOT_RUN) with color coding
+   - Key metrics display (2-3 most important values per section)
+   - Issues list (up to 3 critical items shown in card)
+   - Timestamp of analysis
+   - "View Details" button linking to detailed HTML report (absolute path)
+   
+3. **Status Logic Standards**:
+   - **PASS** (Green #27ae60): Section completed successfully, no issues detected
+   - **WARN** (Orange #f39c12): Attention recommended, non-critical issues found
+   - **FAIL** (Red #e74c3c): Critical issues found requiring immediate action
+   - **NOT_RUN** (Gray #95a5a6): Section not executed or no data available
+   
+4. **Intelligent Section Status Rules**:
+   - **Setup**: Always PASS (basic info extraction)
+   - **Runtime**: Always PASS (informational only)
+   - **Synthesis**: Always PASS (basic compilation)
+   - **PnR**: FAIL if utilization >95%, WARN if >85% or timing violations
+   - **Clock**: FAIL if max latency >=580ps, WARN if >550ps
+   - **Formal**: FAIL if any flow FAILED, WARN if UNRESOLVED/RUNNING
+   - **Star**: FAIL if shorts >0, WARN if SPEF files <6 (missing corners)
+   - **PT**: FAIL if WNS <-0.050ns or TNS <-10.0ns, WARN if WNS <0 or TNS <0
+   - **PV**: FAIL if LVS >5 or DRC >100 or Antenna >10, WARN if any violations >0
+   - **GL Check**: FAIL if non-waived >=50, WARN if non-waived >0
+   - **ECO**: Basic summary, shows PT-ECO loop count
+   - **NV Gate ECO**: Basic summary, shows design info
+   - **Block Release**: Basic summary, shows design info
+   
+5. **Dashboard Visual Features**:
+   - Purple gradient header matching PT report styling
+   - Responsive grid layout (3 columns desktop → 1 column mobile)
+   - Smooth hover effects and transitions
+   - Professional shadows and rounded corners
+   - Embedded base64 logo for portability
+   - Back-to-top button for long dashboards
+   - Copyright footer with contact info
+   
+6. **Dashboard Interactive Elements**:
+   - Click card header to expand/collapse
+   - Rotating arrow icon (▼/▶) shows expand state
+   - Quick action buttons:
+     * "Open All Failed/Warning Sections" - batch open problem areas
+     * "Open All Sections" - open all detail reports
+     * "Print Dashboard" - print-friendly format
+   - Search functionality (future enhancement)
+   - Filter by status (future enhancement)
+   
+7. **Dashboard File Naming**:
+   - Format: `{USER}_MASTER_dashboard_{design}_{date}.html`
+   - Example: `avice_MASTER_dashboard_prt_20251017.html`
+   - Date format: YYYYMMDD (no time component for daily uniqueness)
+   - Always use $USER environment variable for username
+   
+8. **Integration with Section HTMLs**:
+   - Master dashboard links to detailed section HTML reports
+   - Links use relative paths (just filename) since all HTMLs in same directory
+   - Each section HTML has absolute paths for its internal file links
+   - Master dashboard shows summary, section HTMLs show comprehensive detail
+   - Maintain separation: Dashboard = overview, Section HTMLs = deep-dive
+
+## Command Line Interface Standards
+
+1. ALWAYS use absolute paths in help text and examples:
+   - Use `/home/avice/scripts/avice_wa_review_launcher.csh` for all examples
+   - Never use relative paths like `./avice_wa_review.py`
+   - Recommend the C-shell launcher over direct Python calls
+
+2. Documentation generation options:
+   - `--help-docs`: Display formatted documentation in terminal
+   - `--open-docs`: Generate HTML documentation and open in browser
+   - `--generate-pdf`: Generate PDF documentation
+   - `--docs-section`: Choose specific section (usage, examples, troubleshooting, organization, all)
+
+3. Section names for selective analysis:
+   - setup, runtime, recipe, synthesis, pnr, clock, formal, parasitic, timing, pv, gl-check, eco, nv-gate-eco, block-release
+
+## Data Extraction Patterns
+
+1. PT (PrimeTime) Signoff Timing Analysis:
+   - **Dual-Scenario Analysis**: Extract both Setup and Hold scenarios
+   - **Dynamic Corner Discovery**: Automatically discovers ALL available setup/hold corners in work directory
+   - **Worst-Case Selection**: Selects scenario with most negative TNS (worst timing) from all discovered corners
+   - **CRITICAL: Scenario-Specific Values**:
+     * **Timing values (WNS/TNS/NVP) WILL differ between scenarios** - different corners produce different results
+     * **DSR skew values WILL differ between scenarios** - corner-dependent (e.g., setup: 11ps, hold: 0.45ps)
+     * Each scenario has its own DSR skew file with corner-specific values
+     * NEVER assume setup and hold have the same values - always extract from both
+   - **Internal vs External Timing Groups**:
+     * Internal groups: All timing groups except FEEDTHROUGH/REGIN/REGOUT
+     * External groups (FEEDTHROUGH/REGIN/REGOUT): Relaxed during PT, always 0
+     * Display internal timing sum separately (WNS/TNS/NVP)
+     * In HTML tables, show external groups at the END (less interesting)
+   - **DSR Mux Clock Skew Tracking**:
+     * Extract from BOTH setup and hold scenario files separately
+     * Each scenario has its own file: [scenario]/reports/timing_reports/*.dsr_mux_clock_skew
+     * Color thresholds: Green (<=10ps excellent), Yellow/Red (>10ps unacceptable)
+     * Show separate trends for setup and hold scenarios
+     * Track across all work directories
+   - **PT Runtime**: Extract from "Elapsed time for this session" in work_dir/*.log
+   - **HTML Report Features**:
+     * Separate tables for Setup and Hold scenarios
+     * DSR skew column shows scenario-specific values
+     * Total Internal column shows sum of internal timing groups per scenario
+     * Column order: DSR Skew -> Total Internal -> Internal groups (by TNS) -> External groups
+     * **Internal groups sorted by worst TNS** (most negative first) - makes critical groups immediately visible
+     * External groups sorted alphabetically at the end
+     * Clickable links to PT HTML reports
+     * Color-coded timing violations
+
+2. ECO/Signoff Workarea Detection:
+   - **Workarea Type**: Workarea created by copying PnR database from another user/location
+   - **Methodology**: Enables incremental changes without full re-synthesis/re-PnR
+   - **Directory Structure**:
+     * ✅ Has: `export/export_innovus/` (contains imported PnR results: DEF, netlists, LEF, GDS/OAS)
+     * ✅ Has: `signoff_flow/` (ECO work: nv_gate_eco, auto_pt, gl-check, formal verification)
+     * ✅ Has: `syn_flow/` (synthesis outputs)
+     * ✅ Has: `sources/` (design sources)
+     * ✅ Has: `pnr_flow/` directory (but missing `pnr_flow/nv_flow/` subdirectory)
+     * ❌ Missing: `pnr_flow/nv_flow/` (PnR not run locally - results were imported)
+   - **Detection Logic**:
+     * If `pnr_flow/nv_flow/` missing AND `export/export_innovus/` contains PnR artifacts (.def.gz, .gv.gz)
+     * If `signoff_flow/` exists → Classify as "ECO/Signoff workarea (imported PnR)"
+     * Otherwise → Classify as "PnR-imported workarea"
+   - **PnR Section Behavior**:
+     * Reports "ECO/Signoff workarea detected"
+     * Shows available PnR data from `export/export_innovus/`
+     * Focuses on signoff/ECO analysis rather than flow execution
+     * Avoids misleading "No PnR data found" messages
+   - **Use Case**: Common when users want to make incremental changes (timing fixes, ECOs) without re-running full synthesis/PnR
+   - **Validation Message**: "ECO/Signoff workarea (imported PnR) detected"
+
+3. Runtime Analysis:
+   - **CRITICAL: NEVER use "CPU Time" as runtime** - CPU time is the sum of CPU cycles, not wall-clock time
+   - **ALWAYS use "Elapsed time" or wall-clock time" for runtime calculations
+   - Example: "Elapsed time for this session: X.XX hours" is the correct metric
+   - Extract DC runtime from synthesis logs (including fast_dc if present)
+   - Extract PnR runtime from Innovus logs
+   - Extract GL check runtime from signoff_flow/gl-check/ directory
+   - Extract PV flow runtime from pv_flow status files (include running steps' elapsed time)
+   - Extract Auto PT Fix from "Elapsed time for this session" in auto_pt_fix.log
+   - Highlight the PnR stage with highest runtime in HTML reports
+   - Always extract and display start/end timestamps for all stages
+   - Detect fast_dc and adjust PnR start time to setup step (not BEGIN)
+   - For running flows: show "RUNNING" status with start timestamp and elapsed time
+
+2. Synthesis Analysis:
+   - Extract DC (Design Compiler) version from dc.log and display it
+   - Parse QoR reports for design metrics
+   - Extract BeFlow configuration variables
+   - Display Scenario Summary as formatted tables
+   - List Timing Path Groups in single line format
+   - Extract floorplan dimensions from DEF files:
+     * Parse DIEAREA top-right coordinates (x2, y2) from `flp/*_fp.def.gz`
+     * Calculate X, Y dimensions in um: x2/2000, y2/2000
+     * Display ONLY Die dimensions: "Die (X,Y): W um x H um"
+     * Design Area is extracted but not displayed (redundant with die dimensions)
+     * Use ASCII-only characters (um, not μm) to ensure Unix shell compatibility
+
+3. Formal Verification Analysis:
+   - **CRITICAL PURPOSE**: Timestamps help catch when designers run ECO fixes but forget to re-run formal
+   - Always display start/end timestamps for each formal flow
+   - Calculate start time from: end_time - elapsed_time (from log)
+   - Use file modification time as end timestamp
+   - Show status: SUCCEEDED / FAILED / RUNNING / UNRESOLVED
+   - Display runtime in hours
+   - **Compare formal timestamps with design changes** to verify formal was re-run after modifications:
+     * Check 1: Auto PT Fix log (signoff_flow/auto_pt/log/auto_pt_fix.log) - automatic ECO fixes
+     * Check 2: Latest netlist (export/export_innovus/$b.ipo*.lvs.gv.gz) - manual ECOs or any regeneration
+     * Warn if ANY design change occurred after formal verification
+   - Example issue: Netlist updated 10/08 14:01, but formal ended 10/08 13:31 → formal is stale!
+
+4. Configuration Extraction:
+   - Extract runset.tcl variables without truncation
+   - Parse beflow_config.yaml for design parameters
+   - Handle missing or incomplete data gracefully
+
+## File Management Standards
+
+1. Cleanup unused files:
+   - Remove standalone scripts that are no longer used
+   - Keep only essential files in the project directory
+   - Document removed files in README_ORGANIZATION.md
+
+2. File organization:
+   - Main script: `avice_wa_review.py`
+   - Launcher script: `avice_wa_review_launcher.csh`
+   - Batch testing: `batch_review.py`, `summarize_results.py`
+   - Documentation: `README_avice_wa_review.md`, `README_ORGANIZATION.md`
+   - Documentation generator: `docs_generator.py`
+   - Architecture rules: `architecture.mdc`
+   - Cleanup script: `cleanup_test_reports.sh`
+   - **Test HTML reports**: `html/` directory (gitignored)
+   - **Batch test results**: `batch_review_results/` directory (gitignored)
+   - **Presentation materials**: `presentation/` directory (for avice_wa_review demos and training)
+   - **AGUR tracking**: `agur_release_tracking/` directory (SEPARATE UTILITY - see below)
+
+3. **Test-generated HTML file management - AUTOMATIC ORGANIZATION**:
+   - **✨ NEW: HTML reports are now AUTOMATICALLY organized into `html/` folder**
+   - **How it works**:
+     * **Direct script runs**: `_organize_html_files()` automatically moves HTMLs after review completes
+     * **Batch runs**: `batch_review.py` calls `organize_leftover_htmls()` after EACH unit review
+     * **Failsafe**: Even if a review times out or fails, batch_review.py cleans up afterward
+     * You'll see: `Organized N HTML file(s) into html/ folder` or `📁 Organized N HTML file(s) into html/ folder`
+     * No manual intervention required - keeps project directory clean automatically
+   - **Manual organization (if needed)**:
+     ```bash
+     cd /home/avice/scripts/avice_wa_review
+     mv *.html html/  # Manual move if needed (rare)
+     ```
+   - **Cleanup old test reports**:
+     * Use `cleanup_test_reports.sh` periodically to clean old test reports from `html/` folder
+     * Default cleanup: files older than 1 day
+     * Custom cleanup: `./cleanup_test_reports.sh N` (N = days to keep)
+   - **Important distinctions**:
+     * User-generated reports: Saved in user's own working directory (correct behavior)
+     * Developer test reports: Automatically moved to `html/` folder
+     * The `html/` directory is gitignored to prevent tracking test artifacts
+     * This keeps the project directory clean and repository organized
+
+## Utility Separation and Architecture
+
+### CRITICAL: Two Independent Utilities
+
+This project repository contains TWO SEPARATE, INDEPENDENT utilities:
+
+1. **avice_wa_review** (Primary Workarea Analysis Tool)
+   - **Purpose**: Analyze a SINGLE workarea and extract comprehensive metrics
+   - **Location**: Root directory (`/home/avice/scripts/avice_wa_review/`)
+   - **Usage**: `/home/avice/scripts/avice_wa_review_launcher.csh <workarea>`
+   - **Standalone**: Works completely independently
+   - **Output**: Terminal reports + HTML reports for one workarea
+
+2. **AGUR_RELEASE_TRACKING** (Regression Testing Framework)
+   - **Purpose**: Track AGUR releases and run BATCH regression testing on multiple units
+   - **Location**: `agur_release_tracking/` subdirectory
+   - **Usage**: `./run_agur_regression.sh -t formal -c CPORT`
+   - **Standalone**: Works completely independently
+   - **Output**: Aggregate dashboards for multiple units + CSV exports
+
+### Architectural Relationship
+
+**AGUR_RELEASE_TRACKING** (regression framework in `agur_release_tracking/`)  
+  ↓ calls via subprocess  
+**avice_wa_review** (single workarea analyzer in root directory)
+
+### Independence Principles
+
+**CRITICAL RULE: Their development should NOT affect each other**
+
+1. **Separate Development Cycles**
+   - Changes to `avice_wa_review` must NOT break `AGUR_RELEASE_TRACKING`
+   - Changes to `AGUR_RELEASE_TRACKING` must NOT affect `avice_wa_review`
+   - Each utility has its own documentation, tests, and maintenance
+
+2. **AGUR Uses avice_wa_review as a Tool (NOT a Library)**
+   - AGUR calls `avice_wa_review_launcher.csh` as an external command
+   - AGUR parses terminal output or reads HTML reports
+   - AGUR does NOT import avice_wa_review Python modules
+   - AGUR does NOT modify avice_wa_review code
+   - Communication is via: subprocess calls + file output parsing
+
+3. **Interface Contract**
+   - `avice_wa_review` provides a stable command-line interface
+   - `avice_wa_review` generates predictable HTML report formats
+   - `avice_wa_review` returns consistent exit codes
+   - AGUR depends ONLY on these external interfaces, not internal implementation
+
+4. **Testing Isolation**
+   - Test `avice_wa_review` on individual workareas
+   - Test `AGUR_RELEASE_TRACKING` with multiple units
+   - Each utility has its own test suite
+   - Breaking changes in one should not cascade to the other
+
+### File Organization
+
+```
+/home/avice/scripts/avice_wa_review/
+├── avice_wa_review.py              # Main analysis tool
+├── avice_wa_review_launcher.csh    # Tool launcher
+├── architecture.mdc                # Shared architecture rules
+├── README_avice_wa_review.md       # Tool documentation
+├── presentation/                   # Tool presentation materials
+│   ├── AGUR_PRESENTATION_SLIDES.html
+│   ├── PRESENTATION_README.md
+│   └── ...
+├── sections/                       # Tool analysis sections
+├── html/                          # Tool test outputs (gitignored)
+│
+└── agur_release_tracking/         # SEPARATE UTILITY
+    ├── run_agur_regression.sh     # Regression framework
+    ├── README_AGUR_TRACKING.md    # Framework documentation
+    ├── sections/                  # Framework-specific code
+    └── ...                        # Framework files
+```
+
+### When to Modify Each Utility
+
+**Modify avice_wa_review when:**
+- Adding new workarea analysis features (e.g., new timing metrics)
+- Improving HTML report generation for single workareas
+- Fixing bugs in metric extraction
+- Enhancing terminal output formatting
+- Adding new flow stages (synthesis, PnR, PT, etc.)
+
+**Modify AGUR_RELEASE_TRACKING when:**
+- Adding new regression types (formal, timing, etc.)
+- Improving batch processing logic
+- Enhancing dashboard generation
+- Adding new chiplet/unit support
+- Improving parallel execution
+- Changing release metadata extraction
+
+### Key Takeaway
+
+**AGUR_RELEASE_TRACKING is a CONSUMER of avice_wa_review, NOT part of its implementation.**  
+(Like `grep` command vs. script that calls grep 100 times)
+
+They are separate tools that happen to live in the same repository for convenience, but they remain architecturally independent.
+
+## Testing and Validation Standards
+
+1. Always test new features on multiple workareas
+2. Verify cross-directory execution compatibility
+3. Test HTML report generation and link functionality
+4. Validate command line argument parsing
+5. Check Unix shell compatibility for all output
+6. Test both fast_dc and regular DC flows
+7. Test workareas with RTL formal verification
+8. Test workareas with multiple IPOs
+
+9. **Multi-Unit Testing Methodology - CRITICAL**:
+   - **NEVER use find commands on parent directories** to search for workareas
+   - **Example of WRONG approach**: `find /home/scratch.roir_vlsi/agur/ccoreb/* -name "*.timing"`
+   - **CORRECT approach**: Use the `-u <unit_name>` flag with units from AGUR_UNITS_TABLE.csv
+   
+   **Interactive Testing (Development/Debugging)**:
+   - **When to use**: During feature development, debugging, or targeted analysis
+   - **Tool**: Direct `-u` flag with `avice_wa_review.py`
+   - **Testing procedure**:
+     ```bash
+     # Test full analysis on random units
+     /home/utils/Python/builds/3.11.9-20250715/bin/python3 avice_wa_review.py -u prt
+     /home/utils/Python/builds/3.11.9-20250715/bin/python3 avice_wa_review.py -u ccorea
+     /home/utils/Python/builds/3.11.9-20250715/bin/python3 avice_wa_review.py -u fdb
+     
+     # Test specific sections
+     /home/utils/Python/builds/3.11.9-20250715/bin/python3 avice_wa_review.py -u prt -s pt
+     /home/utils/Python/builds/3.11.9-20250715/bin/python3 avice_wa_review.py -u ccorea -s formal
+     ```
+   
+   **Batch Testing (Regression/Bulk Analysis)**:
+   - **When to use**: After major changes to avice_wa_review.py, regression testing, or bulk analysis
+   - **Tool**: `batch_review.py` - automated batch runner with filtering support
+   - **Use cases**:
+     * **Regression testing**: Verify changes don't break existing functionality across all units
+     * **Bulk analysis**: Generate reports for all AGUR units at once
+     * **Automated monitoring**: Run nightly/weekly checks on multiple units
+     * **CI/CD integration**: Automated testing in continuous integration pipelines
+     * **Quick targeted testing**: Filter to specific units/chiplets for development (NEW!)
+   - **Basic usage**:
+     ```bash
+     # Run on all 72 units from AGUR_UNITS_TABLE.csv (default)
+     /home/utils/Python/builds/3.11.9-20250715/bin/python3 batch_review.py
+     
+     # Custom output directory
+     /home/utils/Python/builds/3.11.9-20250715/bin/python3 batch_review.py --output-dir my_results/
+     
+     # Analyze results
+     /home/utils/Python/builds/3.11.9-20250715/bin/python3 summarize_results.py
+     ```
+   - **NEW: Quick & targeted testing filters** (supports both interactive AND batch workflows!):
+     ```bash
+     # Filter to specific units (great for development!)
+     python3 batch_review.py --units prt ccorea dqs
+     
+     # Filter by chiplet
+     python3 batch_review.py --chiplet CPORT
+     
+     # Random sampling for quick testing (5 random units)
+     python3 batch_review.py --random --limit 5
+     
+     # Test specific chiplet with random sampling
+     python3 batch_review.py --chiplet QNS --random --limit 3
+     
+     # Combine filters: specific units from specific chiplet
+     python3 batch_review.py --chiplet HPORT --limit 2
+     ```
+  - **Key differences from interactive testing**:
+    * **Interactive (-u flag)**: Single unit, terminal output, immediate feedback
+    * **Batch (batch_review.py)**: Multiple units, structured logs, batch processing
+    * **Batch with filters**: Best of both worlds - targeted + automated!
+  
+  - **🚨 CRITICAL RULE - When to use batch_review.py vs avice_wa_review.py directly**:
+    * **Testing 2+ units**: ALWAYS use `batch_review.py --units <unit1> <unit2> ...`
+    * **Testing 1 unit**: Use `avice_wa_review.py -u <unit>`
+    * **Why this matters**: 
+      - Single approval vs multiple approvals (better UX)
+      - Structured results in batch_review_results/
+      - Automatic HTML organization failsafe
+      - Summary statistics provided automatically
+    * **Example - WRONG ❌**:
+      ```bash
+      # Don't do this for multiple units!
+      python3 avice_wa_review.py -u unit1
+      python3 avice_wa_review.py -u unit2
+      python3 avice_wa_review.py -u unit3
+      ```
+    * **Example - CORRECT ✅**:
+      ```bash
+      # Do this instead - single command!
+      python3 batch_review.py --units unit1 unit2 unit3
+      ```
+   
+   **Why this testing methodology matters**:
+   - **The `-u` flag uses the AGUR units database** (agur_release_tracking/AGUR_UNITS_TABLE.csv)
+   - **Database contains 72 tracked design units** across 7 chiplets (auto-updated daily)
+   - **Each unit has a known, validated workarea path**
+   - **Using find commands is WRONG**: slow, unreliable, finds outdated/test workareas
+   - **The units database is the authoritative source of truth**
+   
+   **Best practices when testing new features**:
+   - **Development phase**: Use `-u` flag with 2-5 random units from different chiplets
+   - **Pre-commit**: Run batch_review.py on subset of critical units
+   - **Post-commit**: Full regression with batch_review.py on all units (optional)
+   - **Always test sections individually first** using `-s <section>` flag
+   
+   **Available units** (reference: agur_release_tracking/AGUR_UNITS_TABLE.csv):
+   - **CPORT chiplet**: prt, pmux, fdb, fth, lnd (5 units)
+   - **HPORT chiplet**: ccorea, ccoreb, ccorec, ccored, ccoree, ccoref (6 units)
+   - **HIOPL chiplet**: hiopl, ioplca, ioplcb, ioplcc, ioplcd (5 units)
+   - **NDQ chiplet**: clt, cscore, dcmp, fdbm, fdbs, fthm, ftos, fwam, fwas, glc, iopl, ioplm, iopx, ir, lndm, nvrisc, pmuxm, prtm, psca, pscb, pscc, pscd, px, riba, ribs, sma, yu (27 units)
+   - **QNS chiplet**: dqaa, dqaci, dqaco, dqai, dqamci, dqamco, dqamdi, dqamdo, dqap, dqavi, dqavo, dqax, dql, dqs, eds, qcorer, tds, tecorel, tecorer (19 units)
+   - **TCB chiplet**: alm, bta, eri, hib (4 units)
+   - **TOP_YC chiplet**: top_yc_clock, top_yc_gpio, yc_clock_macro, yc_fuse, yc_fuse_macro, yu_mng (6 units)
+   
+   **Total: 72 units across 7 chiplets**
+
+## Error Handling and Logging
+
+1. Use Color class for consistent terminal output:
+   - RED for errors
+   - GREEN for success
+   - YELLOW for warnings
+   - CYAN for headers and important information
+
+2. Provide informative error messages with context
+3. Handle file not found errors gracefully
+4. Log all operations with appropriate detail level
+
+## Performance Optimization
+
+1. Use efficient regex patterns for log parsing
+2. Implement caching for frequently accessed data
+3. Generate HTML reports only when needed
+4. Use generators for large file processing
+5. Minimize memory usage for large log files
+
+## Security Considerations
+
+1. Never write to user directories without permission
+2. Validate all input paths
+3. Use safe subprocess calls
+4. Handle sensitive data appropriately
+5. Generate reports in safe locations only
+
+## Python Environment Standards
+
+1. ALWAYS use the specific Python 3.11.9 build for testing and execution:
+   - Path: /home/utils/Python/builds/3.11.9-20250715/bin/python3
+   - Never use generic 'python3' command
+   - This ensures consistent Python version across all environments
+   - Use this path in all test commands, documentation examples, and scripts
+
+2. Python version requirements:
+   - Minimum: Python 3.6 (for compatibility)
+   - Preferred: Python 3.11.9 (for testing and development)
+   - Always specify the full path to avoid version conflicts
+
+3. Testing and execution standards:
+   - All test commands must use the full Python path
+   - Documentation examples must use the full Python path
+   - Batch scripts must use the C-shell launcher: `/home/avice/scripts/avice_wa_review_launcher.csh`
+   - This ensures reproducible results across different systems
+   - The launcher handles Python path setup automatically
+
+This .mdc file should be referenced for all development work on the workarea review project to ensure consistency and adherence to established patterns.
+
+## Email Implementation Standards
+
+1. **CRITICAL: ALWAYS use SMTP for email functionality**
+   - ✅ CORRECT: Use `smtplib` with `smtp.nvidia.com:25`
+   - ❌ WRONG: Unix `mail` command is unreliable and doesn't work consistently
+   
+2. **Proven SMTP implementation pattern**:
+   ```python
+   import smtplib
+   from email.mime.multipart import MIMEMultipart
+   from email.mime.text import MIMEText
+   
+   # Setup
+   msg = MIMEMultipart()
+   msg['From'] = f"{os.environ.get('USER', 'avice')}@nvidia.com"
+   msg['To'] = to_email
+   msg['Cc'] = cc_email  # Optional
+   msg['Subject'] = subject
+   msg.attach(MIMEText(body, 'plain'))
+   
+   # Send via SMTP
+   smtp_server = "smtp.nvidia.com"
+   smtp_port = 25
+   all_recipients = [to_email, cc_email]  # Include all TO and CC
+   
+   with smtplib.SMTP(smtp_server, smtp_port, timeout=30) as server:
+       server.sendmail(msg['From'], all_recipients, msg.as_string())
+   ```
+
+3. **Email implementation guidelines**:
+   - Use MIMEMultipart for message structure
+   - Use MIMEText for plain text body
+   - Use MIMEBase for file attachments (Excel, etc.)
+   - Always include timeout (30 seconds) in SMTP connection
+   - Include both TO and CC recipients in `all_recipients` list for `sendmail()`
+   - Handle ImportError separately from general exceptions
+   - Print traceback on failure for debugging
+
+4. **Reference implementations** (proven to work):
+   - `_send_ipo_comparison_email()` (Line 22555): IPO comparison reports
+   - `_send_multi_workarea_email()` (Line 22649): Multi-workarea reports
+   - `_send_critical_disk_alert()` (Line 4502): Critical disk usage alerts
+
+5. **Common pitfalls to avoid**:
+   - ❌ Don't use Unix `mail` command: `mail -s "subject" user@nvidia.com`
+   - ❌ Don't use `echo | mail` shell commands
+   - ❌ Don't forget CC recipients in `all_recipients` list
+   - ❌ Don't use shell=True for email commands
+   - ✅ Always use Python's smtplib module
+   - ✅ Always use smtp.nvidia.com:25 (NVIDIA's internal SMTP server)
+
+6. **Testing email functionality**:
+   - Test with actual email recipients
+   - Verify both TO and CC recipients receive email
+   - Check email formatting and headers
+   - Verify attachments if included
+   - Test error handling with invalid recipients
+
+## Critical Disk Alert Feature
+
+### Overview
+Automatically sends email alerts when disk usage reaches critical levels (≥90%) during workarea review.
+
+### Feature Details
+
+**Trigger Condition**:
+- Threshold: Disk usage ≥ 90%
+- Location: Setup section (beginning of analysis)
+- Check: Runs `df -h` on workarea path
+
+**Email Recipients**:
+- TO: Workarea owner (extracted from path: `scratch.username_vlsi` → `username@nvidia.com`)
+- CC: avice@nvidia.com (tool owner, for monitoring)
+
+**Email Content**:
+- Subject: `[CRITICAL] Disk Usage Alert: XX% on /mount/point`
+- Body includes:
+  * Workarea path and design name
+  * Filesystem details (size, used, available, usage %)
+  * Recommended cleanup actions (5 specific steps)
+  * Risk warnings (flow failures, truncated logs, etc.)
+  * Timestamp and contact info
+
+### Implementation
+
+**Methods**:
+- `_send_critical_disk_alert()` (Line 4502): Sends email using SMTP (smtp.nvidia.com:25)
+- `_check_disk_utilization()` (Line 4608): Calls email alert when usage ≥ 90%
+
+**User Extraction Logic**:
+```python
+# From workarea path: /home/scratch.username_vlsi/... → username
+match = re.search(r'/scratch\.([^/]+?)(?:_vlsi)?/', workarea_path)
+# Fallback to $USER environment variable
+```
+
+**Terminal Output**:
+```
+[EMAIL] Critical disk alert sent to username@nvidia.com (CC: avice@nvidia.com)
+```
+
+**Error Handling**:
+- Graceful failure if email cannot be sent
+- Info message displayed to user
+- Does not block workarea analysis
+
+### Testing
+
+Test with workarea having ≥90% disk usage:
+```bash
+/home/utils/Python/builds/3.11.9-20250715/bin/python3 avice_wa_review.py -u pscc -s setup  # 96% usage
+/home/utils/Python/builds/3.11.9-20250715/bin/python3 avice_wa_review.py -u dqaci -s setup # 91% usage
+```
+
+Verify:
+1. ✅ Email received by workarea owner
+2. ✅ avice@nvidia.com in CC
+3. ✅ Proper email formatting
+4. ✅ Accurate disk usage details
+
+### Benefits
+
+1. **Proactive Monitoring**: Alerts users before flow failures
+2. **Centralized Visibility**: avice receives all critical alerts for tracking
+3. **Actionable Guidance**: Email includes specific cleanup recommendations
+4. **Non-Intrusive**: Doesn't block analysis if email fails
+
+### Future Enhancements (Optional)
+
+- Weekly digest of all disk alerts
+- Track alert frequency per user
+- Integration with dashboard for visualization
+- Configurable threshold (default: 90%)
+
+**Implementation Date**: October 30, 2025  
+**Author**: Alon Vice (avice@nvidia.com)
+
+## AGUR Disk Monitor - Automated Daily System
+
+**Status**: ✅ LIVE (Deployed November 2, 2025)
+**Server**: tlv02-cron-01
+**Schedule**: Daily at 8:00 AM
+**Owner**: avice@nvidia.com
+
+### Production Cron Job
+```
+0 8 * * * cd /home/avice/scripts/avice_wa_review/agur_release_tracking && /home/utils/Python/builds/3.11.9-20250715/bin/python3 agur_disk_monitor.py >> logs/disk_alert_$(date +\%Y\%m\%d).log 2>&1 || echo "AGUR Disk Monitor failed on $(date)" | mail -s "[ERROR] AGUR Disk Monitor Failed" avice@nvidia.com
+```
+
+### Overview
+Automated daily monitoring of all 72 AGUR units. Sends consolidated email alerts to workarea owners when disk usage reaches >=90%.
+
+### Key Features
+- Smart email consolidation (one email per owner)
+- Unified email format for single and multi-unit alerts
+- Practical Unix commands for disk analysis (copy-paste ready)
+- Robust error handling with failure notifications
+- Daily logging with disable control
+
+### Files
+- Script: `agur_release_tracking/agur_disk_monitor.py`
+- Docs: `agur_release_tracking/README_DISK_MONITOR.md`
+- Logs: `agur_release_tracking/logs/disk_alert_YYYYMMDD.log`
+
+### Monitoring
+```bash
+ssh tlv02-cron-01
+crontab -l | grep agur_disk_monitor
+tail -50 /home/avice/scripts/avice_wa_review/agur_release_tracking/logs/disk_alert_$(date +%Y%m%d).log
+```
+
+**Implementation Date**: November 2, 2025

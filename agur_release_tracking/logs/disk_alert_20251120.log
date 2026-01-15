@@ -1,0 +1,37 @@
+================================================================================
+AGUR Disk Usage Monitor - 2025-11-20 07:00:05
+================================================================================
+Checking central block release area: /home/agur_backend_blockRelease/
+[OK] Central block release area: 53% used (below threshold)
+
+Checking 73 units...
+
+[CRITICAL] prt             (CPORT     ) - 90% used | Owner: ykatzav
+[CRITICAL] nvrisc          (NDQ       ) - 90% used | Owner: ykatzav
+[CRITICAL] dqamdo          (QNS       ) - 90% used | Owner: abarman
+[CRITICAL] dqap            (QNS       ) - 91% used | Owner: drazmizrahi
+[CRITICAL] dqavi           (QNS       ) - 90% used | Owner: abarman
+[CRITICAL] dqs             (QNS       ) - 90% used | Owner: abarman
+[CRITICAL] qcorer          (QNS       ) - 94% used | Owner: ronil
+
+Grouping by owner...
+  ykatzav: 2 unit(s)
+  abarman: 3 unit(s)
+  drazmizrahi: 1 unit(s)
+  ronil: 1 unit(s)
+
+Sending emails...
+[EMAIL] Sent to ykatzav@nvidia.com (2 unit(s))
+[EMAIL] Sent to abarman@nvidia.com (3 unit(s))
+[EMAIL] Sent to drazmizrahi@nvidia.com (1 unit(s))
+[EMAIL] Sent to ronil@nvidia.com (1 unit(s))
+
+================================================================================
+SUMMARY:
+  Central block release: 53% used [OK]
+  Total units checked: 73
+  Critical units (>=90%): 7
+  Unique owners: 4
+  Emails sent: 4 successful, 0 failed
+  Execution time: 19.9 seconds
+================================================================================

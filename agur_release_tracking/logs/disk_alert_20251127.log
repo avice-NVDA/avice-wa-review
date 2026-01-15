@@ -1,0 +1,43 @@
+================================================================================
+AGUR Disk Usage Monitor - 2025-11-27 07:00:06
+================================================================================
+Checking central block release area: /home/agur_backend_blockRelease/
+[OK] Central block release area: 56% used (below threshold)
+
+Checking 73 units...
+
+[CRITICAL] psca            (NDQ       ) - 92% used | Owner: nkahaz
+[CRITICAL] pscc            (NDQ       ) - 96% used | Owner: dtraitelovic
+[CRITICAL] yu              (NDQ       ) - 100% used | Owner: ashahock
+[CRITICAL] dqaa            (QNS       ) - 92% used | Owner: siddharthasa
+[CRITICAL] dqaci           (QNS       ) - 92% used | Owner: siddharthasa
+[CRITICAL] dqamco          (QNS       ) - 92% used | Owner: siddharthasa
+[CRITICAL] dqavi           (QNS       ) - 96% used | Owner: abarman
+[CRITICAL] dqs             (QNS       ) - 96% used | Owner: abarman
+[CRITICAL] eds             (QNS       ) - 95% used | Owner: eelgabsi
+
+Grouping by owner...
+  nkahaz: 1 unit(s)
+  dtraitelovic: 1 unit(s)
+  ashahock: 1 unit(s)
+  siddharthasa: 3 unit(s)
+  abarman: 2 unit(s)
+  eelgabsi: 1 unit(s)
+
+Sending emails...
+[EMAIL] Sent to nkahaz@nvidia.com (1 unit(s))
+[EMAIL] Sent to dtraitelovic@nvidia.com (1 unit(s))
+[EMAIL] Sent to ashahock@nvidia.com (1 unit(s))
+[EMAIL] Sent to siddharthasa@nvidia.com (3 unit(s))
+[EMAIL] Sent to abarman@nvidia.com (2 unit(s))
+[EMAIL] Sent to eelgabsi@nvidia.com (1 unit(s))
+
+================================================================================
+SUMMARY:
+  Central block release: 56% used [OK]
+  Total units checked: 73
+  Critical units (>=90%): 9
+  Unique owners: 6
+  Emails sent: 6 successful, 0 failed
+  Execution time: 67.4 seconds
+================================================================================

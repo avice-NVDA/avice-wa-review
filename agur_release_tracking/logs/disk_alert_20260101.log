@@ -1,0 +1,57 @@
+================================================================================
+AGUR Disk Usage Monitor - 2026-01-01 07:00:06
+================================================================================
+Checking central block release area: /home/agur_backend_blockRelease/
+[OK] Central block release area: 69% used (below threshold)
+
+Checking 73 units...
+
+[CRITICAL] fwas            (NDQ       ) - 96% used | Owner: ronil
+[CRITICAL] pscc            (NDQ       ) - 91% used | Owner: dtraitelovic
+[CRITICAL] dqamdi          (QNS       ) - 100% used | Owner: seeman
+[CRITICAL] eds             (QNS       ) - 92% used | Owner: nwasserman
+[CRITICAL] tecorer         (QNS       ) - 91% used | Owner: hsajwan
+[CRITICAL] tds             (QNS       ) - 91% used | Owner: hsajwan
+[CRITICAL] alm             (TCB       ) - 91% used | Owner: tmazor
+[CRITICAL] eri             (TCB       ) - 91% used | Owner: hsajwan
+[CRITICAL] hib             (TCB       ) - 91% used | Owner: tmazor
+
+Grouping by owner...
+  ronil: 1 unit(s)
+  dtraitelovic: 1 unit(s)
+  seeman: 1 unit(s)
+  nwasserman: 1 unit(s)
+  hsajwan: 3 unit(s)
+  tmazor: 2 unit(s)
+
+Building disk summaries and scanning for old workareas...
+  Scanning /home/scratch.ronil_vlsi_1 for old workareas...
+    -> No old workareas found (>30 days)
+  Scanning /home/scratch.dtraitelovic_vlsi_1 for old workareas...
+    -> Found 2 old workarea(s): 43G, 18G
+  Scanning /home/scratch.seeman_vlsi_1 for old workareas...
+    -> Found 3 old workarea(s): 1.5T, 1.2T, 716G
+  Scanning /home/scratch.nwasserman_vlsi for old workareas...
+    -> No old workareas found (>30 days)
+  Scanning /home/scratch.hsajwan_vlsi for old workareas...
+    -> Found 3 old workarea(s): 402G, 343G, 286G
+  Scanning /home/scratch.tmazor_vlsi for old workareas...
+    -> No old workareas found (>30 days)
+
+Sending emails...
+[EMAIL] Sent to ronil@nvidia.com (1 unit(s))
+[EMAIL] Sent to dtraitelovic@nvidia.com (1 unit(s))
+[EMAIL] Sent to seeman@nvidia.com (1 unit(s))
+[EMAIL] Sent to nwasserman@nvidia.com (1 unit(s))
+[EMAIL] Sent to hsajwan@nvidia.com (3 unit(s))
+[EMAIL] Sent to tmazor@nvidia.com (2 unit(s))
+
+================================================================================
+SUMMARY:
+  Central block release: 69% used [OK]
+  Total units checked: 73
+  Critical units (>=90%): 9
+  Unique owners: 6
+  Emails sent: 6 successful, 0 failed
+  Execution time: 209.4 seconds
+================================================================================

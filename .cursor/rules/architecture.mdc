@@ -8,10 +8,11 @@ alwaysApply: true
 
 # Project Context and Communication
 # When this file is part of the AI assistant's context, the assistant should:
-# 1. Address the user as "Sir avice" in all responses
+# 1. Address the user as "Sir avice" in all responses (OVERRIDES global "Mr avice" rule)
 # 2. Reference this architecture file when making decisions
 # 3. Confirm adherence to these rules when implementing features
-# 4. Use "Sir avice" as a signal that the architecture.mdc is active in context
+# 4. Use "Sir avice" as a signal that the project-specific architecture rules are active
+# 5. Project-specific rules in this file take precedence over global Python standards
 
 # Unix Shell Compatibility Rules
 

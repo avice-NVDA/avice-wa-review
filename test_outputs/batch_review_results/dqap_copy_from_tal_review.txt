@@ -1,0 +1,371 @@
+# Review for: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal
+# Generated: 2025-10-23 14:11:04
+# Command: /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal
+# Return code: 0
+
+STDOUT:
+[36mValidating workarea structure...[0m
+[32m[OK] Workarea validation passed - PnR + Syn workarea detected[0m
+[36m     Additional stages detected: fast_dc[0m
+
+[36m    +===============================================================+
+    |                                                               |
+    |                    [1mAVICE WORKAREA REVIEW[0m[36m                      |
+    |                                                               |
+    |              [32mAdvanced Verification & Integration[0m[36m              |
+    |                    [32mCircuit Engineering[0m[36m                        |
+    |                                                               |
+    +===============================================================+[0m
+
+
+----------------------------------- [32m[1] Setup[0m -----------------------------------
+
+[36mDisk Utilization:[0m
+  Filesystem: tlv02-cdot16-scr01-lif10b:/vol/scratch137/scratch.drazmizrahi_vlsi
+  Mount Point: /home/scratch.drazmizrahi_vlsi
+  Size: 9.8T | Used: 4.1T | Available: 5.8T
+  [32mUsage: 42% [OK][0m
+UNIT: dqap
+TAG: dqap_rbv_2025_09_05_agur_condb_int3_2025_08_27_0_1NL_snap
+IPO: ipo1000 (Available IPOs: ipo1000, ipo1001, ipo1002, ipo1003, ipo1004, ipo1005, ipo1006, ipo1007, ipo1008, ipo1009, ipo1010)
+  [36mEnvironment Information:[0m
+    No environment information found
+
+----------------------------------- [32m[2] Runtime[0m -----------------------------------
+
+[36mFast DC detected - analyzing both fast_dc and full dc runs[0m
+  Note: PnR start times adjusted to setup step (full PnR run after fast_dc)
+  NV Gate ECO Status file not found
+
+[36mRuntime Summary Table:[0m
+  Category     Stage         Runtime                 Start       End        
+  ------------ ------------- ----------------------- ----------- -----------
+  Construction Fast DC       0.54 hours              09/09 17:49 09/09 18:21
+  Construction PnR (ipo1000) 64.04 hours (2.67 days) 09/09 23:30 09/11 14:45
+  Construction Full DC       13.48 hours             09/10 12:54 09/11 02:23
+  Signoff      Auto PT       3.80 hours              10/09 16:14 10/09 20:02
+
+  [36mRuntime HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mdqap_avice_runtime_report_20251023_141101.html[0m &
+
+----------------------------------- [32m[3] Synthesis (DC)[0m -----------------------------------
+Design Definition: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/unit_scripts/des_def.tcl
+  dont_use
+  dont_use
+DC Log: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/syn_flow/dc/log/dc.log
+QoR Report (Quality of Results): /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/syn_flow/dc/reports/dqap_rtl2gate.qor.rpt
+  [36mQoR Analysis:[0m
+    [32mKey QoR Metrics:[0m
+      Design Area: 262294.9834 um2 (0.262 mm2) | Die (X,Y): 891.48 um x 1197.00 um
+      Leaf Cell Count: 1461445
+      Combinational Cells: 1223729
+      Sequential Cells: 237716
+      Total Nets: 1496483
+      Critical Path Slack: 0.0007
+      Total Negative Slack: 0.0000
+      Violating Paths: 0.0000
+      Macro Count: 305
+    [36mScenario Summary:[0m
+    Scenario                                           WNS        TNS        Violating Paths
+    -------------------------------------------------- ---------- ---------- ---------------
+    func.std_tt_0c_0p6v.setup.typical                  0.0737     38.6680    3945           
+    func.std_tt_0c_0p6v.setup.typical (Hold)           0.0710     148.4628   6758           
+    [36mTiming Path Groups:[0m CLKGATE, FEEDTHROUGH, REGIN, REGOUT, Wrapper_path, i1_clk, i2_clk, m1_clk, default
+BeFlow Configuration: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/syn_flow/dc/beflow_config.yaml
+  [36mBeFlow Configuration Analysis:[0m
+    [32mKey Configuration Variables:[0m
+      Library Snapshot: 20250819
+      NV Process: tsmc5_t6
+      Tracks Number: t6
+      Project: agur
+      Default Scenario: func.std_tt_0c_0p6v.setup.typical
+      StdCell Library Path: /home/nbu_be_agur/ip/lib_snap/20250819/syn
+      Memories Path: /home/nbu_be_agur/ip/arrays/13897726_02032025_RAM_SYNLIB/arrays_release
+      VT Types: svt, hvt, lvt
+      Array Names: RAMPDP_100X88_AH6R2S_M1_G32, RAMPDP_104X20_AH6RS_M2_G32
+      Agur Unit BE IP: nvidia_pads_tsmc5_cust_mixvt, nvidia_analog_tsmc5_cust_mixvt, adw_n5_v2f_thermal_sensor, nvidia_stdcell_tsmc5_t6_sup
+Report: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/syn_flow/dc/reports/be4rtl/internal_high_width_logical_cones.rpt
+Report: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/syn_flow/dc/reports/debug/dqap.rtl2gate.removed_cgates.rep
+Report: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/syn_flow/dc/reports/dqap_rtl2gate.qor.rpt
+Report: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/syn_flow/dc/reports/debug/dqap.rtl2gate.removed_registers.rep
+Clock gates removed: 3
+Removed registers: 7127
+[32mNo don't use cells[0m
+[36mGenerating Unified DC HTML Report...[0m
+  [32m[OK] Unified DC HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mdqap_avice_DC_comprehensive_20251023_141101.html[0m &
+
+----------------------------------- [32m[4] PnR Analysis[0m -----------------------------------
+PnR Status: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/pnr_flow/nv_flow/dqap.prc.status
+
+[36mPnR Flow Status Analysis:[0m
+
+  [36mIPO ipo1000:[0m
+    PnR Flow: Completed: temp_run_ant
+    Reporting: Completed through: report_postroute (5/5)
+    [32mStatus: COMPLETED (27/27 steps)[0m
+PnR Configuration: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/pnr_flow/nv_flow/dqap.prc
+  [36mAvailable IPOs:[0m 1000
+  [36mTools:[0m edi
+  [36mFlow Sequence (ipo1000):[0m [33msetup[0m -> [+nvism_fix_drc.tcl] [33medi_plan[0m -> [33mplace[0m -> [33mcts[0m -> [33mroute[0m -> [+fix_hold_cells.tcl] [33mpostroute[0m -> [33mpredrc_plan[0m -> [33mpredrc_postroute[0m -> [33mexport[0m -> [33mextraction[0m -> [33mauto_pt[0m -> [33mauto_pt_fix[0m -> [33mgl-check[0m -> [33mrtl_vs_pnr_fm[0m -> [33mrtl_vs_pnr_bbox_fm[0m -> [33mtemp_release_mldf[0m -> [33mtemp_stream_in_out[0m -> [33mtemp_run_lvs[0m -> [33mtemp_run_drc[0m -> [33mtemp_run_ant[0m
+  [36mClock Names:[0m
+    ipo1000: i2_clk i1_clk i2_clk
+  [36mTCL Usage Verification:[0m
+    [32m[OK] Used TCL files (4):[0m
+      - fix_cleanup.tcl
+      - fix_hold_cells.tcl
+      - nvism_fix_drc.tcl
+      - trim_and_block.tcl
+    [33m[WARN] Unused TCL files (3):[0m
+      - clean_export.tcl
+      - remove_spr_blockage.tcl
+      - spr_macro_blockgae.tcl
+PnR Runset: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/pnr_flow/nv_flow/dqap/ipo1000/CMDs/dqap.ipo1000.temp_run_ant.09_15_17_06.runset.tcl
+  [36mPnR Flow Variables:[0m
+    FLOW(PATH): /home/nbu_be_tools/flow2/1.0/2025_ww25_01
+    PROJECT(CUSTOM_SCRIPTS_DIR): /home/nbu_be_agur/config/flow2/2025_ww36_04/tcl
+    FLOORPLAN: ../../../../syn_flow/latest/results/../../../flp/dqap_fp.def.gz
+    PIN_PLACEMENT_FILE: /home/nbu_be_agur/backend/release/fcl/dqap.hfp.pins.def
+    TOP_PLANNER_YAML: /home/nbu_be_agur/backend/release/fcl/top_planner.yaml
+    DC_SHELL_VERSION: /home/tools/synopsys/syn_2016.03-SP4/bin/dc_shell
+    RAM_LIB_PATH: "/home/nbu_be_agur/ip/arrays/nvidia/arrays_release/lef
+    CENTRAL_LIB_PATH: /home/agur_backend_blockRelease/block/merged_lib_snap/20250819
+    NETWORK_FLOW_PATH: /home/nbu_be_tools/beflow/1.0/2025_ww13_01_rev13
+    NETWORK_FLOW_UTILS_DIR: /home/nbu_be_tools/flow2_utils/1.0/2024_ww32_01_legacy_rev4
+PnR BeFlow Configuration (ipo1000): /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/pnr_flow/nv_flow/dqap/ipo1000/beflow_config.yaml
+  [36mBeFlow Configuration Analysis:[0m
+    [32mKey Configuration Variables:[0m
+      Library Snapshot: 20250819
+      NV Process: tsmc5_t6
+      Tracks Number: t6
+      Project: agur
+      Default Scenario: func.std_tt_0c_0p6v.setup.typical
+      StdCell Library Path: /home/nbu_be_agur/ip/lib_snap/20250819/syn
+      Memories Path: /home/nbu_be_agur/ip/arrays/13897726_02032025_RAM_SYNLIB/arrays_release
+      VT Types: svt, hvt, lvt
+      Agur Unit BE IP: nvidia_pads_tsmc5_cust_mixvt, nvidia_analog_tsmc5_cust_mixvt, adw_n5_v2f_thermal_sensor, nvidia_stdcell_tsmc5_t6_sup
+Post-Route Data: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/pnr_flow/nv_flow/dqap/ipo1000/reports/dqap_dqap_ipo1000_report_dqap_ipo1000_postroute.func.std_tt_0c_0p6v.setup.typical.data
+
+[33mKey Post-Route Parameters:[0m
+  Parameter                 Value          
+  ------------------------- ---------------
+  Die Dimensions (X x Y)    891.48 x 1197.00 um
+  DieArea (mm2)             1.067          
+  REGIN_WNS                 -0.100         
+  REGIN_TNS                 -30.575        
+  REGIN_ViolPaths           975            
+  REGOUT_WNS                -0.099         
+  REGOUT_TNS                -84.604        
+  REGOUT_ViolPaths          3079           
+  EffictiveUtilization      27.218766422%  
+  CellCount                 1753887        
+  FFCount                   224701         
+  ArraysCount               304            
+  HVT_percentage            74.2906075047% 
+  SVT_percentage            25.7093924953% 
+  i1_clk_WNS                -0.010         
+  i1_clk_TNS                -0.039         
+  i1_clk_ViolPaths          11             
+  i2_clk_WNS                -0.025         
+  i2_clk_TNS                -0.112         
+  i2_clk_ViolPaths          24             
+
+  [36mFull PnR Data Table:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mdqap_avice_pnr_data_ipo1000_20251023_141102.html[0m &
+Power Summary: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/pnr_flow/nv_flow/dqap/ipo1000/REPs/SUMMARY/dqap.ipo1000.postroute.power.rpt.gz
+  [36mPower Summary Table:[0m
+          group     |    area     |  count  |   power   : density : cell_avg | internal : switching : total |  leakage  
+     ===============|=============|=========|===========:=========:==========|==========:===========:=======|===========
+      combinational |  114687.403 | 1628621 | 18383.983 :   0.160 :    0.011 |    0.000 :     0.000 : 0.000 | 18383.983 
+      sequential    |  175313.746 |  125573 |  6391.830 :   0.036 :    0.051 |    0.000 :     0.000 : 0.000 |  6391.830 
+      physical      |  776674.367 | 3939515 |    49.036 :   0.000 :    0.000 |    0.000 :     0.000 : 0.000 |    49.036 
+     ===============|=============|=========|===========:=========:==========|==========:===========:=======|===========
+      total         | 1066675.516 | 5693709 | 24824.849 :   0.023 :    0.004 |    0.000 :     0.000 : 0.000 | 24824.849 
+     ===================================================================================================================
+  [36mTiming Histogram Tables (POSTROUTE):[0m
+PnR Timing Setup (POSTROUTE): /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/pnr_flow/nv_flow/dqap/ipo1000/REPs/SUMMARY/dqap.ipo1000.postroute.timing.setup.rpt.gz
+  Table 2 - Sub-Category Breakdown (Lines 112-127):
+     type  |  category  |   sub_category   | wns  |  tns  |fep |-0.010 -0.020 -0.030 -0.040 -0.050 -0.060 -0.070 -0.080 -0.090 -0.100 -Inf
+   ========|============|==================|======|=======|====|==========================================================================
+           |output      |flop_to_port      |-0.099|-84.593|3012|   685    557    479    451    397    275    128     36      3      1     
+           |............|..................|......|.......|....|..........................................................................
+           |            |port_to_clock_gate|-0.100|-18.981| 319|            1      8     43     62     60     50     50     32     13     
+   external|input       |port_to_flop      |-0.100|-11.596| 631|   242    169     88     76     37     11      5             1      2     
+   ........|............|..................|......|.......|....|..........................................................................
+           |            |flop_to_flop      |-0.025| -0.145|  24|    20      3      1                                                      
+           |reg_to_reg  |flop_to_hard_macro|-0.002| -0.004|   3|     3                                                                    
+           |............|..................|......|.......|....|..........................................................................
+   internal|reg_to_cgate|flop_to_clock_gate|-0.018| -0.103|  24|    22      2                                                             
+   =======================================================================================================================================
+   ===========================================================================================================================================================================
+
+[36mGenerating Unified PnR HTML Report...[0m
+  [32m[OK] Unified PnR HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mdqap_avice_PnR_comprehensive_ipo1000_20251023_141102.html[0m &
+
+----------------------------------- [32m[5] Clock Analysis[0m -----------------------------------
+Innovus Clock Analysis: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/pnr_flow/nv_flow/dqap/ipo1000/REPs/SUMMARY/dqap.ipo1000.postroute.clock_tree.skew_and_latency.from_clock_root_source.rpt.gz
+
+[33mClock Tree Analysis for func.std_tt_0c_0p6v.setup.typical:[0m
+  Clock      Period   Skew     Min      Max      Median   Mean     StdDev  
+  ---------- -------- -------- -------- -------- -------- -------- --------
+  i1_clk     1.244    0.438    0.101    0.539    0.502    0.494    0.029   
+  i2_clk     0.622    0.535    0.014    0.549    0.500    0.499    0.029   
+  m1_clk     6.400    0.280    0.224    0.504    0.469    0.462    0.022   
+
+  All values in nanoseconds (ns)
+  [31mNote: Max latency values > 550ps (0.55ns) are highlighted in red[0m
+PT Clock Analysis: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/signoff_flow/auto_pt/work_09.10.25_16:19/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/dqap_func.std_tt_0c_0p6v.setup.typical.clock_latency
+
+[33mPT Clock Latency Analysis:[0m
+  Clock      Min (ns)   Max (ns)  
+  ---------- ---------- ----------
+  i1_clk     0.185      0.506     
+  i2_clk     0.015      0.408     
+  m1_clk     0.117      0.302     
+
+  All values in nanoseconds (ns)
+  [31mNote: Max latency values > 550ps (0.55ns) are highlighted in red[0m
+
+  [36mCombined Clock Latency Summary (Max per clock):[0m
+  Clock Detail: i1_clk|539.0|438.0
+  Clock Detail: i2_clk|549.0|535.0
+  Clock Detail: m1_clk|504.0|280.0
+
+  [32m[OK] Clock HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mavice_clock_analysis_dqap_ipo1000_20251023_141102.html[0m &
+
+----------------------------------- [32m[6] Formal Verification[0m -----------------------------------
+[36mRTL Tag: [0mdqap_rbv_2025_09_05_agur_condb_int3_2025_08_27_0_1NL_snap
+
+[36mMultibit Mapping Files Check:[0m
+  Checking 6 files across 3 locations per IPO...
+  Files: 1) multibitMapping.gz  2) multibitMapping_for_gen_mbff_scandef.gz
+
+  IPO          Location           File Status          Result    
+  ------------ ------------------ -------------------- ----------
+  ipo1000      PnR Flow           [OK] [OK]            [32mOK[0m
+  ipo1000      Export Innovus     [OK] [OK]            [32mOK[0m
+  ipo1000      NV Gate ECO        [MISS] [MISS]        [31mMISSING[0m
+
+  [31m[FAIL] 1/3 location checks failed[0m
+  [33m-> Formal verification may encounter non-equivalence points[0m
+  [33m-> Files are generated in PnR and copied to export_innovus and nv_gate_eco[0m
+No formal verification logs found
+
+  [36mFormal Verification HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mdqap_avice_formal_verification_20251023_141102.html[0m &
+
+----------------------------------- [32m[7] Parasitic Extraction (Star)[0m -----------------------------------
+  [33mNo Star extraction runs found[0m
+
+[36mSPEF Files (All Corners):[0m
+  [33mNo SPEF files found[0m
+
+[36m  Star Extraction HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mdqap_avice_star_extraction_20251023_141102.html[0m &
+
+----------------------------------- [32m[8] Signoff Timing (PT)[0m -----------------------------------
+HTML Report: [35m/home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/signoff_flow/auto_pt/work_09.10.25_16:19.html[0m
+All Violators: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/signoff_flow/auto_pt/work_09.10.25_16:19/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/dqap_func.std_tt_0c_0p6v.setup.typical.all_violators.gz
+PT Log: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/signoff_flow/auto_pt/log/auto_pt.log
+[31mErrors found (1 total):[0m
+  Error: Library Compiler executable path is not set. (PT-063)
+
+  [36mPT Timing Summary (Dual-Scenario):[0m
+    Open with: /home/utils/firefox-118.0.1/firefox [35mdqap_avice_PT_timing_summary_20251023_141104.html[0m &
+
+  [36mWork Areas Summary:[0m
+    Total Work Areas: 1
+    Latest: work_09.10.25_16:19
+
+  [36mLatest Setup Scenario (func.std_ssg_0c_0p6v.setup.typical):[0m
+    Internal Timing (all groups except FEEDTHROUGH/REGIN/REGOUT):
+      WNS: [31m -2.115[0m ns
+      TNS: [31m-48533.93[0m ns
+      NVP: 74605 paths
+    Worst Internal Group: i1_clk
+
+  [36mLatest Hold Scenario (func.std_tt_0c_0p55v.hold.typical):[0m
+    Internal Timing (all groups except FEEDTHROUGH/REGIN/REGOUT):
+      WNS: [31m -0.219[0m ns
+      TNS: [31m -1837.51[0m ns
+      NVP: 49467 paths
+    Worst Internal Group: i1_clk
+
+  [36mLatest DSR Mux Clock Skew:[0m
+    Setup: [31m 72.56[0m ps
+    Hold:  [31m 78.81[0m ps
+
+----------------------------------- [32m[9] Physical Verification (PV)[0m -----------------------------------
+LVS Errors: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/pv_flow/drc_dir/dqap/lvs_icv_ipo1006/dqap_ipo1006_fill.LVS_ERRORS
+  [32mStatus: PASS[0m
+  Failed Equivalence Points: 0
+  Successful Equivalence Points: 0
+
+  [32mMatched Items:[0m
+    Instances: 0
+    Nets:      0
+    Ports:     0
+DRC Errors: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/pv_flow/drc_dir/dqap/drc_icv_ipo1006/dqap_ipo1006_fill.LAYOUT_ERRORS
+  [31mStatus: ERRORS - DRC violations found[0m
+  [31mTotal DRC violations: 76[0m
+  [36mViolation breakdown:[0m
+    Rule                 Count    Description                                                 
+    -------------------- -------- ------------------------------------------------------------
+    NV.EFP.VIA18.R.1.1.A 76       flip-chip corner bumps must meet {V18+V17+V16} & {V17+V16...
+Antenna Errors: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/pv_flow/drc_dir/dqap/drc_icv_antenna_ipo1006/dqap_ipo1006_fill.LAYOUT_ERRORS
+  [32mStatus: LAYOUT ERRORS RESULTS: CLEAN[0m
+  [32mNo antenna violations found[0m
+
+[33mNo PV flow status files found[0m
+
+  [36mPhysical Verification HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mdqap_avice_pv_report_20251023_141104.html[0m &
+
+----------------------------------- [32m[10] GL Checks[0m -----------------------------------
+  Didn't run GL checks
+
+----------------------------------- [32m[11] ECO Analysis[0m -----------------------------------
+[31m0 ECO loops were done[0m
+Didn't run PT ECO
+Didn't run NV Gate ECO
+
+----------------------------------- [32m[12] NV Gate ECO[0m -----------------------------------
+  Didn't run NV Gate ECO
+
+----------------------------------- [32m[13] Block Release[0m -----------------------------------
+Block Release Log: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal/export/block_release/log/block_release.log
+  [36mRelease to:[0m /home/agur_backend_blockRelease/block/dqap/dqap_rbv_2025_09_05_agur_condb_int3_2025_08_27_0_1NL_snap_new_flow__2025_9_17_11_39_9
+  [33mNo block release attempts found[0m
+
+  [36mAll Custom Links in Central Release Area:[0m
+  [36mLocation: /home/agur_backend_blockRelease/block/dqap[0m
+    Link Name                      Date         User            Target                                                                           Status
+    ------------------------------ ------------ --------------- -------------------------------------------------------------------------------- --------------------
+    [32mAUG_07_FP                     [0m 2025-08-28   tmazor          /home/agur_backend_blockRelease/block/dqap/dqap_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap__2025_8_28_21_24_42 [36mManual[0m
+    [32mQNS_ww42_1NL                  [0m 2025-10-13   alexandrue      /home/agur_backend_blockRelease/block/dqap/nbu_signoff__2025_9_21_11_23_47       [36mManual[0m
+    [32mSEP_10                        [0m 2025-10-19   drazmizrahi     /home/agur_backend_blockRelease/block/dqap/nbu_signoff_dqap_copy_from_tal_ipo1010_2025_10_19_12_16_9 [36mManual[0m
+    [32mQNS_ww43_v1_partial_VIVID     [0m 2025-10-22   alexandrue      /home/agur_backend_blockRelease/block/dqap/nbu_signoff_dqap_copy_from_tal_ipo1010_2025_10_19_12_16_9 [36mManual[0m
+
+    [36mTotal custom links found: 4[0m
+
+  [36mManually Created Custom Links (no release log):[0m
+  Manual Custom Link Detail: AUG_07_FP|2025-08-28
+  Manual Custom Link Detail: QNS_ww42_1NL|2025-10-13
+  Manual Custom Link Detail: QNS_ww43_v1_partial_VIVID|2025-10-22
+  Manual Custom Link Detail: SEP_10|2025-10-19
+
+  [36mBlock Release HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mdqap_avice_block_release_20251023_141104.html[0m &
+
+[36mGenerating Master Dashboard...[0m
+[32m[OK] Master Dashboard generated: dqap_avice_MASTER_dashboard_20251023.html[0m
+[36m     Open with recommended browser:[0m
+     /home/utils/firefox-118.0.1/firefox [35mdqap_avice_MASTER_dashboard_20251023.html[0m &
+
+[32mReview completed successfully![0m
+[36mOrganized 11 HTML file(s) into html/ folder[0m
+
+
+STDERR:

@@ -1,0 +1,71 @@
+# Review for: /home/scratch.aazran_vlsi/dql/040925_1nl_reff_fixed_v0/pnr_flow/nv_flow/dql/ipo1005/nbu_signoff
+# Generated: 2025-11-20 12:48:15
+# Command: /home/scratch.avice_vlsi/cursor/avice_wa_review/avice_wa_review_launcher.csh /home/scratch.aazran_vlsi/dql/040925_1nl_reff_fixed_v0/pnr_flow/nv_flow/dql/ipo1005/nbu_signoff -s pnr
+# Return code: 0
+
+STDOUT:
+[36mValidating workarea structure...[0m
+[32m[OK] Workarea validation passed - PnR + Syn workarea detected[0m
+[36m     Additional stages detected: fast_dc, RTL[0m
+Running selected sections: pnr
+
+----------------------------------- [32m[4] PnR Analysis[0m -----------------------------------
+PnR Status: /home/scratch.aazran_vlsi/dql/040925_1nl_reff_fixed_v0/pnr_flow/nv_flow/dql.prc.status
+
+[36mPnR Flow Status Analysis:[0m
+
+  [36mIPO ipo1000:[0m
+    PnR Flow: Completed through: setup (1/9)
+    Reporting: No steps completed
+    [33mStatus: UNKNOWN (2/16 done)[0m
+PnR Configuration: /home/scratch.aazran_vlsi/dql/040925_1nl_reff_fixed_v0/pnr_flow/nv_flow/dql.prc
+  [36mAvailable IPOs:[0m 1000
+  [36mTools:[0m edi
+  [36mFlow Sequence (ipo1000):[0m [33msetup[0m -> [33medi_plan[0m -> [33mplace[0m -> [33mcts[0m -> [33mroute[0m -> [33mpostroute[0m -> [33mexport[0m -> [33mextraction[0m -> [33mnbu_auto_pt[0m
+  [36mTCL Usage Verification:[0m
+    [33m[WARN] Unused TCL files (6):[0m
+      - dql.modes.interface_effort.tcl
+      - fix_cleanup.tcl
+      - vivid_2nd_26-10-2025_from_ipo1001.tcl
+      - vivid_2nd_26-10-2025_from_ipo1001_with_GL_check_fix.tcl
+      - vivid_3rd_02-11-2025_from_ipo1002.tcl
+      - vivid_4th_12-11-025_from_ipo1004.tcl
+PnR Runset: /home/scratch.aazran_vlsi/dql/040925_1nl_reff_fixed_v0/pnr_flow/nv_flow/dql/ipo1000/CMDs/dql.ipo1000.shell.11_06_18_47.runset.tcl
+
+[36m══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[33m  FLOW CONFIGURATION[0m
+[36m══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+  Parameter                      Source             Value                                           
+  --------------------------------------------------------------------------------------------------
+  FLOW_PATH                      runset.tcl         /home/nbu_be_tools/flow2/1.0/2025_ww25_01
+  CUSTOM_SCRIPTS_DIR             runset.tcl         /home/nbu_be_agur/config/flow2/2025_ww40_02/tcl
+  FLOORPLAN                      runset.tcl         ../../../../syn_flow/latest/results/../../../...
+  PIN_PLACEMENT_FILE             runset.tcl         /home/nbu_be_agur/backend/release/fcl//dql.hf...
+  TOP_PLANNER_YAML               runset.tcl         /home/nbu_be_agur/backend/release/fcl//top_pl...
+  MULTIBIT_FLOP                  runset.tcl         [32m1 (ENABLED)[0m
+[36m══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[33m  Note: Configuration extracted from ipo1000/runset.tcl and ipo1000/beflow_config.yaml[0m
+  [33mPnR Data: No data files found for any stage or temperature corner[0m
+    [33mTried stages: postroute, route, cts, place, plan[0m
+    [33mTried corners: 0c_0p6v, 125c_0p6v, 25c_0p6v, 85c_0p6v[0m
+    [33mThis could be due to:[0m
+      - Flow still running (data files not yet generated)
+      - Flow failed at this stage
+      - Different temperature corner used
+      - File permissions issue
+
+[33mPnR Timing Histogram: No timing reports found for any stage[0m
+  [33mTried stages: postroute, route, cts, place, plan[0m
+  [33mThis could be due to:[0m
+    - Flow still running (timing reports not yet generated)
+    - Flow failed at this stage)
+    - Different file naming convention
+    - File permissions issue
+
+[36mGenerating Unified PnR HTML Report...[0m
+  [32m[OK] Unified PnR HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mtest_outputs/html/dql_avice_PnR_comprehensive_ipo1000_20251120_124815.html[0m &
+[36mOrganized 1 HTML file(s) into test_outputs/html/ folder[0m
+
+
+STDERR:

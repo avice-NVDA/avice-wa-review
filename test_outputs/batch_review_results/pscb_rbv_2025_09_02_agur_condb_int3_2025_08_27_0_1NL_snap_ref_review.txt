@@ -1,0 +1,126 @@
+# Review for: /home/scratch.nkahaz_vlsi/ww38_5_fixes/pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref
+# Generated: 2025-10-23 14:21:48
+# Command: /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.nkahaz_vlsi/ww38_5_fixes/pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref -s pnr
+# Return code: 0
+
+STDOUT:
+[36mValidating workarea structure...[0m
+[32m[OK] Workarea validation passed - PnR + Syn workarea detected[0m
+[36m     Additional stages detected: fast_dc[0m
+Running selected sections: pnr
+
+----------------------------------- [32m[4] PnR Analysis[0m -----------------------------------
+PnR Status: /home/scratch.nkahaz_vlsi/ww38_5_fixes/pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref/pnr_flow/nv_flow/pscb.prc.status
+
+[36mPnR Flow Status Analysis:[0m
+
+  [36mIPO ipo1000:[0m
+    PnR Flow: Completed: auto_pt_fix
+    Reporting: Completed through: report_route (4/5), Error at: report_postroute
+    [31mErrors in: report_postroute[0m
+    [31mStatus: FAILED (18/19 done, 1 errors)[0m
+
+  [36mIPO ipo1020:[0m
+    PnR Flow: Completed: auto_pt_fix
+    Reporting: Completed through: report_postroute (5/5)
+    [33mStatus: UNKNOWN (18/19 done)[0m
+PnR Configuration: /home/scratch.nkahaz_vlsi/ww38_5_fixes/pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref/pnr_flow/nv_flow/pscb.prc
+  [36mAvailable IPOs:[0m 1000, 1020
+  [36mTools:[0m edi
+  [36mFlow Sequence (ipo1000):[0m [33msetup[0m -> [33medi_plan[0m -> [33mpredrc_plan[0m -> [33mplace[0m -> [33mcts[0m -> [33mroute[0m -> [33mpostroute[0m -> [33mpredrc_postroute[0m -> [33mexport[0m -> [33mextraction[0m -> [33mnbu_auto_pt[0m -> [33mauto_pt_fix[0m
+  [36mFlow Sequence (ipo1020):[0m [33msetup[0m -> [33medi_plan[0m -> [33mpredrc_plan[0m -> [33mplace[0m -> [33mcts[0m -> [33mroute[0m -> [33mpostroute[0m -> [33mpredrc_postroute[0m -> [33mexport[0m -> [33mextraction[0m -> [33mnbu_auto_pt[0m -> [33mauto_pt_fix[0m
+  [36mTCL Usage Verification:[0m
+    [32m[OK] Used TCL files (2):[0m
+      - nk_innovus_hook_ipo1018.tcl
+      - nk_path_group.tcl
+    [33m[WARN] Unused TCL files (3):[0m
+      - nk_innovus_hook.tcl
+      - nk_innovus_hook_ipo1017.tcl
+      - nk_path_adjust.tcl
+PnR Runset: /home/scratch.nkahaz_vlsi/ww38_5_fixes/pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref/pnr_flow/nv_flow/pscb/ipo1000/CMDs/pscb.ipo1000.shell.place.10_02_10_08.runset.tcl
+  [36mPnR Flow Variables:[0m
+    FLOW(PATH): /home/nbu_be_tools/flow2/1.0/2025_ww25_01
+    PROJECT(CUSTOM_SCRIPTS_DIR): /home/nbu_be_agur/config/flow2/2025_ww36_04/tcl
+    FLOORPLAN: ../../../../syn_flow/latest/results/../../../flp/pscb_fp.def.gz
+    PIN_PLACEMENT_FILE: /home/nbu_be_agur/backend/release/fcl//pscb.hfp.pins.def
+    TOP_PLANNER_YAML: /home/nbu_be_agur/backend/release/fcl//top_planner.yaml
+    DC_SHELL_VERSION: /home/tools/synopsys/syn_2016.03-SP4/bin/dc_shell
+    RAM_LIB_PATH: "/home/nbu_be_agur/ip/arrays/nvidia/arrays_release/lef
+    CENTRAL_LIB_PATH: /home/agur_backend_blockRelease/block/merged_lib_snap/20250819
+    NETWORK_FLOW_PATH: /home/nbu_be_tools/beflow/1.0/2025_ww13_01_rev13
+    NETWORK_FLOW_UTILS_DIR: /home/nbu_be_tools/flow2_utils/1.0/2024_ww32_01_legacy_rev4
+PnR BeFlow Configuration (ipo1000): /home/scratch.nkahaz_vlsi/ww38_5_fixes/pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref/pnr_flow/nv_flow/pscb/ipo1000/beflow_config.yaml
+  [36mBeFlow Configuration Analysis:[0m
+    [32mKey Configuration Variables:[0m
+      Library Snapshot: 20250819
+      NV Process: tsmc5_t6
+      Tracks Number: t6
+      Project: agur
+      Default Scenario: func.std_tt_0c_0p6v.setup.typical
+      StdCell Library Path: /home/nbu_be_agur/ip/lib_snap/20250819/syn
+      Memories Path: /home/nbu_be_agur/ip/arrays/13897726_02032025_RAM_SYNLIB/arrays_release
+      VT Types: svt, hvt, lvt
+      Agur Unit BE IP: nvidia_pads_tsmc5_cust_mixvt, nvidia_analog_tsmc5_cust_mixvt, adw_n5_v2f_thermal_sensor, nvidia_stdcell_tsmc5_t6_sup, nvidia_rams_tsmc5_cust_mixvt
+Post-Route Data: /home/scratch.nkahaz_vlsi/ww38_5_fixes/pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref/pnr_flow/nv_flow/pscb/ipo1000/reports/pscb_pscb_ipo1000_report_pscb_ipo1000_postroute.func.std_tt_0c_0p6v.setup.typical.data
+
+[33mKey Post-Route Parameters:[0m
+  Parameter                 Value          
+  ------------------------- ---------------
+  Die Dimensions (X x Y)    1608.54 x 750.12 um
+  DieArea (mm2)             1.207          
+  REGIN_WNS                 0.001          
+  REGIN_TNS                 0.000          
+  REGIN_ViolPaths           0              
+  REGOUT_WNS                0.004          
+  REGOUT_TNS                0.000          
+  REGOUT_ViolPaths          0              
+  EffictiveUtilization      11.7300329187% 
+  CellCount                 1092988        
+  FFCount                   306206         
+  ArraysCount               8              
+  HVT_percentage            87.3541847259% 
+  SVT_percentage            12.6458152741% 
+  w1_clk_WNS                0.013          
+  w1_clk_TNS                0.000          
+  w1_clk_ViolPaths          0              
+
+  [36mFull PnR Data Table:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mpscb_avice_pnr_data_ipo1000_20251023_142147.html[0m &
+Power Summary: /home/scratch.nkahaz_vlsi/ww38_5_fixes/pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref/pnr_flow/nv_flow/pscb/ipo1000/REPs/SUMMARY/pscb.ipo1000.postroute.power.rpt
+  [36mPower Summary Table:[0m
+          group     |    area     |  count  |   power   : density : cell_avg | internal : switching : total |  leakage  
+     ===============|=============|=========|===========:=========:==========|==========:===========:=======|===========
+      combinational |   68479.601 | 1001656 |  7062.652 :   0.103 :    0.007 |    0.000 :     0.000 : 0.000 |  7062.652 
+      sequential    |   72925.697 |   91425 |  5438.289 :   0.075 :    0.059 |    0.000 :     0.000 : 0.000 |  5438.289 
+      physical      | 1065133.094 | 3354907 |    70.955 :   0.000 :    0.000 |    0.000 :     0.000 : 0.000 |    70.955 
+     ===============|=============|=========|===========:=========:==========|==========:===========:=======|===========
+      total         | 1206538.392 | 4447988 | 12571.897 :   0.010 :    0.003 |    0.000 :     0.000 : 0.000 | 12571.897 
+     ===================================================================================================================
+  [36mTiming Histogram Tables (ROUTE):[0m
+PnR Timing Setup (ROUTE): /home/scratch.nkahaz_vlsi/ww38_5_fixes/pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref/pnr_flow/nv_flow/pscb/ipo1000/REPs/SUMMARY/pscb.ipo1000.route.timing.setup.rpt.gz
+  Table 2 - Sub-Category Breakdown (Lines 106-120):
+     type  |  category  |   sub_category   | wns  |  tns  |fep |-0.010 -0.020 -0.030 -0.040 -0.050 -0.060 -0.070 -0.080 -0.090 -0.100 -Inf
+   ========|============|==================|======|=======|====|==========================================================================
+           |reg_to_reg  |flop_to_flop      |-0.135|-65.942|1833|   400    294    245    233    206    124     75     78     50     54   74
+           |............|..................|......|.......|....|..........................................................................
+   internal|reg_to_cgate|flop_to_clock_gate|-0.101| -0.387|   5|            1                                                2      1    1
+   ........|............|..................|......|.......|....|..........................................................................
+           |            |port_to_flop      |-0.138|-50.222|2060|   491    458    440    348    182     97     14      7      6      3   14
+           |input       |port_to_clock_gate|-0.022| -0.076|   5|     1      3      1                                                      
+           |............|..................|......|.......|....|..........................................................................
+   external|output      |flop_to_port      |-0.068| -4.180| 219|    89     41     45     23     11      8      2                          
+   =======================================================================================================================================
+   =========================================================================================================================================================================
+
+[36mGenerating Unified PnR HTML Report...[0m
+  [32m[OK] Unified PnR HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mpscb_avice_PnR_comprehensive_ipo1000_20251023_142147.html[0m &
+
+[36mGenerating Master Dashboard...[0m
+[32m[OK] Master Dashboard generated: pscb_avice_MASTER_dashboard_20251023.html[0m
+[36m     Open with recommended browser:[0m
+     /home/utils/firefox-118.0.1/firefox [35mpscb_avice_MASTER_dashboard_20251023.html[0m &
+[36mOrganized 3 HTML file(s) into html/ folder[0m
+
+
+STDERR:

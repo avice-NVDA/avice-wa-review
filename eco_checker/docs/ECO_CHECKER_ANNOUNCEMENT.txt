@@ -1,0 +1,99 @@
+Subject: [NEW TOOL] ECO Checker - Validate ECOs Before Implementation
+
+Hi Team,
+
+I'm excited to announce a new standalone tool for validating ECO TCL files BEFORE implementation!
+
+================================================================================
+WHAT IS IT?
+================================================================================
+A fast validation tool that checks ECO files for:
+  • DontUse cells (prohibited cells)
+  • instNotAllowedOnClocks (illegal clock network operations)
+  • ClockCellsOnData (informational - potential area optimization)
+
+WHY YOU NEED THIS:
+  ✓ Catch errors BEFORE implementing ECOs
+  ✓ No need to wait for full gl-check (saves hours)
+  ✓ Works on external ECOs (VIVID ECOs, full-chip STA ECOs, etc.)
+  ✓ Smart auto-detection - minimal setup required
+  ✓ Fast: analyzes 15,000+ ECO commands in seconds
+
+================================================================================
+QUICK START (No Setup Required!)
+================================================================================
+
+Just run the launcher script - no setup, no aliases needed:
+
+   /home/avice/scripts/avice_wa_review/eco_checker.csh <eco_file.tcl>
+
+Examples:
+
+   # Check single ECO file (workarea auto-detected)
+   cd /home/scratch.myuser_vlsi/.../my_workarea/signoff_flow/auto_pt/
+   /home/avice/scripts/avice_wa_review/eco_checker.csh my_eco.tcl
+
+   # Check multiple ECO files
+   /home/avice/scripts/avice_wa_review/eco_checker.csh *.tcl
+
+   # Check external ECOs (provide reference workarea)
+   /home/avice/scripts/avice_wa_review/eco_checker.csh /path/to/external/*.tcl --workarea /home/scratch.myuser/.../my_wa/
+
+================================================================================
+REAL-WORLD EXAMPLE
+================================================================================
+
+When Radu sends VIVID ECOs, validate them first:
+
+  /home/avice/scripts/avice_wa_review/eco_checker.csh /home/agur_fullchip/.../ECO_VIVID_AND_MANUAL/*.tcl \\
+      --workarea /home/scratch.myuser/.../my_unit_workarea/
+
+If exit code = 0 → Safe to implement!
+If exit code = 1 → Contact Radu about violations
+
+================================================================================
+USE CASES
+================================================================================
+
+1. During ECO Development
+   → Get immediate feedback while writing ECO TCL files
+
+2. Before Implementing External ECOs
+   → Validate VIVID ECOs, full-chip STA ECOs, etc.
+
+3. In Automated Flows
+   → Add to your scripts for automated validation
+
+4. Before Version Control Commits
+   → Ensure ECO files are clean before committing
+
+================================================================================
+DOCUMENTATION
+================================================================================
+
+Quick Start Guide:
+  /home/avice/scripts/avice_wa_review/ECO_CHECKER_USER_GUIDE.txt
+
+Full Documentation:
+  /home/avice/scripts/avice_wa_review/README_ECO_CHECKER.md
+
+Help Command:
+  eco_checker --help
+
+================================================================================
+QUESTIONS / SUPPORT
+================================================================================
+
+Contact: Alon Vice (avice@nvidia.com)
+Slack: #agur-release-tracking
+
+Feel free to reach out with any questions or feedback!
+
+Best regards,
+Alon Vice
+
+P.S. The tool has been thoroughly tested on 72 AGUR units and 15,000+ ECO commands.
+It's production-ready and available now!
+
+================================================================================
+

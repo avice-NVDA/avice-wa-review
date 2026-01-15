@@ -1,0 +1,396 @@
+# Review for: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10
+# Generated: 2025-10-23 14:11:22
+# Command: /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10
+# Return code: 0
+
+STDOUT:
+[36mValidating workarea structure...[0m
+[32m[OK] Workarea validation passed - PnR + Syn workarea detected[0m
+
+[36m    +===============================================================+
+    |                                                               |
+    |                    [1mAVICE WORKAREA REVIEW[0m[36m                      |
+    |                                                               |
+    |              [32mAdvanced Verification & Integration[0m[36m              |
+    |                    [32mCircuit Engineering[0m[36m                        |
+    |                                                               |
+    +===============================================================+[0m
+
+
+----------------------------------- [32m[1] Setup[0m -----------------------------------
+
+[36mDisk Utilization:[0m
+  Filesystem: tlv02-cdot16-scr01-lif10b:/vol/scratch130/scratch.vliberchuk_vlsi
+  Mount Point: /home/scratch.vliberchuk_vlsi
+  Size: 4.9T | Used: 3.2T | Available: 1.8T
+  [32mUsage: 65% [OK][0m
+UNIT: bta
+TAG: bta_rbv_2025_09_25new_tag_agur_condb_int3_2025_08_27_0_1NL_snap
+IPO: ipo1000 (Available IPOs: ipo1000, ipo1005, ipo1006, ipo1010, ipo1011)
+  [36mEnvironment Information:[0m
+    No environment information found
+
+----------------------------------- [32m[2] Runtime[0m -----------------------------------
+  NV Gate ECO Status file not found
+
+[36mRuntime Summary Table:[0m
+  Category     Stage         Runtime     Start       End        
+  ------------ ------------- ----------- ----------- -----------
+  Construction DC            10.11 hours 09/25 21:39 09/26 07:46
+  Signoff      Star          0.81 hours  10/08 14:27 10/08 15:16
+  Signoff      Auto PT       6.19 hours  10/08 15:17 10/08 21:29
+  ECO          Auto PT Fix   1.31 hours  10/09 10:54 10/09 12:13
+  Construction PnR (ipo1000) 0.05 hours  N/A         N/A        
+
+  [36mRuntime HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mbta_avice_runtime_report_20251023_141112.html[0m &
+
+----------------------------------- [32m[3] Synthesis (DC)[0m -----------------------------------
+Design Definition: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/unit_scripts/des_def.tcl
+DC Log: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/syn_flow/dc/log/dc.log
+QoR Report (Quality of Results): /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/syn_flow/dc/reports/bta_rtl2gate.qor.rpt
+  [36mQoR Analysis:[0m
+    [32mKey QoR Metrics:[0m
+      Design Area: 255807.3321 um2 (0.256 mm2) | Die (X,Y): 736.44 um x 526.68 um
+      Leaf Cell Count: 1039954
+      Combinational Cells: 673123
+      Sequential Cells: 366831
+      Total Nets: 1058724
+      Critical Path Slack: -0.0069
+      Total Negative Slack: -0.2742
+      Violating Paths: 237.0000
+      Macro Count: 60
+    [36mScenario Summary:[0m
+    Scenario                                           WNS        TNS        Violating Paths
+    -------------------------------------------------- ---------- ---------- ---------------
+    func.std_tt_0c_0p6v.setup.typical                  0.0930     35.8746    6274           
+    func.std_tt_0c_0p6v.setup.typical (Hold)           0.0520     146.5843   6092           
+    [36mTiming Path Groups:[0m CLKGATE, FEEDTHROUGH, REGIN, REGOUT, Wrapper_path, i1_clk, i2_clk, m1_clk, default
+BeFlow Configuration: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/syn_flow/dc/beflow_config.yaml
+  [36mBeFlow Configuration Analysis:[0m
+    [32mKey Configuration Variables:[0m
+      Library Snapshot: 20250819
+      NV Process: tsmc5_t6
+      Tracks Number: t6
+      Project: agur
+      Default Scenario: func.std_tt_0c_0p6v.setup.typical
+      StdCell Library Path: /home/nbu_be_agur/ip/lib_snap/20250819/syn
+      Memories Path: /home/nbu_be_agur/ip/arrays/13897726_02032025_RAM_SYNLIB/arrays_release
+      VT Types: svt, hvt, lvt
+      Array Names: RAMPDP_448X19_AH6RS_M4_G32, RAMSP_1344X69_AGH6RSU_M4_G32
+      Agur Unit BE IP: nvidia_pads_tsmc5_cust_mixvt, nvidia_analog_tsmc5_cust_mixvt, adw_n5_v2f_thermal_sensor, nvidia_stdcell_tsmc5_t6_sup
+Report: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/syn_flow/dc/reports/be4rtl/internal_high_width_logical_cones.rpt
+Report: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/syn_flow/dc/reports/debug/bta.rtl2gate.removed_cgates.rep
+Report: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/syn_flow/dc/reports/bta_rtl2gate.qor.rpt
+Report: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/syn_flow/dc/reports/debug/bta.rtl2gate.removed_registers.rep
+Clock gates removed: 101
+Removed registers: 125750
+[32mNo don't use cells[0m
+[36mGenerating Unified DC HTML Report...[0m
+  [32m[OK] Unified DC HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mbta_avice_DC_comprehensive_20251023_141112.html[0m &
+
+----------------------------------- [32m[4] PnR Analysis[0m -----------------------------------
+PnR Status: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/pnr_flow/nv_flow/bta.prc.status
+
+[36mPnR Flow Status Analysis:[0m
+
+  [36mIPO ipo1000:[0m
+    PnR Flow: Completed through: setup (1/9)
+    Reporting: No steps completed
+    [33mStatus: UNKNOWN (2/16 done)[0m
+PnR Configuration: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/pnr_flow/nv_flow/bta.prc
+  [36mAvailable IPOs:[0m 1000
+  [36mTools:[0m edi
+  [36mFlow Sequence (ipo1000):[0m [33msetup[0m -> [33medi_plan[0m -> [33mplace[0m -> [33mcts[0m -> [33mroute[0m -> [33mpostroute[0m -> [33mexport[0m -> [33mextraction[0m -> [33mnbu_auto_pt[0m
+  [36mTCL Usage Verification:[0m
+    [33m[WARN] Unused TCL files (2):[0m
+      - glcheck_fix.tcl
+      - timing_fix.tcl
+PnR Runset: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/pnr_flow/nv_flow/bta/ipo1000/CMDs/bta.ipo1000.gen_routing_constraints.10_09_13_02.runset.tcl
+  [36mPnR Flow Variables:[0m
+    FLOW(PATH): /home/nbu_be_tools/flow2/1.0/2025_ww25_01
+    PROJECT(CUSTOM_SCRIPTS_DIR): /home/nbu_be_agur/config/flow2/2025_ww36_04/tcl
+    FLOORPLAN: ../../../../syn_flow/latest/results/../../../flp/bta_fp.def.gz
+    PIN_PLACEMENT_FILE: /home/nbu_be_agur/backend/release/fcl//bta.hfp.pins.def
+    TOP_PLANNER_YAML: /home/nbu_be_agur/backend/release/fcl//top_planner.yaml
+    DC_SHELL_VERSION: /home/tools/synopsys/syn_2016.03-SP4/bin/dc_shell
+    RAM_LIB_PATH: "/home/nbu_be_agur/ip/arrays/nvidia/arrays_release/lef
+    CENTRAL_LIB_PATH: /home/agur_backend_blockRelease/block/merged_lib_snap/20250819
+    NETWORK_FLOW_PATH: /home/nbu_be_tools/beflow/1.0/2025_ww13_01_rev13
+    NETWORK_FLOW_UTILS_DIR: /home/nbu_be_tools/flow2_utils/1.0/2024_ww32_01_legacy_rev4
+PnR BeFlow Configuration (ipo1000): File not found
+  [33mPnR Data: No data files found for any stage or temperature corner[0m
+    [33mTried stages: postroute, route, cts, place, plan[0m
+    [33mTried corners: 0c_0p6v, 125c_0p6v, 25c_0p6v, 85c_0p6v[0m
+    [33mThis could be due to:[0m
+      - Flow still running (data files not yet generated)
+      - Flow failed at this stage
+      - Different temperature corner used
+      - File permissions issue
+  [33mPnR Timing Setup: No timing setup reports found for any stage[0m
+    [33mTried stages: postroute, route, cts, place, plan[0m
+    [33mThis could be due to:[0m
+      - Flow still running (timing reports not yet generated)
+      - Flow failed at this stage
+      - Different file naming convention
+      - File permissions issue
+
+[36mGenerating Unified PnR HTML Report...[0m
+  [32m[OK] Unified PnR HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mbta_avice_PnR_comprehensive_ipo1000_20251023_141113.html[0m &
+
+----------------------------------- [32m[5] Clock Analysis[0m -----------------------------------
+PT Clock Analysis: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/signoff_flow/auto_pt/work_08.10.25_15:27/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/bta_func.std_tt_0c_0p6v.setup.typical.clock_latency
+
+[33mPT Clock Latency Analysis:[0m
+  Clock      Min (ns)   Max (ns)  
+  ---------- ---------- ----------
+  i1_clk     0.264      0.506     
+  i2_clk     0.024      0.484     
+  m1_clk     0.129      0.220     
+
+  All values in nanoseconds (ns)
+  [31mNote: Max latency values > 550ps (0.55ns) are highlighted in red[0m
+
+  [36mCombined Clock Latency Summary (Max per clock):[0m
+  Clock Detail: i1_clk|506.0|0.0
+  Clock Detail: i2_clk|484.0|0.0
+  Clock Detail: m1_clk|220.0|0.0
+
+  [32m[OK] Clock HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mavice_clock_analysis_bta_ipo1000_20251023_141113.html[0m &
+
+----------------------------------- [32m[6] Formal Verification[0m -----------------------------------
+[36mRTL Tag: [0mbta_rbv_2025_09_25new_tag_agur_condb_int3_2025_08_27_0_1NL_snap
+
+[36mMultibit Mapping Files Check:[0m
+  Checking 6 files across 3 locations per IPO...
+  Files: 1) multibitMapping.gz  2) multibitMapping_for_gen_mbff_scandef.gz
+
+  IPO          Location           File Status          Result    
+  ------------ ------------------ -------------------- ----------
+  ipo1000      PnR Flow           [MISS] [MISS]        [31mMISSING[0m
+  ipo1000      Export Innovus     [MISS] [MISS]        [31mMISSING[0m
+  ipo1000      NV Gate ECO        [MISS] [MISS]        [31mMISSING[0m
+
+  [31m[FAIL] 3/3 location checks failed[0m
+  [33m-> Formal verification may encounter non-equivalence points[0m
+  [33m-> Files are generated in PnR and copied to export_innovus and nv_gate_eco[0m
+No formal verification logs found
+
+  [36mFormal Verification HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mbta_avice_formal_verification_20251023_141113.html[0m &
+
+----------------------------------- [32m[7] Parasitic Extraction (Star)[0m -----------------------------------
+
+[36mStar Extraction Runs:[0m
+  Total Runs: 2
+
+  Run    Timestamp    Shorts  
+  ------ ------------ --------
+  1      09/30 11:01  [31m1       [0m
+  2      10/08 14:26  [31m1       [0m (latest)
+
+[36mLatest Run Details:[0m
+  Timestamp: 10/08 14:26
+  Shorts: [31m1[0m
+
+[36mSPEF Files (All Corners):[0m
+  Total SPEF files: 6
+  [32m[OK] All required SPEF files present[0m
+  Location: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/export/nv_star/bta/ipo1000/IOs/netlists
+
+  Corner                        Size
+  ------------------------- --------
+  cworst_CCworst_T0           2.78 GB
+  rcbest_CCbest_T0            2.78 GB
+  rcworst_CCworst_T125        2.78 GB
+  typical_T0                  2.78 GB
+  typical_T105                2.78 GB
+  typical_T125                2.78 GB
+SPEF Info (Typical Corner): /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/export/nv_star/bta/ipo1000/IOs/netlists/bta.ipo1000.typical_T0.spef_info
+
+[36mStar Extraction Configuration:[0m
+  Date: Wed Oct  8 14:34:21 2025
+  Opens: 0
+  Shorts: 11
+  Project RDL: /home/nbu_be_agur/backend/release/current/flp/agurBump_a01_top.oas
+  GDS Layer Map: /home/vlsi_pr/tech/tsmc5/3xs1xt1ya1yb11y3z_T6_DIP/synopsys/star/star_gds_layer.20220907.map
+  Mapping File: /home/vlsi_pr/tech/tsmc5/3xs1xt1ya1yb11y3z_T6_DIP/synopsys/star/nxtgrd.20220208.mapping
+Star Detailed Shorts Report: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/export/nv_star/bta/ipo1000/REPs/bta.ipo1000.bta_ipo1000.star_extraction_shorts.rpt
+  [33mNote: This report is from Run #2 (10/08 14:26) (latest run)[0m
+Short between net FE_RN_166 and unselectable net Layer = TM1 BBox=(361.5900,127.5940),(361.6100,127.6140)
+Short between net FE_RN_166 and unselectable net Layer = TM1 BBox=(361.5400,127.5850),(361.9350,127.6230)
+Short between net FE_RN_166 and unselectable net Layer = TM1 BBox=(361.7100,127.5940),(361.7300,127.6140)
+Short between net FE_RN_166 and unselectable net Layer = TM1 BBox=(361.8300,127.5940),(361.8500,127.6140)
+Short between net FE_RN_166 and unselectable net Layer = TM1 BBox=(361.6650,127.5850),(361.7030,127.6230)
+Short between net FE_OFN4807726_n and net bta_channel/g_dft_wrapper_if/g_dft_wrapper_bta_channel/adw_nvism_dcap_ctrl3/x1dcap_test_out_high_no_buf Layer = M5T BBox=(321.9900,224.2635),(322.0100,224.4715)
+Short between net FE_OFN4807726_n and net bta_channel/g_dft_wrapper_if/g_dft_wrapper_bta_channel/adw_nvism_dcap_ctrl3/x1dcap_test_out_high_no_buf Layer = M5T BBox=(321.9900,224.3420),(322.0100,224.3620)
+Short between net FE_OFN4807726_n and net bta_channel/g_dft_wrapper_if/g_dft_wrapper_bta_channel/adw_nvism_dcap_ctrl3/x1dcap_test_out_high_no_buf Layer = M5T BBox=(321.9920,224.3070),(322.0080,224.3230)
+Short between net FE_OFN4807726_n and net bta_channel/g_dft_wrapper_if/g_dft_wrapper_bta_channel/adw_nvism_dcap_ctrl3/x1dcap_test_out_high_no_buf Layer = M5T BBox=(321.9920,224.4120),(322.0080,224.4280)
+Short between net m1iodft_clk and unselectable net Layer = TM13 BBox=(733.7740,244.3980),(734.2420,244.3980)
+Short between net m1iodft_clk and unselectable net Layer = TM13 BBox=(733.7740,244.3880),(734.2420,244.3980)
+
+
+[36m  Star Extraction HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mbta_avice_star_extraction_20251023_141113.html[0m &
+
+----------------------------------- [32m[8] Signoff Timing (PT)[0m -----------------------------------
+HTML Report: [35m/home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/signoff_flow/auto_pt/work_08.10.25_15:27.html[0m
+All Violators: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/signoff_flow/auto_pt/work_08.10.25_15:27/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/bta_func.std_tt_0c_0p6v.setup.typical.all_violators.gz
+PT Log: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/signoff_flow/auto_pt/log/auto_pt.log
+[31mErrors found (1 total):[0m
+  Error: Library Compiler executable path is not set. (PT-063)
+
+  [36mPT Timing Summary (Dual-Scenario):[0m
+    Open with: /home/utils/firefox-118.0.1/firefox [35mbta_avice_PT_timing_summary_20251023_141115.html[0m &
+
+  [36mWork Areas Summary:[0m
+    Total Work Areas: 1
+    Latest: work_08.10.25_15:27
+
+  [36mLatest Setup Scenario (func.std_tt_0c_0p6v.setup.typical):[0m
+    Internal Timing (all groups except FEEDTHROUGH/REGIN/REGOUT):
+      WNS: [31m -0.085[0m ns
+      TNS: [31m   -32.26[0m ns
+      NVP:  1494 paths
+    Worst Internal Group: i2_clk
+
+  [36mLatest Hold Scenario (func.std_tt_0c_0p55v.hold.typical):[0m
+    Internal Timing (all groups except FEEDTHROUGH/REGIN/REGOUT):
+      WNS: [31m -0.030[0m ns
+      TNS: [31m    -0.90[0m ns
+      NVP:   178 paths
+    Worst Internal Group: i2_clk
+
+  [36mLatest DSR Mux Clock Skew:[0m
+    Setup: [32m  9.56[0m ps
+    Hold:  [33m 16.12[0m ps
+
+----------------------------------- [32m[9] Physical Verification (PV)[0m -----------------------------------
+[33mCould not determine PV flow timestamps: cannot access local variable 'begin_time' where it is not associated with a value[0m
+LVS Errors: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/pv_flow/drc_dir/bta/lvs_icv_ipo1005/bta_ipo1005_fill.LVS_ERRORS
+  [31mStatus: FAIL[0m
+  Failed Equivalence Points: 1
+  First Priority Errors: 1
+  Successful Equivalence Points: 4024
+
+  [33mUnmatched Items:[0m
+    Schematic Nets: 2
+    Layout Nets: 1
+    Schematic Ports: 2
+    Layout Ports: 1
+    [31mTotal Unmatched Items: 6[0m
+
+  [32mMatched Items:[0m
+    Instances: 22,903,146
+    Nets:      9,530,113
+    Ports:     29,972
+DRC Errors: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/pv_flow/drc_dir/bta/drc_icv_ipo1005/bta_ipo1005_fill.LAYOUT_ERRORS
+  [31mStatus: ERRORS - DRC violations found[0m
+  [31mTotal DRC violations: 18[0m
+  [36mViolation breakdown:[0m
+    Rule                 Count    Description                                                 
+    -------------------- -------- ------------------------------------------------------------
+    M1.CS.6.2            4        NMINP space of {M1B OR DM1_DO2} to {M1B OR DM1_DO2} line-...
+    M1.W.19.1            4        Width of DM1EXCL_boundary_empty_Region (DRC flags {{DM1EX...
+    VIA17.R.2__VIA17.R.2.1__VIA17.R.3 3        VIAy.R.2 : (TV12) Redundant via requirement must follow R...
+    M2.R.35              2        Square Lower_VIA/Upper_VIA interact to Mxs_End_non_42 is ...
+    M2.S.4.1             2        NMINP space of Mxs line-end [PRL > -0.015 um] >= 0.0420 e...
+    M2.S.1               1        Space of Mxs >= 0.0150 external1 ...........................
+    PNR.M2.R.26          1        "Line-end" spacing of mxs on NEIGHBORING tracks (w=20/s<1...
+    TSMC.Vx.R.1.11       1        (V14-V18) Max Single Stacked Vx =4 net_select:net_select ...
+Antenna Errors: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/pv_flow/drc_dir/bta/drc_icv_antenna_ipo1005/bta_ipo1005_fill.LAYOUT_ERRORS
+  [32mStatus: LAYOUT ERRORS RESULTS: CLEAN[0m
+  [32mNo antenna violations found[0m
+
+[33mNo PV flow status files found[0m
+
+  [36mPhysical Verification HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mbta_avice_pv_report_20251023_141115.html[0m &
+
+----------------------------------- [32m[10] GL Checks[0m -----------------------------------
+  Didn't run GL checks
+
+----------------------------------- [32m[11] ECO Analysis[0m -----------------------------------
+[31m1 ECO loops were done[0m
+ECO File: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/signoff_flow/auto_pt/work_08.10.25_15:27/pt_eco_out_09.10.25_11:04_final.tcl
+  Total ECO commands: 6996
+  Command breakdown:
+    set_cell_location: 3429
+    size_cell: 3370
+    insert_buffer: 140
+    add_buffer_on_route: 57
+    [36mUsing dont_use check: Project rules (/home/nbu_be_agur/config/flow2/2025_ww36_04/tcl/agur_dont_use.tcl) + BeFlow rules (/home/nbu_be_tools/beflow/1.0/site/bytech/tsmc5/nvidia/tcl/nbu_dont_use.tcl)[0m
+  [32m[OK] No dont_use cells found in ECO[0m
+    [33m[SKIP] ClockTree.rpt not found - cannot check instNotAllowedOnClocks[0m
+    [33m[SKIP] ClockTree.rpt not found - cannot check clock cells on data paths[0m
+
+[36mChecking unit script ECO file:[0m
+Unit Script ECO: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/pnr_flow/nv_flow/COMMON/timing_fix.tcl
+  Total ECO commands: 261
+  Command breakdown:
+    insert_buffer: 249
+    setEcoMode: 8
+    size_cell: 2
+    ecoAddRepeater: 1
+    ecoDeleteRepeater: 1
+    [36mUsing dont_use check: Project rules (/home/nbu_be_agur/config/flow2/2025_ww36_04/tcl/agur_dont_use.tcl) + BeFlow rules (/home/nbu_be_tools/beflow/1.0/site/bytech/tsmc5/nvidia/tcl/nbu_dont_use.tcl)[0m
+  [32m[OK] No dont_use cells found in ECO[0m
+    [33m[SKIP] ClockTree.rpt not found - cannot check instNotAllowedOnClocks[0m
+    [33m[SKIP] ClockTree.rpt not found - cannot check clock cells on data paths[0m
+Didn't run NV Gate ECO
+
+----------------------------------- [32m[12] NV Gate ECO[0m -----------------------------------
+  Didn't run NV Gate ECO
+
+----------------------------------- [32m[13] Block Release[0m -----------------------------------
+Block Release Log: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_09_25_Oct10/export/block_release/log/block_release.log
+  [36mRelease to:[0m /home/agur_backend_blockRelease/block/bta/bta_2025_09_25_Oct10__2025_10_10_10_33_55
+
+  [36mBlock Release Attempts: 1[0m
+  ================================================================================
+
+  [36mAttempt #1:[0m 2025-10-10 10 32 12 | User: vliberchuk
+    Status: [33mUNKNOWN[0m
+    Command: /home/nbu_be_tools/umake/1.0/2025_ww27_02/umake_main/umake.py -s block_release --step_flags -s
+    Flags: sta_release
+
+  [36mRelease Attempts from Workarea[0m
+  [36m---------------------------------------------[0m
+  Total Attempts: 1
+  Successful: 0
+  Failed: 0
+
+
+  [36mAll Custom Links in Central Release Area:[0m
+  [36mLocation: /home/agur_backend_blockRelease/block/bta[0m
+    Link Name                      Date         User            Target                                                                           Status
+    ------------------------------ ------------ --------------- -------------------------------------------------------------------------------- --------------------
+    [32mTCB_ww40                      [0m 2025-10-05   gasheri         /home/agur_backend_blockRelease/block/bta/bta_rbv_2025_03_17_condb_int1_11_4_BE_TNL_snap_input_test__2025_4_28_9_48_13 [36mManual[0m
+    [32mTCB_ww41a                     [0m 2025-10-09   gasheri         /home/agur_backend_blockRelease/block/bta/bta_rbv_2025_09_25new_tag_agur_condb_int3_2025_08_27_0_1NL_snap__2025_10_9_16_4_11/ [36mManual[0m
+    [32mTCB_ww42a                     [0m 2025-10-17   gasheri         /home/agur_backend_blockRelease/block/bta/nbu_signoff_bta_2025_09_25_Oct10_ipo1006_2025_10_16_15_35_44 [36mManual[0m
+    [32mSEP_10                        [0m 2025-10-22   vliberchuk      /home/agur_backend_blockRelease/block/bta/nbu_signoff_bta_2025_09_25_Oct10_ipo1010_2025_10_22_23_43_13 [36mManual[0m
+
+    [36mTotal custom links found: 4[0m
+
+  [36mManually Created Custom Links (no release log):[0m
+  Manual Custom Link Detail: SEP_10|2025-10-22
+  Manual Custom Link Detail: TCB_ww40|2025-10-05
+  Manual Custom Link Detail: TCB_ww41a|2025-10-09
+  Manual Custom Link Detail: TCB_ww42a|2025-10-17
+
+  [36mBlock Release HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mbta_avice_block_release_20251023_141122.html[0m &
+
+[36mGenerating Master Dashboard...[0m
+[32m[OK] Master Dashboard generated: bta_avice_MASTER_dashboard_20251023.html[0m
+[36m     Open with recommended browser:[0m
+     /home/utils/firefox-118.0.1/firefox [35mbta_avice_MASTER_dashboard_20251023.html[0m &
+
+[32mReview completed successfully![0m
+[36mOrganized 10 HTML file(s) into html/ folder[0m
+
+
+STDERR:

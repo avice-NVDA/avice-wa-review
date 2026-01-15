@@ -1,0 +1,2454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGUR Multi-Regression Dashboard</title>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px;
+        min-height: 100vh;
+    }
+    
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        overflow: hidden;
+    }
+    
+    .header {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 30px;
+        flex-wrap: wrap;
+    }
+    
+    .header-logo {
+        height: 100px;
+        width: auto;
+        max-width: 200px;
+        display: block;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    
+    .header-logo:hover {
+        transform: scale(1.05);
+    }
+    
+    .header-text {
+        flex: 1;
+        min-width: 300px;
+    }
+    
+    .header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .header .subtitle {
+        font-size: 1.2em;
+        opacity: 0.9;
+    }
+    
+    /* Logo Modal */
+    .logo-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.9);
+    }
+    
+    .logo-modal-content {
+        margin: auto;
+        display: block;
+        width: 80%;
+        max-width: 700px;
+        animation: zoom 0.6s;
+    }
+    
+    .logo-modal-close {
+        position: absolute;
+        top: 15px;
+        right: 35px;
+        color: #f1f1f1;
+        font-size: 40px;
+        font-weight: bold;
+        transition: 0.3s;
+        cursor: pointer;
+    }
+    
+    .logo-modal-close:hover,
+    .logo-modal-close:focus {
+        color: #bbb;
+    }
+    
+    @keyframes zoom {
+        from {transform: scale(0)}
+        to {transform: scale(1)}
+    }
+    
+    /* Tab Navigation */
+    .tab-nav {
+        display: flex;
+        background: #f8f9fa;
+        border-bottom: 3px solid #dee2e6;
+        overflow-x: auto;
+    }
+    
+    /* Hide tab navigation when only one regression type */
+    .tab-nav.single-type {
+        display: none;
+    }
+    
+    .tab-button {
+        flex: 1;
+        min-width: 150px;
+        padding: 18px 25px;
+        background: #e9ecef;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        transition: all 0.3s;
+        border-bottom: 4px solid transparent;
+        color: #495057;
+    }
+    
+    .tab-button:hover {
+        background: #dee2e6;
+        transform: translateY(-2px);
+    }
+    
+    .tab-button.active {
+        background: white;
+        border-bottom-color: #667eea;
+        color: #667eea;
+    }
+    
+    /* Tab Content */
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+        gap: 12px;
+        padding: 20px;
+        background: #f8f9fa;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 15px 10px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border 0.3s ease;
+        cursor: pointer;
+        border: 3px solid transparent;
+        position: relative;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        background: #f8f9fa;
+    }
+    
+    .stat-card.active {
+        border-color: #667eea;
+        background: #f0f4ff;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .stat-card.clickable::after {
+        content: "Click to filter";
+        position: absolute;
+        bottom: 5px;
+        left: 0;
+        right: 0;
+        font-size: 0.7em;
+        color: #999;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .stat-card.clickable:hover::after {
+        opacity: 1;
+    }
+    
+    .stat-value {
+        font-size: 2em;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.8em;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .stat-passed { color: #28a745; }
+    .stat-failed { color: #dc3545; }
+    .stat-unresolved { color: #ffc107; }
+    .stat-crashed { color: #6c1a1a; }
+    
+    .content {
+        padding: 30px;
+    }
+    
+    .chiplet-section {
+        margin-bottom: 40px;
+    }
+    
+    .chiplet-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 10px;
+        font-size: 1.5em;
+        margin-bottom: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .chiplet-header:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .chiplet-header.highlighted-passed {
+        background: linear-gradient(135deg, #27ae60 0%, #219a52 100%);
+        box-shadow: 0 0 15px rgba(39, 174, 96, 0.5);
+        animation: pulse-passed 2s ease-in-out infinite;
+    }
+    
+    .chiplet-header.highlighted-failed {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
+        animation: pulse-failed 2s ease-in-out infinite;
+    }
+    
+    .chiplet-header.highlighted-crashed {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
+        animation: pulse-failed 2s ease-in-out infinite;
+    }
+    
+    .chiplet-header.highlighted-warn {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        box-shadow: 0 0 15px rgba(243, 156, 18, 0.5);
+        animation: pulse-warn 2s ease-in-out infinite;
+    }
+    
+    .chiplet-header.highlighted-unresolved {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        box-shadow: 0 0 15px rgba(243, 156, 18, 0.5);
+        animation: pulse-warn 2s ease-in-out infinite;
+    }
+    
+    .chiplet-header.highlighted-not_run {
+        background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        box-shadow: 0 0 15px rgba(149, 165, 166, 0.5);
+        animation: pulse-gray 2s ease-in-out infinite;
+    }
+    
+    .chiplet-header.highlighted-no_data {
+        background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        box-shadow: 0 0 15px rgba(149, 165, 166, 0.5);
+        animation: pulse-gray 2s ease-in-out infinite;
+    }
+    
+    .chiplet-header.highlighted-missing {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
+        animation: pulse-failed 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-passed {
+        0%, 100% { box-shadow: 0 0 15px rgba(39, 174, 96, 0.5); }
+        50% { box-shadow: 0 0 25px rgba(39, 174, 96, 0.8); }
+    }
+    
+    @keyframes pulse-failed {
+        0%, 100% { box-shadow: 0 0 15px rgba(231, 76, 60, 0.5); }
+        50% { box-shadow: 0 0 25px rgba(231, 76, 60, 0.8); }
+    }
+    
+    @keyframes pulse-warn {
+        0%, 100% { box-shadow: 0 0 15px rgba(243, 156, 18, 0.5); }
+        50% { box-shadow: 0 0 25px rgba(243, 156, 18, 0.8); }
+    }
+    
+    @keyframes pulse-gray {
+        0%, 100% { box-shadow: 0 0 15px rgba(149, 165, 166, 0.5); }
+        50% { box-shadow: 0 0 25px rgba(149, 165, 166, 0.8); }
+    }
+    
+    .chiplet-header .toggle {
+        font-size: 0.8em;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        padding: 15px 20px;
+        background: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .action-btn {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    }
+    
+    .action-btn:active {
+        transform: translateY(0);
+    }
+    
+    /* Back to Top Button */
+    #backToTopBtn {
+        display: block;
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 99;
+        border: none;
+        outline: none;
+        background-color: #667eea;
+        color: white;
+        cursor: pointer;
+        padding: 15px 20px;
+        border-radius: 50px;
+        font-size: 16px;
+        font-weight: bold;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        transition: all 0.3s ease;
+        opacity: 0.3;
+    }
+    
+    #backToTopBtn.visible {
+        opacity: 1;
+    }
+    
+    #backToTopBtn:hover {
+        background-color: #5568d3;
+        transform: scale(1.1);
+        opacity: 1;
+    }
+    
+    .collapsible-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.5s ease;
+    }
+    
+    .collapsible-content.active {
+        max-height: 50000px;
+    }
+    
+    .units-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 20px;
+        padding: 10px;
+    }
+    
+    .unit-card {
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .unit-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 6px 12px rgba(102, 126, 234, 0.2);
+        transform: translateY(-3px);
+    }
+    
+    .unit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .unit-name {
+        font-size: 1.4em;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9em;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .status-passed {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-partial {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-unresolved {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-failed {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .status-crashed {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .status-running {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .status-error {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .status-notfound {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+    
+    .unit-info {
+        margin: 10px 0;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 0;
+        font-size: 0.9em;
+    }
+    
+    .workarea-row {
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .workarea-path {
+        flex: 1;
+        font-family: monospace;
+        font-size: 0.85em;
+        color: #555;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .copy-btn {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.85em;
+        transition: all 0.3s;
+    }
+    
+    .copy-btn:hover {
+        background: #5568d3;
+        transform: scale(1.05);
+    }
+    
+    .copy-btn:active {
+        transform: scale(0.95);
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #666;
+    }
+    
+    .info-value {
+        color: #333;
+    }
+    
+    /* Formal Flows / PV Metrics */
+    .formal-flows {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 2px solid #f0f0f0;
+    }
+    
+    .flow-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #667eea;
+    }
+    
+    .flow-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 12px;
+        margin: 5px 0;
+        background: #f8f9fa;
+        border-radius: 5px;
+        font-size: 0.9em;
+    }
+    
+    .flow-succeeded {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .flow-failed {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .flow-unresolved {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .flow-crashed {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .flow-running {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .footer {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        text-align: center;
+        padding: 20px;
+        margin-top: 40px;
+    }
+    
+    .footer p {
+        margin: 5px 0;
+    }
+    
+    .footer strong {
+        color: #00ff00;
+    }
+    
+    /* Toast Notification */
+    .toast {
+        visibility: hidden;
+        min-width: 250px;
+        background-color: #28a745;
+        color: white;
+        text-align: center;
+        border-radius: 10px;
+        padding: 16px;
+        position: fixed;
+        z-index: 1;
+        right: 30px;
+        bottom: 30px;
+        font-size: 17px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .toast.show {
+        visibility: visible;
+        animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    }
+    
+    @keyframes fadein {
+        from {bottom: 0; opacity: 0;}
+        to {bottom: 30px; opacity: 1;}
+    }
+    
+    @keyframes fadeout {
+        from {bottom: 30px; opacity: 1;}
+        to {bottom: 0; opacity: 0;}
+    }
+    
+    /* Search and Filter Section */
+    .filter-section {
+        background: #f8f9fa;
+        padding: 20px 30px;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .filter-container {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 20px;
+        align-items: center;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .search-box {
+        position: relative;
+    }
+    
+    .search-box input {
+        width: 100%;
+        padding: 12px 20px;
+        font-size: 16px;
+        border: 2px solid #ddd;
+        border-radius: 25px;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+    
+    .search-box input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+    }
+    
+    .export-buttons {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .export-btn {
+        padding: 10px 20px;
+        border: 2px solid #28a745;
+        background: white;
+        color: #28a745;
+        border-radius: 20px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+    
+    .export-btn:hover {
+        background: #28a745;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+    }
+    
+    .unit-card.hidden {
+        display: none;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <!-- Logo Modal -->
+    <div id="logoModal" class="logo-modal" onclick="closeLogoModal()">
+        <span class="logo-modal-close">&times;</span>
+        <img class="logo-modal-content" src="file:///home/scratch.avice_vlsi/cursor/avice_wa_review/images/avice_logo.png" alt="AVICE Logo">
+    </div>
+    
+    <div class="header">
+        <img class="header-logo" src="file:///home/scratch.avice_vlsi/cursor/avice_wa_review/images/avice_logo.png" alt="AVICE Logo" onclick="showLogoModal()" title="Click to enlarge">
+        <div class="header-text">
+            <h1>🔬 AGUR Multi-Regression Dashboard</h1>
+        <div class="subtitle">Generated: 2025-12-31 14:22:32</div>
+        <div class="subtitle">Regression Types: release</div>
+            <div class="subtitle">Filter: Chiplet = CPORT HPORT</div>
+        </div>
+    </div>
+    
+    <div class="tab-nav single-type">
+            <button class="tab-button active" onclick="openTab('release')">📦 Release</button>
+    </div>
+    
+    <!-- Search and Filter Section -->
+    <div class="filter-section">
+        <div class="filter-container">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Search units by name..." onkeyup="filterUnits()">
+            </div>
+            <div class="action-buttons">
+                <button class="action-btn" onclick="expandAll()">Expand All Chiplets</button>
+                <button class="action-btn" onclick="collapseAll()">Collapse All Chiplets</button>
+            </div>
+            <div class="export-buttons">
+                <button class="export-btn" onclick="exportToCSV()" title="Export results to CSV">📄 Export CSV</button>
+                <button class="export-btn" onclick="printDashboard()" title="Print dashboard">🖨️ Print</button>
+            </div>
+        </div>
+    </div>
+    <div id="release" class="tab-content active">
+        <div class="stats-grid">
+            <div class="stat-card" onclick="filterStatus(event, 'all')" data-filter="all" title="Click to show all units">
+                <div class="stat-label">Total Units</div>
+                <div class="stat-value">11</div>
+            </div>
+            <div class="stat-card clickable" onclick="filterStatus(event, 'passed')" data-filter="passed" title="Click to show only passed units">
+                <div class="stat-label">✅ Passed</div>
+                <div class="stat-value stat-passed">9</div>
+                <div class="stat-label">81%</div>
+            </div>
+            <div class="stat-card clickable" onclick="filterStatus(event, 'warn')" data-filter="warn" title="Click to show only units with warnings">
+                <div class="stat-label">⚠️ Warnings</div>
+                <div class="stat-value stat-unresolved">2</div>
+                <div class="stat-label">18%</div>
+            </div>
+            <div class="stat-card clickable" onclick="filterStatus(event, 'failed')" data-filter="failed" title="Click to show only failed units">
+                <div class="stat-label">❌ Failed</div>
+                <div class="stat-value stat-failed">0</div>
+                <div class="stat-label">0%</div>
+            </div>
+            <div class="stat-card clickable" onclick="filterStatus(event, 'crashed')" data-filter="crashed" title="Click to show only crashed units">
+                <div class="stat-label">💥 Crashed</div>
+                <div class="stat-value stat-crashed">0</div>
+                <div class="stat-label">0%</div>
+            </div>
+            <div class="stat-card clickable" onclick="filterStatus(event, 'not_run')" data-filter="not_run" title="Click to show only units not run">
+                <div class="stat-label">⏸️ Not Run</div>
+                <div class="stat-value stat-unresolved">0</div>
+                <div class="stat-label">0%</div>
+            </div>
+            <div class="stat-card clickable" onclick="filterStatus(event, 'no_data')" data-filter="no_data" title="Click to show only units with no data">
+                <div class="stat-label">📊 No Data</div>
+                <div class="stat-value stat-unresolved">0</div>
+                <div class="stat-label">0%</div>
+            </div>
+            <div class="stat-card clickable" onclick="filterStatus(event, 'missing')" data-filter="missing" title="Click to show only missing units">
+                <div class="stat-label">🚫 Missing</div>
+                <div class="stat-value stat-failed">0</div>
+                <div class="stat-label">0%</div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="chiplet-section">
+                <div class="chiplet-header" onclick="toggleChiplet('release_CPORT')">
+                    <span>CPORT Chiplet (5 units)</span>
+                    <span class="toggle" id="toggle-release_CPORT">▶</span>
+                </div>
+                <div class="collapsible-content" id="content-release_CPORT">
+                    <div class="units-grid">
+                        <div class="unit-card">
+                            <div class="unit-header">
+                                <div class="unit-name">fdb <span style="color: #888; font-size: 0.85em; font-weight: normal;">(dkolesnikov)</span></div>
+                                <div style='display: flex; align-items: center; gap: 4px;'><span class='release-badge' style='background: #3498db; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='Timing Release'>S</span><span class='release-badge' style='background: #9b59b6; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FCL Release'>L</span><span class='release-badge' style='background: #27ae60; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FE DCT Release'>FE</span></div>
+                                <div class="status-badge status-passed">✅ PASSED</div>
+                            </div>
+                            <div class="unit-info">
+                                <div class="info-row">
+                                    <span class="info-label">Release Date:</span>
+                                    <span class="info-value" style="color: #27ae60; font-weight: 500;">2025-12-31</span>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">RTL Tag:</span>
+                                    <span class="info-value workarea-path" id="rtl-release-fdb">fdb_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('rtl-release-fdb', this)" title="Copy RTL tag">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">Workarea:</span>
+                                    <span class="info-value workarea-path" id="wa-release-fdb">/home/scratch.dkolesnikov_vlsi_2/agur/fdb/PFNL/lib_override_runs/fdb_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap__run1_old_lib_pa/fdb_eco_imp_2025_12_30_10_30</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('wa-release-fdb', this)" title="Copy workarea path">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="formal-flows">
+                                <div class="flow-title">Release Summary:</div>
+                                <div class="flow-item">
+                                    <span><strong>📊 Attempts</strong></span>
+                                    <span>1 successful / 1 total attempts</span>
+                                </div>
+                                <div style="margin-left: 20px; margin-top: 6px;">
+                                    <button onclick="toggleCustomLinks('release_attempts_fdb_2493414')" 
+                                            id="release_attempts_fdb_2493414_btn"
+                                            style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                   font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                   display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-size: 0.8em;">▼</span>
+                                        <span>Show all 1 attempts</span>
+                                    </button>
+                                </div>
+                                <div id="release_attempts_fdb_2493414" style="display: none; margin-left: 20px; margin-top: 8px; font-size: 0.9em;">
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-left: 3px solid #27ae60; border-radius: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong style="color: #27ae60;">✓ Attempt #1</strong> 
+                                            <span style="color: #7f8c8d; font-size: 0.85em;">(2025-12-31 08 03 30 )</span>
+                                        </div>
+                                        <div style="color: #555; font-size: 0.85em; margin-left: 20px;">
+                                            Flags: <span style="color: #3498db;">sta_release, fcl_release, fe_dct_release</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flow-item" style="margin-top: 10px;">
+                                    <span><strong>🔗 Custom Links:</strong></span>
+                                </div>
+                                <div style="margin-left: 20px; font-size: 0.95em; line-height: 1.6;">
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #27ae60; font-weight: 500;">DEC_08_post_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-31)</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #f39c12; font-weight: 500;">DEC_08_post_cport_eco</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-24)</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #7f8c8d; font-weight: 500;">DEC_08</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-21)</span>
+                                    </div>
+                                    <div id="custom_links_fdb_2493414" style="display: none; margin-top: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">Nov_27</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-02)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">NOV_02_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-26)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">NOV_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-20, <span style="color: #7f8c8d; font-size: 0.85em;">abarak</span>)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_06</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-16)</span> <span style="background: #3498db; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="Manual Alias Link">M</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_05</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-12)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_04</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-05)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_03</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-29)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">FNL_4PV</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-29, <span style="color: #7f8c8d; font-size: 0.85em;">ekantorovich</span>)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-21)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-16)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-09)</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 6px;">
+                                        <button onclick="toggleCustomLinks('custom_links_fdb_2493414')" 
+                                                id="custom_links_fdb_2493414_btn"
+                                                style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                       font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                       display: flex; align-items: center; gap: 4px;">
+                                            <span style="font-size: 0.8em;">▼</span>
+                                            <span>Show 11 more older link(s)</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                        <div class="unit-card">
+                            <div class="unit-header">
+                                <div class="unit-name">fth <span style="color: #888; font-size: 0.85em; font-weight: normal;">(lmustafa)</span></div>
+                                <div style='display: flex; align-items: center; gap: 4px;'><span class='release-badge' style='background: #3498db; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='Timing Release'>S</span><span class='release-badge' style='background: #9b59b6; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FCL Release'>L</span></div>
+                                <div class="status-badge status-unresolved">⚠️ WARN</div>
+                            </div>
+                            <div class="unit-info">
+                                <div class="info-row">
+                                    <span class="info-label">Release Date:</span>
+                                    <span class="info-value" style="color: #27ae60; font-weight: 500;">2025-12-30</span>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">RTL Tag:</span>
+                                    <span class="info-value workarea-path" id="rtl-release-fth">fth_rbv_2025_12_08_agur_condb_int4_2025_12_04_1_PFNL_snap</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('rtl-release-fth', this)" title="Copy RTL tag">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">Workarea:</span>
+                                    <span class="info-value workarea-path" id="wa-release-fth">/home/scratch.lmustafa_vlsi_1/agur/fth/fth_rbv_2025_12_08_agur_condb_int4_2025_12_04_1_PFNL_snap_power/pnr_flow/nv_flow/fth/ipo1052/nbu_signoff</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('wa-release-fth', this)" title="Copy workarea path">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="formal-flows">
+                                <div class="flow-title">Release Summary:</div>
+                                <div class="flow-item">
+                                    <span><strong>📊 Attempts</strong></span>
+                                    <span>1 successful, 1 failed / 2 total [NBU]</span>
+                                </div>
+                                <div style="margin-left: 20px; margin-top: 6px;">
+                                    <button onclick="toggleCustomLinks('release_attempts_fth_2493414')" 
+                                            id="release_attempts_fth_2493414_btn"
+                                            style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                   font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                   display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-size: 0.8em;">▼</span>
+                                        <span>Show all 2 attempts</span>
+                                    </button>
+                                </div>
+                                <div id="release_attempts_fth_2493414" style="display: none; margin-left: 20px; margin-top: 8px; font-size: 0.9em;">
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-left: 3px solid #e74c3c; border-radius: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong style="color: #e74c3c;">✗ Attempt #1</strong> 
+                                            <span style="color: #7f8c8d; font-size: 0.85em;">(2025-12-30 21 39 29 )</span>
+                                        </div>
+                                        <div style="color: #555; font-size: 0.85em; margin-left: 20px;">
+                                            Flags: <span style="color: #3498db;">sta_release, fcl_release</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-left: 3px solid #27ae60; border-radius: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong style="color: #27ae60;">✓ Attempt #2</strong> 
+                                            <span style="color: #7f8c8d; font-size: 0.85em;">(2025-12-30 21 50 59 )</span>
+                                        </div>
+                                        <div style="color: #555; font-size: 0.85em; margin-left: 20px;">
+                                            Flags: <span style="color: #3498db;">sta_release, fcl_release</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flow-item" style="margin-top: 10px;">
+                                    <span><strong>🔗 Custom Links:</strong></span>
+                                </div>
+                                <div style="margin-left: 20px; font-size: 0.95em; line-height: 1.6;">
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #27ae60; font-weight: 500;">DEC_08_post_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-30)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1052">NBU</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #f39c12; font-weight: 500;">DEC_08_post_cport_eco</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-24)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1042">NBU</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #7f8c8d; font-weight: 500;">DEC_08</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-22)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1022">NBU</span>
+                                    </div>
+                                    <div id="custom_links_fth_2493414" style="display: none; margin-top: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">NOV_02_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-28)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">NOV_02_eco_00</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-27)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">NOV_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-20, <span style="color: #7f8c8d; font-size: 0.85em;">abarak</span>)</span> <span style="background: #3498db; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="Manual Alias Link">M</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_06</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-18)</span> <span style="background: #3498db; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="Manual Alias Link">M</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">Nov_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-18)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_05</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-12)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_04</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-06)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_03</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-30)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">FNL_4PV</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-29, <span style="color: #7f8c8d; font-size: 0.85em;">ekantorovich</span>)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-21)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-17)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-08, <span style="color: #7f8c8d; font-size: 0.85em;">miancu</span>)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_10</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-09-30, <span style="color: #7f8c8d; font-size: 0.85em;">miancu</span>)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_10_cport_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-09-30, <span style="color: #7f8c8d; font-size: 0.85em;">miancu</span>)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">AUG07_cport_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-09-18, <span style="color: #7f8c8d; font-size: 0.85em;">miancu</span>)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">ECO_RUN_TIME_test</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-09-16, <span style="color: #7f8c8d; font-size: 0.85em;">yavital</span>)</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 6px;">
+                                        <button onclick="toggleCustomLinks('custom_links_fth_2493414')" 
+                                                id="custom_links_fth_2493414_btn"
+                                                style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                       font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                       display: flex; align-items: center; gap: 4px;">
+                                            <span style="font-size: 0.8em;">▼</span>
+                                            <span>Show 16 more older link(s)</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                        <div class="unit-card">
+                            <div class="unit-header">
+                                <div class="unit-name">lnd <span style="color: #888; font-size: 0.85em; font-weight: normal;">(shlomoc)</span></div>
+                                <div style='display: flex; align-items: center; gap: 4px;'><span class='release-badge' style='background: #3498db; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='Timing Release'>S</span><span class='release-badge' style='background: #9b59b6; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FCL Release'>L</span></div>
+                                <div class="status-badge status-passed">✅ PASSED</div>
+                            </div>
+                            <div class="unit-info">
+                                <div class="info-row">
+                                    <span class="info-label">Release Date:</span>
+                                    <span class="info-value" style="color: #27ae60; font-weight: 500;">2025-12-31</span>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">RTL Tag:</span>
+                                    <span class="info-value workarea-path" id="rtl-release-lnd">lnd_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_PFNL_snap</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('rtl-release-lnd', this)" title="Copy RTL tag">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">Workarea:</span>
+                                    <span class="info-value workarea-path" id="wa-release-lnd">/home/scratch.shlomoc_vlsi_1/agur/lnd/run_10_12_2025_lnd_rbv_2025_12_09_pfnl_f/pnr_flow/nv_flow/lnd/ipo1010/nbu_signoff</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('wa-release-lnd', this)" title="Copy workarea path">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="formal-flows">
+                                <div class="flow-title">Release Summary:</div>
+                                <div class="flow-item">
+                                    <span><strong>📊 Attempts</strong></span>
+                                    <span>2 successful / 2 total attempts [NBU]</span>
+                                </div>
+                                <div style="margin-left: 20px; margin-top: 6px;">
+                                    <button onclick="toggleCustomLinks('release_attempts_lnd_2493414')" 
+                                            id="release_attempts_lnd_2493414_btn"
+                                            style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                   font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                   display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-size: 0.8em;">▼</span>
+                                        <span>Show all 2 attempts</span>
+                                    </button>
+                                </div>
+                                <div id="release_attempts_lnd_2493414" style="display: none; margin-left: 20px; margin-top: 8px; font-size: 0.9em;">
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-left: 3px solid #27ae60; border-radius: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong style="color: #27ae60;">✓ Attempt #1</strong> 
+                                            <span style="color: #7f8c8d; font-size: 0.85em;">(2025-12-31 09 05 23 )</span>
+                                        </div>
+                                        <div style="color: #555; font-size: 0.85em; margin-left: 20px;">
+                                            Flags: <span style="color: #3498db;">sta_release, fcl_release</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-left: 3px solid #27ae60; border-radius: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong style="color: #27ae60;">✓ Attempt #2</strong> 
+                                            <span style="color: #7f8c8d; font-size: 0.85em;">(2025-12-31 09 16 27 )</span>
+                                        </div>
+                                        <div style="color: #555; font-size: 0.85em; margin-left: 20px;">
+                                            Flags: <span style="color: #3498db;">sta_release, fcl_release</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flow-item" style="margin-top: 10px;">
+                                    <span><strong>🔗 Custom Links:</strong></span>
+                                </div>
+                                <div style="margin-left: 20px; font-size: 0.95em; line-height: 1.6;">
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #27ae60; font-weight: 500;">pfnl4pv</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-31, <span style="color: #7f8c8d; font-size: 0.85em;">ekantorovich</span>)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1010">NBU</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #f39c12; font-weight: 500;">DEC_08_post_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-31)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1010">NBU</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #7f8c8d; font-weight: 500;">DEC_08_post_cport_eco</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-25)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1009">NBU</span>
+                                    </div>
+                                    <div id="custom_links_lnd_2493414" style="display: none; margin-top: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">DEC_08</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-22)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1004">NBU</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">NOV_02_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-26)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1000">NBU</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">NOV_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-19)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1000">NBU</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_06</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-16)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_05</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-12)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_04</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-06)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_03</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-30)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">FNL_4PV</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-29, <span style="color: #7f8c8d; font-size: 0.85em;">ekantorovich</span>)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-21)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-18)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-08)</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 6px;">
+                                        <button onclick="toggleCustomLinks('custom_links_lnd_2493414')" 
+                                                id="custom_links_lnd_2493414_btn"
+                                                style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                       font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                       display: flex; align-items: center; gap: 4px;">
+                                            <span style="font-size: 0.8em;">▼</span>
+                                            <span>Show 11 more older link(s)</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                        <div class="unit-card">
+                            <div class="unit-header">
+                                <div class="unit-name">pmux <span style="color: #888; font-size: 0.85em; font-weight: normal;">(brachas)</span></div>
+                                <div style='display: flex; align-items: center; gap: 4px;'><span class='release-badge' style='background: #3498db; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='Timing Release'>S</span><span class='release-badge' style='background: #9b59b6; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FCL Release'>L</span><span class='release-badge' style='background: #e67e22; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='PnR Release'>P</span><span class='release-badge' style='background: #27ae60; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FE DCT Release'>FE</span></div>
+                                <div class="status-badge status-unresolved">⚠️ WARN</div>
+                            </div>
+                            <div class="unit-info">
+                                <div class="info-row">
+                                    <span class="info-label">Release Date:</span>
+                                    <span class="info-value" style="color: #27ae60; font-weight: 500;">2025-12-31</span>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">RTL Tag:</span>
+                                    <span class="info-value workarea-path" id="rtl-release-pmux">pmux_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('rtl-release-pmux', this)" title="Copy RTL tag">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">Workarea:</span>
+                                    <span class="info-value workarea-path" id="wa-release-pmux">/home/scratch.brachas_vlsi_2/agur/PFNL/pmux/pmux_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_lib_snap_20250819/pnr_flow/nv_flow/pmux/ipo3000/nbu_signoff</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('wa-release-pmux', this)" title="Copy workarea path">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="formal-flows">
+                                <div class="flow-title">Release Summary:</div>
+                                <div class="flow-item">
+                                    <span><strong>📊 Attempts</strong></span>
+                                    <span>1 successful, 1 failed / 2 total [NBU]</span>
+                                </div>
+                                <div style="margin-left: 20px; margin-top: 6px;">
+                                    <button onclick="toggleCustomLinks('release_attempts_pmux_2493414')" 
+                                            id="release_attempts_pmux_2493414_btn"
+                                            style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                   font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                   display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-size: 0.8em;">▼</span>
+                                        <span>Show all 2 attempts</span>
+                                    </button>
+                                </div>
+                                <div id="release_attempts_pmux_2493414" style="display: none; margin-left: 20px; margin-top: 8px; font-size: 0.9em;">
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-left: 3px solid #e74c3c; border-radius: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong style="color: #e74c3c;">✗ Attempt #1</strong> 
+                                            <span style="color: #7f8c8d; font-size: 0.85em;">(2025-12-31 11 11 27 )</span>
+                                        </div>
+                                        <div style="color: #555; font-size: 0.85em; margin-left: 20px;">
+                                            Flags: <span style="color: #3498db;">sta_release, fe_dct_release, fcl_release, force, pnr_release</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-left: 3px solid #27ae60; border-radius: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong style="color: #27ae60;">✓ Attempt #2</strong> 
+                                            <span style="color: #7f8c8d; font-size: 0.85em;">(2025-12-31 11 20 17 )</span>
+                                        </div>
+                                        <div style="color: #555; font-size: 0.85em; margin-left: 20px;">
+                                            Flags: <span style="color: #3498db;">sta_release, fe_dct_release, fcl_release, force, pnr_release</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flow-item" style="margin-top: 10px;">
+                                    <span><strong>🔗 Custom Links:</strong></span>
+                                </div>
+                                <div style="margin-left: 20px; font-size: 0.95em; line-height: 1.6;">
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #27ae60; font-weight: 500;">DEC_08_post_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-31)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo3000">NBU</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #f39c12; font-weight: 500;">DEC_08_post_cport_eco</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-24)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo2000">NBU</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #7f8c8d; font-weight: 500;">DEC_08</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-22)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1014">NBU</span>
+                                    </div>
+                                    <div id="custom_links_pmux_2493414" style="display: none; margin-top: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">NOV_02_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-26)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">Nov_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-20)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">NOV_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-20, <span style="color: #7f8c8d; font-size: 0.85em;">abarak</span>)</span> <span style="background: #3498db; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="Manual Alias Link">M</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_06</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-17)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_05</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-12)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_04</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-06)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_03</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-30)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">FNL_4PV</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-29, <span style="color: #7f8c8d; font-size: 0.85em;">ekantorovich</span>)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-23)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-17)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-17)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_10_cport_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-09-30)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_10</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-09-17)</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 6px;">
+                                        <button onclick="toggleCustomLinks('custom_links_pmux_2493414')" 
+                                                id="custom_links_pmux_2493414_btn"
+                                                style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                       font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                       display: flex; align-items: center; gap: 4px;">
+                                            <span style="font-size: 0.8em;">▼</span>
+                                            <span>Show 13 more older link(s)</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                        <div class="unit-card">
+                            <div class="unit-header">
+                                <div class="unit-name">prt <span style="color: #888; font-size: 0.85em; font-weight: normal;">(ykatzav)</span></div>
+                                <div style='display: flex; align-items: center; gap: 4px;'><span class='release-badge' style='background: #3498db; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='Timing Release'>S</span><span class='release-badge' style='background: #9b59b6; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FCL Release'>L</span></div>
+                                <div class="status-badge status-passed">✅ PASSED</div>
+                            </div>
+                            <div class="unit-info">
+                                <div class="info-row">
+                                    <span class="info-label">Release Date:</span>
+                                    <span class="info-value" style="color: #27ae60; font-weight: 500;">2025-12-30</span>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">RTL Tag:</span>
+                                    <span class="info-value workarea-path" id="rtl-release-prt">prt_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('rtl-release-prt', this)" title="Copy RTL tag">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">Workarea:</span>
+                                    <span class="info-value workarea-path" id="wa-release-prt">/home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_power/pnr_flow/nv_flow/prt/ipo1324/nbu_signoff</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('wa-release-prt', this)" title="Copy workarea path">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="formal-flows">
+                                <div class="flow-title">Release Summary:</div>
+                                <div class="flow-item">
+                                    <span><strong>📊 Attempts</strong></span>
+                                    <span>1 successful / 1 total attempts [NBU]</span>
+                                </div>
+                                <div style="margin-left: 20px; margin-top: 6px;">
+                                    <button onclick="toggleCustomLinks('release_attempts_prt_2493414')" 
+                                            id="release_attempts_prt_2493414_btn"
+                                            style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                   font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                   display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-size: 0.8em;">▼</span>
+                                        <span>Show all 1 attempts</span>
+                                    </button>
+                                </div>
+                                <div id="release_attempts_prt_2493414" style="display: none; margin-left: 20px; margin-top: 8px; font-size: 0.9em;">
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-left: 3px solid #27ae60; border-radius: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong style="color: #27ae60;">✓ Attempt #1</strong> 
+                                            <span style="color: #7f8c8d; font-size: 0.85em;">(2025-12-30 21 27 07 )</span>
+                                        </div>
+                                        <div style="color: #555; font-size: 0.85em; margin-left: 20px;">
+                                            Flags: <span style="color: #3498db;">sta_release, fcl_release</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flow-item" style="margin-top: 10px;">
+                                    <span><strong>🔗 Custom Links:</strong></span>
+                                </div>
+                                <div style="margin-left: 20px; font-size: 0.95em; line-height: 1.6;">
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #27ae60; font-weight: 500;">DEC_08_post_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-30)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1324">NBU</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #f39c12; font-weight: 500;">DEC_08_post_cport_eco</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-30)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1323">NBU</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #7f8c8d; font-weight: 500;">DEC_08</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-22)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1322">NBU</span>
+                                    </div>
+                                    <div id="custom_links_prt_2493414" style="display: none; margin-top: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">TestForUdi</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-08, <span style="color: #7f8c8d; font-size: 0.85em;">tlevor</span>)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo5555">NBU</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">NOV_02_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-27)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1040">NBU</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_06</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-18)</span> <span style="background: #3498db; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="Manual Alias Link">M</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_05</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-13)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">NOV_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-13)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1020">NBU</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_04</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-06)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_03</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-30)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">FNL_4PV</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-29, <span style="color: #7f8c8d; font-size: 0.85em;">ekantorovich</span>)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-22)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-16)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-08)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_10_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-09-30)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_10_cport_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-09-30)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">AUG07_cport_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-09-17)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_10</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-09-16)</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 6px;">
+                                        <button onclick="toggleCustomLinks('custom_links_prt_2493414')" 
+                                                id="custom_links_prt_2493414_btn"
+                                                style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                       font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                       display: flex; align-items: center; gap: 4px;">
+                                            <span style="font-size: 0.8em;">▼</span>
+                                            <span>Show 15 more older link(s)</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+            </div>
+            <div class="chiplet-section">
+                <div class="chiplet-header" onclick="toggleChiplet('release_HPORT')">
+                    <span>HPORT Chiplet (6 units)</span>
+                    <span class="toggle" id="toggle-release_HPORT">▶</span>
+                </div>
+                <div class="collapsible-content" id="content-release_HPORT">
+                    <div class="units-grid">
+                        <div class="unit-card">
+                            <div class="unit-header">
+                                <div class="unit-name">ccorea <span style="color: #888; font-size: 0.85em; font-weight: normal;">(arcohen)</span></div>
+                                <div style='display: flex; align-items: center; gap: 4px;'><span class='release-badge' style='background: #3498db; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='Timing Release'>S</span><span class='release-badge' style='background: #e67e22; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='PnR Release'>P</span><span class='release-badge' style='background: #27ae60; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FE DCT Release'>FE</span></div>
+                                <div class="status-badge status-passed">✅ PASSED</div>
+                            </div>
+                            <div class="unit-info">
+                                <div class="info-row">
+                                    <span class="info-label">Release Date:</span>
+                                    <span class="info-value" style="color: #27ae60; font-weight: 500;">2025-12-25</span>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">RTL Tag:</span>
+                                    <span class="info-value workarea-path" id="rtl-release-ccorea">ccorea_rbv_2025_12_07_condb_int4_2025_12_04_1_BE_PFNL_snap</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('rtl-release-ccorea', this)" title="Copy RTL tag">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">Workarea:</span>
+                                    <span class="info-value workarea-path" id="wa-release-ccorea">/home/scratch.arcohen_vlsi_1/agur/channels/ccorea_0812/ccorea_rbv_2025_12_07_condb_int4_2025_12_04_1_BE_PFNL_snap_ref_rerun_pnr_with_prev_setup/pnr_flow/nv_flow/ccorea/ipo1643/nbu_signoff</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('wa-release-ccorea', this)" title="Copy workarea path">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="formal-flows">
+                                <div class="flow-title">Release Summary:</div>
+                                <div class="flow-item">
+                                    <span><strong>📊 Attempts</strong></span>
+                                    <span>1 successful / 1 total attempts [NBU]</span>
+                                </div>
+                                <div style="margin-left: 20px; margin-top: 6px;">
+                                    <button onclick="toggleCustomLinks('release_attempts_ccorea_2493414')" 
+                                            id="release_attempts_ccorea_2493414_btn"
+                                            style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                   font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                   display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-size: 0.8em;">▼</span>
+                                        <span>Show all 1 attempts</span>
+                                    </button>
+                                </div>
+                                <div id="release_attempts_ccorea_2493414" style="display: none; margin-left: 20px; margin-top: 8px; font-size: 0.9em;">
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-left: 3px solid #27ae60; border-radius: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong style="color: #27ae60;">✓ Attempt #1</strong> 
+                                            <span style="color: #7f8c8d; font-size: 0.85em;">(2025-12-25 11 14 29 )</span>
+                                        </div>
+                                        <div style="color: #555; font-size: 0.85em; margin-left: 20px;">
+                                            Flags: <span style="color: #3498db;">sta_release, force, pnr_release, fe_dct_release</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flow-item" style="margin-top: 10px;">
+                                    <span><strong>🔗 Custom Links:</strong></span>
+                                </div>
+                                <div style="margin-left: 20px; font-size: 0.95em; line-height: 1.6;">
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #27ae60; font-weight: 500;">DEC_08</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-25)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1643">NBU</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #f39c12; font-weight: 500;">NOV_02_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-27)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1009">NBU</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-21)</span>
+                                    </div>
+                                    <div id="custom_links_ccorea_2493414" style="display: none; margin-top: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_06</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-17)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1008">NBU</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_05</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-13)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1006">NBU</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_04</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-08)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1005">NBU</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_03</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-30)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1004">NBU</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">FNL_4PV</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-29, <span style="color: #7f8c8d; font-size: 0.85em;">ekantorovich</span>)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-09, <span style="color: #7f8c8d; font-size: 0.85em;">raduc</span>)</span> <span style="background: #3498db; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="Manual Alias Link">M</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_10</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-08, <span style="color: #7f8c8d; font-size: 0.85em;">roir</span>)</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 6px;">
+                                        <button onclick="toggleCustomLinks('custom_links_ccorea_2493414')" 
+                                                id="custom_links_ccorea_2493414_btn"
+                                                style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                       font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                       display: flex; align-items: center; gap: 4px;">
+                                            <span style="font-size: 0.8em;">▼</span>
+                                            <span>Show 7 more older link(s)</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                        <div class="unit-card">
+                            <div class="unit-header">
+                                <div class="unit-name">ccoreb <span style="color: #888; font-size: 0.85em; font-weight: normal;">(arcohen)</span></div>
+                                <div style='display: flex; align-items: center; gap: 4px;'><span class='release-badge' style='background: #3498db; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='Timing Release'>S</span><span class='release-badge' style='background: #9b59b6; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FCL Release'>L</span><span class='release-badge' style='background: #e67e22; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='PnR Release'>P</span><span class='release-badge' style='background: #27ae60; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FE DCT Release'>FE</span></div>
+                                <div class="status-badge status-passed">✅ PASSED</div>
+                            </div>
+                            <div class="unit-info">
+                                <div class="info-row">
+                                    <span class="info-label">Release Date:</span>
+                                    <span class="info-value" style="color: #27ae60; font-weight: 500;">2025-12-25</span>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">RTL Tag:</span>
+                                    <span class="info-value workarea-path" id="rtl-release-ccoreb">ccoreb_rbv_2025_12_07_condb_int4_2025_12_04_1_BE_PFNL_snap</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('rtl-release-ccoreb', this)" title="Copy RTL tag">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">Workarea:</span>
+                                    <span class="info-value workarea-path" id="wa-release-ccoreb">/home/scratch.arcohen_vlsi_1/agur/channels/ccoreb_0812/ccoreb_rbv_2025_12_07_condb_int4_2025_12_04_1_BE_PFNL_snap_ref_rerun_pnr_with_prev_setup/pnr_flow/nv_flow/ccoreb/ipo1423/nbu_signoff</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('wa-release-ccoreb', this)" title="Copy workarea path">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="formal-flows">
+                                <div class="flow-title">Release Summary:</div>
+                                <div class="flow-item">
+                                    <span><strong>📊 Attempts</strong></span>
+                                    <span>1 successful / 1 total attempts [NBU]</span>
+                                </div>
+                                <div style="margin-left: 20px; margin-top: 6px;">
+                                    <button onclick="toggleCustomLinks('release_attempts_ccoreb_2493414')" 
+                                            id="release_attempts_ccoreb_2493414_btn"
+                                            style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                   font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                   display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-size: 0.8em;">▼</span>
+                                        <span>Show all 1 attempts</span>
+                                    </button>
+                                </div>
+                                <div id="release_attempts_ccoreb_2493414" style="display: none; margin-left: 20px; margin-top: 8px; font-size: 0.9em;">
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-left: 3px solid #27ae60; border-radius: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong style="color: #27ae60;">✓ Attempt #1</strong> 
+                                            <span style="color: #7f8c8d; font-size: 0.85em;">(2025-12-25 11 35 30 )</span>
+                                        </div>
+                                        <div style="color: #555; font-size: 0.85em; margin-left: 20px;">
+                                            Flags: <span style="color: #3498db;">sta_release, force, pnr_release, fcl_release, fe_dct_release</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flow-item" style="margin-top: 10px;">
+                                    <span><strong>🔗 Custom Links:</strong></span>
+                                </div>
+                                <div style="margin-left: 20px; font-size: 0.95em; line-height: 1.6;">
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #27ae60; font-weight: 500;">DEC_08</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-25)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1423">NBU</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #f39c12; font-weight: 500;">NOV_02_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-27)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1008">NBU</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-21)</span>
+                                    </div>
+                                    <div id="custom_links_ccoreb_2493414" style="display: none; margin-top: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">FNL_4PV</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-19, <span style="color: #7f8c8d; font-size: 0.85em;">ekantorovich</span>)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1001">NBU</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_06</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-18)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1007">NBU</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_05</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-13)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1005">NBU</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_04</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-07)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1004">NBU</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_03</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-31)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1003">NBU</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-09, <span style="color: #7f8c8d; font-size: 0.85em;">raduc</span>)</span> <span style="background: #3498db; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="Manual Alias Link">M</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_10</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-08, <span style="color: #7f8c8d; font-size: 0.85em;">roir</span>)</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 6px;">
+                                        <button onclick="toggleCustomLinks('custom_links_ccoreb_2493414')" 
+                                                id="custom_links_ccoreb_2493414_btn"
+                                                style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                       font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                       display: flex; align-items: center; gap: 4px;">
+                                            <span style="font-size: 0.8em;">▼</span>
+                                            <span>Show 7 more older link(s)</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                        <div class="unit-card">
+                            <div class="unit-header">
+                                <div class="unit-name">ccorec <span style="color: #888; font-size: 0.85em; font-weight: normal;">(dkolesnikov)</span></div>
+                                <div style='display: flex; align-items: center; gap: 4px;'><span class='release-badge' style='background: #3498db; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='Timing Release'>S</span></div>
+                                <div class="status-badge status-passed">✅ PASSED</div>
+                            </div>
+                            <div class="unit-info">
+                                <div class="info-row">
+                                    <span class="info-label">Release Date:</span>
+                                    <span class="info-value" style="color: #27ae60; font-weight: 500;">2025-12-25</span>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">RTL Tag:</span>
+                                    <span class="info-value workarea-path" id="rtl-release-ccorec">ccorec_rbv_2025_12_07_condb_int4_2025_12_04_1_BE_PFNL_snap</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('rtl-release-ccorec', this)" title="Copy RTL tag">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">Workarea:</span>
+                                    <span class="info-value workarea-path" id="wa-release-ccorec">/home/scratch.dkolesnikov_vlsi/agur/ccorec/PFNL/ccorec_rbv_2025_12_07_condb_int4_2025_12_04_1_BE_PFNL_snap__run1_dec1_ref_test/ccorec_eco_imp_2025_12_24_18_06</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('wa-release-ccorec', this)" title="Copy workarea path">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="formal-flows">
+                                <div class="flow-title">Release Summary:</div>
+                                <div class="flow-item">
+                                    <span><strong>📊 Attempts</strong></span>
+                                    <span>1 successful / 1 total attempts</span>
+                                </div>
+                                <div style="margin-left: 20px; margin-top: 6px;">
+                                    <button onclick="toggleCustomLinks('release_attempts_ccorec_2493414')" 
+                                            id="release_attempts_ccorec_2493414_btn"
+                                            style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                   font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                   display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-size: 0.8em;">▼</span>
+                                        <span>Show all 1 attempts</span>
+                                    </button>
+                                </div>
+                                <div id="release_attempts_ccorec_2493414" style="display: none; margin-left: 20px; margin-top: 8px; font-size: 0.9em;">
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-left: 3px solid #27ae60; border-radius: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong style="color: #27ae60;">✓ Attempt #1</strong> 
+                                            <span style="color: #7f8c8d; font-size: 0.85em;">(2025-12-25 17 41 50 )</span>
+                                        </div>
+                                        <div style="color: #555; font-size: 0.85em; margin-left: 20px;">
+                                            Flags: <span style="color: #3498db;">sta_release</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flow-item" style="margin-top: 10px;">
+                                    <span><strong>🔗 Custom Links:</strong></span>
+                                </div>
+                                <div style="margin-left: 20px; font-size: 0.95em; line-height: 1.6;">
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #27ae60; font-weight: 500;">DEC_08</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-25)</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #f39c12; font-weight: 500;">NOV_02_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-27)</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_06</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-17)</span>
+                                    </div>
+                                    <div id="custom_links_ccorec_2493414" style="display: none; margin-top: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_05</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-13)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_04</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-06)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_03</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-31)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">FNL_4PV</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-29, <span style="color: #7f8c8d; font-size: 0.85em;">ekantorovich</span>)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-21)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-09, <span style="color: #7f8c8d; font-size: 0.85em;">raduc</span>)</span> <span style="background: #3498db; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="Manual Alias Link">M</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_10</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-08, <span style="color: #7f8c8d; font-size: 0.85em;">roir</span>)</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 6px;">
+                                        <button onclick="toggleCustomLinks('custom_links_ccorec_2493414')" 
+                                                id="custom_links_ccorec_2493414_btn"
+                                                style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                       font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                       display: flex; align-items: center; gap: 4px;">
+                                            <span style="font-size: 0.8em;">▼</span>
+                                            <span>Show 7 more older link(s)</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                        <div class="unit-card">
+                            <div class="unit-header">
+                                <div class="unit-name">ccored <span style="color: #888; font-size: 0.85em; font-weight: normal;">(brachas)</span></div>
+                                <div style='display: flex; align-items: center; gap: 4px;'><span class='release-badge' style='background: #3498db; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='Timing Release'>S</span><span class='release-badge' style='background: #9b59b6; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FCL Release'>L</span><span class='release-badge' style='background: #e67e22; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='PnR Release'>P</span><span class='release-badge' style='background: #27ae60; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FE DCT Release'>FE</span></div>
+                                <div class="status-badge status-passed">✅ PASSED</div>
+                            </div>
+                            <div class="unit-info">
+                                <div class="info-row">
+                                    <span class="info-label">Release Date:</span>
+                                    <span class="info-value" style="color: #27ae60; font-weight: 500;">2025-12-31</span>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">RTL Tag:</span>
+                                    <span class="info-value workarea-path" id="rtl-release-ccored">ccored_rbv_2025_12_07_condb_int4_2025_12_04_1_BE_PFNL_snap</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('rtl-release-ccored', this)" title="Copy RTL tag">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">Workarea:</span>
+                                    <span class="info-value workarea-path" id="wa-release-ccored">/home/scratch.brachas_vlsi_2/agur/PFNL/ccored/ccored_rbv_2025_12_07_condb_int4_2025_12_04_1_BE_PFNL_snap_test_2_dec01_cfg/pnr_flow/nv_flow/ccored/ipo1500/nbu_signoff</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('wa-release-ccored', this)" title="Copy workarea path">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="formal-flows">
+                                <div class="flow-title">Release Summary:</div>
+                                <div class="flow-item">
+                                    <span><strong>📊 Attempts</strong></span>
+                                    <span>1 successful / 1 total attempts [NBU]</span>
+                                </div>
+                                <div style="margin-left: 20px; margin-top: 6px;">
+                                    <button onclick="toggleCustomLinks('release_attempts_ccored_2493414')" 
+                                            id="release_attempts_ccored_2493414_btn"
+                                            style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                   font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                   display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-size: 0.8em;">▼</span>
+                                        <span>Show all 1 attempts</span>
+                                    </button>
+                                </div>
+                                <div id="release_attempts_ccored_2493414" style="display: none; margin-left: 20px; margin-top: 8px; font-size: 0.9em;">
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-left: 3px solid #27ae60; border-radius: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong style="color: #27ae60;">✓ Attempt #1</strong> 
+                                            <span style="color: #7f8c8d; font-size: 0.85em;">(2025-12-31 11 14 07 )</span>
+                                        </div>
+                                        <div style="color: #555; font-size: 0.85em; margin-left: 20px;">
+                                            Flags: <span style="color: #3498db;">sta_release, fe_dct_release, fcl_release, force, pnr_release</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flow-item" style="margin-top: 10px;">
+                                    <span><strong>🔗 Custom Links:</strong></span>
+                                </div>
+                                <div style="margin-left: 20px; font-size: 0.95em; line-height: 1.6;">
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #27ae60; font-weight: 500;">DEC_08_post_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-31)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1500">NBU</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #f39c12; font-weight: 500;">DEC_08</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-25)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1417">NBU</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #7f8c8d; font-weight: 500;">NOV_02_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-27)</span>
+                                    </div>
+                                    <div id="custom_links_ccored_2493414" style="display: none; margin-top: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_06</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-17)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_05</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-13)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_04</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-06)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_03</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-30)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">FNL_4PV</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-29, <span style="color: #7f8c8d; font-size: 0.85em;">ekantorovich</span>)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-23)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-09, <span style="color: #7f8c8d; font-size: 0.85em;">raduc</span>)</span> <span style="background: #3498db; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="Manual Alias Link">M</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_10</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-08, <span style="color: #7f8c8d; font-size: 0.85em;">sorino</span>)</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 6px;">
+                                        <button onclick="toggleCustomLinks('custom_links_ccored_2493414')" 
+                                                id="custom_links_ccored_2493414_btn"
+                                                style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                       font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                       display: flex; align-items: center; gap: 4px;">
+                                            <span style="font-size: 0.8em;">▼</span>
+                                            <span>Show 8 more older link(s)</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                        <div class="unit-card">
+                            <div class="unit-header">
+                                <div class="unit-name">ccoree <span style="color: #888; font-size: 0.85em; font-weight: normal;">(ykatzav)</span></div>
+                                <div style='display: flex; align-items: center; gap: 4px;'><span class='release-badge' style='background: #3498db; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='Timing Release'>S</span></div>
+                                <div class="status-badge status-passed">✅ PASSED</div>
+                            </div>
+                            <div class="unit-info">
+                                <div class="info-row">
+                                    <span class="info-label">Release Date:</span>
+                                    <span class="info-value" style="color: #27ae60; font-weight: 500;">2025-12-25</span>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">RTL Tag:</span>
+                                    <span class="info-value workarea-path" id="rtl-release-ccoree">ccoree_rbv_2025_12_07_condb_int4_2025_12_04_1_BE_PFNL_snap</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('rtl-release-ccoree', this)" title="Copy RTL tag">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">Workarea:</span>
+                                    <span class="info-value workarea-path" id="wa-release-ccoree">/home/scratch.ykatzav_vlsi_1/agur/ccoree/ccoree_rbv_2025_12_07_condb_int4_2025_12_04_1_BE_PFNL_snap_ww49/pnr_flow/nv_flow/ccoree/ipo1453/nbu_signoff</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('wa-release-ccoree', this)" title="Copy workarea path">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="formal-flows">
+                                <div class="flow-title">Release Summary:</div>
+                                <div class="flow-item">
+                                    <span><strong>📊 Attempts</strong></span>
+                                    <span>1 successful / 1 total attempts [NBU]</span>
+                                </div>
+                                <div style="margin-left: 20px; margin-top: 6px;">
+                                    <button onclick="toggleCustomLinks('release_attempts_ccoree_2493414')" 
+                                            id="release_attempts_ccoree_2493414_btn"
+                                            style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                   font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                   display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-size: 0.8em;">▼</span>
+                                        <span>Show all 1 attempts</span>
+                                    </button>
+                                </div>
+                                <div id="release_attempts_ccoree_2493414" style="display: none; margin-left: 20px; margin-top: 8px; font-size: 0.9em;">
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-left: 3px solid #27ae60; border-radius: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong style="color: #27ae60;">✓ Attempt #1</strong> 
+                                            <span style="color: #7f8c8d; font-size: 0.85em;">(2025-12-25 10 20 50 )</span>
+                                        </div>
+                                        <div style="color: #555; font-size: 0.85em; margin-left: 20px;">
+                                            Flags: <span style="color: #3498db;">sta_release</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flow-item" style="margin-top: 10px;">
+                                    <span><strong>🔗 Custom Links:</strong></span>
+                                </div>
+                                <div style="margin-left: 20px; font-size: 0.95em; line-height: 1.6;">
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #27ae60; font-weight: 500;">DEC_08</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-25)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1453">NBU</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #f39c12; font-weight: 500;">NOV_02_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-27)</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_06</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-18)</span>
+                                    </div>
+                                    <div id="custom_links_ccoree_2493414" style="display: none; margin-top: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_05</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-13)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_04</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-06)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_03</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-30)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">FNL_4PV</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-29, <span style="color: #7f8c8d; font-size: 0.85em;">ekantorovich</span>)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-22)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-09, <span style="color: #7f8c8d; font-size: 0.85em;">raduc</span>)</span> <span style="background: #3498db; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="Manual Alias Link">M</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_10</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-08, <span style="color: #7f8c8d; font-size: 0.85em;">sorino</span>)</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 6px;">
+                                        <button onclick="toggleCustomLinks('custom_links_ccoree_2493414')" 
+                                                id="custom_links_ccoree_2493414_btn"
+                                                style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                       font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                       display: flex; align-items: center; gap: 4px;">
+                                            <span style="font-size: 0.8em;">▼</span>
+                                            <span>Show 7 more older link(s)</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                        <div class="unit-card">
+                            <div class="unit-header">
+                                <div class="unit-name">ccoref <span style="color: #888; font-size: 0.85em; font-weight: normal;">(brachas)</span></div>
+                                <div style='display: flex; align-items: center; gap: 4px;'><span class='release-badge' style='background: #3498db; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='Timing Release'>S</span><span class='release-badge' style='background: #9b59b6; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FCL Release'>L</span><span class='release-badge' style='background: #27ae60; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin: 0 2px;' title='FE DCT Release'>FE</span></div>
+                                <div class="status-badge status-passed">✅ PASSED</div>
+                            </div>
+                            <div class="unit-info">
+                                <div class="info-row">
+                                    <span class="info-label">Release Date:</span>
+                                    <span class="info-value" style="color: #27ae60; font-weight: 500;">2025-12-25</span>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">RTL Tag:</span>
+                                    <span class="info-value workarea-path" id="rtl-release-ccoref">ccoref_rbv_2025_12_07_condb_int4_2025_12_04_1_BE_PFNL_snap</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('rtl-release-ccoref', this)" title="Copy RTL tag">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                                <div class="info-row workarea-row">
+                                    <span class="info-label">Workarea:</span>
+                                    <span class="info-value workarea-path" id="wa-release-ccoref">/home/scratch.brachas_vlsi_2/agur/PFNL/ccoref/ccoref_rbv_2025_12_07_condb_int4_2025_12_04_1_BE_PFNL_snap_test_2_dec01_cfg/pnr_flow/nv_flow/ccoref/ipo1415/nbu_signoff</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('wa-release-ccoref', this)" title="Copy workarea path">
+                                        📋 Copy
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="formal-flows">
+                                <div class="flow-title">Release Summary:</div>
+                                <div class="flow-item">
+                                    <span><strong>📊 Attempts</strong></span>
+                                    <span>1 successful / 1 total attempts [NBU]</span>
+                                </div>
+                                <div style="margin-left: 20px; margin-top: 6px;">
+                                    <button onclick="toggleCustomLinks('release_attempts_ccoref_2493414')" 
+                                            id="release_attempts_ccoref_2493414_btn"
+                                            style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                   font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                   display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-size: 0.8em;">▼</span>
+                                        <span>Show all 1 attempts</span>
+                                    </button>
+                                </div>
+                                <div id="release_attempts_ccoref_2493414" style="display: none; margin-left: 20px; margin-top: 8px; font-size: 0.9em;">
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-left: 3px solid #27ae60; border-radius: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            <strong style="color: #27ae60;">✓ Attempt #1</strong> 
+                                            <span style="color: #7f8c8d; font-size: 0.85em;">(2025-12-25 09 01 01 )</span>
+                                        </div>
+                                        <div style="color: #555; font-size: 0.85em; margin-left: 20px;">
+                                            Flags: <span style="color: #3498db;">sta_release, fe_dct_release, fcl_release</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flow-item" style="margin-top: 10px;">
+                                    <span><strong>🔗 Custom Links:</strong></span>
+                                </div>
+                                <div style="margin-left: 20px; font-size: 0.95em; line-height: 1.6;">
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #27ae60; font-weight: 500;">DEC_08</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-12-25)</span> <span style="background: #9b59b6; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="NBU Signoff Release - ipo1415">NBU</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #f39c12; font-weight: 500;">NOV_02_eco_01</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-27)</span>
+                                    </div>
+                                    <div style="margin-bottom: 4px;">
+                                        • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_06</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-18)</span> <span style="background: #3498db; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="Manual Alias Link">M</span>
+                                    </div>
+                                    <div id="custom_links_ccoref_2493414" style="display: none; margin-top: 4px;">
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_05</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-12)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_04</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-11-06)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_03</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-30)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">FNL_4PV</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-29, <span style="color: #7f8c8d; font-size: 0.85em;">ekantorovich</span>)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP_eco_02</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-23)</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_28_FP</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-09, <span style="color: #7f8c8d; font-size: 0.85em;">raduc</span>)</span> <span style="background: #3498db; color: white; padding: 1px 5px; border-radius: 3px; font-size: 0.75em; font-weight: bold; cursor: help;" title="Manual Alias Link">M</span>
+                                        </div>
+                                        <div style="margin-bottom: 4px;">
+                                            • <span style="color: #7f8c8d; font-weight: 500;">SEP_10</span> <span style="color: #95a5a6; font-size: 0.9em;">(2025-10-08, <span style="color: #7f8c8d; font-size: 0.85em;">sorino</span>)</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 6px;">
+                                        <button onclick="toggleCustomLinks('custom_links_ccoref_2493414')" 
+                                                id="custom_links_ccoref_2493414_btn"
+                                                style="background: none; border: none; color: #3498db; cursor: pointer; 
+                                                       font-size: 0.9em; padding: 4px 8px; text-decoration: underline;
+                                                       display: flex; align-items: center; gap: 4px;">
+                                            <span style="font-size: 0.8em;">▼</span>
+                                            <span>Show 7 more older link(s)</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p><strong>AVICE Multi-Regression Dashboard</strong></p>
+        <p>Copyright (c) 2025 Alon Vice (avice)</p>
+        <p>Contact: avice@nvidia.com</p>
+    </div>
+</div>
+
+<div id="toast" class="toast">Copied to clipboard!</div>
+
+<script>
+    // Logo modal functionality
+    function showLogoModal() {
+        document.getElementById('logoModal').style.display = 'block';
+    }
+    
+    function closeLogoModal() {
+        document.getElementById('logoModal').style.display = 'none';
+    }
+    
+    // Tab switching
+    function openTab(tabName) {
+        const tabContents = document.getElementsByClassName('tab-content');
+        for (let i = 0; i < tabContents.length; i++) {
+            tabContents[i].classList.remove('active');
+        }
+        
+        const tabButtons = document.getElementsByClassName('tab-button');
+        for (let i = 0; i < tabButtons.length; i++) {
+            tabButtons[i].classList.remove('active');
+        }
+        
+        document.getElementById(tabName).classList.add('active');
+        event.target.classList.add('active');
+    }
+    
+    // Toggle chiplet sections
+    function toggleChiplet(chipletId) {
+        const content = document.getElementById('content-' + chipletId);
+        const toggle = document.getElementById('toggle-' + chipletId);
+        
+        if (content.classList.contains('active')) {
+            content.classList.remove('active');
+            toggle.textContent = '▶';
+        } else {
+            content.classList.add('active');
+            toggle.textContent = '▼';
+        }
+    }
+    
+    // Copy to clipboard
+    function copyToClipboard(elementId, button) {
+        const element = document.getElementById(elementId);
+        const text = element.textContent;
+        
+        navigator.clipboard.writeText(text).then(function() {
+            showToast();
+            button.textContent = '✓ Copied';
+            setTimeout(function() {
+                button.textContent = '📋 Copy';
+            }, 2000);
+        });
+    }
+    
+    function showToast() {
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(function() {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+    
+    // Toggle custom links expandable section
+    function toggleCustomLinks(expandId) {
+        const expandDiv = document.getElementById(expandId);
+        const button = document.getElementById(expandId + '_btn');
+        
+        if (expandDiv.style.display === 'none') {
+            // Expand - show older links
+            expandDiv.style.display = 'block';
+            // Change button text and arrow
+            const arrow = button.querySelector('span:first-child');
+            const text = button.querySelector('span:last-child');
+            arrow.textContent = '▲';
+            text.textContent = 'Show less';
+        } else {
+            // Collapse - hide older links
+            expandDiv.style.display = 'none';
+            // Change button text and arrow
+            const arrow = button.querySelector('span:first-child');
+            const text = button.querySelector('span:last-child');
+            const count = text.textContent.match(/\d+/);
+            arrow.textContent = '▼';
+            text.textContent = 'Show ' + (count ? count[0] : '') + ' more older link(s)';
+        }
+    }
+    
+    // Toggle timing breakdown expandable section
+    function toggleTimingBreakdown(timingId) {
+        const contentDiv = document.getElementById(timingId);
+        const arrow = document.getElementById(timingId + '-arrow');
+        
+        if (contentDiv.style.display === 'none') {
+            // Expand - show timing details
+            contentDiv.style.display = 'block';
+            arrow.style.transform = 'rotate(90deg)';
+        } else {
+            // Collapse - hide timing details
+            contentDiv.style.display = 'none';
+            arrow.style.transform = 'rotate(0deg)';
+        }
+    }
+    
+    // Search and filter functionality
+    function filterUnits() {
+        const searchInput = document.getElementById('searchInput').value.toLowerCase();
+        const unitCards = document.getElementsByClassName('unit-card');
+        let visibleCount = 0;
+        
+        for (let card of unitCards) {
+            const unitName = card.querySelector('.unit-name').textContent.toLowerCase();
+            const workarea = card.querySelector('.workarea-path') ? card.querySelector('.workarea-path').textContent.toLowerCase() : '';
+            
+            if (unitName.includes(searchInput) || workarea.includes(searchInput)) {
+                if (!card.classList.contains('status-filtered')) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                }
+            } else {
+                card.classList.add('hidden');
+            }
+        }
+    }
+    
+    function filterStatus(evt, status) {
+        try {
+            const unitCards = document.getElementsByClassName('unit-card');
+            const statCards = document.getElementsByClassName('stat-card');
+            
+            // Update active stat card (statistics cards at top)
+            for (let card of statCards) {
+                card.classList.remove('active');
+            }
+            
+            // Add active class to clicked stat card
+            if (evt && evt.target) {
+                // If clicked on a child element (like stat-value), find parent stat-card
+                let targetElement = evt.target;
+                if (!targetElement.classList.contains('stat-card')) {
+                    targetElement = evt.target.closest('.stat-card');
+                }
+                if (targetElement) {
+                    targetElement.classList.add('active');
+                }
+            }
+            
+            // Filter unit cards based on status
+            for (let card of unitCards) {
+                const statusBadgeEl = card.querySelector('.status-badge');
+                if (!statusBadgeEl) continue;
+                
+                const statusBadge = statusBadgeEl.textContent.toLowerCase();
+            
+            if (status === 'all') {
+                card.classList.remove('status-filtered', 'hidden');
+            } else if (status === 'passed' && statusBadge.includes('passed')) {
+                card.classList.remove('status-filtered', 'hidden');
+            } else if (status === 'failed' && (statusBadge.includes('failed') || statusBadge.includes('error'))) {
+                card.classList.remove('status-filtered', 'hidden');
+            } else if (status === 'crashed' && statusBadge.includes('crashed')) {
+                card.classList.remove('status-filtered', 'hidden');
+            } else if (status === 'warn' && (statusBadge.includes('warn') || statusBadge.includes('partial'))) {
+                card.classList.remove('status-filtered', 'hidden');
+            } else if (status === 'unresolved' && statusBadge.includes('unresolved')) {
+                card.classList.remove('status-filtered', 'hidden');
+            } else if (status === 'not_run' && statusBadge.includes('not run')) {
+                card.classList.remove('status-filtered', 'hidden');
+            } else if (status === 'no_data' && statusBadge.includes('no data')) {
+                card.classList.remove('status-filtered', 'hidden');
+            } else if (status === 'missing' && statusBadge.includes('missing')) {
+                card.classList.remove('status-filtered', 'hidden');
+            } else {
+                card.classList.add('status-filtered', 'hidden');
+            }
+        }
+        
+        // Re-apply search filter
+        filterUnits();
+        
+        // Highlight chiplets containing matching units
+        highlightRelevantChiplets(status);
+        } catch (e) {
+            console.error('Error in filterStatus:', e);
+        }
+    }
+    
+    function highlightRelevantChiplets(status) {
+        try {
+            const chipletHeaders = document.querySelectorAll('.chiplet-header');
+            const chipletSections = document.querySelectorAll('.chiplet-section');
+            
+            // Remove all previous highlights
+            for (let header of chipletHeaders) {
+                header.classList.remove('highlighted-passed', 'highlighted-failed', 'highlighted-crashed', 
+                                        'highlighted-warn', 'highlighted-unresolved', 'highlighted-not_run', 
+                                        'highlighted-no_data', 'highlighted-missing');
+            }
+            
+            // If showing all, don't highlight anything
+            if (status === 'all') {
+                return;
+            }
+            
+            // Determine highlight class based on status
+            const highlightClass = 'highlighted-' + status;
+            
+            // Check each chiplet section for visible units
+            for (let section of chipletSections) {
+                const unitsGrid = section.querySelector('.units-grid');
+                if (!unitsGrid) continue;
+                
+                const unitCards = unitsGrid.querySelectorAll('.unit-card');
+                let hasVisibleUnits = false;
+                
+                // Check if this chiplet has any visible (matching) units
+                for (let card of unitCards) {
+                    if (!card.classList.contains('hidden') && !card.classList.contains('status-filtered')) {
+                        hasVisibleUnits = true;
+                        break;
+                    }
+                }
+                
+                // If chiplet has matching units, highlight and expand it
+                if (hasVisibleUnits) {
+                    const header = section.querySelector('.chiplet-header');
+                    const content = section.querySelector('.collapsible-content');
+                    const toggle = section.querySelector('.toggle');
+                    
+                    if (header) {
+                        header.classList.add(highlightClass);
+                    }
+                    
+                    // Auto-expand chiplets with matching units
+                    if (content && !content.classList.contains('active')) {
+                        content.classList.add('active');
+                        if (toggle) {
+                            toggle.textContent = '▼';
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Error in highlightRelevantChiplets:', e);
+        }
+    }
+    
+    function collapseAll() {
+        try {
+            const chipletHeaders = document.querySelectorAll('.chiplet-header');
+            const chipletContents = document.querySelectorAll('.collapsible-content');
+            const toggles = document.querySelectorAll('.chiplet-header .toggle');
+            
+            // Collapse all chiplet sections
+            for (let content of chipletContents) {
+                content.classList.remove('active');
+            }
+            
+            // Update all toggle icons to collapsed state
+            for (let toggle of toggles) {
+                toggle.textContent = '▶';
+            }
+            
+            // Remove all highlights
+            for (let header of chipletHeaders) {
+                header.classList.remove('highlighted-passed', 'highlighted-failed', 'highlighted-crashed', 
+                                        'highlighted-warn', 'highlighted-unresolved', 'highlighted-not_run', 
+                                        'highlighted-no_data', 'highlighted-missing');
+            }
+        } catch (e) {
+            console.error('Error in collapseAll:', e);
+        }
+    }
+    
+    function expandAll() {
+        try {
+            const chipletHeaders = document.querySelectorAll('.chiplet-header');
+            const chipletContents = document.querySelectorAll('.collapsible-content');
+            const toggles = document.querySelectorAll('.chiplet-header .toggle');
+            
+            // Expand all chiplet sections
+            for (let content of chipletContents) {
+                content.classList.add('active');
+            }
+            
+            // Update all toggle icons to expanded state
+            for (let toggle of toggles) {
+                toggle.textContent = '▼';
+            }
+            
+            // Remove all highlights (clean slate)
+            for (let header of chipletHeaders) {
+                header.classList.remove('highlighted-passed', 'highlighted-failed', 'highlighted-crashed', 
+                                        'highlighted-warn', 'highlighted-unresolved', 'highlighted-not_run', 
+                                        'highlighted-no_data', 'highlighted-missing');
+            }
+        } catch (e) {
+            console.error('Error in expandAll:', e);
+        }
+    }
+    
+    function exportToCSV() {
+        try {
+        const unitCards = document.getElementsByClassName('unit-card');
+        let csv = 'Unit,Chiplet,Status,Released By,Release Date,Runtime,Workarea\n';
+        
+        for (let card of unitCards) {
+            if (card.classList.contains('hidden')) continue;
+            
+            const unit = card.querySelector('.unit-name').textContent.trim();
+            const status = card.querySelector('.status-badge').textContent.trim();
+            const infoRows = card.querySelectorAll('.info-value');
+            
+            let releasedBy = '';
+            let releaseDate = '';
+            let runtime = '';
+            let workarea = '';
+            let chiplet = card.closest('.chiplet-section') ? card.closest('.chiplet-section').querySelector('.chiplet-header span').textContent.split(' ')[0] : '';
+            
+            const infoLabels = card.querySelectorAll('.info-label');
+            for (let i = 0; i < infoLabels.length; i++) {
+                const label = infoLabels[i].textContent.trim();
+                const value = infoRows[i] ? infoRows[i].textContent.trim() : '';
+                
+                if (label.includes('Released By')) releasedBy = value;
+                if (label.includes('Release Date')) releaseDate = value;
+                if (label.includes('Runtime')) runtime = value;
+                if (label.includes('Workarea')) workarea = value;
+            }
+            
+            csv += `"${unit}","${chiplet}","${status}","${releasedBy}","${releaseDate}","${runtime}","${workarea}"\n`;
+        }
+        
+        // Download CSV
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'agur_regression_results_' + new Date().toISOString().split('T')[0] + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        showToast();
+        } catch (e) {
+            console.error('Error in exportToCSV:', e);
+            alert('Error exporting CSV: ' + e.message);
+        }
+    }
+    
+    function printDashboard() {
+        try {
+            window.print();
+        } catch (e) {
+            console.error('Error in printDashboard:', e);
+        }
+    }
+    
+    // Initialize page - activate "Total Units" card by default
+    window.addEventListener('DOMContentLoaded', function() {
+        try {
+            // Find and activate the first stat-card (Total Units)
+            const firstStatCard = document.querySelector('.stat-card[data-filter="all"]');
+            if (firstStatCard) {
+                firstStatCard.classList.add('active');
+            }
+        } catch (e) {
+            console.error('Error in page initialization:', e);
+        }
+    });
+</script>
+
+<!-- Back to Top Button -->
+<button id="backToTopBtn" title="Go to top">↑ Top</button>
+
+<script>
+    // Back to Top Button functionality (must run after button is in DOM)
+    document.addEventListener('DOMContentLoaded', function() {
+        const backToTopBtn = document.getElementById('backToTopBtn');
+        if (backToTopBtn) {
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    backToTopBtn.classList.add('visible');
+                } else {
+                    backToTopBtn.classList.remove('visible');
+                }
+            });
+            
+            backToTopBtn.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    });
+</script>
+
+</body>
+</html>

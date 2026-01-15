@@ -1,0 +1,50 @@
+================================================================================
+AGUR Disk Usage Monitor - 2025-11-22 07:00:04
+================================================================================
+Checking central block release area: /home/agur_backend_blockRelease/
+[OK] Central block release area: 54% used (below threshold)
+
+Checking 73 units...
+
+[CRITICAL] cscore          (NDQ       ) - 90% used | Owner: ynaim
+[CRITICAL] glc             (NDQ       ) - 91% used | Owner: ynaim
+[CRITICAL] pscc            (NDQ       ) - 96% used | Owner: dtraitelovic
+[CRITICAL] ribs            (NDQ       ) - 91% used | Owner: ynaim
+[CRITICAL] dqaa            (QNS       ) - 92% used | Owner: siddharthasa
+[CRITICAL] dqaci           (QNS       ) - 92% used | Owner: siddharthasa
+[CRITICAL] dqaco           (QNS       ) - 90% used | Owner: gnarla
+[CRITICAL] dqamco          (QNS       ) - 92% used | Owner: siddharthasa
+[CRITICAL] dqamdo          (QNS       ) - 91% used | Owner: abarman
+[CRITICAL] dqavi           (QNS       ) - 91% used | Owner: abarman
+[CRITICAL] dqavo           (QNS       ) - 90% used | Owner: gnarla
+[CRITICAL] dqs             (QNS       ) - 91% used | Owner: abarman
+[CRITICAL] eds             (QNS       ) - 95% used | Owner: eelgabsi
+[CRITICAL] qcorer          (QNS       ) - 94% used | Owner: ronil
+
+Grouping by owner...
+  ynaim: 3 unit(s)
+  dtraitelovic: 1 unit(s)
+  siddharthasa: 3 unit(s)
+  gnarla: 2 unit(s)
+  abarman: 3 unit(s)
+  eelgabsi: 1 unit(s)
+  ronil: 1 unit(s)
+
+Sending emails...
+[EMAIL] Sent to ynaim@nvidia.com (3 unit(s))
+[EMAIL] Sent to dtraitelovic@nvidia.com (1 unit(s))
+[EMAIL] Sent to siddharthasa@nvidia.com (3 unit(s))
+[EMAIL] Sent to gnarla@nvidia.com (2 unit(s))
+[EMAIL] Sent to abarman@nvidia.com (3 unit(s))
+[EMAIL] Sent to eelgabsi@nvidia.com (1 unit(s))
+[EMAIL] Sent to ronil@nvidia.com (1 unit(s))
+
+================================================================================
+SUMMARY:
+  Central block release: 54% used [OK]
+  Total units checked: 73
+  Critical units (>=90%): 14
+  Unique owners: 7
+  Emails sent: 7 successful, 0 failed
+  Execution time: 28.7 seconds
+================================================================================

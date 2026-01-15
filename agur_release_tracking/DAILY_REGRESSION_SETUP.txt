@@ -1,0 +1,246 @@
+================================================================================
+AGUR DAILY REGRESSION - Setup Guide
+================================================================================
+
+STATUS: Ready to Deploy
+Script: /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_regression.sh
+Schedule: Daily at 9:00 AM
+Server: tlv02-cron-01
+
+================================================================================
+WHAT IT DOES:
+================================================================================
+
+1. Runs ALL regression types on ALL 72 AGUR units
+2. Regression Types: formal, timing, pv, clock, release, glcheck
+3. Generates SINGLE comprehensive dashboard HTML per day
+4. Organizes outputs in dated folders: daily_reports/YYYYMMDD/
+
+================================================================================
+OUTPUT STRUCTURE:
+================================================================================
+
+daily_reports/
+├── 20251103/                                      # Today's run
+│   ├── agur_multi_regression_dashboard_20251103_090015.html  # Single dashboard!
+│   └── *.log                                      # Various log files
+├── 20251104/                                      # Tomorrow's run
+│   └── agur_multi_regression_dashboard_20251104_090012.html
+└── ...
+
+ONE HTML DASHBOARD PER DAY - Contains all regression results for all units!
+
+================================================================================
+CRON JOB SETUP (9:00 AM Daily):
+================================================================================
+
+Step 1: SSH to cron server
+--------------------------
+ssh tlv02-cron-01
+
+
+Step 2: Edit crontab
+--------------------
+crontab -e
+
+
+Step 3: Add this line (COPY-PASTE):
+------------------------------------
+0 9 * * * cd /home/avice/scripts/avice_wa_review/agur_release_tracking && bash daily_regression.sh >> logs/daily_regression_$(date +\%Y\%m\%d).log 2>&1
+
+
+Step 4: Save and exit
+---------------------
+- vi: Press ESC, type :wq, press ENTER
+- nano: Press CTRL+X, then Y, then ENTER
+
+
+Step 5: Verify
+--------------
+crontab -l | grep daily_regression
+
+
+================================================================================
+MANUAL TESTING (Before Going Live):
+================================================================================
+
+Test the script manually first:
+
+# Open bash shell (important!)
+bash
+
+# Test run
+cd /home/avice/scripts/avice_wa_review/agur_release_tracking
+bash daily_regression.sh
+
+# Check output
+ls -lh daily_reports/$(date +%Y%m%d)/
+
+# View the dashboard
+ls -lh daily_reports/$(date +%Y%m%d)/*.html
+
+# Exit bash
+exit
+
+================================================================================
+RUNTIME EXPECTATIONS:
+================================================================================
+
+- Total Units: 72
+- Regression Types: All (formal, timing, pv, clock, release, glcheck)
+- Parallel Execution: ~16 units at a time
+- Estimated Runtime: 2-3 hours
+- Start: 9:00 AM
+- Expected Finish: 11:00 AM - 12:00 PM
+
+- HTML Dashboard: 1 file per day
+- Log Files: Multiple log files
+- Disk Usage per Day: ~50-100 MB
+
+================================================================================
+MONITORING:
+================================================================================
+
+Check if regression ran today (after 9 AM):
+-------------------------------------------
+ls -l /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/$(date +%Y%m%d)
+
+
+View today's log (in bash shell):
+----------------------------------
+bash
+tail -50 /home/avice/scripts/avice_wa_review/agur_release_tracking/logs/daily_regression_$(date +%Y%m%d).log
+exit
+
+
+View dashboard:
+---------------
+# In bash shell
+bash
+firefox /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/$(date +%Y%m%d)/*.html
+exit
+
+
+Count generated files:
+----------------------
+find /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/$(date +%Y%m%d) -name "*.html" | wc -l
+# Should be 1 HTML file per day
+
+
+================================================================================
+ACCESS REPORTS:
+================================================================================
+
+Browse in Firefox (recommended):
+---------------------------------
+/home/utils/firefox-118.0.1/firefox /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/20251103/*.html
+
+
+Or navigate via file manager:
+------------------------------
+/home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/20251103/
+
+
+================================================================================
+CLEANUP OLD REPORTS (Optional):
+================================================================================
+
+Manually clean reports older than 30 days:
+------------------------------------------
+find /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/* -maxdepth 0 -type d -mtime +30 -exec rm -rf {} \;
+
+
+Add automatic cleanup cron (9:30 AM daily):
+-------------------------------------------
+30 9 * * * find /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/* -maxdepth 0 -type d -mtime +30 -exec rm -rf {} \; 2>/dev/null
+
+
+================================================================================
+DISABLE/ENABLE:
+================================================================================
+
+Method 1: Comment out cron line
+--------------------------------
+ssh tlv02-cron-01
+crontab -e
+# Add '#' at start of line to disable
+# Remove '#' to re-enable
+
+
+Method 2: Delete cron line
+---------------------------
+ssh tlv02-cron-01
+crontab -e
+# Delete the entire line
+
+
+================================================================================
+TROUBLESHOOTING:
+================================================================================
+
+Problem: Script not running
+---------------------------
+1. Check cron installed: ssh tlv02-cron-01 && crontab -l | grep daily_regression
+2. Check log for errors: tail logs/daily_regression_$(date +%Y%m%d).log
+3. Test manually: bash daily_regression.sh
+
+
+Problem: No dashboard generated
+--------------------------------
+1. Check script permissions: ls -l daily_regression.sh (should be -rwxr-xr-x)
+2. Check run_agur_regression.sh exists: ls -l run_agur_regression.sh
+3. Check AGUR_UNITS_TABLE.txt exists: ls -l AGUR_UNITS_TABLE.txt
+
+
+Problem: Dashboard in wrong location
+-------------------------------------
+1. Check output directory: ls -ld daily_reports/$(date +%Y%m%d)
+2. Verify dashboard exists: ls -lh daily_reports/$(date +%Y%m%d)/*.html
+
+
+================================================================================
+COMPARISON WITH OTHER CRON JOBS:
+================================================================================
+
+Disk Monitor (8:00 AM):
+-----------------------
+- Checks: Disk usage only
+- Runtime: ~5 seconds
+- Output: Email alerts
+- Frequency: Daily
+
+
+Daily Regression (9:00 AM):
+----------------------------
+- Checks: All regression types (formal, timing, pv, clock, release, glcheck)
+- Runtime: 2-3 hours
+- Output: Single HTML dashboard
+- Frequency: Daily
+
+
+They complement each other:
+- Disk Monitor = Proactive disk alerts
+- Daily Regression = Comprehensive quality monitoring dashboard
+
+
+================================================================================
+WHAT'S IN THE DASHBOARD:
+================================================================================
+
+The single HTML dashboard contains:
+- Formal verification results (all units)
+- PT timing analysis results (all units)
+- PV (LVS/DRC) results (all units)
+- Clock tree results (all units)
+- Release status (all units)
+- GL Check results (all units)
+
+One comprehensive view of all 72 units across all regression types!
+
+
+================================================================================
+CONTACT:
+================================================================================
+Alon Vice (avice@nvidia.com)
+Implementation Date: November 2, 2025
+================================================================================

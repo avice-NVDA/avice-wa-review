@@ -1,0 +1,48 @@
+# Review for: /home/scratch.arcohen_vlsi/agur/channels/ccoreb_1510/ccoreb_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref__copy
+# Generated: 2025-10-23 14:43:56
+# Command: /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.arcohen_vlsi/agur/channels/ccoreb_1510/ccoreb_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref__copy -s pnr
+# Return code: 0
+
+STDOUT:
+[36mValidating workarea structure...[0m
+[33m[WARN] WORKAREA VALIDATION WARNINGS:[0m
+  [33mWARNING:[0m ECO/Signoff workarea detected (PnR results imported from external source)
+[32m[OK] Workarea validation passed - ECO/Signoff workarea (imported PnR) detected[0m
+[36m     Additional stages detected: fast_dc, RTL[0m
+Running selected sections: pnr
+
+----------------------------------- [32m[4] PnR Analysis[0m -----------------------------------
+  [36m[WARN] IPO directory 'unknown' from .prc file not found[0m
+    [33mNote: Users sometimes delete IPO directories to save disk space[0m
+
+[36m[INFO] ECO/Signoff workarea detected - PnR results imported from external source[0m
+
+[36mImported PnR Data (export/export_innovus/):[0m
+  [32mIPO: ipo1400[0m
+  [32m✓ Physical Design (DEF):[0m     9.4 GB       (ccoreb.ipo1400.def.gz)
+  [32m✓ Layout (GDS/OAS):[0m          13.1 GB      (ccoreb_ipo1400_fill.oas)
+  [32m✓ Netlist (LVS):[0m            184.1 MB     (ccoreb.ipo1400.lvs.gv.gz)
+  [32m✓ Netlist (no-power):[0m       155.4 MB     (ccoreb.ipo1400.nopower.gv.gz)
+  [32m✓ LEF:[0m                      26.0 MB      (ccoreb.ipo1400.lef)
+  [32m✓ Multibit Mapping:[0m         Present
+
+[36mSignoff/ECO Activities (signoff_flow/):[0m
+  [32m✓ PrimeTime Signoff:[0m                             auto_pt/ (present)
+  [32m✓ NV Gate ECO:[0m                                   nv_gate_eco/ (present)
+  [32m✓ Gate-Level Checks:[0m                             gl-check/ (present)
+  [32m✓ Gate-Level Checks (ECO):[0m                       gl-check_eco/ (present)
+  [32m✓ Formal Verification (ECO vs PnR):[0m              eco_vs_pnr_fm/ (present)
+  [32m✓ ECO Netlist Generation:[0m                        gen_eco_netlist_innovus/ (present)
+
+[33mNote:[0m PnR flow configuration files (prc, runset, beflow_config) not present
+      This is [32mexpected[0m for ECO/Signoff workflow - workarea uses imported PnR results
+      from external source and focuses on signoff/ECO activities.
+
+[36mGenerating Master Dashboard...[0m
+[32m[OK] Master Dashboard generated: ccoreb_avice_MASTER_dashboard_20251023.html[0m
+[36m     Open with recommended browser:[0m
+     /home/utils/firefox-118.0.1/firefox [35mccoreb_avice_MASTER_dashboard_20251023.html[0m &
+[36mOrganized 1 HTML file(s) into html/ folder[0m
+
+
+STDERR:

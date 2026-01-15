@@ -1,0 +1,48 @@
+================================================================================
+AGUR Disk Usage Monitor - 2026-01-02 07:00:06
+================================================================================
+Checking shared infrastructure paths...
+  AGUR Release Area: /home/agur_backend_blockRelease/
+    [OK] 71% used (below 80%)
+  PFNL Unit DB: /home/PFNL_Unit_DB/
+    [OK] 6% used (below 80%)
+
+Checking 73 units...
+
+[CRITICAL] dqamdo          (QNS       ) - 92% used | Owner: abarman
+[CRITICAL] dqavi           (QNS       ) - 92% used | Owner: abarman
+[CRITICAL] dqs             (QNS       ) - 92% used | Owner: abarman
+[CRITICAL] tecorer         (QNS       ) - 91% used | Owner: hsajwan
+[CRITICAL] tds             (QNS       ) - 91% used | Owner: hsajwan
+[CRITICAL] bta             (TCB       ) - 91% used | Owner: vliberchuk
+[CRITICAL] eri             (TCB       ) - 91% used | Owner: hsajwan
+
+Grouping by owner...
+  abarman: 3 unit(s)
+  hsajwan: 3 unit(s)
+  vliberchuk: 1 unit(s)
+
+Building disk summaries and scanning for old workareas...
+  Scanning /home/scratch.abarman_vlsi_2 for old workareas...
+    -> No old workareas found (>30 days)
+  Scanning /home/scratch.hsajwan_vlsi for old workareas...
+    -> Found 3 old workarea(s): 402G, 343G, 286G
+  Scanning /home/scratch.vliberchuk_vlsi_1 for old workareas...
+    -> No old workareas found (>30 days)
+
+Sending emails...
+[EMAIL] Sent to abarman@nvidia.com (3 unit(s))
+[EMAIL] Sent to hsajwan@nvidia.com (3 unit(s))
+[EMAIL] Sent to vliberchuk@nvidia.com (1 unit(s))
+
+================================================================================
+SUMMARY:
+  Shared Infrastructure:
+    AGUR Release Area: 71% [OK]
+    PFNL Unit DB: 6% [OK]
+  Total units checked: 73
+  Critical units (>=90%): 7
+  Unique owners: 3
+  Emails sent: 3 successful, 0 failed
+  Execution time: 79.9 seconds
+================================================================================

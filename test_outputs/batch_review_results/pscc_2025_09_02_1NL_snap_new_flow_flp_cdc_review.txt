@@ -1,0 +1,356 @@
+# Review for: /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc
+# Generated: 2025-10-23 14:15:47
+# Command: /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc
+# Return code: 0
+
+STDOUT:
+[36mValidating workarea structure...[0m
+[32m[OK] Workarea validation passed - PnR + Syn workarea detected[0m
+
+[36m    +===============================================================+
+    |                                                               |
+    |                    [1mAVICE WORKAREA REVIEW[0m[36m                      |
+    |                                                               |
+    |              [32mAdvanced Verification & Integration[0m[36m              |
+    |                    [32mCircuit Engineering[0m[36m                        |
+    |                                                               |
+    +===============================================================+[0m
+
+
+----------------------------------- [32m[1] Setup[0m -----------------------------------
+
+[36mDisk Utilization:[0m
+  Filesystem: tlv02-cdot14-scr01-lif10b:/vol/scratch38/scratch.dtraitelovic_vlsi
+  Mount Point: /home/scratch.dtraitelovic_vlsi
+  Size: 4.9T | Used: 4.7T | Available: 223G
+  [31mUsage: 96% [WARN][0m
+  [31m[WARN] Disk usage is high! Consider cleaning up old files.[0m
+  [31m[CRITICAL] Disk almost full! This may cause flow failures.[0m
+UNIT: pscc
+TAG: pscc_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap
+IPO: ipo1000 (Available IPOs: ipo1000, ipo1001, ipo1003, ipo1004, ipo1005)
+  [36mEnvironment Information:[0m
+    No environment information found
+
+----------------------------------- [32m[2] Runtime[0m -----------------------------------
+  NV Gate ECO Status file not found
+
+[36mRuntime Summary Table:[0m
+  Category     Stage         Runtime                 Start       End        
+  ------------ ------------- ----------------------- ----------- -----------
+  Construction DC            22.48 hours             10/01 09:19 10/02 07:48
+  Construction PnR (ipo1000) 73.02 hours (3.04 days) 10/02 23:19 10/04 02:34
+  Construction PnR (ipo1001) 67.32 hours (2.81 days) 10/06 12:22 10/07 15:34
+
+  [36mRuntime HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mpscc_avice_runtime_report_20251023_141544.html[0m &
+
+----------------------------------- [32m[3] Synthesis (DC)[0m -----------------------------------
+Design Definition: /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/unit_scripts/des_def.tcl
+DC Log: /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/syn_flow/dc/log/dc.log
+QoR Report (Quality of Results): /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/syn_flow/dc/reports/pscc_rtl2gate.qor.rpt
+  [36mQoR Analysis:[0m
+    [32mKey QoR Metrics:[0m
+      Design Area: 685298.7036 um2 (0.685 mm2) | Die (X,Y): 2209.32 um x 893.76 um
+      Leaf Cell Count: 2331664
+      Combinational Cells: 1913667
+      Sequential Cells: 417997
+      Total Nets: 2386797
+      Critical Path Slack: -0.0334
+      Total Negative Slack: -0.1048
+      Violating Paths: 6.0000
+      Macro Count: 173
+    [36mScenario Summary:[0m
+    Scenario                                           WNS        TNS        Violating Paths
+    -------------------------------------------------- ---------- ---------- ---------------
+    func.std_tt_0c_0p6v.setup.typical                  3.0333     478.5747   3656           
+    func.std_tt_0c_0p6v.setup.typical (Hold)           0.1196     140.6463   8237           
+    [36mTiming Path Groups:[0m CLKGATE, FEEDTHROUGH, REGIN, REGOUT, Wrapper_path, i1_clk, i2_clk, m1_clk, w1_clk, w1_div16480_clk, w2_clk, w16_clk, default
+BeFlow Configuration: /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/syn_flow/dc/beflow_config.yaml
+  [36mBeFlow Configuration Analysis:[0m
+    [32mKey Configuration Variables:[0m
+      Library Snapshot: 20250819
+      NV Process: tsmc5_t6
+      Tracks Number: t6
+      Project: agur
+      Default Scenario: func.std_tt_0c_0p6v.setup.typical
+      StdCell Library Path: /home/nbu_be_agur/ip/lib_snap/20250819/syn
+      Memories Path: /home/nbu_be_agur/ip/arrays/13897726_02032025_RAM_SYNLIB/arrays_release
+      VT Types: svt, hvt, lvt
+      Array Names: RAMDP_200X36_AFH6RS_M2_H15, RAMDP_20X54_AFH6R2S_M1_H15, RAMDP_20X68_AFH6R2S_M1_H15, RAMDP_56X36_AFH6RS_M2_H15, RAMDP_64X44_AFH6R2S_M1_H15, RAMDP_8X72_AFH6R2S_M1_H15, RAMPDP_1024X57_AH6RSU_M4_G42, RAMPDP_128X36_AE1H6RS_M4_G32, RAMPDP_128X36_AH6RS_M2_G32, RAMPDP_128X36_AH6RS_M4_G32, RAMPDP_128X40_AH6RS_M2_G32, RAMPDP_128X60_AE1H6RS_M2_G32, RAMPDP_128X66_AE1H6RS_M4_G32, RAMPDP_12X74_AH6R2S_M1_G40, RAMPDP_12X86_AH6R2S_M1_G40, RAMPDP_12X98_AH6R2S_M1_G40, RAMPDP_152X40_AH6RS_M2_G32, RAMPDP_16X64_AH6R2S_M1_G40, RAMPDP_16X66_AH6R2S_M1_G40, RAMPDP_16X68_AH6R2S_M1_G40, RAMPDP_16X74_AH6R2S_M1_G40, RAMPDP_16X78_AH6R2S_M1_G40, RAMPDP_16X80_AH6R2S_M1_G40, RAMPDP_192X34_AE1H6RS_M2_G32, RAMPDP_208X8_AH6RS_M4_G32, RAMPDP_20X54_AH6R2S_M1_G40, RAMPDP_20X76_AH6R2S_M1_G40, RAMPDP_216X40_AH6RS_M2_G32, RAMPDP_256X32_AE1H6RS_M4_G32, RAMPDP_256X32_AH6RS_M2_G32, RAMPDP_256X40_AH6RS_M2_G32, RAMPDP_256X60_AE1H6RS_M2_G32, RAMPDP_272X36_AH6RS_M4_G32, RAMPDP_272X9_AH6RS_M4_G32, RAMPDP_320X34_AE1H6RSU_M2_G42, RAMPDP_32X40_AH6R2S_M1_G32, RAMPDP_32X44_AH6R2S_M1_G40, RAMPDP_336X32_AH6RS_M4_G32, RAMPDP_36X72_AH6R2S_M1_G40, RAMPDP_36X76_AH6R2S_M1_G40, RAMPDP_384X40_AH6RSU_M2_G42, RAMPDP_512X16_AE1H6RS_M4_G32, RAMPDP_512X17_AE1H6RS_M4_G32, RAMPDP_512X18_AE1H6RS_M4_G32, RAMPDP_512X19_AE1H6RS_M4_G32, RAMPDP_512X32_AH6RS_M4_G32, RAMPDP_512X52_AE1H6RSU_M2_G42, RAMPDP_64X192_AH6R2S_M1_G32, RAMPDP_64X22_AH6R2S_M1_G40, RAMPDP_64X26_AH6R2S_M1_G40, RAMPDP_64X32_AH6R2S_M1_G40, RAMPDP_64X36_AE1H6RS_M2_G32, RAMPDP_64X40_AH6RS_M2_G32, RAMPDP_64X64_AH6R2S_M1_G40, RAMPDP_64X86_AH6R2S_M1_G40, RAMPDP_64X92_AH6R2S_M1_G32, RAMPDP_64X94_AH6R2S_M1_G40, RAMPDP_68X128_AH6R2S_M1_G32, RAMPDP_80X32_AH6R2S_M1_G32, RAMPDP_96X40_AH6R2S_M1_G32, RAMPDP_96X44_AH6R2S_M1_G32, RAMSP_1536X32_AH6RSU_M4_G32, RAMSP_1536X72_AE1H6RSU_M4_G32, RAMSP_1792X72_AE1H6RSU_M4_G32, RAMSP_2048X32_AE1H6RSU_M4_G32, RAMSP_2048X39_AH6RSU_M4_G32, RAMSP_2048X64_AE1H6RSU_M4_G32, RAMSP_640X36_AE1H6RS_M4_G32
+      Agur Unit BE IP: nvidia_pads_tsmc5_cust_mixvt, nvidia_analog_tsmc5_cust_mixvt, adw_n5_v2f_thermal_sensor, nvidia_stdcell_tsmc5_t6_sup, fcm_rams_tsmc5_cust_mixvt, nvidia_rams_tsmc5_cust_mixvt
+Report: File not found
+Report: /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/syn_flow/dc/reports/debug/pscc.rtl2gate.removed_cgates.rep
+Report: /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/syn_flow/dc/reports/pscc_rtl2gate.qor.rpt
+Report: /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/syn_flow/dc/reports/debug/pscc.rtl2gate.removed_registers.rep
+Clock gates removed: 13
+Removed registers: 91028
+[32mNo don't use cells[0m
+[36mGenerating Unified DC HTML Report...[0m
+  [32m[OK] Unified DC HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mpscc_avice_DC_comprehensive_20251023_141544.html[0m &
+
+----------------------------------- [32m[4] PnR Analysis[0m -----------------------------------
+PnR Status: /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/pnr_flow/nv_flow/pscc.prc.status
+
+[36mPnR Flow Status Analysis:[0m
+
+  [36mIPO ipo1000:[0m
+    PnR Flow: Completed through: nbu_auto_pt (9/9)
+    Reporting: Completed through: report_postroute (5/5)
+    [32mStatus: COMPLETED (18/18 steps)[0m
+
+  [36mIPO ipo1001:[0m
+    PnR Flow: Completed through: nbu_auto_pt (9/9)
+    Reporting: Completed through: report_postroute (5/5)
+    [32mStatus: COMPLETED (17/17 steps)[0m
+PnR Configuration: /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/pnr_flow/nv_flow/pscc.prc
+  [36mAvailable IPOs:[0m 1000, 1001
+  [36mTools:[0m edi
+  [36mFlow Sequence (ipo1000):[0m [33msetup[0m -> [33medi_plan[0m -> [33mplace[0m -> [33mcts[0m -> [33mroute[0m -> [33mpostroute[0m -> [33mpredrc_onPLAN[0m -> [33mpredrc_onPRO[0m -> [33mexport[0m -> [33mextraction[0m -> [33mnbu_auto_pt[0m
+  [36mClock Names:[0m
+    ipo1000: w1_clk w1_clk w2_clk i2_clk i2_clk
+  [36mTCL Usage Verification:[0m
+    [32m[OK] Used TCL files (3):[0m
+      - dt_cdc_at_pnr.tcl
+      - dt_pscc.nbu_custom_hooks_1.tcl
+      - dt_pscc.nbu_custom_hooks_2.tcl
+    [33m[WARN] Unused TCL files (4):[0m
+      - dt_set_dont_merge_on_cdc.tcl
+      - fix_cleanup.tcl
+      - inst_padding.tcl
+      - pscc.ipo1003-1004.2025Oct21_22_11_28_Flow_Fixall.fixall.innovus.tcl
+PnR Runset: /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/pnr_flow/nv_flow/pscc/ipo1000/CMDs/pscc.ipo1000.shell.postroute.10_23_13_38.runset.tcl
+  [36mPnR Flow Variables:[0m
+    FLOW(PATH): /home/nbu_be_tools/flow2/1.0/2025_ww25_01
+    PROJECT(CUSTOM_SCRIPTS_DIR): /home/nbu_be_agur/config/flow2/2025_ww36_04/tcl
+    FLOORPLAN: ../../../../syn_flow/latest/results/../../../flp/pscc_fp.def.gz
+    PIN_PLACEMENT_FILE: none
+    TOP_PLANNER_YAML: /home/nbu_be_agur/backend/release/fcl//top_planner.yaml
+    DC_SHELL_VERSION: /home/tools/synopsys/syn_2016.03-SP4/bin/dc_shell
+    RAM_LIB_PATH: "/home/nbu_be_agur/ip/arrays/nvidia/arrays_release/lef
+    CENTRAL_LIB_PATH: /home/agur_backend_blockRelease/block/merged_lib_snap/20250819
+    NETWORK_FLOW_PATH: /home/nbu_be_tools/beflow/1.0/2025_ww13_01_rev13
+    NETWORK_FLOW_UTILS_DIR: /home/nbu_be_tools/flow2_utils/1.0/2024_ww32_01_legacy_rev4
+PnR BeFlow Configuration (ipo1000): /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/pnr_flow/nv_flow/pscc/ipo1000/beflow_config.yaml
+  [36mBeFlow Configuration Analysis:[0m
+    [32mKey Configuration Variables:[0m
+      Library Snapshot: 20250819
+      NV Process: tsmc5_t6
+      Tracks Number: t6
+      Project: agur
+      Default Scenario: func.std_tt_0c_0p6v.setup.typical
+      StdCell Library Path: /home/nbu_be_agur/ip/lib_snap/20250819/syn
+      Memories Path: /home/nbu_be_agur/ip/arrays/13897726_02032025_RAM_SYNLIB/arrays_release
+      VT Types: svt, hvt, lvt
+      Agur Unit BE IP: nvidia_pads_tsmc5_cust_mixvt, nvidia_analog_tsmc5_cust_mixvt, adw_n5_v2f_thermal_sensor, nvidia_stdcell_tsmc5_t6_sup, fcm_rams_tsmc5_cust_mixvt, nvidia_rams_tsmc5_cust_mixvt
+Post-Route Data: /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/pnr_flow/nv_flow/pscc/ipo1000/reports/pscc_pscc_ipo1000_report_pscc_ipo1000_postroute.func.std_tt_0c_0p6v.setup.typical.data
+
+[33mKey Post-Route Parameters:[0m
+  Parameter                 Value          
+  ------------------------- ---------------
+  Die Dimensions (X x Y)    2209.32 x 893.76 um
+  DieArea (mm2)             1.975          
+  REGIN_WNS                 -2.316         
+  REGIN_TNS                 -129.721       
+  REGIN_ViolPaths           1867           
+  REGOUT_WNS                -0.221         
+  REGOUT_TNS                -119.945       
+  REGOUT_ViolPaths          5852           
+  EffictiveUtilization      36.1537745654% 
+  CellCount                 2575393        
+  FFCount                   413182         
+  ArraysCount               160            
+  HVT_percentage            77.6175443569% 
+  SVT_percentage            22.3824556431% 
+  w1_clk_WNS                0.006          
+  w1_clk_TNS                0.000          
+  w1_clk_ViolPaths          0              
+  i1_clk_WNS                0.000          
+  i1_clk_TNS                0.000          
+  i1_clk_ViolPaths          0              
+  i2_clk_WNS                -0.018         
+  i2_clk_TNS                -0.061         
+  i2_clk_ViolPaths          8              
+
+  [36mFull PnR Data Table:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mpscc_avice_pnr_data_ipo1000_20251023_141545.html[0m &
+Power Summary: /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/pnr_flow/nv_flow/pscc/ipo1000/REPs/SUMMARY/pscc.ipo1000.postroute.power.rpt.gz
+  [36mPower Summary Table:[0m
+          group     |    area     |  count  |   power   : density : cell_avg | internal : switching : total |  leakage  
+     ===============|=============|=========|===========:=========:==========|==========:===========:=======|===========
+      combinational |  166721.949 | 2402549 | 23989.336 :   0.144 :    0.010 |    0.000 :     0.000 : 0.000 | 23989.336 
+      sequential    |  546492.166 |  173020 |  7490.029 :   0.014 :    0.043 |    0.000 :     0.000 : 0.000 |  7490.029 
+      physical      | 1260856.941 | 6497534 |    79.621 :   0.000 :    0.000 |    0.000 :     0.000 : 0.000 |    79.621 
+     ===============|=============|=========|===========:=========:==========|==========:===========:=======|===========
+      total         | 1974071.056 | 9073103 | 31558.986 :   0.016 :    0.003 |    0.000 :     0.000 : 0.000 | 31558.986 
+     ===================================================================================================================
+  [36mTiming Histogram Tables (POSTROUTE):[0m
+PnR Timing Setup (POSTROUTE): /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/pnr_flow/nv_flow/pscc/ipo1000/REPs/SUMMARY/pscc.ipo1000.postroute.timing.setup.rpt.gz
+  Table 2 - Sub-Category Breakdown (Lines 128-145):
+     type  |  category  |   sub_category   | wns  |  tns   |fep |-0.010 -0.020 -0.030 -0.040 -0.050 -0.060 -0.070 -0.080 -0.090 -0.100 -Inf
+   ========|============|==================|======|========|====|==========================================================================
+           |feedthrough |port_to_port      |-2.177|-334.488| 225|     4             1                           1                       219
+           |............|..................|......|........|....|..........................................................................
+           |output      |flop_to_port      |-0.174|-119.672|5687|  1941   1435    982    667    335    125     50     50     26     27   49
+           |............|..................|......|........|....|..........................................................................
+           |            |port_to_flop      |-0.213| -89.938|1648|   149    134    215    255    201    127    107    113     27     85  235
+           |            |port_to_hard_macro|-2.316| -25.756| 131|    26     11      5      6     10      7     11      9      7     10   29
+   external|input       |port_to_clock_gate|-0.409| -14.012|  75|     3      2      1      3      3      2      3      4      5      4   45
+   ........|............|..................|......|........|....|..........................................................................
+           |reg_to_cgate|flop_to_clock_gate|-0.102|  -0.122|   3|     1      1                                                            1
+           |............|..................|......|........|....|..........................................................................
+   internal|reg_to_reg  |flop_to_flop      |-0.018|  -0.062|   7|     5      2                                                             
+   ========================================================================================================================================
+   ============================================================================================================================================================================
+
+[36mGenerating Unified PnR HTML Report...[0m
+  [32m[OK] Unified PnR HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mpscc_avice_PnR_comprehensive_ipo1000_20251023_141545.html[0m &
+
+----------------------------------- [32m[5] Clock Analysis[0m -----------------------------------
+Innovus Clock Analysis: /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/pnr_flow/nv_flow/pscc/ipo1000/REPs/SUMMARY/pscc.ipo1000.postroute.clock_tree.skew_and_latency.from_clock_root_source.rpt.gz
+
+[33mClock Tree Analysis for func.std_tt_0c_0p6v.setup.typical:[0m
+  Clock      Period   Skew     Min      Max      Median   Mean     StdDev  
+  ---------- -------- -------- -------- -------- -------- -------- --------
+  i2_clk     0.622    0.537    0.005    0.542    0.499    0.498    0.019   
+  w1_clk     1.850    0.509    0.004    0.513    0.472    0.467    0.030   
+  w2_clk     3.700    0.303    0.209    0.512    0.467    0.466    0.015   
+  i1_clk     1.244    0.430    0.123    [31m0.553[0m 0.397    0.455    0.070   
+  m1_clk     6.400    0.188    0.159    0.347    0.332    0.329    0.014   
+  w1_div16480_clk 118.400  0.129    0.378    0.507    0.487    0.486    0.018   
+  w16_clk    29.600   0.086    0.416    0.502    0.487    0.486    0.020   
+
+  All values in nanoseconds (ns)
+  [31mNote: Max latency values > 550ps (0.55ns) are highlighted in red[0m
+
+  [36mCombined Clock Latency Summary (Max per clock):[0m
+  Clock Detail: i1_clk|553.0|430.0
+  Clock Detail: i2_clk|542.0|537.0
+  Clock Detail: m1_clk|347.0|188.0
+  Clock Detail: w16_clk|502.0|86.0
+  Clock Detail: w1_clk|513.0|509.0
+  Clock Detail: w1_div16480_clk|507.0|129.0
+  Clock Detail: w2_clk|512.0|303.0
+
+  [32m[OK] Clock HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mavice_clock_analysis_pscc_ipo1000_20251023_141545.html[0m &
+
+----------------------------------- [32m[6] Formal Verification[0m -----------------------------------
+[36mRTL Tag: [0mpscc_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap
+
+[36mMultibit Mapping Files Check:[0m
+  Checking 6 files across 3 locations per IPO...
+  Files: 1) multibitMapping.gz  2) multibitMapping_for_gen_mbff_scandef.gz
+
+  IPO          Location           File Status          Result    
+  ------------ ------------------ -------------------- ----------
+  ipo1000      PnR Flow           [OK] [OK]            [32mOK[0m
+  ipo1000      Export Innovus     [OK] [OK]            [32mOK[0m
+  ipo1000      NV Gate ECO        [MISS] [MISS]        [31mMISSING[0m
+
+  [31m[FAIL] 1/3 location checks failed[0m
+  [33m-> Formal verification may encounter non-equivalence points[0m
+  [33m-> Files are generated in PnR and copied to export_innovus and nv_gate_eco[0m
+No formal verification logs found
+
+  [36mFormal Verification HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mpscc_avice_formal_verification_20251023_141545.html[0m &
+
+----------------------------------- [32m[7] Parasitic Extraction (Star)[0m -----------------------------------
+  [33mNo Star extraction runs found[0m
+
+[36mSPEF Files (All Corners):[0m
+  [33mNo SPEF files found[0m
+
+[36m  Star Extraction HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mpscc_avice_star_extraction_20251023_141545.html[0m &
+
+----------------------------------- [32m[8] Signoff Timing (PT)[0m -----------------------------------
+All Violators: File not found
+PT Log: File not found
+
+----------------------------------- [32m[9] Physical Verification (PV)[0m -----------------------------------
+LVS Errors: /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/pv_flow/drc_dir/pscc/lvs_icv_ipo1003/pscc_ipo1003_fill.LVS_ERRORS
+  [32mStatus: PASS[0m
+  Failed Equivalence Points: 0
+  Successful Equivalence Points: 0
+
+  [32mMatched Items:[0m
+    Instances: 0
+    Nets:      0
+    Ports:     0
+DRC Errors: /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/pv_flow/drc_dir/pscc/drc_icv_ipo1003/pscc_ipo1003_fill.LAYOUT_ERRORS
+  [31mStatus: ERRORS - DRC violations found[0m
+  [31mTotal DRC violations: 96[0m
+  [36mViolation breakdown:[0m
+    Rule                 Count    Description                                                 
+    -------------------- -------- ------------------------------------------------------------
+    M18.S.8.0.1          9        (TM13) Space of My edge [edge length > 0.080 um in NMINP ...
+    M18.S.11             8        (TM13) Space of My edge [edge length > 0.080 um in NMINP ...
+    M18.S.11.2           8        (TM13) Space to My [width >= 0.231 um, PRL > 0.120 um] >=...
+    M18.S.11.3           8        (TM13) Space to My [width >= 0.280 um, PRL > 0.160 um] >=...
+    M1.CS.6.2            6        NMINP space of {M1B OR DM1_DO2} to {M1B OR DM1_DO2} line-...
+    M18.S.1              6        (TM13) Space >= 0.0380 external1 ...........................
+    M18.S.2.1.1          6        (TM13) Space of My [width = 0.038 um in MINP direction] t...
+    M2.R.35              6        Square Lower_VIA/Upper_VIA interact to Mxs_End_non_42 is ...
+    M2.S.4.1             6        NMINP space of Mxs line-end [PRL > -0.015 um] >= 0.0420 e...
+    M18.S.11.4           4        (TM13) Space of My [width >= 0.280 um] to My [0.040 um < ...
+    M6.S.16              4        (TM1) Space to Mya line-end [edge length = 0.038 um betwe...
+    M18.S.8              3        (TM13) Space of My edge [edge length > 0.080 um in NMINP ...
+    M2.S.1               3        Space of Mxs >= 0.0150 external1 ...........................
+    PNR.M2.R.26          3        "Line-end" spacing of mxs on NEIGHBORING tracks (w=20/s<1...
+    M17.S.11.0.1         2        (TM12) Space of My edge [width >= 0.201 um in MINP direct...
+    M17.S.11.2           2        (TM12) Space to My [width >= 0.231 um, PRL > 0.120 um] >=...
+    M17.S.11.3           2        (TM12) Space to My [width >= 0.280 um, PRL > 0.160 um] >=...
+    M17.S.11.4           2        (TM12) Space of My [width >= 0.280 um] to My [0.040 um < ...
+    M17.S.8              2        (TM12) Space of My edge [edge length > 0.080 um in NMINP ...
+    M18.S.11.0.1         2        (TM13) Space of My edge [width >= 0.201 um in MINP direct...
+    M3.R.35              2        Square Lower_VIA/Upper_VIA interact to Mxs_End_non_42 is ...
+    M6.S.1               2        (TM1) Space >= 0.0380 external1 ............................
+Antenna Errors: /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc/pv_flow/drc_dir/pscc/drc_icv_antenna_ipo1003/pscc_ipo1003_fill.LAYOUT_ERRORS
+  [31mStatus: LAYOUT ERRORS RESULTS: ERRORS[0m
+  [36mError Summary:[0m
+    ERROR SUMMARY
+     A.R.4:VIA18 : (VIA18 area / gate area) <= 20 (without
+     diode)
+       net_area_ratio:net_select .......................... 5 violations found.
+     A.R.4:VIA19 : (VIA19 area / gate area) <= 20 (without
+     diode)
+       net_area_ratio:net_select .......................... 2 violations found.
+  [31mTotal Antenna violations: 7[0m
+
+[33mNo PV flow status files found[0m
+
+  [36mPhysical Verification HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mpscc_avice_pv_report_20251023_141546.html[0m &
+
+----------------------------------- [32m[10] GL Checks[0m -----------------------------------
+  Didn't run GL checks
+
+----------------------------------- [32m[11] ECO Analysis[0m -----------------------------------
+[31m0 ECO loops were done[0m
+Didn't run PT ECO
+Didn't run NV Gate ECO
+
+----------------------------------- [32m[12] NV Gate ECO[0m -----------------------------------
+  Didn't run NV Gate ECO
+
+----------------------------------- [32m[13] Block Release[0m -----------------------------------
+  [33mNo block_release.log found[0m
+  [33mNo block release attempts found[0m
+
+  [36mBlock Release HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mpscc_avice_block_release_20251023_141547.html[0m &
+
+[36mGenerating Master Dashboard...[0m
+[32m[OK] Master Dashboard generated: pscc_avice_MASTER_dashboard_20251023.html[0m
+[36m     Open with recommended browser:[0m
+     /home/utils/firefox-118.0.1/firefox [35mpscc_avice_MASTER_dashboard_20251023.html[0m &
+
+[32mReview completed successfully![0m
+[36mOrganized 10 HTML file(s) into html/ folder[0m
+
+
+STDERR:

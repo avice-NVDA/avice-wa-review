@@ -1,0 +1,48 @@
+================================================================================
+AGUR Disk Usage Monitor - 2025-12-24 07:00:06
+================================================================================
+Checking central block release area: /home/agur_backend_blockRelease/
+[OK] Central block release area: 63% used (below threshold)
+
+Checking 73 units...
+
+[CRITICAL] ccorea          (HPORT     ) - 96% used | Owner: arcohen
+[CRITICAL] ccoreb          (HPORT     ) - 96% used | Owner: arcohen
+[CRITICAL] ir              (NDQ       ) - 90% used | Owner: thadad
+[CRITICAL] psca            (NDQ       ) - 92% used | Owner: nkahaz
+[CRITICAL] pscb            (NDQ       ) - 92% used | Owner: nkahaz
+[CRITICAL] dqaco           (QNS       ) - 98% used | Owner: gnarla
+[CRITICAL] dqavo           (QNS       ) - 98% used | Owner: gnarla
+[CRITICAL] tecorel         (QNS       ) - 98% used | Owner: gnarla
+
+Grouping by owner...
+  arcohen: 2 unit(s)
+  thadad: 1 unit(s)
+  nkahaz: 2 unit(s)
+  gnarla: 3 unit(s)
+
+Building disk summaries and scanning for old workareas...
+  Scanning /home/scratch.arcohen_vlsi_1 for old workareas...
+    -> Found 1 old workarea(s): >100G
+  Scanning /home/scratch.thadad_vlsi_1 for old workareas...
+    -> No old workareas found (>40 days)
+  Scanning /home/scratch.nkahaz_vlsi_1 for old workareas...
+    -> No old workareas found (>40 days)
+  Scanning /home/scratch.gnarla_vlsi_1 for old workareas...
+    -> No old workareas found (>40 days)
+
+Sending emails...
+[EMAIL] Sent to arcohen@nvidia.com (2 unit(s))
+[EMAIL] Sent to thadad@nvidia.com (1 unit(s))
+[EMAIL] Sent to nkahaz@nvidia.com (2 unit(s))
+[EMAIL] Sent to gnarla@nvidia.com (3 unit(s))
+
+================================================================================
+SUMMARY:
+  Central block release: 63% used [OK]
+  Total units checked: 73
+  Critical units (>=90%): 8
+  Unique owners: 4
+  Emails sent: 4 successful, 0 failed
+  Execution time: 52.6 seconds
+================================================================================

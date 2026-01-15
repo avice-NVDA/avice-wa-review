@@ -1,0 +1,57 @@
+================================================================================
+AGUR Disk Usage Monitor - 2026-01-07 17:00:13
+================================================================================
+Checking shared infrastructure paths...
+  AGUR Release Area: /home/agur_backend_blockRelease/
+    [OK] 75% used (below 80%)
+  PFNL Unit DB: /home/PFNL_Unit_DB/
+    [OK] 8% used (below 80%)
+
+Checking 73 units...
+
+[CRITICAL] ccorea          (HPORT     ) - 91% used | Owner: arcohen
+[CRITICAL] ccoreb          (HPORT     ) - 91% used | Owner: arcohen
+[CRITICAL] pscc            (NDQ       ) - 93% used | Owner: dtraitelovic
+[CRITICAL] dqamdo          (QNS       ) - 97% used | Owner: abarman
+[CRITICAL] dqap            (QNS       ) - 92% used | Owner: drazmizrahi
+[CRITICAL] dqavi           (QNS       ) - 97% used | Owner: abarman
+[CRITICAL] dqs             (QNS       ) - 97% used | Owner: abarman
+[CRITICAL] eds             (QNS       ) - 90% used | Owner: nwasserman
+
+Grouping by owner...
+  arcohen: 2 unit(s)
+  dtraitelovic: 1 unit(s)
+  abarman: 3 unit(s)
+  drazmizrahi: 1 unit(s)
+  nwasserman: 1 unit(s)
+
+Building disk summaries and scanning for old workareas...
+  Scanning /home/scratch.arcohen_vlsi_1 for old workareas...
+    -> Found 2 old workarea(s): 463G, 202G
+  Scanning /home/scratch.dtraitelovic_vlsi_1 for old workareas...
+    -> Found 1 old workarea(s): 18G
+  Scanning /home/scratch.abarman_vlsi_2 for old workareas...
+    -> No old workareas found (>30 days)
+  Scanning /home/scratch.drazmizrahi_vlsi_1 for old workareas...
+    -> No old workareas found (>30 days)
+  Scanning /home/scratch.nwasserman_vlsi for old workareas...
+    -> No old workareas found (>30 days)
+
+Sending emails...
+[EMAIL] Sent to arcohen@nvidia.com (2 unit(s))
+[EMAIL] Sent to dtraitelovic@nvidia.com (1 unit(s))
+[EMAIL] Sent to abarman@nvidia.com (3 unit(s))
+[EMAIL] Sent to drazmizrahi@nvidia.com (1 unit(s))
+[EMAIL] Sent to nwasserman@nvidia.com (1 unit(s))
+
+================================================================================
+SUMMARY:
+  Shared Infrastructure:
+    AGUR Release Area: 75% [OK]
+    PFNL Unit DB: 8% [OK]
+  Total units checked: 73
+  Critical units (>=90%): 8
+  Unique owners: 5
+  Emails sent: 5 successful, 0 failed
+  Execution time: 133.8 seconds
+================================================================================

@@ -1,0 +1,469 @@
+# Review for: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY
+# Generated: 2025-10-23 14:15:27
+# Command: /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY
+# Return code: 0
+
+STDOUT:
+[36mValidating workarea structure...[0m
+[32m[OK] Workarea validation passed - PnR + Syn workarea detected[0m
+[36m     Additional stages detected: fast_dc, RTL[0m
+
+[36m    +===============================================================+
+    |                                                               |
+    |                    [1mAVICE WORKAREA REVIEW[0m[36m                      |
+    |                                                               |
+    |              [32mAdvanced Verification & Integration[0m[36m              |
+    |                    [32mCircuit Engineering[0m[36m                        |
+    |                                                               |
+    +===============================================================+[0m
+
+
+----------------------------------- [32m[1] Setup[0m -----------------------------------
+
+[36mDisk Utilization:[0m
+  Filesystem: tlv02-cdot16-scr01-lif10b:/vol/scratch166/scratch.arcohen_vlsi
+  Mount Point: /home/scratch.arcohen_vlsi
+  Size: 4.0T | Used: 2.3T | Available: 1.7T
+  [32mUsage: 58% [OK][0m
+UNIT: ccorea
+TAG: ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap
+IPO: ipo1000 (Available IPOs: ipo1000, ipo1001)
+  [36mEnvironment Information:[0m
+    BEFLOW_REV=1.0/2025_ww13_01_rev13
+    BEFLOW_CONFIG_REV=2025_ww36_08
+    TECH_DATA_T6_REV=rev_flow_2025_ww01_01
+
+----------------------------------- [32m[2] Runtime[0m -----------------------------------
+
+[36mFast DC detected - analyzing both fast_dc and full dc runs[0m
+  Note: PnR start times adjusted to setup step (full PnR run after fast_dc)
+NV Gate ECO Status: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/signoff_flow/nv_gate_eco/eco_ccorea.prc.status
+
+[36mRuntime Summary Table:[0m
+  Category     Stage                       Runtime                 Start       End        
+  ------------ --------------------------- ----------------------- ----------- -----------
+  Construction Fast DC                     0.31 hours              09/09 17:55 09/09 18:14
+  Construction Full DC                     7.26 hours              09/22 13:06 09/22 20:22
+  Signoff      GL Check                    0.55 hours              10/20 10:50 10/20 11:23
+  ECO          NV Gate ECO                 36.48 hours (1.52 days) 10/20 18:31 10/22 07:00
+  Signoff      PV                          11.37 hours             10/22 11:24 10/22 22:52
+  Signoff      Star                        3.06 hours              10/22 12:34 10/22 15:37
+  Signoff      Formal (rtl_vs_pnr_fm)      3.08 hours              10/22 13:40 10/22 16:45
+  Signoff      Formal (rtl_vs_pnr_bbox_fm) 4.51 hours              10/22 15:22 10/22 19:53
+  Construction PnR (ipo1000)               0.05 hours              N/A         N/A        
+
+  [36mRuntime HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mccorea_avice_runtime_report_20251023_141525.html[0m &
+
+----------------------------------- [32m[3] Synthesis (DC)[0m -----------------------------------
+Design Definition: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/unit_scripts/des_def.tcl
+DC Log: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/syn_flow/dc/log/dc.log
+QoR Report (Quality of Results): /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/syn_flow/dc/reports/ccorea_rtl2gate.qor.rpt
+  [36mQoR Analysis:[0m
+    [32mKey QoR Metrics:[0m
+      Design Area: 84977.8746 um2 (0.085 mm2) | Die (X,Y): 4282.98 um x 973.56 um
+      Leaf Cell Count: 733494
+      Combinational Cells: 515477
+      Sequential Cells: 218017
+      Total Nets: 764659
+      Critical Path Slack: 0.0017
+      Total Negative Slack: 0.0000
+      Violating Paths: 0.0000
+      Macro Count: 36
+    [36mScenario Summary:[0m
+    Scenario                                           WNS        TNS        Violating Paths
+    -------------------------------------------------- ---------- ---------- ---------------
+    func.std_tt_0c_0p6v.setup.typical                  0.8786     3.9807     394            
+    func.std_tt_0c_0p6v.setup.typical (Hold)           0.0509     506.3427   17957          
+    [36mTiming Path Groups:[0m CLKGATE, FEEDTHROUGH, REGIN, REGOUT, i2_clk0, m1_clk
+BeFlow Configuration: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/syn_flow/dc/beflow_config.yaml
+  [36mBeFlow Configuration Analysis:[0m
+    [32mKey Configuration Variables:[0m
+      Library Snapshot: 20250819
+      NV Process: tsmc5_t6
+      Tracks Number: t6
+      Project: agur
+      Default Scenario: func.std_tt_0c_0p6v.setup.typical
+      StdCell Library Path: /home/nbu_be_agur/ip/lib_snap/20250819/syn
+      Memories Path: /home/nbu_be_agur/ip/arrays/13897726_02032025_RAM_SYNLIB/arrays_release
+      VT Types: svt, hvt, lvt
+      Agur Unit BE IP: nvidia_pads_tsmc5_cust_mixvt, nvidia_analog_tsmc5_cust_mixvt, adw_n5_v2f_thermal_sensor, nvidia_stdcell_tsmc5_t6_sup
+Report: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/syn_flow/dc/reports/be4rtl/internal_high_width_logical_cones.rpt
+Report: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/syn_flow/dc/reports/debug/ccorea.rtl2gate.removed_cgates.rep
+Report: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/syn_flow/dc/reports/ccorea_rtl2gate.qor.rpt
+Report: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/syn_flow/dc/reports/debug/ccorea.rtl2gate.removed_registers.rep
+Clock gates removed: 2
+Removed registers: 217
+[32mNo don't use cells[0m
+[36mGenerating Unified DC HTML Report...[0m
+  [32m[OK] Unified DC HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mccorea_avice_DC_comprehensive_20251023_141525.html[0m &
+
+----------------------------------- [32m[4] PnR Analysis[0m -----------------------------------
+PnR Status: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/pnr_flow/nv_flow/ccorea.prc.status
+
+[36mPnR Flow Status Analysis:[0m
+
+  [36mIPO ipo1000:[0m
+    PnR Flow: Completed through: setup (1/9)
+    Reporting: No steps completed
+    [33mStatus: UNKNOWN (2/16 done)[0m
+PnR Configuration: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/pnr_flow/nv_flow/ccorea.prc
+  [36mAvailable IPOs:[0m 1000
+  [36mTools:[0m edi
+  [36mFlow Sequence (ipo1000):[0m [33msetup[0m -> [33medi_plan[0m -> [33mplace[0m -> [33mcts[0m -> [33mroute[0m -> [33mpostroute[0m -> [33mexport[0m -> [33mextraction[0m -> [33mnbu_auto_pt[0m
+  [36mTCL Usage Verification:[0m
+    [33m[WARN] Unused TCL files (1):[0m
+      - fix_cleanup.tcl
+PnR Runset: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/pnr_flow/nv_flow/ccorea/ipo1000/CMDs/ccorea.ipo1400.gen_routing_constraints.10_20_15_45.runset.tcl
+  [36mPnR Flow Variables:[0m
+    FLOW(PATH): /home/nbu_be_tools/flow2/1.0/2025_ww25_01
+    PROJECT(CUSTOM_SCRIPTS_DIR): /home/nbu_be_agur/config/flow2/2025_ww36_04/tcl
+    FLOORPLAN: ../../../../syn_flow/latest/results/../../../flp/ccorea_fp.def.gz
+    PIN_PLACEMENT_FILE: /home/nbu_be_agur/backend/release/fcl//ccorea.hfp.pins.def
+    TOP_PLANNER_YAML: /home/nbu_be_agur/backend/release/fcl//top_planner.yaml
+    DC_SHELL_VERSION: /home/tools/synopsys/syn_2016.03-SP4/bin/dc_shell
+    RAM_LIB_PATH: "/home/nbu_be_agur/ip/arrays/nvidia/arrays_release/lef
+    CENTRAL_LIB_PATH: /home/agur_backend_blockRelease/block/merged_lib_snap/20250819
+    NETWORK_FLOW_PATH: /home/nbu_be_tools/beflow/1.0/2025_ww13_01_rev13
+    NETWORK_FLOW_UTILS_DIR: /home/nbu_be_tools/flow2_utils/1.0/2024_ww32_01_legacy_rev4
+PnR BeFlow Configuration (ipo1000): File not found
+  [33mPnR Data: No data files found for any stage or temperature corner[0m
+    [33mTried stages: postroute, route, cts, place, plan[0m
+    [33mTried corners: 0c_0p6v, 125c_0p6v, 25c_0p6v, 85c_0p6v[0m
+    [33mThis could be due to:[0m
+      - Flow still running (data files not yet generated)
+      - Flow failed at this stage
+      - Different temperature corner used
+      - File permissions issue
+  [33mPnR Timing Setup: No timing setup reports found for any stage[0m
+    [33mTried stages: postroute, route, cts, place, plan[0m
+    [33mThis could be due to:[0m
+      - Flow still running (timing reports not yet generated)
+      - Flow failed at this stage
+      - Different file naming convention
+      - File permissions issue
+
+[36mGenerating Unified PnR HTML Report...[0m
+  [32m[OK] Unified PnR HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mccorea_avice_PnR_comprehensive_ipo1000_20251023_141526.html[0m &
+
+----------------------------------- [32m[5] Clock Analysis[0m -----------------------------------
+
+----------------------------------- [32m[6] Formal Verification[0m -----------------------------------
+[36mRTL Tag: [0mccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap
+
+[36mMultibit Mapping Files Check:[0m
+  Checking 6 files across 3 locations per IPO...
+  Files: 1) multibitMapping.gz  2) multibitMapping_for_gen_mbff_scandef.gz
+
+  IPO          Location           File Status          Result    
+  ------------ ------------------ -------------------- ----------
+  ipo1000      PnR Flow           [MISS] [MISS]        [31mMISSING[0m
+  ipo1000      Export Innovus     [MISS] [MISS]        [31mMISSING[0m
+  ipo1000      NV Gate ECO        [MISS] [MISS]        [31mMISSING[0m
+
+  [31m[FAIL] 3/3 location checks failed[0m
+  [33m-> Formal verification may encounter non-equivalence points[0m
+  [33m-> Files are generated in PnR and copied to export_innovus and nv_gate_eco[0m
+Formal Log: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/formal_flow/rtl_vs_pnr_fm/log/rtl_vs_pnr_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 3.08 hours
+  Start: 10/22 13:40
+  End:   10/22 16:45
+Formal Log: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/formal_flow/rtl_vs_pnr_bbox_fm/log/rtl_vs_pnr_bbox_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 4.51 hours
+  Start: 10/22 15:22
+  End:   10/22 19:53
+
+  [36mFormal Verification HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mccorea_avice_formal_verification_20251023_141526.html[0m &
+
+----------------------------------- [32m[7] Parasitic Extraction (Star)[0m -----------------------------------
+
+[36mStar Extraction Runs:[0m
+  Total Runs: 2
+
+  Run    Timestamp    Shorts  
+  ------ ------------ --------
+  1      10/07 06:58  [31m1       [0m
+  2      10/22 12:32  [31m1       [0m (latest)
+
+[36mLatest Run Details:[0m
+  Timestamp: 10/22 12:32
+  Shorts: [31m1[0m
+
+[36mSPEF Files (All Corners):[0m
+  Total SPEF files: 6
+  [32m[OK] All required SPEF files present[0m
+  Location: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/export/nv_star/ccorea/ipo1000/IOs/netlists
+
+  Corner                        Size
+  ------------------------- --------
+  cworst_CCworst_T0           7.04 GB
+  rcbest_CCbest_T0            7.04 GB
+  rcworst_CCworst_T125        7.03 GB
+  typical_T0                  7.03 GB
+  typical_T105                7.03 GB
+  typical_T125                7.03 GB
+SPEF Info (Typical Corner): /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/export/nv_star/ccorea/ipo1000/IOs/netlists/ccorea.ipo1400.typical_T0.spef_info
+
+[36mStar Extraction Configuration:[0m
+  Date: Wed Oct 22 12:55:19 2025
+  Opens: 0
+  Shorts: 6
+  Project RDL: /home/nbu_be_agur/backend/release/current/flp/agurBump_a01_top.oas
+  GDS Layer Map: /home/vlsi_pr/tech/tsmc5/3xs1xt1ya1yb11y3z_T6_DIP/synopsys/star/star_gds_layer.20220907.map
+  Mapping File: /home/vlsi_pr/tech/tsmc5/3xs1xt1ya1yb11y3z_T6_DIP/synopsys/star/nxtgrd.20220208.mapping
+Star Detailed Shorts Report: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/export/nv_star/ccorea/ipo1000/REPs/ccorea.ipo1400.ccorea_ipo1400.star_extraction_shorts.rpt
+  [33mNote: This report is from Run #2 (10/22 12:32) (latest run)[0m
+Short between net ccorea_channel/g_dft_wrapper_if/g_dft_wrapper_ccorea_channel/adw_nvism_dcap_ctrl24/x1dcap_test_out_low_no_buf and unselectable net Layer = M1_mask1 BBox=(3442.6960,490.8670),(3442.7120,490.8830)
+Short between net ccorea_channel/g_dft_wrapper_if/g_dft_wrapper_ccorea_channel/adw_nvism_dcap_ctrl24/x1dcap_test_out_low_no_buf and unselectable net Layer = M1_mask1 BBox=(3442.6940,490.8380),(3442.7140,490.9120)
+Short between net ccorea_channel/g_dft_wrapper_if/g_dft_wrapper_ccorea_channel/adw_nvism_dcap_ctrl24/x1dcap_test_out_low_no_buf and unselectable net Layer = M1_mask1 BBox=(3442.6970,490.8680),(3442.7110,490.8820)
+Short between net ccorea_channel/g_dft_wrapper_if/g_dft_wrapper_ccorea_channel/adw_nvism_dcap_ctrl13/x1dcap_test_out_low_no_buf and unselectable net Layer = M1_mask1 BBox=(2098.1320,478.4770),(2098.1480,478.4930)
+Short between net ccorea_channel/g_dft_wrapper_if/g_dft_wrapper_ccorea_channel/adw_nvism_dcap_ctrl13/x1dcap_test_out_low_no_buf and unselectable net Layer = M1_mask1 BBox=(2098.1300,478.4480),(2098.1500,478.5220)
+Short between net ccorea_channel/g_dft_wrapper_if/g_dft_wrapper_ccorea_channel/adw_nvism_dcap_ctrl13/x1dcap_test_out_low_no_buf and unselectable net Layer = M1_mask1 BBox=(2098.1330,478.4780),(2098.1470,478.4920)
+
+
+[36m  Star Extraction HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mccorea_avice_star_extraction_20251023_141526.html[0m &
+
+----------------------------------- [32m[8] Signoff Timing (PT)[0m -----------------------------------
+All Violators: File not found
+PT Log: File not found
+
+----------------------------------- [32m[9] Physical Verification (PV)[0m -----------------------------------
+[36mPV Flow Timeline:[0m
+  Started:  2025/10/22 11:24:40AM
+  Finished: 2025/10/22 10:52:08PM
+  Duration: 11h 27m 28s
+
+LVS Errors: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/pv_flow/drc_dir/ccorea/lvs_icv_ipo1400/ccorea_ipo1400_fill.LVS_ERRORS
+  [31mStatus: FAIL[0m
+  Failed Equivalence Points: 1
+  First Priority Errors: 1
+  Successful Equivalence Points: 944
+
+  [33mUnmatched Items:[0m
+    Schematic Nets: 4
+    Layout Nets: 2
+    Schematic Ports: 2
+    Layout Ports: 2
+    [31mTotal Unmatched Items: 10[0m
+
+  [32mMatched Items:[0m
+    Instances: 10,610,984
+    Nets:      2,322,701
+    Ports:     63,259
+DRC Errors: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/pv_flow/drc_dir/ccorea/drc_icv_ipo1400/ccorea_ipo1400_fill.LAYOUT_ERRORS
+  [31mStatus: ERRORS - DRC violations found[0m
+  [31mTotal DRC violations: 19[0m
+  [36mViolation breakdown:[0m
+    Rule                 Count    Description                                                 
+    -------------------- -------- ------------------------------------------------------------
+    DM7.S.7              9        (TM2b) Empty space of {{Mn OR DMn} OR DMn_O} DRC flags {{...
+    M1.W.19.1            9        Width of DM1EXCL_boundary_empty_Region (DRC flags {{DM1EX...
+    TSMC.Vx.R.1.11       1        (V15-V19) Max Single Stacked Vx =4 net_select:net_select ...
+Antenna Errors: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/pv_flow/drc_dir/ccorea/drc_icv_antenna_ipo1400/ccorea_ipo1400_fill.LAYOUT_ERRORS
+  [32mStatus: LAYOUT ERRORS RESULTS: CLEAN[0m
+  [32mNo antenna violations found[0m
+
+[36mPV Flow Analysis:[0m
+PV Flow Status: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/pv_flow/nv_flow/pv_ccorea.prc.status
+  [36mccorea/local_flow:[0m
+    [32mCompleted: 8 steps[0m (Total runtime: 11h 22m 24s)
+    [36mKey step runtimes:[0m
+      temp_run_lvs: 58m 13s
+      temp_run_drc: 6h 11m 17s
+      temp_run_ant: 2h 45m 32s
+
+  [36mccorea/release_flow:[0m
+    [32mCompleted: 1 steps[0m (Total runtime: 1s)
+    [33mUnlaunched: 7 steps[0m
+
+PV Flow Configuration: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/pv_flow/nv_flow/pv_ccorea.prc
+  [36mConfiguration Summary:[0m
+    IPO Number: 1400
+    Tool: edi
+    [36mLocal Flow Sequence:[0m setup -> temp_release_mldf -> temp_stream_in_out -> temp_run_lvs -> temp_run_drc -> temp_run_ant
+    [36mRelease Flow Sequence:[0m setup -> release_mldf -> drc_options -> streamin -> drc_lvs -> ant
+
+  [36mPhysical Verification HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mccorea_avice_pv_report_20251023_141526.html[0m &
+
+----------------------------------- [32m[10] GL Checks[0m -----------------------------------
+
+  [36mGL Check Run History:[0m
+    Total Runs: 1
+    First Run: 2025/10/20 10:49:35
+    Latest Run: 2025/10/20 10:49:35
+
+  [36mGL Check Error Summary:[0m
+    Total Errors: 946
+    [32mWaived: 945[0m
+    [31mNon-Waived: 1[0m
+
+  [36mGL Check Results by Checker:[0m
+  Checker [Code](Name)                     Waived     Non-Waived   Total     
+  ---------------------------------------- ---------- ------------ ----------
+  [224](checkClockDomain)                  573        [32m0[0m             573       
+  [152](testSpeedConnectivity)             370        [32m0[0m             370       
+  [280](multipleRootClockgatePerClkInput)  1          [32m0[0m             1         
+  [19](dontUseCells)                       0          [31m1[0m             1         
+  [160](checkMultiBitMapping)              1          [32m0[0m             1         
+
+  Waived Errors File: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/signoff_flow/gl-check/gl-check.all.waived
+  Non-Waived Errors File: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/signoff_flow/gl-check/gl-check.all.err
+    [36mParsing checker rules from gl-check.log...[0m
+    [32m[OK] Found 56 checker rules (56 executed, 8 skipped)[0m
+
+  Open with: /home/utils/firefox-118.0.1/firefox [35mccorea_avice_gl_check_report_20251023_141526.html[0m &
+
+----------------------------------- [32m[11] ECO Analysis[0m -----------------------------------
+[31m0 ECO loops were done[0m
+Didn't run PT ECO
+
+[36mChecking unit script ECO file:[0m
+Unit Script ECO: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/unit_scripts/empty.tcl
+  Total ECO commands: 18248
+  Command breakdown:
+    placeInstance: 6560
+    ecoChangeCell: 6236
+    ecoAddRepeater: 5448
+    nv_eval: 2
+    nv_bug: 1
+    setEcoMode: 1
+    [36mUsing dont_use check: GL-Check results (dont_use_cell_patterns.tcl)[0m
+  [32m[OK] No dont_use cells found in ECO[0m
+    [36mChecking instNotAllowedOnClocks: 8853 clock instances, 61 allowed patterns[0m
+  [32m[OK] No instNotAllowedOnClocks violations found[0m
+    [36mChecking for clock cells on data paths (area optimization info)...[0m
+  [36m[INFO] Found 96 ECO commands using clock cells on data paths:[0m
+    [36mClock cells on data signals (larger cells, consider for area optimization):[0m
+      CKNV6CS1D12T6: 14 instance(s)
+        - CTSOPT_FE_OFC965465_ccorea_channel_g_shiftreg_i2ids2dqa_desc__out_e3_11943401_0_feed_out_ns4_45
+        - CTSOPT_FE_OFC1040204_ccorea_channel_g_shiftreg_i2llu72dqs_p0_xmit_fix_desc1_red_feed_out_ns4_2
+        ... and 12 more
+      CKNV6CS3D12T6: 10 instance(s)
+        - CTSOPT_FE_OFC1005462_ccorea_channel_g_shiftreg_i2llu2dqs_desc__out_e3_77851793_0_fo_out_0_ns5_0
+        - PLACEOPT_FE_OFC1149191_ccorea_channel_g_shiftreg_i2ctrl52dqa_p0_desc_red_feed_out_ns4_54
+        ... and 8 more
+      CKNV6CS2D4T6: 8 instance(s)
+        - PLACEOPT_FE_OFC1178676_N_11120_input_io_buffer
+        - PLACEOPT_FE_OFC1185363_N_10253_input_io_buffer
+        ... and 6 more
+      CKNCS2D3T6: 7 instance(s)
+        - PLACEOPT_FE_OFC1185175_N_10813_input_io_buffer
+        - PLACEOPT_FE_OFC1119373_N_10603_input_io_buffer
+        ... and 5 more
+      CKND3T6: 6 instance(s)
+        - PLACEOPT_FE_OFC1192171_N_14738_input_io_buffer
+        - PLACEOPT_FE_OFC1088675_N_15638_input_io_buffer
+        ... and 4 more
+      CKNCS1D3T6: 6 instance(s)
+        - PLACEOPT_FE_OFC1176134_N_9138_input_io_buffer
+        - PLACEOPT_FE_OFC1196436_N_14238_input_io_buffer
+        ... and 4 more
+      CKNV6D4T6: 5 instance(s)
+        - PLACEOPT_FE_OFC1187900_N_15566_input_io_buffer
+        - POSTROUTE_FE_PSBC626980_N_11335_input_io_buffer
+        ... and 3 more
+      CKNV6CS3D4T6: 5 instance(s)
+        - PLACEOPT_FE_OFC1188949_N_7942_input_io_buffer
+        - PLACEOPT_FE_OFC1180647_N_28340_input_io_buffer
+        ... and 3 more
+      CKNV6D12T6: 5 instance(s)
+        - CTSOPT_FE_OFC1033500_ccorea_channel_g_shiftreg_i2llu212dqs_p0_xmit_fix_desc0_red_feed_out_ns6_6
+        - CTSOPT_FE_OFC1098558_ccorea_channel_g_shiftreg_i2dcm52dql_p0l1_desc_red_feed_out_ns4_4
+        ... and 3 more
+      CKNV6CS2D12T6: 3 instance(s)
+        - CTSOPT_FE_OFC979602_ccorea_channel_g_shiftreg_i2plu172dqs_p0s0_l1_traffic_allowed_red_feed_out_ns4__vld
+        - CTSOPT_FE_OFC880104_ccorea_channel_g_shiftreg_i2llu72dqs_p0_fccl_desc_red_fo_out_i2llu72dqs_p0_fccl_desc_red_s00_ns5_6
+        ... and 1 more
+      ... and 22 more cell types
+NV Gate ECO directory found - see NV Gate ECO section for details
+
+----------------------------------- [32m[12] NV Gate ECO[0m -----------------------------------
+NV Gate ECO Summary: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/signoff_flow/nv_gate_eco/ccorea/ipo1000/sum.eco_change
+  [36mECO Changes Summary:[0m
+    Object     Change             Count
+    ---------- --------------- --------
+    INST       NONCS_REF_SWAP      6020
+    INST       CS_REF_SWAP          216
+    INST       ADDITION            5448
+    NET        DISCONNECTION       5232
+    NET        CONNECTION         27024
+    NET        ADDITION            5448
+    ---------- --------------- --------
+    TOTAL                         49388
+NV Gate ECO Setup Timing: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/signoff_flow/nv_gate_eco/ccorea/ipo1000/REPs/SUMMARY/ccorea.ipo1400.eco.timing.setup.rpt.gz
+  [36mTiming Histogram Tables (ECO):[0m
+  Table 2 - Sub-Category Breakdown (Lines 124-138):
+  |            |                  |      |        |     |                                histogram                                 
+           |            |                  |      |        |     |..........................................................................
+     type  |  category  |   sub_category   | wns  |  tns   | fep |-0.010 -0.020 -0.030 -0.040 -0.050 -0.060 -0.070 -0.080 -0.090 -0.100 -Inf
+   ========|============|==================|======|========|=====|==========================================================================
+           |            |port_to_flop      |-0.256|-912.615|19268|  2006   3027   2417   2208   2042   1867   1608   1180    800    593 1520
+           |input       |port_to_clock_gate|-0.095|  -4.999|  159|     7     41     41     32     21      9      2      1      2      3     
+           |............|..................|......|........|.....|..........................................................................
+   external|output      |flop_to_port      |-0.098| -71.686| 4641|  1772   1889    626    219     92     28      7      5      2      1     
+   ........|............|..................|......|........|.....|..........................................................................
+           |reg_to_reg  |flop_to_flop      |-0.162| -16.940|  918|   357    331    112     56     20      6     12      6      3      2   13
+           |............|..................|......|........|.....|..........................................................................
+   internal|reg_to_cgate|flop_to_clock_gate|-0.028|  -0.177|   16|     9      6      1                                                      
+   =========================================================================================================================================
+   =============================================================================================================================================================================
+NV Gate ECO Hold Timing: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/signoff_flow/nv_gate_eco/ccorea/ipo1000/REPs/SUMMARY/ccorea.ipo1400.eco.timing.hold.rpt.gz
+ECO Cell Movement: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/signoff_flow/nv_gate_eco/ccorea/ipo1000/REPs/ccorea.ipo1400.eco_summary_cell_movement.rpt.gz
+  number_of_cells_moved: 10263
+  ratio_of_cells_moved: 0.0031
+                       ErrorType      ErrorCount      DirectMove       OtherMove           Total DirectMovePerError
+ECO DRC Summary: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/signoff_flow/nv_gate_eco/ccorea/ipo1000/REPs/ccorea.ipo1400.eco_summary_drc_data.rpt.gz
+ECO Open Nets Check: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/signoff_flow/nv_gate_eco/ccorea/ipo1000/REPs/ccorea.ipo1400.eco_summary_open_nets.rpt.gz
+  [32mNo open nets found (PASS)[0m
+  number_of_open_nets_left: 0
+ECO Wire Length Change: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/signoff_flow/nv_gate_eco/ccorea/ipo1000/REPs/ccorea.ipo1400.eco_summary_wire_length_change.rpt.gz
+  ## BEGIN: wire_change Summary (detail report: REPs/ccorea.ipo1400.eco_summary_wire_length_change.rpt)
+  ## db_path: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/signoff_flow/nv_gate_eco/ccorea/ipo1000/DBs/ccorea_ipo1400_eco.enc.dat
+  ## database_id: 0ff652d285dd9713169a4e36bef6c854
+  ## report_time_stamp: Tue Oct 21 17:30:39 IDT 2025 ----------------------------------------------------------------------------------------------------
+  total_net_count: 1743986
+NV Gate ECO Traces: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/signoff_flow/nv_gate_eco/ccorea/ipo1000/reports/ccorea_ipo1400_report_ccorea_ipo1400_eco.traces.rpt
+NV Gate ECO Worst Paths: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/signoff_flow/nv_gate_eco/ccorea/ipo1000/reports/ccorea_ipo1400_report_ccorea_ipo1400_eco.worst_paths
+
+----------------------------------- [32m[13] Block Release[0m -----------------------------------
+Block Release Log: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/export/block_release/log/block_release.log
+  [36mRelease to:[0m /home/agur_backend_blockRelease/block/ccorea/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__2025_10_8_14_36_32
+  [33mNo block release attempts found[0m
+
+  [36mAll Custom Links in Central Release Area:[0m
+  [36mLocation: /home/agur_backend_blockRelease/block/ccorea[0m
+    Link Name                      Date         User            Target                                                                           Status
+    ------------------------------ ------------ --------------- -------------------------------------------------------------------------------- --------------------
+    [32mAUG_07_FP                     [0m 2025-09-08   roir            /home/agur_backend_blockRelease/block/ccorea/ccorea_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap__2025_9_8_7_59_31 [36mManual[0m
+    [32mSEP_10                        [0m 2025-10-08   roir            /home/agur_backend_blockRelease/block/ccorea/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__2025_10_8_14_36_32 [36mManual[0m
+    [32mSEP_28_FP                     [0m 2025-10-09   raduc           /home/agur_backend_blockRelease/block/ccorea/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__2025_10_8_14_36_32 [36mManual[0m
+    [32mSEP_28_FP_eco_02              [0m 2025-10-23   arcohen         /home/agur_backend_blockRelease/block/ccorea/nbu_signoff_ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY_ipo1001_2025_10_23_12_3_41 [36mManual[0m
+
+    [36mTotal custom links found: 4[0m
+
+  [36mManually Created Custom Links (no release log):[0m
+  Manual Custom Link Detail: AUG_07_FP|2025-09-08
+  Manual Custom Link Detail: SEP_10|2025-10-08
+  Manual Custom Link Detail: SEP_28_FP|2025-10-09
+  Manual Custom Link Detail: SEP_28_FP_eco_02|2025-10-23
+
+  [36mBlock Release HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mccorea_avice_block_release_20251023_141527.html[0m &
+
+[36mGenerating Master Dashboard...[0m
+[32m[OK] Master Dashboard generated: ccorea_avice_MASTER_dashboard_20251023.html[0m
+[36m     Open with recommended browser:[0m
+     /home/utils/firefox-118.0.1/firefox [35mccorea_avice_MASTER_dashboard_20251023.html[0m &
+
+[32mReview completed successfully![0m
+[36mOrganized 9 HTML file(s) into html/ folder[0m
+
+
+STDERR:

@@ -1,0 +1,66 @@
+# Review for: /home/scratch.tmazor_vlsi/agur/hib_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap
+# Generated: 2025-10-24 20:30:02
+# Command: /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.tmazor_vlsi/agur/hib_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap -s synthesis
+# Return code: 0
+
+STDOUT:
+[36mValidating workarea structure...[0m
+[32m[OK] Workarea validation passed - PnR + Syn workarea detected[0m
+[36m     Additional stages detected: fast_dc[0m
+Running selected sections: synthesis
+
+----------------------------------- [32m[3] Synthesis (DC)[0m -----------------------------------
+Design Definition: /home/scratch.tmazor_vlsi/agur/hib_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap/unit_scripts/des_def.tcl
+DC Log: /home/scratch.tmazor_vlsi/agur/hib_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap/syn_flow/dc/log/dc.log
+  [32mDC Version: V-2023.12-SP4[0m
+  [32m[OK] DC Errors: 0[0m
+  [36m[INFO] DC Warnings: 949,283[0m
+QoR Report (Quality of Results): /home/scratch.tmazor_vlsi/agur/hib_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap/syn_flow/dc/reports/hib_rtl2gate.qor.rpt
+  [36mQoR Analysis:[0m
+    [32mKey QoR Metrics:[0m
+      Die (X,Y): 736.44 um x 638.40 um
+      Leaf Cell Count: 1351764
+      Combinational Cells: 1006793
+      Sequential Cells: 344971
+      Total Nets: 1373729
+      Critical Path Slack: -0.0407
+      Total Negative Slack: -0.2841
+      Violating Paths: 139.0000
+      Macro Count: 153
+    [36mScenario Summary:[0m
+    Scenario                                           WNS        TNS        Violating Paths
+    -------------------------------------------------- ---------- ---------- ---------------
+    func.std_tt_0c_0p6v.setup.typical                  0.0407     1.8541     1559           
+    func.std_tt_0c_0p6v.setup.typical (Hold)           0.0508     69.3629    4888           
+    [36mTiming Path Groups:[0m REGIN, REGOUT, CLKGATE, FEEDTHROUGH, Wrapper_path, bte_grp, hbr_grp, i1_clk, i2_clk, ids_grp, m1_clk, default
+BeFlow Configuration: /home/scratch.tmazor_vlsi/agur/hib_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap/syn_flow/dc/beflow_config.yaml
+  [36mBeFlow Configuration Analysis:[0m
+    [32mKey Configuration Variables:[0m
+      Library Snapshot: 20250819
+      NV Process: tsmc5_t6
+      Tracks Number: t6
+      Project: agur
+      Default Scenario: func.std_tt_0c_0p6v.setup.typical
+      StdCell Library Path: /home/nbu_be_agur/ip/lib_snap/20250819/syn
+      Memories Path: /home/nbu_be_agur/ip/arrays/13897726_02032025_RAM_SYNLIB/arrays_release
+      VT Types: svt, hvt, lvt
+      Array Names: RAMPDP_152X70_AH6RS_M2_G32, RAMPDP_44X42_AH6R2S_M1_G40, RAMPDP_48X76_AH6R2S_M1_G32, RAMPDP_68X140_AH6R2S_M1_G32, RAMPDP_768X70_AH6RSU_M4_G42
+      Agur Unit BE IP: nvidia_pads_tsmc5_cust_mixvt, nvidia_analog_tsmc5_cust_mixvt, adw_n5_v2f_thermal_sensor, nvidia_stdcell_tsmc5_t6_sup
+Report: /home/scratch.tmazor_vlsi/agur/hib_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap/syn_flow/dc/reports/be4rtl/internal_high_width_logical_cones.rpt
+Report: /home/scratch.tmazor_vlsi/agur/hib_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap/syn_flow/dc/reports/debug/hib.rtl2gate.removed_cgates.rep
+Report: /home/scratch.tmazor_vlsi/agur/hib_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap/syn_flow/dc/reports/hib_rtl2gate.qor.rpt
+Report: /home/scratch.tmazor_vlsi/agur/hib_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap/syn_flow/dc/reports/debug/hib.rtl2gate.removed_registers.rep
+Clock gates removed: 8
+Removed registers: 49947
+[32mNo don't use cells[0m
+[36mGenerating Unified DC HTML Report...[0m
+  [32m[OK] Unified DC HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mhib_avice_DC_comprehensive_20251024_203001.html[0m &
+
+[36mGenerating Master Dashboard...[0m
+[32m[OK] Master Dashboard generated: [35mhib_avice_MASTER_dashboard_20251024.html[0m
+     [36mOpen with:[0m /home/utils/firefox-118.0.1/firefox <filename> &
+[36mOrganized 2 HTML file(s) into html/ folder[0m
+
+
+STDERR:

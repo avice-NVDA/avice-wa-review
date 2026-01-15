@@ -1,6 +1,6 @@
 #!/bin/bash
 # Extract complete block release data for agur project units
-# Supports all chiplets - tracking ALL 67 units across 7 chiplets
+# Supports all chiplets - tracking ALL 73 units across 7 chiplets
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 output_file="$SCRIPT_DIR/AGUR_RELEASES.md"
@@ -8,10 +8,10 @@ current_date=$(date '+%Y-%m-%d %H:%M:%S')
 
 # Define all units by chiplet
 declare -A CHIPLET_UNITS
-CHIPLET_UNITS[HIOPL]="hiopl ioplca ioplcb ioplcc ioplcd"
+CHIPLET_UNITS[HIOPL]="ioplca ioplcb ioplcc ioplcd"
 CHIPLET_UNITS[CPORT]="fdb fth lnd pmux prt"
 CHIPLET_UNITS[HPORT]="ccorea ccoreb ccorec ccored ccoree ccoref"
-CHIPLET_UNITS[NDQ]="clt cscore dcmp fdbm fdbs fthm ftos fwam fwas glc iopl ioplm iopx ir lndm nvrisc pmuxm prtm psca pscb pscc pscd px riba ribs sma yu"
+CHIPLET_UNITS[NDQ]="clr clt cscore dcmp fdbm fdbs fthm ftos fwam fwas glc iopl ioplm iopx ir lndm nvrisc pmuxm prtm psca pscb pscc pscd px riba ribs sma yu"
 CHIPLET_UNITS[QNS]="dqaa dqaci dqaco dqai dqamci dqamco dqamdi dqamdo dqap dqavi dqavo dqax dql dqs eds qcorel qcorer tecorel tecorer tds"
 CHIPLET_UNITS[TCB]="alm bta eri hib"
 CHIPLET_UNITS[TOP_YC]="top_yc_clock top_yc_gpio yc_clock_macro yc_fuse yc_fuse_macro yu_mng"
@@ -56,11 +56,11 @@ This document tracks the latest block releases for all units across all chiplets
 **Last Updated**: $current_date
 
 ### Chiplet Breakdown
-- **HIOPL**: 5 units (hiopl, ioplca, ioplcb, ioplcc, ioplcd)
+- **HIOPL**: 4 units (ioplca, ioplcb, ioplcc, ioplcd)
 - **CPORT**: 5 units (fdb, fth, lnd, pmux, prt)
 - **HPORT**: 6 units (ccorea, ccoreb, ccorec, ccored, ccoree, ccoref)
-- **NDQ**: 27 units (clt, cscore, dcmp, fdbm, fdbs, fthm, ftos, fwam, fwas, glc, iopl, ioplm, iopx, ir, lndm, nvrisc, pmuxm, prtm, psca, pscb, pscc, pscd, px, riba, ribs, sma, yu)
-- **QNS**: 20 units (dqaa, dqaci, dqaco, dqai, dqamci, dqamco, dqamdi, dqamdo, dqap, dqavi, dqavo, dqax, dql, dqs, eds, qcorei, qcorer, tecorel, tecorer, tds)
+- **NDQ**: 28 units (clr, clt, cscore, dcmp, fdbm, fdbs, fthm, ftos, fwam, fwas, glc, iopl, ioplm, iopx, ir, lndm, nvrisc, pmuxm, prtm, psca, pscb, pscc, pscd, px, riba, ribs, sma, yu)
+- **QNS**: 20 units (dqaa, dqaci, dqaco, dqai, dqamci, dqamco, dqamdi, dqamdo, dqap, dqavi, dqavo, dqax, dql, dqs, eds, qcorel, qcorer, tecorel, tecorer, tds)
 - **TCB**: 4 units (alm, bta, eri, hib)
 - **TOP_YC**: 6 units (top_yc_clock, top_yc_gpio, yc_clock_macro, yc_fuse, yc_fuse_macro, yu_mng)
 

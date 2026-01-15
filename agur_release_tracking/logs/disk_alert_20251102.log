@@ -1,0 +1,43 @@
+================================================================================
+AGUR Disk Usage Monitor - 2025-11-02 10:15:43
+================================================================================
+[TEST MODE] All emails will be sent to avice@nvidia.com only!
+[TEST MODE] Subjects will have [TEST] prefix
+================================================================================
+Checking 72 units...
+
+[CRITICAL] ccorea          (HPORT     ) - 93% used | Owner: arcohen
+[CRITICAL] ccoreb          (HPORT     ) - 93% used | Owner: arcohen
+[CRITICAL] cscore          (NDQ       ) - 92% used | Owner: ynaim
+[CRITICAL] glc             (NDQ       ) - 92% used | Owner: ynaim
+[CRITICAL] psca            (NDQ       ) - 91% used | Owner: nkahaz
+[CRITICAL] pscb            (NDQ       ) - 91% used | Owner: nkahaz
+[CRITICAL] ribs            (NDQ       ) - 92% used | Owner: ynaim
+[CRITICAL] dqaa            (QNS       ) - 92% used | Owner: siddharthasa
+[CRITICAL] dqaci           (QNS       ) - 92% used | Owner: siddharthasa
+[CRITICAL] dqamco          (QNS       ) - 92% used | Owner: siddharthasa
+[CRITICAL] dqavo           (QNS       ) - 95% used | Owner: gnarla
+[CRITICAL] tecorel         (QNS       ) - 95% used | Owner: gnarla
+
+Grouping by owner...
+  arcohen: 2 unit(s)
+  ynaim: 3 unit(s)
+  nkahaz: 2 unit(s)
+  siddharthasa: 3 unit(s)
+  gnarla: 2 unit(s)
+
+Sending emails...
+[TEST] Sent to avice@nvidia.com (originally for arcohen@nvidia.com, 2 unit(s))
+[TEST] Sent to avice@nvidia.com (originally for ynaim@nvidia.com, 3 unit(s))
+[TEST] Sent to avice@nvidia.com (originally for nkahaz@nvidia.com, 2 unit(s))
+[TEST] Sent to avice@nvidia.com (originally for siddharthasa@nvidia.com, 3 unit(s))
+[TEST] Sent to avice@nvidia.com (originally for gnarla@nvidia.com, 2 unit(s))
+
+================================================================================
+SUMMARY:
+  Total units checked: 72
+  Critical units (>=90%): 12
+  Unique owners: 5
+  Emails sent (TEST MODE): 5 to avice@nvidia.com, 0 failed
+  Execution time: 31.1 seconds
+================================================================================

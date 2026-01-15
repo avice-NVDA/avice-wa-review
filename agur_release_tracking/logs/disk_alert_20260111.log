@@ -1,0 +1,39 @@
+================================================================================
+AGUR Disk Usage Monitor - 2026-01-11 17:00:06
+================================================================================
+Checking shared infrastructure paths...
+  AGUR Release Area: /home/agur_backend_blockRelease/
+    [OK] 79% used (below 80%)
+  PFNL Unit DB: /home/PFNL_Unit_DB/
+    [OK] 11% used (below 80%)
+
+Checking 73 units...
+
+[CRITICAL] pscc            (NDQ       ) - 94% used | Owner: dtraitelovic
+[CRITICAL] dqap            (QNS       ) - 100% used | Owner: drazmizrahi
+
+Grouping by owner...
+  dtraitelovic: 1 unit(s)
+  drazmizrahi: 1 unit(s)
+
+Building disk summaries and scanning for old workareas...
+  Scanning /home/scratch.dtraitelovic_vlsi_1 for old workareas...
+    -> Found 2 old workarea(s): 924G, 18G
+  Scanning /home/scratch.drazmizrahi_vlsi_1 for old workareas...
+    -> No old workareas found (>30 days)
+
+Sending emails...
+[EMAIL] Sent to dtraitelovic@nvidia.com (1 unit(s))
+[EMAIL] Sent to drazmizrahi@nvidia.com (1 unit(s))
+
+================================================================================
+SUMMARY:
+  Shared Infrastructure:
+    AGUR Release Area: 79% [OK]
+    PFNL Unit DB: 11% [OK]
+  Total units checked: 73
+  Critical units (>=90%): 2
+  Unique owners: 2
+  Emails sent: 2 successful, 0 failed
+  Execution time: 68.5 seconds
+================================================================================

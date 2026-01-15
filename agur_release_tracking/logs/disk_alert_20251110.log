@@ -1,0 +1,36 @@
+================================================================================
+AGUR Disk Usage Monitor - 2025-11-10 07:00:04
+================================================================================
+Checking 73 units...
+
+[CRITICAL] cscore          (NDQ       ) - 93% used | Owner: ynaim
+[CRITICAL] pscc            (NDQ       ) - 91% used | Owner: dtraitelovic
+[CRITICAL] dqamdi          (QNS       ) - 92% used | Owner: seeman
+[CRITICAL] dqamdo          (QNS       ) - 91% used | Owner: abarman
+[CRITICAL] dqavi           (QNS       ) - 91% used | Owner: abarman
+[CRITICAL] dqs             (QNS       ) - 91% used | Owner: abarman
+[CRITICAL] qcorel          (QNS       ) - 92% used | Owner: ronil
+[CRITICAL] qcorer          (QNS       ) - 92% used | Owner: ronil
+
+Grouping by owner...
+  ynaim: 1 unit(s)
+  dtraitelovic: 1 unit(s)
+  seeman: 1 unit(s)
+  abarman: 3 unit(s)
+  ronil: 2 unit(s)
+
+Sending emails...
+[EMAIL] Sent to ynaim@nvidia.com (1 unit(s))
+[EMAIL] Sent to dtraitelovic@nvidia.com (1 unit(s))
+[EMAIL] Sent to seeman@nvidia.com (1 unit(s))
+[EMAIL] Sent to abarman@nvidia.com (3 unit(s))
+[EMAIL] Sent to ronil@nvidia.com (2 unit(s))
+
+================================================================================
+SUMMARY:
+  Total units checked: 73
+  Critical units (>=90%): 8
+  Unique owners: 5
+  Emails sent: 5 successful, 0 failed
+  Execution time: 38.0 seconds
+================================================================================

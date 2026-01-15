@@ -28,6 +28,7 @@
 #   -t, --type TYPE          Regression type: formal|timing|pv|clock|release|glcheck (REQUIRED)
 #   -c, --chiplet CHIPLET    Filter by chiplet - case-insensitive (default: all chiplets)
 #   -u, --unit UNIT          Run for specific unit only
+#   -r, --release NAME       Test specific release (case-insensitive, fallback to last_sta_rel)
 #   -h, --help               Show this help message
 #
 # Output:
@@ -40,6 +41,8 @@
 #   ./run_agur_regression.sh -t timing -u prt             # Run timing regression on prt unit
 #   ./run_agur_regression.sh -t pv                        # Run PV regression on all units
 #   ./run_agur_regression.sh -t glcheck -c CPORT          # Run GL Check regression on CPORT units
+#   ./run_agur_regression.sh -t formal --release NOV_02   # Run formal on NOV_02 release (fallback to last_sta_rel)
+#   ./run_agur_regression.sh -t timing -c CPORT -r nov_02 # Run timing on CPORT units using NOV_02 release
 #
 #===============================================================================
 
@@ -58,6 +61,7 @@ TEMP_DIR="/tmp/agur_regression_$$"
 # Filters
 FILTER_CHIPLETS=()  # Array to store multiple chiplets: CPORT, HPORT, NDQ, QNS, TCB
 FILTER_UNIT=""
+CUSTOM_RELEASE=""   # Custom release name (e.g., NOV_02) - case-insensitive
 
 # Execution options
 # Default: auto-detect with smart capping (min(cpu_cores, 16))
@@ -1415,6 +1419,132 @@ get_regression_name() {
     esac
 }
 
+# Extract workarea path from a release directory
+# Args: $1 = release_dir (e.g., /home/agur_backend_blockRelease/block/pmux/pmux_rbv_...)
+# Returns: workarea path (via echo)
+extract_workarea_from_release() {
+    local release_dir="$1"
+    local log_file="$release_dir/logs/block_release.log"
+    
+    if [ ! -f "$log_file" ]; then
+        log_verbose "Warning: block_release.log not found in $release_dir"
+        echo ""
+        return 1
+    fi
+    
+    # Extract source workarea from log file
+    # Try multiple patterns:
+    # 1. "Create block_release beflow workdir = /home/scratch.USER/..."
+    # 2. "Release <unit> from <workarea_name>" (need to reconstruct full path)
+    # 3. Extract from copy paths (first Copy line has full source path)
+    
+    local workarea=""
+    
+    # Pattern 1: beflow workdir line (most reliable, contains full path)
+    workarea=$(grep -a "beflow workdir = " "$log_file" | head -1 | sed 's/^.*beflow workdir = *//' | sed 's|/export/block_release.*||')
+    
+    if [ -z "$workarea" ]; then
+        # Pattern 2: Extract from Copy lines (they show full source paths)
+        workarea=$(grep -a "Copy /home/" "$log_file" | head -1 | sed 's/^.*Copy *//' | sed 's|/export/.*||')
+    fi
+    
+    if [ -z "$workarea" ]; then
+        log_verbose "Warning: Could not extract workarea from $log_file"
+        echo ""
+        return 1
+    fi
+    
+    echo "$workarea"
+    return 0
+}
+
+# Resolve release for a unit: Try custom release first, fallback to last_sta_rel
+# Args: $1 = unit name, $2 = custom_release_name (optional)
+# Sets global: RESOLVED_WORKAREA, RESOLVED_RELEASE_NAME, RESOLVED_RTL_TAG, RESOLVED_RELEASE_DATE, RESOLVED_RELEASE_USER
+# Returns: 0 if custom release found, 1 if fallback used
+resolve_release() {
+    local unit="$1"
+    local custom_release="$2"
+    local base_dir="/home/agur_backend_blockRelease/block/$unit"
+    
+    # Initialize globals
+    RESOLVED_WORKAREA=""
+    RESOLVED_RELEASE_NAME="last_sta_rel"
+    RESOLVED_RTL_TAG=""
+    RESOLVED_RELEASE_DATE=""
+    RESOLVED_RELEASE_USER=""
+    
+    # If no custom release specified, use default last_sta_rel
+    if [ -z "$custom_release" ]; then
+        log_debug "No custom release specified for $unit - using last_sta_rel"
+        return 1  # Indicate fallback (default behavior)
+    fi
+    
+    # Convert custom release name to lowercase for case-insensitive matching
+    local custom_release_lower=$(echo "$custom_release" | tr '[:upper:]' '[:lower:]')
+    log_debug "Looking for custom release '$custom_release' (lowercase: $custom_release_lower) for unit $unit"
+    
+    # Search for matching release directory (case-insensitive, partial match)
+    local release_dir=""
+    local best_match=""
+    local newest_mtime=0
+    
+    # First, check if it's a symbolic link (e.g., NOV_02 -> actual release dir)
+    for item in "$base_dir"/*; do
+        [ -e "$item" ] || continue  # Skip if doesn't exist
+        local basename=$(basename "$item")
+        local basename_lower=$(echo "$basename" | tr '[:upper:]' '[:lower:]')
+        
+        # Check for partial match
+        if [[ "$basename_lower" == *"$custom_release_lower"* ]]; then
+            # Resolve symlinks
+            local resolved_item=$(readlink -f "$item")
+            if [ -d "$resolved_item" ]; then
+                # If multiple matches, use the most recent one
+                local mtime=$(stat -c %Y "$resolved_item" 2>/dev/null || echo 0)
+                if [ $mtime -gt $newest_mtime ]; then
+                    newest_mtime=$mtime
+                    best_match="$resolved_item"
+                    release_dir="$resolved_item"
+                    RESOLVED_RELEASE_NAME="$basename"
+                    log_debug "Found matching release: $basename -> $resolved_item (mtime: $mtime)"
+                fi
+            fi
+        fi
+    done
+    
+    # If custom release found, extract workarea from it
+    if [ -n "$release_dir" ] && [ -d "$release_dir" ]; then
+        local workarea=$(extract_workarea_from_release "$release_dir")
+        if [ -n "$workarea" ]; then
+            RESOLVED_WORKAREA="$workarea"
+            
+            # Extract additional metadata from release log
+            local log_file="$release_dir/logs/block_release.log"
+            if [ -f "$log_file" ]; then
+                RESOLVED_RELEASE_DATE=$(grep -a "^\-I\- \[" "$log_file" | grep "Release $unit from" | head -1 | sed 's/^-I- \[\(.*\)\].*/\1/')
+                RESOLVED_RELEASE_USER=$(grep -a "^\-I\- \[" "$log_file" | grep " USER:" | head -1 | sed 's/^-I- \[.*\] USER: //')
+                
+                # Try to extract RTL tag from rbv/README in the source workarea
+                if [ -d "$workarea/rbv" ] && [ -f "$workarea/rbv/README" ]; then
+                    RESOLVED_RTL_TAG=$(sed -n '2p' "$workarea/rbv/README" | sed 's/^TAG: //')
+                fi
+            fi
+            
+            log_verbose "✓ Using custom release '$RESOLVED_RELEASE_NAME' for $unit"
+            log_verbose "  Workarea: $RESOLVED_WORKAREA"
+            return 0  # Custom release found and used
+        else
+            log_verbose "⚠ Custom release found but could not extract workarea - falling back to last_sta_rel"
+        fi
+    else
+        log_verbose "⚠ Custom release '$custom_release' not found for $unit - falling back to last_sta_rel"
+    fi
+    
+    # Fallback to last_sta_rel (return 1 to indicate fallback)
+    return 1
+}
+
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -1437,6 +1567,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -u|--unit)
             FILTER_UNIT="$2"
+            shift 2
+            ;;
+        -r|--release)
+            CUSTOM_RELEASE="$2"
             shift 2
             ;;
         -j|--jobs)
@@ -1671,6 +1805,7 @@ declare -a WORKAREAS
 declare -a RTL_TAGS
 declare -a RELEASE_DATES
 declare -a RELEASE_USERS
+declare -a RELEASE_NAMES  # Track which release was used per unit (e.g., "NOV_02" or "last_sta_rel")
 
 while IFS='|' read -r unit chiplet workarea rtl_tag release_types release_date release_user release_path; do
     # Skip comments and empty lines
@@ -1705,12 +1840,28 @@ while IFS='|' read -r unit chiplet workarea rtl_tag release_types release_date r
         continue
     fi
     
+    # Try to resolve custom release if specified
+    release_name="last_sta_rel"
+    if [ -n "$CUSTOM_RELEASE" ]; then
+        resolve_release "$unit" "$CUSTOM_RELEASE"
+        if [ $? -eq 0 ] && [ -n "$RESOLVED_WORKAREA" ]; then
+            # Custom release found - use it
+            workarea="$RESOLVED_WORKAREA"
+            release_name="$RESOLVED_RELEASE_NAME"
+            [ -n "$RESOLVED_RTL_TAG" ] && rtl_tag="$RESOLVED_RTL_TAG"
+            [ -n "$RESOLVED_RELEASE_DATE" ] && release_date="$RESOLVED_RELEASE_DATE"
+            [ -n "$RESOLVED_RELEASE_USER" ] && release_user="$RESOLVED_RELEASE_USER"
+        fi
+        # If resolve_release() returned 1 (fallback), keep original values from table
+    fi
+    
     UNITS+=("$unit")
     CHIPLETS+=("$chiplet")
     WORKAREAS+=("$workarea")
     RTL_TAGS+=("$rtl_tag")
     RELEASE_DATES+=("$release_date")
     RELEASE_USERS+=("$release_user")
+    RELEASE_NAMES+=("$release_name")
 done < "$UNITS_TABLE"
 
 TOTAL_UNITS=${#UNITS[@]}
@@ -1718,6 +1869,30 @@ TOTAL_UNITS=${#UNITS[@]}
 if [ $TOTAL_UNITS -eq 0 ]; then
     echo -e "${RED}[ERROR]${NC} No units found matching the filter criteria"
     exit 1
+fi
+
+# Calculate release statistics if custom release was specified
+if [ -n "$CUSTOM_RELEASE" ]; then
+    CUSTOM_RELEASE_COUNT=0
+    FALLBACK_COUNT=0
+    for release_name in "${RELEASE_NAMES[@]}"; do
+        if [ "$release_name" != "last_sta_rel" ]; then
+            ((CUSTOM_RELEASE_COUNT++))
+        else
+            ((FALLBACK_COUNT++))
+        fi
+    done
+    
+    # Display release summary (always shown, even in quiet mode)
+    echo -e "${CYAN}===============================================================================${NC}"
+    echo -e "${CYAN}  RELEASE SELECTION SUMMARY${NC}"
+    echo -e "${CYAN}===============================================================================${NC}"
+    echo -e "${GREEN}Target Release:${NC} $CUSTOM_RELEASE"
+    echo -e "${GREEN}Found in:${NC} $CUSTOM_RELEASE_COUNT/$TOTAL_UNITS units"
+    if [ $FALLBACK_COUNT -gt 0 ]; then
+        echo -e "${YELLOW}Fallback (last_sta_rel):${NC} $FALLBACK_COUNT units"
+    fi
+    echo ""
 fi
 
 # Smart auto-adjust parallel jobs based on unit count (if -j auto was used)
@@ -1851,6 +2026,13 @@ for REGRESSION_TYPE in "${REGRESSION_TYPES[@]}"; do
                 print_section "Unit $((i+1))/$TOTAL_UNITS: $unit ($chiplet)"
                 echo "Workarea: $workarea"
                 echo "Released: ${RELEASE_DATES[$i]} by ${RELEASE_USERS[$i]}"
+                if [ -n "$CUSTOM_RELEASE" ]; then
+                    if [ "${RELEASE_NAMES[$i]}" != "last_sta_rel" ]; then
+                        echo -e "${GREEN}Using release: ${RELEASE_NAMES[$i]}${NC}"
+                    else
+                        echo -e "${YELLOW}Using release: last_sta_rel (${CUSTOM_RELEASE} not found)${NC}"
+                    fi
+                fi
                 echo ""
                 echo -e "${CYAN}Running $REGRESSION_NAME analysis...${NC}"
                 fi
@@ -3056,6 +3238,7 @@ CHIPLET_SECTION
             rtl_tag="${RTL_TAGS[$idx]}"
             release_date="${RELEASE_DATES[$idx]}"
             release_user="${RELEASE_USERS[$idx]}"
+            release_name="${RELEASE_NAMES[$idx]:-last_sta_rel}"
             
             # Validation: Skip if unit doesn't belong to this chiplet (sanity check)
             if [ "$unit_chiplet" != "$chiplet" ]; then
@@ -3172,24 +3355,15 @@ UNIT_CARD
                 run_date="${REGRESSION_RESULTS[${REGRESSION_TYPE}_${idx}_run_date]}"
                 [ -z "$run_date" ] && run_date="N/A"
                 
-                # Combine Run Date and Runtime into single line (except for formal which shows runtime per flow)
-                if [ "$REGRESSION_TYPE" != "formal" ]; then
-                    # For GL Check, PT, and PV: show "Run: date (runtime)"
-                    cat >> "$HTML_FILE" << RUN_INFO
+                # Combine Run Date and Runtime into single line for ALL types (formal, glcheck, timing, pv)
+                # For formal: show total runtime (individual flow runtimes shown below)
+                # For others: show total runtime
+                cat >> "$HTML_FILE" << RUN_INFO
                                 <div class="info-row">
                                     <span class="info-label">Run:</span>
                                     <span class="info-value" style="color: #3498db; font-weight: 500;">$run_date <span style="color: #7f8c8d; font-weight: normal;">($runtime)</span></span>
                                 </div>
 RUN_INFO
-                else
-                    # For Formal: only show run date (runtime is shown per flow)
-                    cat >> "$HTML_FILE" << RUN_DATE
-                                <div class="info-row">
-                                    <span class="info-label">Run Date:</span>
-                                    <span class="info-value" style="color: #3498db; font-weight: 500;">$run_date</span>
-                                </div>
-RUN_DATE
-                fi
             else
                 # Calculate release date age and add color coding for release/clock types
                 # Color scheme: <1 week=green, 1-2 weeks=orange, >2 weeks=red
@@ -3218,6 +3392,23 @@ RUN_DATE
                                     <span class="info-value" style="color: $release_date_color; font-weight: 500;">$release_date</span>
                                 </div>
 RELEASE_DATE_COLORED
+            fi
+            
+            # If custom release was specified, show which release was actually used (for ALL regression types)
+            if [ -n "$CUSTOM_RELEASE" ]; then
+                release_badge_color="#27ae60"  # Green for custom release
+                release_badge_text="$release_name"
+                if [ "$release_name" = "last_sta_rel" ]; then
+                    release_badge_color="#f39c12"  # Orange/yellow for fallback
+                    release_badge_text="last_sta_rel (fallback)"
+                fi
+                
+                cat >> "$HTML_FILE" << RELEASE_NAME_INFO
+                                <div class="info-row">
+                                    <span class="info-label">Release Used:</span>
+                                    <span class="info-value" style="color: $release_badge_color; font-weight: 500;">$release_badge_text</span>
+                                </div>
+RELEASE_NAME_INFO
             fi
             
             # RTL Tag is only relevant for formal and release regressions

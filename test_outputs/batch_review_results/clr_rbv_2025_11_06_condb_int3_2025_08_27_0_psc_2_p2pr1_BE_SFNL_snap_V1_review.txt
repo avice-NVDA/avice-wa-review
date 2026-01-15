@@ -1,0 +1,185 @@
+# Review for: /home/scratch.ayerushalmy_vlsi_1/agur/clr/1NL/clr_rbv_2025_11_06_condb_int3_2025_08_27_0_psc_2_p2pr1_BE_SFNL_snap_V1
+# Generated: 2025-11-20 12:48:13
+# Command: /home/scratch.avice_vlsi/cursor/avice_wa_review/avice_wa_review_launcher.csh /home/scratch.ayerushalmy_vlsi_1/agur/clr/1NL/clr_rbv_2025_11_06_condb_int3_2025_08_27_0_psc_2_p2pr1_BE_SFNL_snap_V1 -s pnr
+# Return code: 0
+
+STDOUT:
+[36mValidating workarea structure...[0m
+[32m[OK] Workarea validation passed - PnR + Syn workarea detected[0m
+[36m     Additional stages detected: fast_dc, RTL[0m
+Running selected sections: pnr
+
+----------------------------------- [32m[4] PnR Analysis[0m -----------------------------------
+PnR Status: /home/scratch.ayerushalmy_vlsi_1/agur/clr/1NL/clr_rbv_2025_11_06_condb_int3_2025_08_27_0_psc_2_p2pr1_BE_SFNL_snap_V1/pnr_flow/nv_flow/clr.prc.status
+
+[36mPnR Flow Status Analysis:[0m
+
+  [36mIPO ipo1000:[0m
+    PnR Flow: Completed through: nbu_auto_pt (9/9)
+    Reporting: Completed through: report_postroute (5/5)
+    [32mStatus: COMPLETED (16/16 steps)[0m
+PnR Configuration: /home/scratch.ayerushalmy_vlsi_1/agur/clr/1NL/clr_rbv_2025_11_06_condb_int3_2025_08_27_0_psc_2_p2pr1_BE_SFNL_snap_V1/pnr_flow/nv_flow/clr.prc
+  [36mAvailable IPOs:[0m 1000
+  [36mTools:[0m edi
+  [36mFlow Sequence (ipo1000):[0m [33msetup[0m -> [+tsense_routing_new.tcl] [33medi_plan[0m -> [+spr_macro_blockgae.tcl] [33mplace[0m -> [33mcts[0m -> [33mroute[0m -> [+remove_spr_blockage.tcl] [33mpostroute[0m -> [33mexport[0m -> [33mextraction[0m -> [33mnbu_auto_pt[0m
+  [36mClock Names:[0m
+    ipo1000: i2_clk i1_clk i2_clk
+  [36mTCL Usage Verification:[0m
+    [32m[OK] Used TCL files (4):[0m
+      - clr.modes.interface_effort.tcl
+      - remove_spr_blockage.tcl
+      - spr_macro_blockgae.tcl
+      - tsense_routing_new.tcl
+    [33m[WARN] Unused TCL files (1):[0m
+      - vbe_add_ndr.tcl
+PnR Runset: /home/scratch.ayerushalmy_vlsi_1/agur/clr/1NL/clr_rbv_2025_11_06_condb_int3_2025_08_27_0_psc_2_p2pr1_BE_SFNL_snap_V1/pnr_flow/nv_flow/clr/ipo1000/CMDs/clr.ipo1000.shell.11_18_07_43.runset.tcl
+PnR BeFlow Configuration (ipo1000): /home/scratch.ayerushalmy_vlsi_1/agur/clr/1NL/clr_rbv_2025_11_06_condb_int3_2025_08_27_0_psc_2_p2pr1_BE_SFNL_snap_V1/pnr_flow/nv_flow/clr/ipo1000/beflow_config.yaml
+
+[36m══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[33m  FLOW CONFIGURATION[0m
+[36m══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+  Parameter                      Source             Value                                           
+  --------------------------------------------------------------------------------------------------
+  FLOW_PATH                      runset.tcl         /home/nbu_be_tools/flow2/1.0/2025_ww25_01
+  CUSTOM_SCRIPTS_DIR             runset.tcl         /home/nbu_be_agur/config/flow2/2025_ww40_02/tcl
+  FLOORPLAN                      runset.tcl         ../../../../syn_flow/latest/results/../../../...
+  PIN_PLACEMENT_FILE             runset.tcl         /home/nbu_be_agur/backend/release/fcl//clr.hf...
+  TOP_PLANNER_YAML               runset.tcl         /home/nbu_be_agur/backend/release/fcl//top_pl...
+  MULTIBIT_FLOP                  runset.tcl         [32m1 (ENABLED)[0m
+  Library Snapshot               beflow_config      20250819
+  NV Process                     beflow_config      tsmc5_t6
+  Tracks Number                  beflow_config      t6
+  Project                        beflow_config      agur
+  Default Scenario               beflow_config      func.std_tt_0c_0p6v.setup.typical
+  VT Types                       beflow_config      svt, hvt, lvt
+  Agur Unit BE IP                beflow_config      nvidia_pads_tsmc5_cust_mixvt, nvidia_analog_t...
+[36m══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[33m  Note: Configuration extracted from ipo1000/runset.tcl and ipo1000/beflow_config.yaml[0m
+Post-Route Data: /home/scratch.ayerushalmy_vlsi_1/agur/clr/1NL/clr_rbv_2025_11_06_condb_int3_2025_08_27_0_psc_2_p2pr1_BE_SFNL_snap_V1/pnr_flow/nv_flow/clr/ipo1000/reports/clr_clr_ipo1000_report_clr_ipo1000_postroute.func.std_tt_0c_0p6v.setup.typical.data
+
+[36m══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[33m  TIMING PARAMETERS (POSTROUTE)[0m
+[36m══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[36m  EXTERNAL TIMING (I/O Interfaces)[0m
+  --------------------------------------------------------------------------------------------------
+  Path Group                     SETUP Timing (WNS / TNS / ViolPaths)    
+  --------------------------------------------------------------------------------------------------
+  FEEDTHROUGH (Passthrough)         0.003 /      0.000 /      0          
+  REGIN (Inputs)                    0.001 /      0.000 /      0          
+  REGOUT (Outputs)                 -0.080 /   -123.008 /   4877          
+
+[36m  INTERNAL TIMING (Core Logic)[0m
+  --------------------------------------------------------------------------------------------------
+  Clock Domain                   SETUP Timing (WNS / TNS / ViolPaths)    
+  --------------------------------------------------------------------------------------------------
+  m1_clk (Main Clock)               0.061 /      0.000 /      0          
+  i1_clk (Interface Clock)          0.035 /      0.000 /      0          
+  i2_clk (Interface Clock)         -0.051 /     -0.184 /     10          
+[36m══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[33m  Note: HOLD timing will be extracted from timing histogram reports[0m
+
+[36m══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[33m  DESIGN METRICS (POSTROUTE)[0m
+[36m══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[36m  AREA & UTILIZATION[0m
+  --------------------------------------------------------------------------------------------------
+  Die Dimensions (X x Y)              2209.32 x 510.72 um (from: postroute DB)
+  DieArea                             1.1283439104 mm2
+  CoreArea                            1.1268694647 mm2
+  CellArea                            0.02409155595 mm2
+  ArraysArea                          0 mm2
+  Utilization                         1.96625551508%
+  Effective Utilization               2.27226186902%
+
+[36m  CELL COUNTS & DISTRIBUTION[0m
+  --------------------------------------------------------------------------------------------------
+  Cell                                285,105
+  Combinational                       292,666
+  Sequential                          17,596
+  Flip-Flops (Total)                  22,574
+  Buf/Inv Cells                       238,095 (83.5113379281%)
+  Arrays                              0
+  Delay Buffers                       47,491
+  m1_clk FFs                          1,602
+  i2_clk FFs                          19,011
+  i1_clk FFs                          1,961
+
+[36m  VT DISTRIBUTION[0m
+  --------------------------------------------------------------------------------------------------
+  HVT                                 66.6449645783%
+  SVT                                 33.3550354217%
+  LVT                                 0.0%
+  ULVT                                0.0%
+
+[36m  CLOCK GATING & FF EFFICIENCY[0m
+  --------------------------------------------------------------------------------------------------
+  Clock Gates Count                   630
+  Gated FFs                           37.6153165677%
+  Ungated FFs                         61.0348188181% (13,778 ungated)
+  Multibit FFs                        47.9489678391%
+  FFs with One ClkGate                35.1643483654
+  FFs with >2 ClkGates                3.80083281651
+  Max CG Fanout Instance              clr_channel/g_shiftreg_i2ir_crbus_fo_out_i2ir_crbus__in_e...
+  Max CG Fanout Count                 29
+  Non-Scan Flops                      3158
+
+[36m  ROUTING & CONGESTION[0m
+  --------------------------------------------------------------------------------------------------
+  Total Wire Length                   13,693,944 um (13693.94 mm)
+  Shorts                              4
+  Congestion Both Dir                 0.0%
+  Congestion H Dir                    0.00%
+  Congestion V Dir                    0.00%
+
+[36m  DESIGN VIOLATIONS[0m
+  --------------------------------------------------------------------------------------------------
+  Max Cap Violations                  0
+  Max Trans Violations                822
+  Max Fanout Violations               0
+
+[36m  DFT METRICS[0m
+  --------------------------------------------------------------------------------------------------
+  Longest Scan Chain                  177
+  Number of Scan Chains               752
+
+[36m══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+Power Summary: /home/scratch.ayerushalmy_vlsi_1/agur/clr/1NL/clr_rbv_2025_11_06_condb_int3_2025_08_27_0_psc_2_p2pr1_BE_SFNL_snap_V1/pnr_flow/nv_flow/clr/ipo1000/REPs/SUMMARY/clr.ipo1000.postroute.power.rpt.gz
+  [36mPower Summary Table:[0m
+          group     |    area     |  count  |  power   : density : cell_avg | internal : switching : total | leakage  
+     ===============|=============|=========|==========:=========:==========|==========:===========:=======|==========
+      combinational |   16296.764 |  267506 | 4018.003 :   0.247 :    0.015 |    0.000 :     0.000 : 0.000 | 4018.003 
+      sequential    |    9308.661 |   17603 |  763.343 :   0.082 :    0.043 |    0.000 :     0.000 : 0.000 |  763.343 
+      physical      | 1102705.070 | 3207241 |   74.245 :   0.000 :    0.000 |    0.000 :     0.000 : 0.000 |   74.245 
+     ===============|=============|=========|==========:=========:==========|==========:===========:=======|==========
+      total         | 1128310.495 | 3492350 | 4855.591 :   0.004 :    0.001 |    0.000 :     0.000 : 0.000 | 4855.591 
+     =================================================================================================================
+
+[36m══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[33m  TIMING HISTOGRAM - EXTERNAL PATHS (POSTROUTE)[0m
+[36m══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+  Sub-Category                        SETUP (WNS / TNS / FEP)        HOLD (WNS / TNS / FEP)        
+  --------------------------------------------------------------------------------------------------
+  Inputs (port->flop)                      N/A /        N/A /    N/A      N/A /        N/A /    N/A
+  Inputs (port->cg)                        N/A /        N/A /    N/A      N/A /        N/A /    N/A
+  Outputs (flop->port)                     N/A /        N/A /    N/A      N/A /        N/A /    N/A
+  Feedthrough (port->port)                 N/A /        N/A /    N/A      N/A /        N/A /    N/A
+
+[36m  TIMING HISTOGRAM - INTERNAL PATHS (POSTROUTE)[0m
+  --------------------------------------------------------------------------------------------------
+  Sub-Category                        SETUP (WNS / TNS / FEP)        HOLD (WNS / TNS / FEP)        
+  --------------------------------------------------------------------------------------------------
+  Core Logic (flop->flop)                  N/A /        N/A /    N/A      N/A /        N/A /    N/A
+  To Macros (flop->macro)                  N/A /        N/A /    N/A      N/A /        N/A /    N/A
+  From Macros (macro->flop)                N/A /        N/A /    N/A      N/A /        N/A /    N/A
+  Clock Gating (flop->cg)                  N/A /        N/A /    N/A      N/A /        N/A /    N/A
+  Macro to Gates (macro->cg)               N/A /        N/A /    N/A      N/A /        N/A /    N/A
+[36m══════════════════════════════════════════════════════════════════════════════════════════════════[0m
+[33m  Note: SETUP and HOLD timing extracted from POSTROUTE.timing.setup.rpt.gz and POSTROUTE.timing.hold.rpt.gz[0m
+
+[36mGenerating Unified PnR HTML Report...[0m
+  [32m[OK] Unified PnR HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mtest_outputs/html/clr_avice_PnR_comprehensive_ipo1000_20251120_124813.html[0m &
+[36mOrganized 1 HTML file(s) into test_outputs/html/ folder[0m
+
+
+STDERR:

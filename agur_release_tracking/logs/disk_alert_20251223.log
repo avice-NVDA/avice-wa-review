@@ -1,0 +1,68 @@
+================================================================================
+AGUR Disk Usage Monitor - 2025-12-23 07:00:07
+================================================================================
+Checking central block release area: /home/agur_backend_blockRelease/
+[OK] Central block release area: 63% used (below threshold)
+
+Checking 73 units...
+
+[CRITICAL] ccorea          (HPORT     ) - 92% used | Owner: arcohen
+[CRITICAL] ccoreb          (HPORT     ) - 92% used | Owner: arcohen
+[CRITICAL] ccorec          (HPORT     ) - 90% used | Owner: dkolesnikov
+[CRITICAL] cscore          (NDQ       ) - 91% used | Owner: ynaim
+[CRITICAL] glc             (NDQ       ) - 91% used | Owner: ynaim
+[CRITICAL] pscb            (NDQ       ) - 90% used | Owner: nkahaz
+[CRITICAL] ribs            (NDQ       ) - 90% used | Owner: ynaim
+[CRITICAL] dqaa            (QNS       ) - 98% used | Owner: siddharthasa
+[CRITICAL] dqaci           (QNS       ) - 98% used | Owner: siddharthasa
+[CRITICAL] dqamco          (QNS       ) - 98% used | Owner: siddharthasa
+[CRITICAL] dqap            (QNS       ) - 100% used | Owner: drazmizrahi
+[CRITICAL] dqax            (QNS       ) - 90% used | Owner: hmendelovich
+[CRITICAL] qcorel          (QNS       ) - 90% used | Owner: hmendelovich
+[CRITICAL] qcorer          (QNS       ) - 90% used | Owner: hmendelovich
+
+Grouping by owner...
+  arcohen: 2 unit(s)
+  dkolesnikov: 1 unit(s)
+  ynaim: 3 unit(s)
+  nkahaz: 1 unit(s)
+  siddharthasa: 3 unit(s)
+  drazmizrahi: 1 unit(s)
+  hmendelovich: 3 unit(s)
+
+Building disk summaries and scanning for old workareas...
+  Scanning /home/scratch.arcohen_vlsi_1 for old workareas...
+    -> Found 1 old workarea(s): >100G
+  Scanning /home/scratch.dkolesnikov_vlsi_1 for old workareas...
+    -> No old workareas found (>40 days)
+  Scanning /home/scratch.ynaim_vlsi_1 for old workareas...
+    -> Found 2 old workarea(s): >100G, >100G
+  Scanning /home/scratch.ynaim_vlsi for old workareas...
+    -> Found 1 old workarea(s): >100G
+  Scanning /home/scratch.nkahaz_vlsi_1 for old workareas...
+    -> No old workareas found (>40 days)
+  Scanning /home/scratch.siddharthasa_vlsi for old workareas...
+    -> No old workareas found (>40 days)
+  Scanning /home/scratch.drazmizrahi_vlsi_1 for old workareas...
+    -> No old workareas found (>40 days)
+  Scanning /home/scratch.hmendelovich_vlsi_1 for old workareas...
+    -> No old workareas found (>40 days)
+
+Sending emails...
+[EMAIL] Sent to arcohen@nvidia.com (2 unit(s))
+[EMAIL] Sent to dkolesnikov@nvidia.com (1 unit(s))
+[EMAIL] Sent to ynaim@nvidia.com (3 unit(s))
+[EMAIL] Sent to nkahaz@nvidia.com (1 unit(s))
+[EMAIL] Sent to siddharthasa@nvidia.com (3 unit(s))
+[EMAIL] Sent to drazmizrahi@nvidia.com (1 unit(s))
+[EMAIL] Sent to hmendelovich@nvidia.com (3 unit(s))
+
+================================================================================
+SUMMARY:
+  Central block release: 63% used [OK]
+  Total units checked: 73
+  Critical units (>=90%): 14
+  Unique owners: 7
+  Emails sent: 7 successful, 0 failed
+  Execution time: 152.1 seconds
+================================================================================

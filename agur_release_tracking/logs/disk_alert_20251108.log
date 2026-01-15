@@ -1,0 +1,36 @@
+================================================================================
+AGUR Disk Usage Monitor - 2025-11-08 07:00:04
+================================================================================
+Checking 73 units...
+
+[CRITICAL] ccorea          (HPORT     ) - 94% used | Owner: arcohen
+[CRITICAL] cscore          (NDQ       ) - 91% used | Owner: ynaim
+[CRITICAL] glc             (NDQ       ) - 93% used | Owner: ynaim
+[CRITICAL] ribs            (NDQ       ) - 93% used | Owner: ynaim
+[CRITICAL] dqamdi          (QNS       ) - 92% used | Owner: seeman
+[CRITICAL] eds             (QNS       ) - 94% used | Owner: eelgabsi
+[CRITICAL] qcorel          (QNS       ) - 100% used | Owner: ronil
+[CRITICAL] qcorer          (QNS       ) - 100% used | Owner: ronil
+
+Grouping by owner...
+  arcohen: 1 unit(s)
+  ynaim: 3 unit(s)
+  seeman: 1 unit(s)
+  eelgabsi: 1 unit(s)
+  ronil: 2 unit(s)
+
+Sending emails...
+[EMAIL] Sent to arcohen@nvidia.com (1 unit(s))
+[EMAIL] Sent to ynaim@nvidia.com (3 unit(s))
+[EMAIL] Sent to seeman@nvidia.com (1 unit(s))
+[EMAIL] Sent to eelgabsi@nvidia.com (1 unit(s))
+[EMAIL] Sent to ronil@nvidia.com (2 unit(s))
+
+================================================================================
+SUMMARY:
+  Total units checked: 73
+  Critical units (>=90%): 8
+  Unique owners: 5
+  Emails sent: 5 successful, 0 failed
+  Execution time: 37.7 seconds
+================================================================================

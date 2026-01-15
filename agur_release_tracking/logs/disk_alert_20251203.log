@@ -1,0 +1,41 @@
+================================================================================
+AGUR Disk Usage Monitor - 2025-12-03 07:01:08
+================================================================================
+Checking central block release area: /home/agur_backend_blockRelease/
+[WARN] Could not check central block release area disk usage
+
+Checking 73 units...
+
+[CRITICAL] glc             (NDQ       ) - 90% used | Owner: ynaim
+[CRITICAL] psca            (NDQ       ) - 92% used | Owner: nkahaz
+[CRITICAL] pscb            (NDQ       ) - 92% used | Owner: nkahaz
+[CRITICAL] ribs            (NDQ       ) - 90% used | Owner: ynaim
+[CRITICAL] yu              (NDQ       ) - 93% used | Owner: ashahock
+[CRITICAL] dqamdi          (QNS       ) - 91% used | Owner: seeman
+[CRITICAL] tecorer         (QNS       ) - 99% used | Owner: hsajwan
+[CRITICAL] tds             (QNS       ) - 99% used | Owner: hsajwan
+[CRITICAL] eri             (TCB       ) - 99% used | Owner: hsajwan
+
+Grouping by owner...
+  ynaim: 2 unit(s)
+  nkahaz: 2 unit(s)
+  ashahock: 1 unit(s)
+  seeman: 1 unit(s)
+  hsajwan: 3 unit(s)
+
+Sending emails...
+[EMAIL] Sent to ynaim@nvidia.com (2 unit(s))
+[EMAIL] Sent to nkahaz@nvidia.com (2 unit(s))
+[EMAIL] Sent to ashahock@nvidia.com (1 unit(s))
+[EMAIL] Sent to seeman@nvidia.com (1 unit(s))
+[EMAIL] Sent to hsajwan@nvidia.com (3 unit(s))
+
+================================================================================
+SUMMARY:
+  Central block release: [CHECK FAILED]
+  Total units checked: 73
+  Critical units (>=90%): 9
+  Unique owners: 5
+  Emails sent: 5 successful, 0 failed
+  Execution time: 100.6 seconds
+================================================================================

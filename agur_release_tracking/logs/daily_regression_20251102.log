@@ -1,0 +1,977 @@
+================================================================================
+AGUR Daily Regression - 2025-11-02 10:39:25
+================================================================================
+
+Configuration:
+  Units: All 72 AGUR units
+  Analysis: Full workarea review (all sections)
+  Output: /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/20251102
+
+================================================================================
+
+Starting batch review...
+
+Error: agur_release_tracking/AGUR_UNITS_TABLE.csv not found
+Expected path: /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/20251102/agur_release_tracking/AGUR_UNITS_TABLE.csv
+
+================================================================================
+[1;33m⚠️  Daily Regression Completed with Errors (exit code: 1)[0m
+================================================================================
+
+Results Location:
+  Directory: /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/20251102
+  Summary: /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/20251102/summary.txt
+
+Generated Files:
+  HTML Reports: 0
+  Text Logs: 0
+
+Disk Usage: 4.0K
+
+================================================================================
+Execution Time: 2025-11-02 10:39:25
+================================================================================
+================================================================================
+AGUR Daily Regression - 2025-11-02 10:44:33
+================================================================================
+
+Configuration:
+  Units: All 72 AGUR units
+  Analysis: Full workarea review (all sections)
+  Output: /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/20251102
+
+================================================================================
+
+Starting batch review...
+
+Loaded 72 units from database
+
+Will process 72 workarea(s)
+
+[1/72] Processing: export_icc2
+    Description: hiopl (HIOPL) - Released by yshlush
+    IPOs to test: auto
+❌ NOT FOUND: /home/scratch.yshlush_vlsi/hiopl/hiopl_condb_int1_52_2r1/export/export_icc2
+
+[2/72] Processing: ioplca_rbv_2024_03_17_starling_LO_fe_silver_new_flp_ref_final_2
+    Description: ioplca (HIOPL) - Released by ysapojnikov
+    IPOs to test: auto
+❌ NOT FOUND: /home/scratch.ysapojnikov_vlsi/ioplca/ioplca_rbv_2024_03_17_starling_LO_fe_silver_new_flp_ref_final_2
+
+[3/72] Processing: ioplcb_rbv_2024_03_17_starling_LO_fe_silver_PD_fix_ref_uphy
+    Description: ioplcb (HIOPL) - Released by maximkr
+    IPOs to test: auto
+❌ NOT FOUND: /home/scratch.maximkr_vlsi/starling/ioplcb/ioplcb_rbv_2024_03_17_starling_LO_fe_silver_PD_fix_ref_uphy
+
+[4/72] Processing: ioplcc_rbv_2024_03_17_starling_LO_fe_silver_NewUphy
+    Description: ioplcc (HIOPL) - Released by roir
+    IPOs to test: auto
+❌ NOT FOUND: /home/scratch.roir_vlsi_1/starling/ioplcc/ioplcc_rbv_2024_03_17_starling_LO_fe_silver_NewUphy
+
+[5/72] Processing: ioplcd_rbv_2024_03_17_starling_LO_fe_silver_ref_new_flp_2
+    Description: ioplcd (HIOPL) - Released by ysapojnikov
+    IPOs to test: auto
+❌ NOT FOUND: /home/scratch.ysapojnikov_vlsi/ioplcd/ioplcd_rbv_2024_03_17_starling_LO_fe_silver_ref_new_flp_2
+
+[6/72] Processing: fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__floorplanChange_run1
+    Description: fdb (CPORT) - Released by dkolesnikov
+    IPOs to test: auto
+
+[1/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.dkolesnikov_vlsi/agur/fdb/1NL/fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__floorplanChange_run1 (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__floorplanChange_run1
+
+[7/72] Processing: fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner_ref_run
+    Description: fth (CPORT) - Released by lmustafa
+    IPOs to test: auto
+
+[2/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.lmustafa_vlsi/agur/fth/fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner_ref_run (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner_ref_run
+
+[8/72] Processing: run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065
+    Description: lnd (CPORT) - Released by shlomoc
+    IPOs to test: auto
+
+[3/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.shlomoc_vlsi/agur/lnd/run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065 (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065
+
+[9/72] Processing: pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10
+    Description: pmux (CPORT) - Released by brachas
+    IPOs to test: auto
+
+[4/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.brachas_vlsi/agur/1NL/pmux/pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10 (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10
+
+[10/72] Processing: prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap
+    Description: prt (CPORT) - Released by ykatzav
+    IPOs to test: auto
+
+[5/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap
+
+[11/72] Processing: nbu_signoff
+    Description: ccorea (HPORT) - Released by arcohen
+    IPOs to test: auto
+
+[6/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.arcohen_vlsi/agur/channels/ccorea_1510/ccorea_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref_COPY/pnr_flow/nv_flow/ccorea/ipo1004/nbu_signoff (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for nbu_signoff
+
+[12/72] Processing: nbu_signoff
+    Description: ccoreb (HPORT) - Released by arcohen
+    IPOs to test: auto
+
+[7/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.arcohen_vlsi/agur/channels/ccoreb_1510/ccoreb_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref__copy/pnr_flow/nv_flow/ccoreb/ipo1003/nbu_signoff (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for nbu_signoff
+
+[13/72] Processing: ccorec_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref__roi_ref
+    Description: ccorec (HPORT) - Released by dkolesnikov
+    IPOs to test: auto
+
+[8/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.dkolesnikov_vlsi_1/agur/ccorec/1NL/ccorec_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref__roi_ref (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for ccorec_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref__roi_ref
+
+[14/72] Processing: ccored_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__updated_pins_ref_copy
+    Description: ccored (HPORT) - Released by brachas
+    IPOs to test: auto
+
+[9/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.brachas_vlsi_1/agur/1NL/ccored/ccored_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__updated_pins_ref_copy (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for ccored_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__updated_pins_ref_copy
+
+[15/72] Processing: ccoree_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__updated_pins_ref_copy
+    Description: ccoree (HPORT) - Released by ykatzav
+    IPOs to test: auto
+
+[10/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.ykatzav_vlsi_1/agur/ccoree/ccoree_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__updated_pins_ref_copy (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for ccoree_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__updated_pins_ref_copy
+
+[16/72] Processing: ccoref_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__updated_pins_ref_copy
+    Description: ccoref (HPORT) - Released by brachas
+    IPOs to test: auto
+
+[11/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.brachas_vlsi_1/agur/1NL/ccoref/ccoref_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__updated_pins_ref_copy (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for ccoref_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__updated_pins_ref_copy
+
+[17/72] Processing: clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3
+    Description: clt (NDQ) - Released by aamsalem
+    IPOs to test: auto
+
+[12/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.aamsalem_vlsi/agur/clt/1NL/9_9_new_flow/clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3 (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3
+
+[18/72] Processing: cscore.cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_eco_fix_vivid
+    Description: cscore (NDQ) - Released by ynaim
+    IPOs to test: auto
+
+[13/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.ynaim_vlsi_1/agur/1NL/cscore/cscore.cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_eco_fix_vivid (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for cscore.cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_eco_fix_vivid
+
+[19/72] Processing: dcmp_manual_flp_21_9_for_vivid
+    Description: dcmp (NDQ) - Released by rmenasheof
+    IPOs to test: auto
+
+[14/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.rmenasheof_vlsi/agur/dcmp/dcmp_manual_flp_21_9_for_vivid (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for dcmp_manual_flp_21_9_for_vivid
+
+[20/72] Processing: fdbm_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run1
+    Description: fdbm (NDQ) - Released by dkolesnikov
+    IPOs to test: auto
+
+[15/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.dkolesnikov_vlsi/agur/fdbm/1NL/fdbm_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run1 (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for fdbm_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run1
+
+[21/72] Processing: fdbs_eco_imp_2025_10_19_17_25
+    Description: fdbs (NDQ) - Released by brachas
+    IPOs to test: auto
+
+[16/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.brachas_vlsi/agur/1NL/fdbs/fdbs_eco_imp_2025_10_19_17_25 (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for fdbs_eco_imp_2025_10_19_17_25
+
+[22/72] Processing: fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_V3
+    Description: fthm (NDQ) - Released by ayerushalmy
+    IPOs to test: auto
+
+[17/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.ayerushalmy_vlsi/agur/fthm/1NL/fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_V3 (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_V3
+
+[23/72] Processing: condb_int3_2025_08_27_0_1NL_snap_th
+    Description: ftos (NDQ) - Released by thadad
+    IPOs to test: auto
+
+[18/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.thadad_vlsi_1/agur/1NL/ftos/condb_int3_2025_08_27_0_1NL_snap_th (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for condb_int3_2025_08_27_0_1NL_snap_th
+
+[24/72] Processing: run_15_09_2025_fwam_rbv_2025_09_07_4x6_clock_tree_Tzlil_Hook_for_vivid
+    Description: fwam (NDQ) - Released by zbirman
+    IPOs to test: auto
+
+[19/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.zbirman_vlsi/agur/fwam/run_15_09_2025_fwam_rbv_2025_09_07_4x6_clock_tree_Tzlil_Hook_for_vivid (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for run_15_09_2025_fwam_rbv_2025_09_07_4x6_clock_tree_Tzlil_Hook_for_vivid
+
+[25/72] Processing: fwas_golden_ipo4_21_9_for_vivid
+    Description: fwas (NDQ) - Released by rmenasheof
+    IPOs to test: auto
+
+[20/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.rmenasheof_vlsi/agur/fwas/fwas_golden_ipo4_21_9_for_vivid (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for fwas_golden_ipo4_21_9_for_vivid
+
+[26/72] Processing: glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound_vivid
+    Description: glc (NDQ) - Released by ynaim
+    IPOs to test: auto
+
+[21/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.ynaim_vlsi_1/agur/1NL/glc/glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound_vivid (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound_vivid
+
+[27/72] Processing: export_icc2
+    Description: iopl (NDQ) - Released by yshlush
+    IPOs to test: auto
+❌ NOT FOUND: /home/scratch.yshlush_vlsi/iopl/iopl_condb_int1_52_2r1/export/export_icc2
+
+[28/72] Processing: starling_ioplm_2024_10_30
+    Description: ioplm (NDQ) - Released by netaa
+    IPOs to test: auto
+❌ NOT FOUND: /home/sunbird_netaa/ioplm/starling_ioplm_2024_10_30
+
+[29/72] Processing: starling_iopx_2024_11_06
+    Description: iopx (NDQ) - Released by vmoshkovich
+    IPOs to test: auto
+❌ NOT FOUND: /home/sunbird_vmoshkovich/iopx/starling_iopx_2024_11_06
+
+[30/72] Processing: ir_rbv_2025_09_12_agur_icg_fanin_fix_th
+    Description: ir (NDQ) - Released by thadad
+    IPOs to test: auto
+
+[22/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.thadad_vlsi_1/agur/1NL/ir/ir_rbv_2025_09_12_agur_icg_fanin_fix_th (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for ir_rbv_2025_09_12_agur_icg_fanin_fix_th
+
+[31/72] Processing: run_07_09_2025_lndm_rbv_2025_09_01_new_flow
+    Description: lndm (NDQ) - Released by shlomoc
+    IPOs to test: auto
+
+[23/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.shlomoc_vlsi/agur/lndm/run_07_09_2025_lndm_rbv_2025_09_01_new_flow (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for run_07_09_2025_lndm_rbv_2025_09_01_new_flow
+
+[32/72] Processing: nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2
+    Description: nvrisc (NDQ) - Released by ykatzav
+    IPOs to test: auto
+
+[24/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.ykatzav_vlsi/agur/nvrisc/nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2 (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2
+
+[33/72] Processing: run_15_10_pmuxm_rbv_2025_09_03_release_sep10
+    Description: pmuxm (NDQ) - Released by zbirman
+    IPOs to test: auto
+
+[25/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.zbirman_vlsi/agur/pmuxm/run_15_10_pmuxm_rbv_2025_09_03_release_sep10 (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for run_15_10_pmuxm_rbv_2025_09_03_release_sep10
+
+[34/72] Processing: prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry
+    Description: prtm (NDQ) - Released by lmustafa
+    IPOs to test: auto
+
+[26/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.lmustafa_vlsi/agur/prtm/prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry
+
+[35/72] Processing: psca_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_ref
+    Description: psca (NDQ) - Released by nkahaz
+    IPOs to test: auto
+
+[27/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.nkahaz_vlsi/ww38_5_fixes/psca_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_ref (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for psca_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_ref
+
+[36/72] Processing: pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref
+    Description: pscb (NDQ) - Released by nkahaz
+    IPOs to test: auto
+
+[28/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.nkahaz_vlsi/ww38_5_fixes/pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref
+
+[37/72] Processing: pscc_2025_09_02_1NL_snap_new_flow_flp_cdc
+    Description: pscc (NDQ) - Released by dtraitelovic
+    IPOs to test: auto
+
+[29/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.dtraitelovic_vlsi/agur/pscc/pscc_2025_09_02_1NL_snap_new_flow_flp_cdc (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for pscc_2025_09_02_1NL_snap_new_flow_flp_cdc
+
+[38/72] Processing: pscd_rbv_2025_09_02_ver4_Sep25_gb
+    Description: pscd (NDQ) - Released by gibell
+    IPOs to test: auto
+
+[30/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.gibell_vlsi/agur/1nl/pscd/pscd_rbv_2025_09_02_ver4_Sep25_gb (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for pscd_rbv_2025_09_02_ver4_Sep25_gb
+
+[39/72] Processing: px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_old_util65
+    Description: px (NDQ) - Released by aamsalem
+    IPOs to test: auto
+
+[31/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.aamsalem_vlsi/agur/px/1NL/run_9_9_old_util65/px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_old_util65 (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_old_util65
+
+[40/72] Processing: riba_10_9_1nl_new_flow_golden
+    Description: riba (NDQ) - Released by rmenasheof
+    IPOs to test: auto
+
+[32/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.rmenasheof_vlsi/agur/riba/riba_10_9_1nl_new_flow_golden (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for riba_10_9_1nl_new_flow_golden
+
+[41/72] Processing: ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk_vivid
+    Description: ribs (NDQ) - Released by ynaim
+    IPOs to test: auto
+
+[33/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.ynaim_vlsi_1/agur/1NL/ribs/ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk_vivid (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk_vivid
+
+[42/72] Processing: run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix
+    Description: sma (NDQ) - Released by shlomoc
+    IPOs to test: auto
+
+[34/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.shlomoc_vlsi/agur/sma/run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix
+
+[43/72] Processing: yu_agur_rbv_2025_03_17_condb_int1_11_3_BE_TNL_snap_ver7_new_flow
+    Description: yu (NDQ) - Released by ashahock
+    IPOs to test: auto
+❌ NOT FOUND: /home/scratch.ashahock_vlsi_1/agur/yu/yu_agur_rbv_2025_03_17_condb_int1_11_3_BE_TNL_snap_ver7_new_flow
+
+[44/72] Processing: dqaa_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_final
+    Description: dqaa (QNS) - Released by siddharthasa
+    IPOs to test: auto
+
+[35/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaa/dqaa_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_final (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for dqaa_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_final
+
+[45/72] Processing: dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_pv_rel
+    Description: dqaci (QNS) - Released by siddharthasa
+    IPOs to test: auto
+
+[36/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_pv_rel (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_pv_rel
+
+[46/72] Processing: dqaco_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_lat_pin_def
+    Description: dqaco (QNS) - Released by gnarla
+    IPOs to test: auto
+
+[37/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.gnarla_vlsi_1/agur/1NL/dqaco/dqaco_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_lat_pin_def (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for dqaco_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_lat_pin_def
+
+[47/72] Processing: fix_tag_1nl
+    Description: dqai (QNS) - Released by mlanzerer
+    IPOs to test: auto
+
+[38/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.mlanzerer_vlsi/dqai_dir/fix_tag_1nl (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for fix_tag_1nl
+
+[48/72] Processing: dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap
+    Description: dqamci (QNS) - Released by mlanzerer
+    IPOs to test: auto
+
+[39/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.mlanzerer_vlsi/dqamci_dir/dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap
+
+[49/72] Processing: dqamco_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_pv_rel
+    Description: dqamco (QNS) - Released by siddharthasa
+    IPOs to test: auto
+
+[40/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.siddharthasa_vlsi/agur/1NL/dqamco/dqamco_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_pv_rel (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for dqamco_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_pv_rel
+
+[50/72] Processing: dqamdi_rbv_2025_09_18_agur_condb_int3_2025_08_27_0_1NL_snap_q2si
+    Description: dqamdi (QNS) - Released by seeman
+    IPOs to test: auto
+
+[41/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.seeman_vlsi_1/agur/1nl/dqamdi/dqamdi_rbv_2025_09_18_agur_condb_int3_2025_08_27_0_1NL_snap_q2si (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for dqamdi_rbv_2025_09_18_agur_condb_int3_2025_08_27_0_1NL_snap_q2si
+
+[51/72] Processing: dqamdo_rbv_2025_09_18_agur_condb_int3_2025_08_27_0_1NL_snap_vivideco
+    Description: dqamdo (QNS) - Released by abarman
+    IPOs to test: auto
+
+[42/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.abarman_vlsi/agur/1NL/DQAMO_NEW/1NL_run2_scan_VIVID_ECO/dqamdo_rbv_2025_09_18_agur_condb_int3_2025_08_27_0_1NL_snap_vivideco (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for dqamdo_rbv_2025_09_18_agur_condb_int3_2025_08_27_0_1NL_snap_vivideco
+
+[52/72] Processing: dqap_copy_from_tal
+    Description: dqap (QNS) - Released by drazmizrahi
+    IPOs to test: auto
+
+[43/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.drazmizrahi_vlsi/dqap/dqap_copy_from_tal (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for dqap_copy_from_tal
+
+[53/72] Processing: dqavi_rbv_2025_09_09_agur_condb_int3_2025_08_27_0_1NL_snap_eco
+    Description: dqavi (QNS) - Released by abarman
+    IPOs to test: auto
+
+[44/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.abarman_vlsi/agur/1NL/DQAVI/1NL_run1_eco/dqavi_rbv_2025_09_09_agur_condb_int3_2025_08_27_0_1NL_snap_eco (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for dqavi_rbv_2025_09_09_agur_condb_int3_2025_08_27_0_1NL_snap_eco
+
+[54/72] Processing: dqavo_rbv_2025_09_09_agur_condb_int3_2025_08_27_0_1NL_snaplat_sram_fix
+    Description: dqavo (QNS) - Released by gnarla
+    IPOs to test: auto
+
+[45/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.gnarla_vlsi/agur/1NL/dqavo/dqavo_rbv_2025_09_09_agur_condb_int3_2025_08_27_0_1NL_snaplat_sram_fix (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for dqavo_rbv_2025_09_09_agur_condb_int3_2025_08_27_0_1NL_snaplat_sram_fix
+
+[55/72] Processing: dqax_from_matan2
+    Description: dqax (QNS) - Released by hmendelovich
+    IPOs to test: auto
+
+[46/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.hmendelovich_vlsi/dqax_from_matan2 (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for dqax_from_matan2
+
+[56/72] Processing: 040925_1nl_reff_fixed_v0
+    Description: dql (QNS) - Released by aazran
+    IPOs to test: auto
+
+[47/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.aazran_vlsi/dql/040925_1nl_reff_fixed_v0 (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for 040925_1nl_reff_fixed_v0
+
+[57/72] Processing: dqs_rbv_2025_08_28_agur_condb_int3_2025_08_27_0_snap_r1_so
+    Description: dqs (QNS) - Released by abarman
+    IPOs to test: auto
+
+[48/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.abarman_vlsi/agur/1NL/DQS/1NL_run1_SO/dqs_rbv_2025_08_28_agur_condb_int3_2025_08_27_0_snap_r1_so (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for dqs_rbv_2025_08_28_agur_condb_int3_2025_08_27_0_snap_r1_so
+
+[58/72] Processing: eds_rbv_2025_10_06_agur_condb_int3_2025_08_27_0_r0
+    Description: eds (QNS) - Released by eelgabsi
+    IPOs to test: auto
+
+[49/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.eelgabsi_vlsi/AGUR/PARTITIONS/1nl/qns/eds/eds_rbv_2025_10_06_agur_condb_int3_2025_08_27_0_r0 (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for eds_rbv_2025_10_06_agur_condb_int3_2025_08_27_0_r0
+
+[59/72] Processing: qcorer_r0_19_10_25
+    Description: qcorer (QNS) - Released by ronil
+    IPOs to test: auto
+
+[50/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.ronil_vlsi/qcorer/qcorer_r0_19_10_25 (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for qcorer_r0_19_10_25
+
+[60/72] Processing: tecorel_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_default_run
+    Description: tecorel (QNS) - Released by gnarla
+    IPOs to test: auto
+
+[51/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.gnarla_vlsi/agur/1NL/tecorel/tecorel_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_default_run (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for tecorel_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_default_run
+
+[61/72] Processing: tecorer_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_FIRST_RUN
+    Description: tecorer (QNS) - Released by hsajwan
+    IPOs to test: auto
+
+[52/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.hsajwan_vlsi/agur/1NL/tecorer/tecorer_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_FIRST_RUN (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for tecorer_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_FIRST_RUN
+
+[62/72] Processing: tds_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_FIRST_RUN
+    Description: tds (QNS) - Released by hsajwan
+    IPOs to test: auto
+
+[53/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.hsajwan_vlsi/agur/1NL/tds/tds_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_FIRST_RUN (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for tds_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_FIRST_RUN
+
+[63/72] Processing: agur_alm_rbv_2025_10_09
+    Description: alm (TCB) - Released by tmazor
+    IPOs to test: auto
+
+[54/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.tmazor_vlsi/agur/agur_alm_rbv_2025_10_09 (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for agur_alm_rbv_2025_10_09
+
+[64/72] Processing: bta_2025_10_21_Oct21_UTIL
+    Description: bta (TCB) - Released by vliberchuk
+    IPOs to test: auto
+❌ NOT FOUND: /home/scratch.vliberchuk_vlsi/agur/1nl/bta/bta_2025_10_21_Oct21_UTIL
+
+[65/72] Processing: eri_rbv_2025_09_28_timing_fixes_first_run
+    Description: eri (TCB) - Released by hsajwan
+    IPOs to test: auto
+
+[55/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.hsajwan_vlsi/agur/1NL/ERI/eri_rbv_2025_09_28_timing_fixes_first_run (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for eri_rbv_2025_09_28_timing_fixes_first_run
+
+[66/72] Processing: hib_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap
+    Description: hib (TCB) - Released by tmazor
+    IPOs to test: auto
+
+[56/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.tmazor_vlsi/agur/hib_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for hib_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap
+
+[67/72] Processing: top_yc_clock_sunbird_rbv_2023_05_21_FNL
+    Description: top_yc_clock (TOP_YC) - Released by abeinhorn
+    IPOs to test: auto
+❌ NOT FOUND: /home/starling_backend_blockData/top_yc_clock/top_yc_clock_sunbird_rbv_2023_05_21_FNL
+
+[68/72] Processing: top_yc_gpio_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_new
+    Description: top_yc_gpio (TOP_YC) - Released by lschwartz
+    IPOs to test: auto
+
+[57/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.lschwartz_vlsi/agur/top_yc_gpio/top_yc_gpio_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_new (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for top_yc_gpio_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_new
+
+[69/72] Processing: top_yc_clock_agur_rbv_2025_06_09_condb_int2_23_5r1_SFNL_snap_00
+    Description: yc_clock_macro (TOP_YC) - Released by lschwartz
+    IPOs to test: auto
+
+[58/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.lschwartz_vlsi/agur/yc_clock_macro/top_yc_clock_agur_rbv_2025_06_09_condb_int2_23_5r1_SFNL_snap_00 (Auto-detect IPO)
+================================================================================
+⏰ TIMEOUT: Review timed out for top_yc_clock_agur_rbv_2025_06_09_condb_int2_23_5r1_SFNL_snap_00
+
+[70/72] Processing: yc_fuse_agur_rbv_2025_08_11_condb_int3_2025_07_31_1_1NL_snap
+    Description: yc_fuse (TOP_YC) - Released by lhaiby
+    IPOs to test: auto
+
+[59/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.lhaiby_vlsi/Agur/yc_fuse_agur_rbv_2025_08_11_condb_int3_2025_07_31_1_1NL_snap (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for yc_fuse_agur_rbv_2025_08_11_condb_int3_2025_07_31_1_1NL_snap
+
+[71/72] Processing: yc_fuse_sunbird_rbv_2023_05_21
+    Description: yc_fuse_macro (TOP_YC) - Released by abeinhorn
+    IPOs to test: auto
+❌ NOT FOUND: /home/starling_backend_blockData/yc_fuse_macro/yc_fuse_sunbird_rbv_2023_05_21
+
+[72/72] Processing: yu_mng_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_04
+    Description: yu_mng (TOP_YC) - Released by aspiegelglas
+    IPOs to test: auto
+
+[60/72] Testing IPO: auto
+
+================================================================================
+REVIEWING: /home/scratch.aspiegelglas_vlsi/Agur/yu_mng/yu_mng_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_04 (Auto-detect IPO)
+================================================================================
+✅ SUCCESS: Review completed for yu_mng_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_04
+
+================================================================================
+BATCH REVIEW SUMMARY
+================================================================================
+Total workareas: 72
+Total tests run: 72
+✅ Successful: 59
+❌ Failed: 1
+🔍 Not found: 12
+📁 Results saved in: /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/20251102/
+================================================================================
+
+DETAILED WORKAREA SUMMARY:
+================================================================================
+❌ export_icc2: auto
+❌ ioplca_rbv_2024_03_17_starling_LO_fe_silver_new_flp_ref_final_2: auto
+❌ ioplcb_rbv_2024_03_17_starling_LO_fe_silver_PD_fix_ref_uphy: auto
+❌ ioplcc_rbv_2024_03_17_starling_LO_fe_silver_NewUphy: auto
+❌ ioplcd_rbv_2024_03_17_starling_LO_fe_silver_ref_new_flp_2: auto
+✅ fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__floorplanChange_run1: auto
+✅ fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner_ref_run: auto
+✅ run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065: auto
+✅ pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10: auto
+✅ prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap: auto
+✅ nbu_signoff: auto
+✅ nbu_signoff: auto
+✅ ccorec_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_ref__roi_ref: auto
+✅ ccored_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__updated_pins_ref_copy: auto
+✅ ccoree_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__updated_pins_ref_copy: auto
+✅ ccoref_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__updated_pins_ref_copy: auto
+✅ clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3: auto
+✅ cscore.cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_eco_fix_vivid: auto
+✅ dcmp_manual_flp_21_9_for_vivid: auto
+✅ fdbm_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run1: auto
+✅ fdbs_eco_imp_2025_10_19_17_25: auto
+✅ fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_V3: auto
+✅ condb_int3_2025_08_27_0_1NL_snap_th: auto
+✅ run_15_09_2025_fwam_rbv_2025_09_07_4x6_clock_tree_Tzlil_Hook_for_vivid: auto
+✅ fwas_golden_ipo4_21_9_for_vivid: auto
+✅ glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound_vivid: auto
+❌ export_icc2: auto
+❌ starling_ioplm_2024_10_30: auto
+❌ starling_iopx_2024_11_06: auto
+✅ ir_rbv_2025_09_12_agur_icg_fanin_fix_th: auto
+✅ run_07_09_2025_lndm_rbv_2025_09_01_new_flow: auto
+✅ nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2: auto
+✅ run_15_10_pmuxm_rbv_2025_09_03_release_sep10: auto
+✅ prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry: auto
+✅ psca_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_ref: auto
+✅ pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref: auto
+✅ pscc_2025_09_02_1NL_snap_new_flow_flp_cdc: auto
+✅ pscd_rbv_2025_09_02_ver4_Sep25_gb: auto
+✅ px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_old_util65: auto
+✅ riba_10_9_1nl_new_flow_golden: auto
+✅ ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk_vivid: auto
+✅ run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix: auto
+❌ yu_agur_rbv_2025_03_17_condb_int1_11_3_BE_TNL_snap_ver7_new_flow: auto
+✅ dqaa_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_final: auto
+✅ dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_pv_rel: auto
+✅ dqaco_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_lat_pin_def: auto
+✅ fix_tag_1nl: auto
+✅ dqamci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap: auto
+✅ dqamco_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_pv_rel: auto
+✅ dqamdi_rbv_2025_09_18_agur_condb_int3_2025_08_27_0_1NL_snap_q2si: auto
+✅ dqamdo_rbv_2025_09_18_agur_condb_int3_2025_08_27_0_1NL_snap_vivideco: auto
+✅ dqap_copy_from_tal: auto
+✅ dqavi_rbv_2025_09_09_agur_condb_int3_2025_08_27_0_1NL_snap_eco: auto
+✅ dqavo_rbv_2025_09_09_agur_condb_int3_2025_08_27_0_1NL_snaplat_sram_fix: auto
+✅ dqax_from_matan2: auto
+✅ 040925_1nl_reff_fixed_v0: auto
+✅ dqs_rbv_2025_08_28_agur_condb_int3_2025_08_27_0_snap_r1_so: auto
+✅ eds_rbv_2025_10_06_agur_condb_int3_2025_08_27_0_r0: auto
+✅ qcorer_r0_19_10_25: auto
+✅ tecorel_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_default_run: auto
+✅ tecorer_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_FIRST_RUN: auto
+✅ tds_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_FIRST_RUN: auto
+✅ agur_alm_rbv_2025_10_09: auto
+❌ bta_2025_10_21_Oct21_UTIL: auto
+✅ eri_rbv_2025_09_28_timing_fixes_first_run: auto
+✅ hib_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap: auto
+❌ top_yc_clock_sunbird_rbv_2023_05_21_FNL: auto
+✅ top_yc_gpio_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_new: auto
+✅ top_yc_clock_agur_rbv_2025_06_09_condb_int2_23_5r1_SFNL_snap_00: auto
+✅ yc_fuse_agur_rbv_2025_08_11_condb_int3_2025_07_31_1_1NL_snap: auto
+❌ yc_fuse_sunbird_rbv_2023_05_21: auto
+✅ yu_mng_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_04: auto
+================================================================================
+
+================================================================================
+[0;32m✅ Daily Regression Completed Successfully[0m
+================================================================================
+
+Results Location:
+  Directory: /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/20251102
+  Summary: /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/20251102/summary.txt
+
+Generated Files:
+  HTML Reports: 655
+  Text Logs: 58
+
+Disk Usage: 1.2G
+
+================================================================================
+Execution Time: 2025-11-02 11:02:00
+================================================================================
+================================================================================
+AGUR Daily Regression - 2025-11-02 11:39:17
+================================================================================
+
+Configuration:
+  Units: All 72 AGUR units
+  Regression Types: All (formal, timing, pv, clock, release, glcheck)
+  Output: /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/20251102
+
+================================================================================
+
+Starting AGUR regression (all types)...
+
+[0;36mNo regression type specified - running ALL types[0m
+
+[0;36m[AUTO-DETECT][0m Detected 128 CPU cores -> Using 16 jobs (capped for optimal performance)
+
+[0;36mProgress:[0m [                                                 ] 0% (0/72) - hiopl     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplca     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcc     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fdb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fth     [0;36mProgress:[0m [                                                 ] 0% (0/72) - lnd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - pmux     [0;36mProgress:[0m [                                                 ] 0% (0/72) - prt     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccorea     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccoreb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccorec     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccored     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccoree     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccoref     [0;36mProgress:[0m [                                                 ] 1% (1/72) - clt - ETA: 43m 47s     [0;36mProgress:[0m [=>                                                ] 2% (2/72) - cscore - ETA: 21m 0s     [0;36mProgress:[0m [==>                                               ] 4% (3/72) - dcmp - ETA: 13m 48s     [0;36mProgress:[0m [==>                                               ] 5% (4/72) - fdbm - ETA: 10m 12s     [0;36mProgress:[0m [===>                                              ] 6% (5/72) - fdbs - ETA: 7m 49s     [0;36mProgress:[0m [====>                                             ] 8% (6/72) - fthm - ETA: 7m 42s     [0;36mProgress:[0m [====>                                             ] 9% (7/72) - ftos - ETA: 7m 35s     [0;36mProgress:[0m [=====>                                            ] 11% (8/72) - fwam - ETA: 6m 24s     [0;36mProgress:[0m [======>                                           ] 12% (9/72) - fwas - ETA: 5m 15s     [0;36mProgress:[0m [======>                                           ] 13% (10/72) - glc - ETA: 5m 10s     [0;36mProgress:[0m [=======>                                          ] 15% (11/72) - iopl - ETA: 4m 4s     [0;36mProgress:[0m [========>                                         ] 16% (12/72) - ioplm - ETA: 4m 0s     [0;36mProgress:[0m [=========>                                        ] 18% (13/72) - iopx - ETA: 3m 56s     [0;36mProgress:[0m [=========>                                        ] 19% (14/72) - ir - ETA: 2m 54s     [0;36mProgress:[0m [==========>                                       ] 20% (15/72) - lndm - ETA: 2m 51s     [0;36mProgress:[0m [===========>                                      ] 22% (16/72) - nvrisc - ETA: 2m 48s     [0;36mProgress:[0m [===========>                                      ] 23% (17/72) - pmuxm - ETA: 2m 45s     [0;36mProgress:[0m [============>                                     ] 25% (18/72) - prtm - ETA: 2m 42s     [0;36mProgress:[0m [=============>                                    ] 26% (19/72) - psca - ETA: 1m 46s     [0;36mProgress:[0m [=============>                                    ] 27% (20/72) - pscb - ETA: 1m 44s     [0;36mProgress:[0m [==============>                                   ] 29% (21/72) - pscc - ETA: 1m 42s     [0;36mProgress:[0m [===============>                                  ] 30% (22/72) - pscd - ETA: 1m 40s     [0;36mProgress:[0m [===============>                                  ] 31% (23/72) - px - ETA: 1m 38s     [0;36mProgress:[0m [================>                                 ] 33% (24/72) - riba - ETA: 1m 36s     [0;36mProgress:[0m [=================>                                ] 34% (25/72) - ribs - ETA: 1m 34s     [0;36mProgress:[0m [==================>                               ] 36% (26/72) - sma - ETA: 1m 32s     [0;36mProgress:[0m [==================>                               ] 37% (27/72) - yu - ETA: 1m 30s     [0;36mProgress:[0m [===================>                              ] 38% (28/72) - dqaa - ETA: 1m 28s     [0;36mProgress:[0m [====================>                             ] 40% (29/72) - dqaci - ETA: 1m 26s     [0;36mProgress:[0m [====================>                             ] 41% (30/72) - dqaco - ETA: 1m 24s     [0;36mProgress:[0m [=====================>                            ] 43% (31/72) - dqai - ETA: 1m 22s     [0;36mProgress:[0m [======================>                           ] 44% (32/72) - dqamci - ETA: 1m 20s     [0;36mProgress:[0m [======================>                           ] 45% (33/72) - dqamco - ETA: 1m 18s     [0;36mProgress:[0m [=======================>                          ] 47% (34/72) - dqamdi - ETA: 1m 16s     [0;36mProgress:[0m [========================>                         ] 48% (35/72) - dqamdo - ETA: 1m 14s     [0;36mProgress:[0m [=========================>                        ] 50% (36/72) - dqap - ETA: 1m 12s     [0;36mProgress:[0m [=========================>                        ] 51% (37/72) - dqavi - ETA: 1m 10s     [0;36mProgress:[0m [==========================>                       ] 52% (38/72) - dqavo - ETA: 1m 8s     [0;36mProgress:[0m [===========================>                      ] 54% (39/72) - dqax - ETA: 1m 6s     [0;36mProgress:[0m [===========================>                      ] 55% (40/72) - dql - ETA: 1m 4s     [0;36mProgress:[0m [============================>                     ] 56% (41/72) - dqs - ETA: 0m 31s     [0;36mProgress:[0m [=============================>                    ] 58% (42/72) - eds - ETA: 0m 30s     [0;36mProgress:[0m [=============================>                    ] 59% (43/72) - qcorer - ETA: 0m 29s     [0;36mProgress:[0m [==============================>                   ] 61% (44/72) - tecorel - ETA: 0m 28s     [0;36mProgress:[0m [===============================>                  ] 62% (45/72) - tecorer - ETA: 0m 27s     [0;36mProgress:[0m [===============================>                  ] 63% (46/72) - tds - ETA: 0m 52s     [0;36mProgress:[0m [================================>                 ] 65% (47/72) - alm - ETA: 0m 50s     [0;36mProgress:[0m [=================================>                ] 66% (48/72) - bta - ETA: 0m 24s     [0;36mProgress:[0m [==================================>               ] 68% (49/72) - eri - ETA: 0m 23s     [0;36mProgress:[0m [==================================>               ] 69% (50/72) - hib - ETA: 0m 22s     [0;36mProgress:[0m [===================================>              ] 70% (51/72) - top_yc_clock - ETA: 0m 21s     [0;36mProgress:[0m [====================================>             ] 72% (52/72) - top_yc_gpio - ETA: 0m 20s     [0;36mProgress:[0m [====================================>             ] 73% (53/72) - yc_clock_macro - ETA: 0m 19s     [0;36mProgress:[0m [=====================================>            ] 75% (54/72) - yc_fuse - ETA: 0m 18s     [0;36mProgress:[0m [======================================>           ] 76% (55/72) - yc_fuse_macro - ETA: 0m 17s     [0;36mProgress:[0m [======================================>           ] 77% (56/72) - yu_mng - ETA: 0m 16s     [0;36mProgress:[0m [==================================================>] 100% (72/72) - All units completed - ETA: 0m 0s     
+[0;36mProgress:[0m [                                                 ] 0% (0/72) - hiopl     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplca     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcc     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fdb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fth     [0;36mProgress:[0m [                                                 ] 0% (0/72) - lnd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - pmux     [0;36mProgress:[0m [                                                 ] 0% (0/72) - prt     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccorea     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccoreb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccorec     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccored     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccoree     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccoref     [0;36mProgress:[0m [                                                 ] 1% (1/72) - clt - ETA: 140m 49s     [0;36mProgress:[0m [=>                                                ] 2% (2/72) - cscore - ETA: 68m 50s     [0;36mProgress:[0m [==>                                               ] 4% (3/72) - dcmp - ETA: 44m 51s     [0;36mProgress:[0m [==>                                               ] 5% (4/72) - fdbm - ETA: 32m 52s     [0;36mProgress:[0m [===>                                              ] 6% (5/72) - fdbs - ETA: 25m 41s     [0;36mProgress:[0m [====>                                             ] 8% (6/72) - fthm - ETA: 20m 54s     [0;36mProgress:[0m [====>                                             ] 9% (7/72) - ftos - ETA: 20m 35s     [0;36mProgress:[0m [=====>                                            ] 11% (8/72) - fwam - ETA: 18m 8s     [0;36mProgress:[0m [======>                                           ] 12% (9/72) - fwas - ETA: 15m 45s     [0;36mProgress:[0m [======>                                           ] 13% (10/72) - glc - ETA: 14m 28s     [0;36mProgress:[0m [=======>                                          ] 15% (11/72) - iopl - ETA: 13m 13s     [0;36mProgress:[0m [========>                                         ] 16% (12/72) - ioplm - ETA: 12m 0s     [0;36mProgress:[0m [=========>                                        ] 18% (13/72) - iopx - ETA: 10m 49s     [0;36mProgress:[0m [=========>                                        ] 19% (14/72) - ir - ETA: 9m 40s     [0;36mProgress:[0m [==========>                                       ] 20% (15/72) - lndm - ETA: 9m 30s     [0;36mProgress:[0m [===========>                                      ] 22% (16/72) - nvrisc - ETA: 8m 24s     [0;36mProgress:[0m [===========>                                      ] 23% (17/72) - pmuxm - ETA: 8m 15s     [0;36mProgress:[0m [============>                                     ] 25% (18/72) - prtm - ETA: 7m 12s     [0;36mProgress:[0m [=============>                                    ] 26% (19/72) - psca - ETA: 7m 4s     [0;36mProgress:[0m [=============>                                    ] 27% (20/72) - pscb - ETA: 6m 4s     [0;36mProgress:[0m [==============>                                   ] 29% (21/72) - pscc - ETA: 5m 57s     [0;36mProgress:[0m [===============>                                  ] 30% (22/72) - pscd - ETA: 5m 50s     [0;36mProgress:[0m [===============>                                  ] 31% (23/72) - px - ETA: 5m 43s     [0;36mProgress:[0m [================>                                 ] 33% (24/72) - riba - ETA: 4m 48s     [0;36mProgress:[0m [=================>                                ] 34% (25/72) - ribs - ETA: 4m 42s     [0;36mProgress:[0m [==================>                               ] 36% (26/72) - sma - ETA: 4m 36s     [0;36mProgress:[0m [==================>                               ] 37% (27/72) - yu - ETA: 4m 30s     [0;36mProgress:[0m [===================>                              ] 38% (28/72) - dqaa - ETA: 4m 24s     [0;36mProgress:[0m [====================>                             ] 40% (29/72) - dqaci - ETA: 3m 35s     [0;36mProgress:[0m [====================>                             ] 41% (30/72) - dqaco - ETA: 3m 30s     [0;36mProgress:[0m [=====================>                            ] 43% (31/72) - dqai - ETA: 3m 25s     [0;36mProgress:[0m [======================>                           ] 44% (32/72) - dqamci - ETA: 3m 20s     [0;36mProgress:[0m [======================>                           ] 45% (33/72) - dqamco - ETA: 3m 15s     [0;36mProgress:[0m [=======================>                          ] 47% (34/72) - dqamdi - ETA: 3m 10s     [0;36mProgress:[0m [========================>                         ] 48% (35/72) - dqamdo - ETA: 3m 5s     [0;36mProgress:[0m [=========================>                        ] 50% (36/72) - dqap - ETA: 3m 0s     [0;36mProgress:[0m [=========================>                        ] 51% (37/72) - dqavi - ETA: 2m 55s     [0;36mProgress:[0m [==========================>                       ] 52% (38/72) - dqavo - ETA: 2m 50s     [0;36mProgress:[0m [===========================>                      ] 54% (39/72) - dqax - ETA: 2m 45s     [0;36mProgress:[0m [===========================>                      ] 55% (40/72) - dql - ETA: 2m 40s     [0;36mProgress:[0m [============================>                     ] 56% (41/72) - dqs - ETA: 2m 35s     [0;36mProgress:[0m [=============================>                    ] 58% (42/72) - eds - ETA: 2m 30s     [0;36mProgress:[0m [=============================>                    ] 59% (43/72) - qcorer - ETA: 2m 25s     [0;36mProgress:[0m [==============================>                   ] 61% (44/72) - tecorel - ETA: 2m 20s     [0;36mProgress:[0m [===============================>                  ] 62% (45/72) - tecorer - ETA: 2m 15s     [0;36mProgress:[0m [===============================>                  ] 63% (46/72) - tds - ETA: 2m 10s     [0;36mProgress:[0m [================================>                 ] 65% (47/72) - alm - ETA: 2m 5s     [0;36mProgress:[0m [=================================>                ] 66% (48/72) - bta - ETA: 1m 36s     [0;36mProgress:[0m [==================================>               ] 68% (49/72) - eri - ETA: 1m 32s     [0;36mProgress:[0m [==================================>               ] 69% (50/72) - hib - ETA: 1m 28s     [0;36mProgress:[0m [===================================>              ] 70% (51/72) - top_yc_clock - ETA: 1m 24s     [0;36mProgress:[0m [====================================>             ] 72% (52/72) - top_yc_gpio - ETA: 1m 20s     [0;36mProgress:[0m [====================================>             ] 73% (53/72) - yc_clock_macro - ETA: 1m 16s     [0;36mProgress:[0m [=====================================>            ] 75% (54/72) - yc_fuse - ETA: 1m 12s     [0;36mProgress:[0m [======================================>           ] 76% (55/72) - yc_fuse_macro - ETA: 1m 8s     [0;36mProgress:[0m [======================================>           ] 77% (56/72) - yu_mng - ETA: 1m 4s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [==================================================>] 100% (72/72) - All units completed - ETA: 0m 0s     
+[0;36mProgress:[0m [                                                 ] 0% (0/72) - hiopl     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplca     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcc     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fdb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fth     [0;36mProgress:[0m [                                                 ] 0% (0/72) - lnd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - pmux     [0;36mProgress:[0m [                                                 ] 0% (0/72) - prt     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccorea     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccoreb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccorec     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [                                                 ] 0% (0/72) - ccored     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [                                                 ] 0% (0/72) - ccoree     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccoref     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [                                                 ] 1% (1/72) - clt - ETA: 321m 52s     [0;36mProgress:[0m [=>                                                ] 2% (2/72) - cscore - ETA: 158m 40s     [0;36mProgress:[0m [==>                                               ] 4% (3/72) - dcmp - ETA: 103m 30s     [0;36mProgress:[0m [==>                                               ] 5% (4/72) - fdbm - ETA: 77m 4s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [===>                                              ] 6% (5/72) - fdbs - ETA: 60m 18s     [0;36mProgress:[0m [====>                                             ] 8% (6/72) - fthm - ETA: 49m 30s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [====>                                             ] 9% (7/72) - ftos - ETA: 43m 20s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [=====>                                            ] 11% (8/72) - fwam - ETA: 38m 24s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [======>                                           ] 12% (9/72) - fwas - ETA: 33m 36s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [======>                                           ] 13% (10/72) - glc - ETA: 29m 58s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [=======>                                          ] 15% (11/72) - iopl - ETA: 26m 26s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [========>                                         ] 16% (12/72) - ioplm - ETA: 24m 0s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [=========>                                        ] 18% (13/72) - iopx - ETA: 21m 38s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [=========>                                        ] 19% (14/72) - ir - ETA: 19m 20s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [==========>                                       ] 20% (15/72) - lndm - ETA: 18m 3s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [===========>                                      ] 22% (16/72) - nvrisc - ETA: 16m 48s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [===========>                                      ] 23% (17/72) - pmuxm - ETA: 15m 35s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [============>                                     ] 25% (18/72) - prtm - ETA: 14m 24s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [=============>                                    ] 26% (19/72) - psca - ETA: 13m 15s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [=============>                                    ] 27% (20/72) - pscb - ETA: 13m 0s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [==============>                                   ] 29% (21/72) - pscc - ETA: 11m 54s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [===============>                                  ] 30% (22/72) - pscd - ETA: 10m 50s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [===============>                                  ] 31% (23/72) - px - ETA: 10m 37s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [================>                                 ] 33% (24/72) - riba - ETA: 9m 36s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [=================>                                ] 34% (25/72) - ribs - ETA: 9m 24s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [==================>                               ] 36% (26/72) - sma - ETA: 8m 26s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [==================>                               ] 37% (27/72) - yu - ETA: 8m 15s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [===================>                              ] 38% (28/72) - dqaa - ETA: 8m 4s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [====================>                             ] 40% (29/72) - dqaci - ETA: 7m 10s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [====================>                             ] 41% (30/72) - dqaco - ETA: 7m 0s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [=====================>                            ] 43% (31/72) - dqai - ETA: 6m 50s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [======================>                           ] 44% (32/72) - dqamci - ETA: 6m 0s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [======================>                           ] 45% (33/72) - dqamco - ETA: 5m 51s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [=======================>                          ] 47% (34/72) - dqamdi - ETA: 5m 42s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [========================>                         ] 48% (35/72) - dqamdo - ETA: 5m 33s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [=========================>                        ] 50% (36/72) - dqap - ETA: 4m 48s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [=========================>                        ] 51% (37/72) - dqavi - ETA: 4m 40s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [==========================>                       ] 52% (38/72) - dqavo - ETA: 4m 32s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [===========================>                      ] 54% (39/72) - dqax - ETA: 4m 24s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [===========================>                      ] 55% (40/72) - dql - ETA: 4m 16s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [============================>                     ] 56% (41/72) - dqs - ETA: 4m 8s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [=============================>                    ] 58% (42/72) - eds - ETA: 3m 30s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [=============================>                    ] 59% (43/72) - qcorer - ETA: 3m 23s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [==============================>                   ] 61% (44/72) - tecorel - ETA: 3m 16s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [===============================>                  ] 62% (45/72) - tecorer - ETA: 3m 9s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [===============================>                  ] 63% (46/72) - tds - ETA: 3m 2s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [================================>                 ] 65% (47/72) - alm - ETA: 2m 55s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [=================================>                ] 66% (48/72) - bta - ETA: 2m 48s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [==================================>               ] 68% (49/72) - eri - ETA: 2m 18s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [==================================>               ] 69% (50/72) - hib - ETA: 2m 12s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [===================================>              ] 70% (51/72) - top_yc_clock - ETA: 2m 6s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [====================================>             ] 72% (52/72) - top_yc_gpio - ETA: 2m 0s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [====================================>             ] 73% (53/72) - yc_clock_macro - ETA: 1m 54s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [=====================================>            ] 75% (54/72) - yc_fuse - ETA: 1m 48s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [======================================>           ] 76% (55/72) - yc_fuse_macro - ETA: 1m 42s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+[0;36mProgress:[0m [======================================>           ] 77% (56/72) - yu_mng - ETA: 1m 36s     /home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle
+/home/avice/scripts/avice_wa_review/agur_release_tracking/run_agur_regression.sh: line 225: .agur_regression_state_20251102_113917.txt: Stale file handle

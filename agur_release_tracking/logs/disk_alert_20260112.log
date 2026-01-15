@@ -1,0 +1,61 @@
+================================================================================
+AGUR Disk Usage Monitor - 2026-01-12 17:00:05
+================================================================================
+Checking shared infrastructure paths...
+  AGUR Release Area: /home/agur_backend_blockRelease/
+    [WARNING] 80% used (>=80% - first warning)
+    [EMAIL] 80% warning sent to avice
+  PFNL Unit DB: /home/PFNL_Unit_DB/
+    [OK] 12% used (below 80%)
+
+Checking 73 units...
+
+[CRITICAL] pscc            (NDQ       ) - 95% used | Owner: dtraitelovic
+[CRITICAL] dqaa            (QNS       ) - 97% used | Owner: siddharthasa
+[CRITICAL] dqaci           (QNS       ) - 97% used | Owner: siddharthasa
+[CRITICAL] dqaco           (QNS       ) - 93% used | Owner: gnarla
+[CRITICAL] dqamco          (QNS       ) - 97% used | Owner: siddharthasa
+[CRITICAL] dqamdo          (QNS       ) - 98% used | Owner: abarman
+[CRITICAL] dqap            (QNS       ) - 92% used | Owner: drazmizrahi
+[CRITICAL] dqavi           (QNS       ) - 98% used | Owner: abarman
+[CRITICAL] dqavo           (QNS       ) - 93% used | Owner: gnarla
+[CRITICAL] dqs             (QNS       ) - 98% used | Owner: abarman
+[CRITICAL] tecorel         (QNS       ) - 93% used | Owner: gnarla
+
+Grouping by owner...
+  dtraitelovic: 1 unit(s)
+  siddharthasa: 3 unit(s)
+  gnarla: 3 unit(s)
+  abarman: 3 unit(s)
+  drazmizrahi: 1 unit(s)
+
+Building disk summaries and scanning for old workareas...
+  Scanning /home/scratch.dtraitelovic_vlsi_1 for old workareas...
+    -> Found 2 old workarea(s): 924G, 18G
+  Scanning /home/scratch.siddharthasa_vlsi for old workareas...
+    -> Found 3 old workarea(s): 602G, 538G, 472G
+  Scanning /home/scratch.gnarla_vlsi_1 for old workareas...
+    -> Found 3 old workarea(s): 449G, 181G, 64G
+  Scanning /home/scratch.abarman_vlsi_2 for old workareas...
+    -> No old workareas found (>30 days)
+  Scanning /home/scratch.drazmizrahi_vlsi_1 for old workareas...
+    -> No old workareas found (>30 days)
+
+Sending emails...
+[EMAIL] Sent to dtraitelovic@nvidia.com (1 unit(s))
+[EMAIL] Sent to siddharthasa@nvidia.com (3 unit(s))
+[EMAIL] Sent to gnarla@nvidia.com (3 unit(s))
+[EMAIL] Sent to abarman@nvidia.com (3 unit(s))
+[EMAIL] Sent to drazmizrahi@nvidia.com (1 unit(s))
+
+================================================================================
+SUMMARY:
+  Shared Infrastructure:
+    AGUR Release Area: 80% [WARNING SENT]
+    PFNL Unit DB: 12% [OK]
+  Total units checked: 73
+  Critical units (>=90%): 11
+  Unique owners: 5
+  Emails sent: 6 successful, 0 failed
+  Execution time: 192.6 seconds
+================================================================================

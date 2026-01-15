@@ -1,0 +1,66 @@
+# Review for: /home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap
+# Generated: 2025-10-24 20:29:58
+# Command: /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap -s synthesis
+# Return code: 0
+
+STDOUT:
+[36mValidating workarea structure...[0m
+[32m[OK] Workarea validation passed - PnR + Syn workarea detected[0m
+[36m     Additional stages detected: fast_dc, RTL[0m
+Running selected sections: synthesis
+
+----------------------------------- [32m[3] Synthesis (DC)[0m -----------------------------------
+Design Definition: /home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap/unit_scripts/des_def.tcl
+DC Log: /home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap/syn_flow/dc/log/dc.log
+  [32mDC Version: V-2023.12-SP4[0m
+  [32m[OK] DC Errors: 0[0m
+  [36m[INFO] DC Warnings: 774,474[0m
+QoR Report (Quality of Results): /home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap/syn_flow/dc/reports/prt_rtl2gate.qor.rpt
+  [36mQoR Analysis:[0m
+    [32mKey QoR Metrics:[0m
+      Die (X,Y): 600.78 um x 622.44 um
+      Leaf Cell Count: 989447
+      Combinational Cells: 878773
+      Sequential Cells: 110674
+      Total Nets: 1000911
+      Critical Path Slack: -0.0027
+      Total Negative Slack: -0.0251
+      Violating Paths: 19.0000
+      Macro Count: 56
+    [36mScenario Summary:[0m
+    Scenario                                           WNS        TNS        Violating Paths
+    -------------------------------------------------- ---------- ---------- ---------------
+    func.std_tt_0c_0p6v.setup.typical                  0.0400     1.4264     798            
+    func.std_tt_0c_0p6v.setup.typical (Hold)           0.0750     119.5958   3240           
+    [36mTiming Path Groups:[0m CLKGATE, FEEDTHROUGH, REGIN, REGOUT, Wrapper_path, i1_clk, i2_clk, m1_clk, default
+BeFlow Configuration: /home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap/syn_flow/dc/beflow_config.yaml
+  [36mBeFlow Configuration Analysis:[0m
+    [32mKey Configuration Variables:[0m
+      Library Snapshot: 20250819
+      NV Process: tsmc5_t6
+      Tracks Number: t6
+      Project: agur
+      Default Scenario: func.std_tt_0c_0p6v.setup.typical
+      StdCell Library Path: /home/nbu_be_agur/ip/lib_snap/20250819/syn
+      Memories Path: /home/nbu_be_agur/ip/arrays/13897726_02032025_RAM_SYNLIB/arrays_release
+      VT Types: svt, hvt, lvt
+      Array Names: RAMPDP_32X94_AH6R2S_M1_G40, RAMPDP_36X116_AH6R2S_M1_G32, RAMPDP_40X116_AH6R2S_M1_G32, RAMPDP_72X68_AH6R2S_M1_G32, RAMPDP_800X67_AH6RSU_M4_G42
+      Agur Unit BE IP: nvidia_pads_tsmc5_cust_mixvt, nvidia_analog_tsmc5_cust_mixvt, adw_n5_v2f_thermal_sensor, nvidia_stdcell_tsmc5_t6_sup
+Report: /home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap/syn_flow/dc/reports/be4rtl/internal_high_width_logical_cones.rpt
+Report: /home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap/syn_flow/dc/reports/debug/prt.rtl2gate.removed_cgates.rep
+Report: /home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap/syn_flow/dc/reports/prt_rtl2gate.qor.rpt
+Report: /home/scratch.ykatzav_vlsi/agur/prt/prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap/syn_flow/dc/reports/debug/prt.rtl2gate.removed_registers.rep
+Clock gates removed: 0
+Removed registers: 3679
+[32mNo don't use cells[0m
+[36mGenerating Unified DC HTML Report...[0m
+  [32m[OK] Unified DC HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mprt_avice_DC_comprehensive_20251024_202957.html[0m &
+
+[36mGenerating Master Dashboard...[0m
+[32m[OK] Master Dashboard generated: [35mprt_avice_MASTER_dashboard_20251024.html[0m
+     [36mOpen with:[0m /home/utils/firefox-118.0.1/firefox <filename> &
+[36mOrganized 2 HTML file(s) into html/ folder[0m
+
+
+STDERR:

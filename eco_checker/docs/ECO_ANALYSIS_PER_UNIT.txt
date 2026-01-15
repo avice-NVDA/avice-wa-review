@@ -1,0 +1,339 @@
+===============================================================================
+      DETAILED ECO ANALYSIS PER UNIT - VIVID Final Round
+===============================================================================
+Source: Radu (Full-Chip STA Owner)
+Date: November 4, 2025 03:43:11
+Purpose: Final VIVID ECOs + Manual Fixes (Internal + Interface + Zero Corner)
+Target: SEP_28_FP_eco_04 Release
+===============================================================================
+
+UNIT-BY-UNIT BREAKDOWN (Sorted by Total ECO Count)
+===============================================================================
+
+1. CCOREA (HPORT Chiplet) - IPO 1004-1005
+   File: ccorea.ipo1004-1005.2025Nov04_03_43_11_Flow_Fixall.fixall.innovus.tcl
+   -------------------------------------------------------------------------
+   Total Lines:               8,783 (46.2% of all ECOs)
+   Buffer Insertions:         1,419 (51.2% of all buffers)
+   Cell Changes:              3,331 (42.5% of all cell changes)
+   TOTAL ECO OPERATIONS:      4,750 *** LARGEST UNIT ***
+   
+   Breakdown by Cell Type:
+   - Clock cells (CK*):         432 changes (9.1%)
+   - Delay cells (DEL*):        667 changes (14.0%)
+   - Buffer cells (BUFF*):     1,626 changes (34.2%)
+   - Other logic:              ~600 changes
+   - Buffers on CTSOPT paths:   247 buffers
+   
+   Risk Assessment: 🔴 HIGH
+   - Largest ECO count by far (nearly 2x second largest)
+   - Most complex unit requiring extensive timing fixes
+   - Priority 1 for testing and verification
+   
+   Recommended Actions:
+   ✓ Full timing signoff (setup + hold + transition time)
+   ✓ Formal verification (LEC) - critical due to size
+   ✓ Clock tree report verification
+   ✓ Full regression testing (func + timing)
+   ✓ DRC/LVS check after ECO implementation
+
+
+2. CCOREB (HPORT Chiplet) - IPO 1003-1004
+   File: ccoreb.ipo1003-1004.2025Nov04_03_43_11_Flow_Fixall.fixall.innovus.tcl
+   -------------------------------------------------------------------------
+   Total Lines:               2,813
+   Buffer Insertions:           364
+   Cell Changes:              1,304
+   TOTAL ECO OPERATIONS:      1,668
+   
+   Breakdown by Cell Type:
+   - Clock cells (CK*):         122 changes (7.3%)
+   - Delay cells (DEL*):        498 changes (29.9%)
+   - Buffer cells (BUFF*):      600 changes (36.0%)
+   - Buffers on CTSOPT paths:    79 buffers
+   
+   Risk Assessment: 🟡 MEDIUM
+   - Second largest unit, but manageable size
+   - High percentage of delay cells (hold fixes)
+   
+   Recommended Actions:
+   ✓ Full timing signoff
+   ✓ Formal verification (LEC)
+   ✓ Targeted regression on timing-critical paths
+
+
+3. CCORED (HPORT Chiplet) - IPO 1400-1401
+   File: ccored.ipo1400-1401.2025Nov04_03_43_11_Flow_Fixall.fixall.innovus.tcl
+   -------------------------------------------------------------------------
+   Total Lines:               2,465
+   Buffer Insertions:           324
+   Cell Changes:              1,142
+   TOTAL ECO OPERATIONS:      1,466
+   
+   Breakdown by Cell Type:
+   - Clock cells (CK*):         131 changes (8.9%)
+   - Delay cells (DEL*):        356 changes (24.3%)
+   - Buffer cells (BUFF*):      546 changes (37.2%)
+   - Buffers on CTSOPT paths:    56 buffers
+   
+   Risk Assessment: 🟡 MEDIUM
+   - Significant ECO count
+   - Balanced mix of delay/buffer fixes
+   
+   Recommended Actions:
+   ✓ Full timing signoff
+   ✓ Formal verification (LEC)
+
+
+4. CCOREE (HPORT Chiplet) - IPO 1400-1401
+   File: ccoree.ipo1400-1401.2025Nov04_03_43_11_Flow_Fixall.fixall.innovus.tcl
+   -------------------------------------------------------------------------
+   Total Lines:               2,229
+   Buffer Insertions:           302
+   Cell Changes:                995
+   TOTAL ECO OPERATIONS:      1,297
+   
+   Breakdown by Cell Type:
+   - Clock cells (CK*):          85 changes (6.6%)
+   - Delay cells (DEL*):        400 changes (30.8%)
+   - Buffer cells (BUFF*):      441 changes (34.0%)
+   - Buffers on CTSOPT paths:    55 buffers
+   
+   SPECIAL NOTE: Contains MANUAL ECO section (Line 18)
+   - Manual fixes for paths VIVID could not fix automatically
+   - Requires extra scrutiny during review
+   
+   Risk Assessment: 🟡 MEDIUM
+   - Manual ECOs require special attention
+   - High percentage of delay cells
+   
+   Recommended Actions:
+   ✓ Full timing signoff
+   ✓ Manual ECO review with design team
+   ✓ Formal verification (LEC)
+
+
+5. CCOREC (HPORT Chiplet) - IPO 1400-1401
+   File: ccorec.ipo1400-1401.2025Nov04_03_43_11_Flow_Fixall.fixall.innovus.tcl
+   -------------------------------------------------------------------------
+   Total Lines:               2,124
+   Buffer Insertions:           309
+   Cell Changes:                884
+   TOTAL ECO OPERATIONS:      1,193
+   
+   Breakdown by Cell Type:
+   - Clock cells (CK*):          91 changes (7.6%)
+   - Delay cells (DEL*):        290 changes (24.3%)
+   - Buffer cells (BUFF*):      438 changes (36.7%)
+   - Buffers on CTSOPT paths:    12 buffers
+   
+   Risk Assessment: 🟡 MEDIUM
+   - Moderate ECO count
+   - Lower CTSOPT buffer count (good sign)
+   
+   Recommended Actions:
+   ✓ Full timing signoff
+   ✓ Formal verification (LEC)
+
+
+6. CCOREF (HPORT Chiplet) - IPO 1400-1401
+   File: ccoref.ipo1400-1401.2025Nov04_03_43_11_Flow_Fixall.fixall.innovus.tcl
+   -------------------------------------------------------------------------
+   Total Lines:                 204 (smallest HPORT unit)
+   Buffer Insertions:            35
+   Cell Changes:                 69
+   TOTAL ECO OPERATIONS:        104 *** CLEANEST HPORT UNIT ***
+   
+   Breakdown by Cell Type:
+   - Clock cells (CK*):           5 changes (4.8%)
+   - Delay cells (DEL*):         37 changes (35.6%)
+   - Buffer cells (BUFF*):       25 changes (24.0%)
+   - Buffers on CTSOPT paths:    10 buffers
+   
+   Risk Assessment: 🟢 LOW
+   - Minimal ECO count
+   - Clean timing already achieved
+   
+   Recommended Actions:
+   ✓ Standard timing signoff
+   ✓ Quick LEC check
+
+
+7. LND (CPORT Chiplet) - IPO 1000-1001
+   File: lnd.ipo1000-1001.2025Nov04_03_43_11_Flow_Fixall.fixall.innovus.tcl
+   -------------------------------------------------------------------------
+   Total Lines:                 158
+   Buffer Insertions:            11
+   Cell Changes:                 50
+   TOTAL ECO OPERATIONS:         61
+   
+   Breakdown by Cell Type:
+   - Clock cells (CK*):           9 changes (14.8%)
+   - Delay cells (DEL*):         ~15 changes
+   - Buffer cells (BUFF*):       ~20 changes
+   
+   Notable: Includes data transition fixes on DSR paths
+   
+   Risk Assessment: 🟢 LOW
+   - Small ECO count
+   - Focus on interface timing
+   
+   Recommended Actions:
+   ✓ Interface timing verification
+   ✓ Quick LEC check
+
+
+8. PMUX (CPORT Chiplet) - IPO 1000-1001
+   File: pmux.ipo1000-1001.2025Nov04_03_43_11_Flow_Fixall.fixall.innovus.tcl
+   -------------------------------------------------------------------------
+   Total Lines:                 112
+   Buffer Insertions:             6
+   Cell Changes:                 33
+   TOTAL ECO OPERATIONS:         39
+   
+   Breakdown by Cell Type:
+   - Clock cells (CK*):           3 changes (7.7%)
+   - Delay cells (DEL*):         ~12 changes
+   - Buffer cells (BUFF*):       ~15 changes
+   
+   Risk Assessment: 🟢 LOW
+   - Minimal ECO count
+   - Primarily hold fixes
+   
+   Recommended Actions:
+   ✓ Standard timing signoff
+
+
+9. FDB (CPORT Chiplet) - IPO 1000-1001
+   File: fdb.ipo1000-1001.2025Nov04_03_43_11_Flow_Fixall.fixall.innovus.tcl
+   -------------------------------------------------------------------------
+   Total Lines:                  55 *** SMALLEST FILE ***
+   Buffer Insertions:             0 (No buffer insertion)
+   Cell Changes:                 16
+   TOTAL ECO OPERATIONS:         16 *** MANUAL ECOs ONLY ***
+   
+   SPECIAL NOTE: Line 18 contains "#MANUAL ECO SETUP IFC"
+   - Manual interface (IFC) timing fixes
+   - Only 2 manual cell changes for input_io_buffer:
+     * C_4098_input_io_buffer -> BUFFD4T6
+     * C_4884_input_io_buffer -> BUFFD4T6
+   - Rest are automated cell swaps (delay cells)
+   
+   Risk Assessment: 🟢 VERY LOW
+   - Minimal changes
+   - Manual ECOs well-documented
+   
+   Recommended Actions:
+   ✓ Interface timing verification (focus on IFC)
+   ✓ Quick LEC check
+
+
+10. FTH (CPORT Chiplet) - IPO 1000-1001
+    File: fth.ipo1000-1001.2025Nov04_03_43_11_Flow_Fixall.fixall.innovus.tcl
+    -------------------------------------------------------------------------
+    Total Lines:                  42
+    Buffer Insertions:             1
+    Cell Changes:                  8
+    TOTAL ECO OPERATIONS:          9
+    
+    Breakdown by Cell Type:
+    - Clock cells (CK*):           3 changes (33.3%)
+    - Delay cells (DEL*):          ~3 changes
+    - Buffer cells (BUFF*):        ~2 changes
+    
+    Risk Assessment: 🟢 VERY LOW
+    - Extremely minimal changes
+    - Clean timing baseline
+    
+    Recommended Actions:
+    ✓ Quick timing check
+
+
+11. PRT (CPORT Chiplet) - IPO 1000-1001
+    File: prt.ipo1000-1001.2025Nov04_03_43_11_Flow_Fixall.fixall.innovus.tcl
+    -------------------------------------------------------------------------
+    Total Lines:                  30 *** CLEANEST UNIT ***
+    Buffer Insertions:             0 (No buffer insertion)
+    Cell Changes:                  1 (ONLY 1 CELL!)
+    TOTAL ECO OPERATIONS:          1 *** MINIMAL ECO ***
+    
+    Single Change:
+    - Instance: POSTROUTE_FE_PHC10097_...
+    - Cell: BUFFSFV1CS1D1T6
+    - Type: High-speed buffer
+    
+    Risk Assessment: 🟢 MINIMAL RISK
+    - Only 1 cell change in entire unit
+    - Extremely clean timing
+    
+    Recommended Actions:
+    ✓ Quick sanity check
+
+
+===============================================================================
+OVERALL SUMMARY BY CHIPLET
+===============================================================================
+
+HPORT Chiplet (6 units):
+- Total ECO Operations:    10,478 (98.8% of all ECOs)
+- Average per unit:         1,746 ECOs
+- Largest: ccorea (4,750)
+- Smallest: ccoref (104)
+- Risk: 🔴 HIGH due to ccorea size
+
+CPORT Chiplet (5 units):
+- Total ECO Operations:       126 (1.2% of all ECOs)
+- Average per unit:            25 ECOs
+- Largest: lnd (61)
+- Smallest: prt (1)
+- Risk: 🟢 LOW - very clean timing
+
+
+===============================================================================
+TESTING PRIORITY MATRIX
+===============================================================================
+
+PRIORITY 1 (Test First - High Risk):
+✓ ccorea (4,750 ECOs) - Most critical, highest complexity
+
+PRIORITY 2 (Test Second - Medium Risk):
+✓ ccoreb (1,668 ECOs)
+✓ ccored (1,466 ECOs)
+✓ ccoree (1,297 ECOs) - Includes manual ECOs
+✓ ccorec (1,193 ECOs)
+
+PRIORITY 3 (Test Third - Low Risk):
+✓ ccoref (104 ECOs)
+✓ lnd (61 ECOs)
+✓ pmux (39 ECOs)
+✓ fdb (16 ECOs) - Manual ECOs
+✓ fth (9 ECOs)
+✓ prt (1 ECO) - Lowest risk
+
+
+===============================================================================
+IMPLEMENTATION RECOMMENDATION
+===============================================================================
+
+Suggested Order:
+1. Implement prt, fth, fdb first (low risk, quick validation)
+2. Implement pmux, lnd (CPORT units)
+3. Implement ccoref (smallest HPORT)
+4. Implement ccorec, ccoree, ccored (medium HPORT)
+5. Implement ccoreb (large HPORT)
+6. Implement ccorea LAST (highest risk, requires most attention)
+
+Rationale:
+- Build confidence with low-risk units first
+- Learn from small units before tackling large ones
+- Save highest-risk unit for last when process is validated
+- Allows early detection of systematic issues
+
+
+===============================================================================
+END OF DETAILED UNIT ANALYSIS
+===============================================================================
+Generated: $(date)
+Analyst: Alon Vice (avice@nvidia.com)
+===============================================================================
+

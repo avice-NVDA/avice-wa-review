@@ -1,0 +1,122 @@
+# Review for: /home/scratch.gnarla_vlsi/agur/1NL/tecorel/tecorel_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_default_run
+# Generated: 2025-10-23 14:21:50
+# Command: /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.gnarla_vlsi/agur/1NL/tecorel/tecorel_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_default_run -s pnr
+# Return code: 0
+
+STDOUT:
+[36mValidating workarea structure...[0m
+[32m[OK] Workarea validation passed - PnR + Syn workarea detected[0m
+[36m     Additional stages detected: fast_dc, RTL[0m
+Running selected sections: pnr
+
+----------------------------------- [32m[4] PnR Analysis[0m -----------------------------------
+PnR Status: /home/scratch.gnarla_vlsi/agur/1NL/tecorel/tecorel_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_default_run/pnr_flow/nv_flow/tecorel.prc.status
+
+[36mPnR Flow Status Analysis:[0m
+
+  [36mIPO ipo1000:[0m
+    PnR Flow: Completed: predrc_onPRO, Error at: export
+    Reporting: Completed through: report_postroute (5/5)
+    [31mErrors in: export[0m
+    [31mStatus: FAILED (15/18 done, 1 errors)[0m
+PnR Configuration: /home/scratch.gnarla_vlsi/agur/1NL/tecorel/tecorel_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_default_run/pnr_flow/nv_flow/tecorel.prc
+  [36mAvailable IPOs:[0m 1000
+  [36mTools:[0m edi
+  [36mFlow Sequence (ipo1000):[0m [33msetup[0m -> [33medi_plan[0m -> [33mplace[0m -> [33mcts[0m -> [33mroute[0m -> [33mpostroute[0m -> [33mexport[0m -> [33mextraction[0m -> [33mnbu_auto_pt[0m -> [33mpredrc_onPLAN[0m -> [33mpredrc_onPRO[0m
+  [36mClock Names:[0m
+    ipo1000: i2_clk i1_clk i2_clk
+  [36mTCL Usage Verification:[0m
+    [32m[OK] Used TCL files (2):[0m
+      - tecorel.modes.interface_effort.tcl
+      - tm11_12_13_rblkg.tcl
+PnR Runset: /home/scratch.gnarla_vlsi/agur/1NL/tecorel/tecorel_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_default_run/pnr_flow/nv_flow/tecorel/ipo1000/CMDs/tecorel.ipo1000.shell.09_18_07_31.runset.tcl
+  [36mPnR Flow Variables:[0m
+    FLOW(PATH): /home/nbu_be_tools/flow2/1.0/2025_ww25_01
+    PROJECT(CUSTOM_SCRIPTS_DIR): /home/nbu_be_agur/config/flow2/2025_ww36_04/tcl
+    FLOORPLAN: ../../../../syn_flow/latest/results/../../../flp/tecorel_fp.def.gz
+    PIN_PLACEMENT_FILE: /home/nbu_be_agur/backend/release/fcl/tecorel.hfp.pins.def
+    TOP_PLANNER_YAML: /home/nbu_be_agur/backend/release/fcl/top_planner.yaml
+    DC_SHELL_VERSION: /home/tools/synopsys/syn_2016.03-SP4/bin/dc_shell
+    RAM_LIB_PATH: "/home/nbu_be_agur/ip/arrays/nvidia/arrays_release/lef
+    CENTRAL_LIB_PATH: /home/agur_backend_blockRelease/block/merged_lib_snap/20250819
+    NETWORK_FLOW_PATH: /home/nbu_be_tools/beflow/1.0/2025_ww13_01_rev13
+    NETWORK_FLOW_UTILS_DIR: /home/nbu_be_tools/flow2_utils/1.0/2024_ww32_01_legacy_rev4
+PnR BeFlow Configuration (ipo1000): /home/scratch.gnarla_vlsi/agur/1NL/tecorel/tecorel_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_default_run/pnr_flow/nv_flow/tecorel/ipo1000/beflow_config.yaml
+  [36mBeFlow Configuration Analysis:[0m
+    [32mKey Configuration Variables:[0m
+      Library Snapshot: 20250819
+      NV Process: tsmc5_t6
+      Tracks Number: t6
+      Project: agur
+      Default Scenario: func.std_tt_0c_0p6v.setup.typical
+      StdCell Library Path: /home/nbu_be_agur/ip/lib_snap/20250819/syn
+      Memories Path: /home/nbu_be_agur/ip/arrays/13897726_02032025_RAM_SYNLIB/arrays_release
+      VT Types: svt, hvt, lvt
+      Agur Unit BE IP: nvidia_pads_tsmc5_cust_mixvt, nvidia_analog_tsmc5_cust_mixvt, adw_n5_v2f_thermal_sensor, nvidia_stdcell_tsmc5_t6_sup
+Post-Route Data: /home/scratch.gnarla_vlsi/agur/1NL/tecorel/tecorel_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_default_run/pnr_flow/nv_flow/tecorel/ipo1000/reports/tecorel_tecorel_ipo1000_report_tecorel_ipo1000_postroute.func.std_tt_0c_0p6v.setup.typical.data
+
+[33mKey Post-Route Parameters:[0m
+  Parameter                 Value          
+  ------------------------- ---------------
+  Die Dimensions (X x Y)    1802.34 x 399.00 um
+  DieArea (mm2)             0.719          
+  REGIN_WNS                 -0.022         
+  REGIN_TNS                 -1.459         
+  REGIN_ViolPaths           342            
+  REGOUT_WNS                -0.088         
+  REGOUT_TNS                -59.858        
+  REGOUT_ViolPaths          2959           
+  EffictiveUtilization      3.93219039797% 
+  CellCount                 280311         
+  FFCount                   43706          
+  ArraysCount               0              
+  HVT_percentage            57.709835612%  
+  SVT_percentage            42.290164388%  
+  i1_clk_WNS                -0.001         
+  i1_clk_TNS                -0.001         
+  i1_clk_ViolPaths          1              
+  i2_clk_WNS                -0.012         
+  i2_clk_TNS                -0.068         
+  i2_clk_ViolPaths          18             
+
+  [36mFull PnR Data Table:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mtecorel_avice_pnr_data_ipo1000_20251023_142149.html[0m &
+Power Summary: /home/scratch.gnarla_vlsi/agur/1NL/tecorel/tecorel_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_default_run/pnr_flow/nv_flow/tecorel/ipo1000/REPs/SUMMARY/tecorel.ipo1000.postroute.power.rpt.gz
+  [36mPower Summary Table:[0m
+          group     |    area    |  count  |  power   : density : cell_avg | internal : switching : total | leakage  
+     ===============|============|=========|==========:=========:==========|==========:===========:=======|==========
+      combinational |  17435.045 |  254454 | 5080.698 :   0.291 :    0.020 |    0.000 :     0.000 : 0.000 | 5080.698 
+      sequential    |  10796.108 |   25859 | 1992.843 :   0.185 :    0.077 |    0.000 :     0.000 : 0.000 | 1992.843 
+      physical      | 690881.130 | 2318252 |   46.167 :   0.000 :    0.000 |    0.000 :     0.000 : 0.000 |   46.167 
+     ===============|============|=========|==========:=========:==========|==========:===========:=======|==========
+      total         | 719112.283 | 2598565 | 7119.709 :   0.010 :    0.003 |    0.000 :     0.000 : 0.000 | 7119.709 
+     ================================================================================================================
+  [36mTiming Histogram Tables (POSTROUTE):[0m
+PnR Timing Setup (POSTROUTE): /home/scratch.gnarla_vlsi/agur/1NL/tecorel/tecorel_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_default_run/pnr_flow/nv_flow/tecorel/ipo1000/REPs/SUMMARY/tecorel.ipo1000.postroute.timing.setup.rpt.gz
+  Table 2 - Sub-Category Breakdown (Lines 113-128):
+     type  |  category  |   sub_category   | wns  |  tns  |fep |-0.010 -0.020 -0.030 -0.040 -0.050 -0.060 -0.070 -0.080 -0.090 -0.100 -Inf
+   ========|============|==================|======|=======|====|==========================================================================
+           |output      |flop_to_port      |-0.088|-59.844|2869|   927    767    482    313    197     90     56     34      3            
+           |............|..................|......|.......|....|..........................................................................
+           |input       |port_to_flop      |-0.022| -1.469| 313|   298     14      1                                                      
+           |............|..................|......|.......|....|..........................................................................
+   external|feedthrough |port_to_port      |-0.067| -0.102|   4|     1      2                                  1                          
+   ........|............|..................|......|.......|....|..........................................................................
+           |reg_to_reg  |flop_to_flop      |-0.012| -0.070|  17|    16      1                                                             
+           |............|..................|......|.......|....|..........................................................................
+   internal|reg_to_cgate|flop_to_clock_gate|-0.003| -0.006|   3|     3                                                                    
+   =======================================================================================================================================
+   ===========================================================================================================================================================================
+
+[36mGenerating Unified PnR HTML Report...[0m
+  [32m[OK] Unified PnR HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mtecorel_avice_PnR_comprehensive_ipo1000_20251023_142149.html[0m &
+
+[36mGenerating Master Dashboard...[0m
+[32m[OK] Master Dashboard generated: tecorel_avice_MASTER_dashboard_20251023.html[0m
+[36m     Open with recommended browser:[0m
+     /home/utils/firefox-118.0.1/firefox [35mtecorel_avice_MASTER_dashboard_20251023.html[0m &
+[36mOrganized 3 HTML file(s) into html/ folder[0m
+
+
+STDERR:

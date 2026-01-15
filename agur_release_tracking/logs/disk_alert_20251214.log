@@ -1,0 +1,34 @@
+================================================================================
+AGUR Disk Usage Monitor - 2025-12-14 07:00:06
+================================================================================
+Checking central block release area: /home/agur_backend_blockRelease/
+[OK] Central block release area: 59% used (below threshold)
+
+Checking 73 units...
+
+[CRITICAL] fth             (CPORT     ) - 93% used | Owner: lmustafa
+[CRITICAL] lnd             (CPORT     ) - 90% used | Owner: shlomoc
+[CRITICAL] lndm            (NDQ       ) - 90% used | Owner: shlomoc
+[CRITICAL] sma             (NDQ       ) - 90% used | Owner: shlomoc
+[CRITICAL] alm             (TCB       ) - 90% used | Owner: tmazor
+[CRITICAL] hib             (TCB       ) - 90% used | Owner: tmazor
+
+Grouping by owner...
+  lmustafa: 1 unit(s)
+  shlomoc: 3 unit(s)
+  tmazor: 2 unit(s)
+
+Sending emails...
+[EMAIL] Sent to lmustafa@nvidia.com (1 unit(s))
+[EMAIL] Sent to shlomoc@nvidia.com (3 unit(s))
+[EMAIL] Sent to tmazor@nvidia.com (2 unit(s))
+
+================================================================================
+SUMMARY:
+  Central block release: 59% used [OK]
+  Total units checked: 73
+  Critical units (>=90%): 6
+  Unique owners: 3
+  Emails sent: 3 successful, 0 failed
+  Execution time: 18.0 seconds
+================================================================================

@@ -1,0 +1,47 @@
+# Review for: /home/scratch.rmenasheof_vlsi/agur/fwas/fwas_golden_ipo4_21_9_for_vivid
+# Generated: 2025-10-23 14:21:46
+# Command: /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.rmenasheof_vlsi/agur/fwas/fwas_golden_ipo4_21_9_for_vivid -s pnr
+# Return code: 0
+
+STDOUT:
+[36mValidating workarea structure...[0m
+[33m[WARN] WORKAREA VALIDATION WARNINGS:[0m
+  [33mWARNING:[0m Missing pnr_flow/nv_flow/ directory
+[32m[OK] Workarea validation passed - Syn-only workarea detected[0m
+[36m     Additional stages detected: fast_dc, RTL[0m
+Running selected sections: pnr
+
+----------------------------------- [32m[4] PnR Analysis[0m -----------------------------------
+  [33m[WARN] IPO directory 'unknown' from .prc file not found[0m
+    [33mNote: Users sometimes delete IPO directories to save disk space[0m
+PnR Configuration: File not found
+PnR Runset: File not found
+PnR BeFlow Configuration (unknown): File not found
+  [33mPnR Data: No data files found for any stage or temperature corner[0m
+    [33mTried stages: postroute, route, cts, place, plan[0m
+    [33mTried corners: 0c_0p6v, 125c_0p6v, 25c_0p6v, 85c_0p6v[0m
+    [33mThis could be due to:[0m
+      - Flow still running (data files not yet generated)
+      - Flow failed at this stage
+      - Different temperature corner used
+      - File permissions issue
+  [33mPnR Timing Setup: No timing setup reports found for any stage[0m
+    [33mTried stages: postroute, route, cts, place, plan[0m
+    [33mThis could be due to:[0m
+      - Flow still running (timing reports not yet generated)
+      - Flow failed at this stage
+      - Different file naming convention
+      - File permissions issue
+
+[36mGenerating Unified PnR HTML Report...[0m
+  [32m[OK] Unified PnR HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mfwas_avice_PnR_comprehensive_unknown_20251023_142146.html[0m &
+
+[36mGenerating Master Dashboard...[0m
+[32m[OK] Master Dashboard generated: fwas_avice_MASTER_dashboard_20251023.html[0m
+[36m     Open with recommended browser:[0m
+     /home/utils/firefox-118.0.1/firefox [35mfwas_avice_MASTER_dashboard_20251023.html[0m &
+[36mOrganized 2 HTML file(s) into html/ folder[0m
+
+
+STDERR:

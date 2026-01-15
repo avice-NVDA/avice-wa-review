@@ -1,0 +1,56 @@
+================================================================================
+AGUR Disk Usage Monitor - 2025-12-28 07:00:05
+================================================================================
+Checking central block release area: /home/agur_backend_blockRelease/
+[OK] Central block release area: 66% used (below threshold)
+
+Checking 73 units...
+
+[CRITICAL] ccorea          (HPORT     ) - 99% used | Owner: arcohen
+[CRITICAL] ccoreb          (HPORT     ) - 99% used | Owner: arcohen
+[CRITICAL] ccoree          (HPORT     ) - 94% used | Owner: ykatzav
+[CRITICAL] fwas            (NDQ       ) - 96% used | Owner: ronil
+[CRITICAL] sma             (NDQ       ) - 90% used | Owner: shlomoc
+[CRITICAL] dqaa            (QNS       ) - 91% used | Owner: siddharthasa
+[CRITICAL] dqamco          (QNS       ) - 91% used | Owner: siddharthasa
+[CRITICAL] dqap            (QNS       ) - 92% used | Owner: drazmizrahi
+
+Grouping by owner...
+  arcohen: 2 unit(s)
+  ykatzav: 1 unit(s)
+  ronil: 1 unit(s)
+  shlomoc: 1 unit(s)
+  siddharthasa: 2 unit(s)
+  drazmizrahi: 1 unit(s)
+
+Building disk summaries and scanning for old workareas...
+  Scanning /home/scratch.arcohen_vlsi_1 for old workareas...
+    -> No old workareas found (>40 days)
+  Scanning /home/scratch.ykatzav_vlsi_1 for old workareas...
+    -> No old workareas found (>40 days)
+  Scanning /home/scratch.ronil_vlsi_1 for old workareas...
+    -> No old workareas found (>40 days)
+  Scanning /home/scratch.shlomoc_vlsi for old workareas...
+    -> Found 1 old workarea(s): >100G
+  Scanning /home/scratch.siddharthasa_vlsi for old workareas...
+    -> No old workareas found (>40 days)
+  Scanning /home/scratch.drazmizrahi_vlsi_1 for old workareas...
+    -> No old workareas found (>40 days)
+
+Sending emails...
+[EMAIL] Sent to arcohen@nvidia.com (2 unit(s))
+[EMAIL] Sent to ykatzav@nvidia.com (1 unit(s))
+[EMAIL] Sent to ronil@nvidia.com (1 unit(s))
+[EMAIL] Sent to shlomoc@nvidia.com (1 unit(s))
+[EMAIL] Sent to siddharthasa@nvidia.com (2 unit(s))
+[EMAIL] Sent to drazmizrahi@nvidia.com (1 unit(s))
+
+================================================================================
+SUMMARY:
+  Central block release: 66% used [OK]
+  Total units checked: 73
+  Critical units (>=90%): 8
+  Unique owners: 6
+  Emails sent: 6 successful, 0 failed
+  Execution time: 60.8 seconds
+================================================================================

@@ -33,7 +33,7 @@ grep "\[EMAIL\]" /home/avice/scripts/avice_wa_review/agur_release_tracking/logs/
 ```
 
 ## Features
-- ✅ Monitors all 72 AGUR units from AGUR_UNITS_TABLE.csv
+- ✅ Monitors all 73 AGUR units from AGUR_UNITS_TABLE.csv
 - ✅ Groups emails by owner (one email per owner)
 - ✅ Individual email for 1 critical unit
 - ✅ Consolidated email for 2+ critical units per owner

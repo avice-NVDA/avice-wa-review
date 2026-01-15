@@ -1,0 +1,691 @@
+================================================================================
+AGUR Daily Regression - 2025-11-03 09:00:03
+================================================================================
+
+Configuration:
+  Units: All 72 AGUR units
+  Regression Types: All (formal, timing, pv, clock, release, glcheck)
+  Output: /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/20251103
+
+================================================================================
+
+Starting AGUR regression (all types)...
+
+[0;36mNo regression type specified - running ALL types[0m
+
+[0;36m[AUTO-DETECT][0m Using 12 CPU cores (auto-detected via nproc)
+
+[0;36mProgress:[0m [                                                 ] 0% (0/72) - hiopl     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplca     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcc     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fdb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fth     [0;36mProgress:[0m [                                                 ] 0% (0/72) - lnd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - pmux     [0;36mProgress:[0m [                                                 ] 0% (0/72) - prt     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccorea     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccoreb     [0;36mProgress:[0m [                                                 ] 1% (1/72) - ccorec - ETA: 39m 3s     [0;36mProgress:[0m [=>                                                ] 2% (2/72) - ccored - ETA: 18m 40s     [0;36mProgress:[0m [==>                                               ] 4% (3/72) - ccoree - ETA: 12m 39s     [0;36mProgress:[0m [==>                                               ] 5% (4/72) - ccoref - ETA: 9m 4s     [0;36mProgress:[0m [===>                                              ] 6% (5/72) - clt - ETA: 6m 42s     [0;36mProgress:[0m [====>                                             ] 8% (6/72) - cscore - ETA: 6m 36s     [0;36mProgress:[0m [====>                                             ] 9% (7/72) - dcmp - ETA: 5m 25s     [0;36mProgress:[0m [=====>                                            ] 11% (8/72) - fdbm - ETA: 4m 16s     [0;36mProgress:[0m [======>                                           ] 12% (9/72) - fdbs - ETA: 4m 12s     [0;36mProgress:[0m [======>                                           ] 13% (10/72) - fthm - ETA: 3m 6s     [0;36mProgress:[0m [=======>                                          ] 15% (11/72) - ftos - ETA: 3m 3s     [0;36mProgress:[0m [========>                                         ] 16% (12/72) - fwam - ETA: 3m 0s     [0;36mProgress:[0m [=========>                                        ] 18% (13/72) - fwas - ETA: 2m 57s     [0;36mProgress:[0m [=========>                                        ] 19% (14/72) - glc - ETA: 1m 56s     [0;36mProgress:[0m [==========>                                       ] 20% (15/72) - iopl - ETA: 1m 54s     [0;36mProgress:[0m [===========>                                      ] 22% (16/72) - ioplm - ETA: 1m 52s     [0;36mProgress:[0m [===========>                                      ] 23% (17/72) - iopx - ETA: 1m 50s     [0;36mProgress:[0m [============>                                     ] 25% (18/72) - ir - ETA: 1m 48s     [0;36mProgress:[0m [=============>                                    ] 26% (19/72) - lndm - ETA: 1m 46s     [0;36mProgress:[0m [=============>                                    ] 27% (20/72) - nvrisc - ETA: 1m 44s     [0;36mProgress:[0m [==============>                                   ] 29% (21/72) - pmuxm - ETA: 1m 42s     [0;36mProgress:[0m [===============>                                  ] 30% (22/72) - prtm - ETA: 0m 50s     [0;36mProgress:[0m [===============>                                  ] 31% (23/72) - psca - ETA: 0m 49s     [0;36mProgress:[0m [================>                                 ] 33% (24/72) - pscb - ETA: 0m 48s     [0;36mProgress:[0m [=================>                                ] 34% (25/72) - pscc - ETA: 0m 47s     [0;36mProgress:[0m [==================>                               ] 36% (26/72) - pscd - ETA: 0m 46s     [0;36mProgress:[0m [==================>                               ] 37% (27/72) - px - ETA: 0m 45s     [0;36mProgress:[0m [===================>                              ] 38% (28/72) - riba - ETA: 0m 44s     [0;36mProgress:[0m [====================>                             ] 40% (29/72) - ribs - ETA: 0m 43s     [0;36mProgress:[0m [====================>                             ] 41% (30/72) - sma - ETA: 0m 42s     [0;36mProgress:[0m [=====================>                            ] 43% (31/72) - yu - ETA: 0m 41s     [0;36mProgress:[0m [======================>                           ] 44% (32/72) - dqaa - ETA: 0m 40s     [0;36mProgress:[0m [======================>                           ] 45% (33/72) - dqaci - ETA: 0m 39s     [0;36mProgress:[0m [=======================>                          ] 47% (34/72) - dqaco - ETA: 0m 38s     [0;36mProgress:[0m [========================>                         ] 48% (35/72) - dqai - ETA: 0m 37s     [0;36mProgress:[0m [=========================>                        ] 50% (36/72) - dqamci - ETA: 0m 36s     [0;36mProgress:[0m [=========================>                        ] 51% (37/72) - dqamco - ETA: 0m 35s     [0;36mProgress:[0m [==========================>                       ] 52% (38/72) - dqamdi - ETA: 0m 34s     [0;36mProgress:[0m [===========================>                      ] 54% (39/72) - dqamdo - ETA: 0m 33s     [0;36mProgress:[0m [===========================>                      ] 55% (40/72) - dqap - ETA: 0m 32s     [0;36mProgress:[0m [============================>                     ] 56% (41/72) - dqavi - ETA: 0m 31s     [0;36mProgress:[0m [=============================>                    ] 58% (42/72) - dqavo - ETA: 0m 30s     [0;36mProgress:[0m [=============================>                    ] 59% (43/72) - dqax - ETA: 0m 29s     [0;36mProgress:[0m [==============================>                   ] 61% (44/72) - dql - ETA: 0m 28s     [0;36mProgress:[0m [===============================>                  ] 62% (45/72) - dqs - ETA: 0m 27s     [0;36mProgress:[0m [===============================>                  ] 63% (46/72) - eds - ETA: 0m 26s     [0;36mProgress:[0m [================================>                 ] 65% (47/72) - qcorer - ETA: 0m 25s     [0;36mProgress:[0m [=================================>                ] 66% (48/72) - tecorel - ETA: 0m 24s     [0;36mProgress:[0m [==================================>               ] 68% (49/72) - tecorer - ETA: 0m 23s     [0;36mProgress:[0m [==================================>               ] 69% (50/72) - tds - ETA: 0m 22s     [0;36mProgress:[0m [===================================>              ] 70% (51/72) - alm - ETA: 0m 21s     [0;36mProgress:[0m [====================================>             ] 72% (52/72) - bta - ETA: 0m 20s     [0;36mProgress:[0m [====================================>             ] 73% (53/72) - eri - ETA: 0m 19s     [0;36mProgress:[0m [=====================================>            ] 75% (54/72) - hib - ETA: 0m 18s     [0;36mProgress:[0m [======================================>           ] 76% (55/72) - top_yc_clock - ETA: 0m 0s     [0;36mProgress:[0m [======================================>           ] 77% (56/72) - top_yc_gpio - ETA: 0m 0s     [0;36mProgress:[0m [=======================================>          ] 79% (57/72) - yc_clock_macro - ETA: 0m 0s     [0;36mProgress:[0m [========================================>         ] 80% (58/72) - yc_fuse - ETA: 0m 0s     [0;36mProgress:[0m [========================================>         ] 81% (59/72) - yc_fuse_macro - ETA: 0m 0s     [0;36mProgress:[0m [=========================================>        ] 83% (60/72) - yu_mng - ETA: 0m 0s     [0;36mProgress:[0m [==================================================>] 100% (72/72) - All units completed - ETA: 0m 0s     
+[0;36mProgress:[0m [                                                 ] 0% (0/72) - hiopl     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplca     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcc     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fdb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fth     [0;36mProgress:[0m [                                                 ] 0% (0/72) - lnd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - pmux     [0;36mProgress:[0m [                                                 ] 0% (0/72) - prt     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccorea     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccoreb     [0;36mProgress:[0m [                                                 ] 1% (1/72) - ccorec - ETA: 69m 49s     [0;36mProgress:[0m [=>                                                ] 2% (2/72) - ccored - ETA: 33m 50s     [0;36mProgress:[0m [==>                                               ] 4% (3/72) - ccoree - ETA: 21m 51s     [0;36mProgress:[0m [==>                                               ] 5% (4/72) - ccoref - ETA: 15m 52s     [0;36mProgress:[0m [===>                                              ] 6% (5/72) - clt - ETA: 12m 17s     [0;36mProgress:[0m [====>                                             ] 8% (6/72) - cscore - ETA: 9m 54s     [0;36mProgress:[0m [====>                                             ] 9% (7/72) - dcmp - ETA: 8m 40s     [0;36mProgress:[0m [=====>                                            ] 11% (8/72) - fdbm - ETA: 8m 32s     [0;36mProgress:[0m [======>                                           ] 12% (9/72) - fdbs - ETA: 7m 21s     [0;36mProgress:[0m [======>                                           ] 13% (10/72) - fthm - ETA: 6m 12s     [0;36mProgress:[0m [=======>                                          ] 15% (11/72) - ftos - ETA: 6m 6s     [0;36mProgress:[0m [========>                                         ] 16% (12/72) - fwam - ETA: 5m 0s     [0;36mProgress:[0m [=========>                                        ] 18% (13/72) - fwas - ETA: 4m 55s     [0;36mProgress:[0m [=========>                                        ] 19% (14/72) - glc - ETA: 3m 52s     [0;36mProgress:[0m [==========>                                       ] 20% (15/72) - iopl - ETA: 3m 48s     [0;36mProgress:[0m [===========>                                      ] 22% (16/72) - ioplm - ETA: 3m 44s     [0;36mProgress:[0m [===========>                                      ] 23% (17/72) - iopx - ETA: 3m 40s     [0;36mProgress:[0m [============>                                     ] 25% (18/72) - ir - ETA: 2m 42s     [0;36mProgress:[0m [=============>                                    ] 26% (19/72) - lndm - ETA: 2m 39s     [0;36mProgress:[0m [=============>                                    ] 27% (20/72) - nvrisc - ETA: 2m 36s     [0;36mProgress:[0m [==============>                                   ] 29% (21/72) - pmuxm - ETA: 2m 33s     [0;36mProgress:[0m [===============>                                  ] 30% (22/72) - prtm - ETA: 2m 30s     [0;36mProgress:[0m [===============>                                  ] 31% (23/72) - psca - ETA: 2m 27s     [0;36mProgress:[0m [================>                                 ] 33% (24/72) - pscb - ETA: 1m 36s     [0;36mProgress:[0m [=================>                                ] 34% (25/72) - pscc - ETA: 1m 34s     [0;36mProgress:[0m [==================>                               ] 36% (26/72) - pscd - ETA: 1m 32s     [0;36mProgress:[0m [==================>                               ] 37% (27/72) - px - ETA: 1m 30s     [0;36mProgress:[0m [===================>                              ] 38% (28/72) - riba - ETA: 1m 28s     [0;36mProgress:[0m [====================>                             ] 40% (29/72) - ribs - ETA: 1m 26s     [0;36mProgress:[0m [====================>                             ] 41% (30/72) - sma - ETA: 1m 24s     [0;36mProgress:[0m [=====================>                            ] 43% (31/72) - yu - ETA: 1m 22s     [0;36mProgress:[0m [======================>                           ] 44% (32/72) - dqaa - ETA: 1m 20s     [0;36mProgress:[0m [======================>                           ] 45% (33/72) - dqaci - ETA: 1m 18s     [0;36mProgress:[0m [=======================>                          ] 47% (34/72) - dqaco - ETA: 1m 16s     [0;36mProgress:[0m [========================>                         ] 48% (35/72) - dqai - ETA: 1m 14s     [0;36mProgress:[0m [=========================>                        ] 50% (36/72) - dqamci - ETA: 1m 12s     [0;36mProgress:[0m [=========================>                        ] 51% (37/72) - dqamco - ETA: 1m 10s     [0;36mProgress:[0m [==========================>                       ] 52% (38/72) - dqamdi - ETA: 1m 8s     [0;36mProgress:[0m [===========================>                      ] 54% (39/72) - dqamdo - ETA: 1m 6s     [0;36mProgress:[0m [===========================>                      ] 55% (40/72) - dqap - ETA: 1m 4s     [0;36mProgress:[0m [============================>                     ] 56% (41/72) - dqavi - ETA: 1m 2s     [0;36mProgress:[0m [=============================>                    ] 58% (42/72) - dqavo - ETA: 1m 0s     [0;36mProgress:[0m [=============================>                    ] 59% (43/72) - dqax - ETA: 0m 58s     [0;36mProgress:[0m [==============================>                   ] 61% (44/72) - dql - ETA: 0m 56s     [0;36mProgress:[0m [===============================>                  ] 62% (45/72) - dqs - ETA: 0m 54s     [0;36mProgress:[0m [===============================>                  ] 63% (46/72) - eds - ETA: 0m 26s     [0;36mProgress:[0m [================================>                 ] 65% (47/72) - qcorer - ETA: 0m 25s     [0;36mProgress:[0m [=================================>                ] 66% (48/72) - tecorel - ETA: 0m 24s     [0;36mProgress:[0m [==================================>               ] 68% (49/72) - tecorer - ETA: 0m 23s     [0;36mProgress:[0m [==================================>               ] 69% (50/72) - tds - ETA: 0m 22s     [0;36mProgress:[0m [===================================>              ] 70% (51/72) - alm - ETA: 0m 21s     [0;36mProgress:[0m [====================================>             ] 72% (52/72) - bta - ETA: 0m 20s     [0;36mProgress:[0m [====================================>             ] 73% (53/72) - eri - ETA: 0m 19s     [0;36mProgress:[0m [=====================================>            ] 75% (54/72) - hib - ETA: 0m 18s     [0;36mProgress:[0m [======================================>           ] 76% (55/72) - top_yc_clock - ETA: 0m 17s     [0;36mProgress:[0m [======================================>           ] 77% (56/72) - top_yc_gpio - ETA: 0m 16s     [0;36mProgress:[0m [=======================================>          ] 79% (57/72) - yc_clock_macro - ETA: 0m 15s     [0;36mProgress:[0m [========================================>         ] 80% (58/72) - yc_fuse - ETA: 0m 14s     [0;36mProgress:[0m [========================================>         ] 81% (59/72) - yc_fuse_macro - ETA: 0m 13s     [0;36mProgress:[0m [=========================================>        ] 83% (60/72) - yu_mng - ETA: 0m 12s     [0;36mProgress:[0m [==================================================>] 100% (72/72) - All units completed - ETA: 0m 0s     
+[0;36mProgress:[0m [                                                 ] 0% (0/72) - hiopl     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplca     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcc     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fdb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fth     [0;36mProgress:[0m [                                                 ] 0% (0/72) - lnd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - pmux     [0;36mProgress:[0m [                                                 ] 0% (0/72) - prt     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccorea     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccoreb     [0;36mProgress:[0m [                                                 ] 1% (1/72) - ccorec - ETA: 125m 26s     [0;36mProgress:[0m [=>                                                ] 2% (2/72) - ccored - ETA: 61m 50s     [0;36mProgress:[0m [==>                                               ] 4% (3/72) - ccoree - ETA: 40m 15s     [0;36mProgress:[0m [==>                                               ] 5% (4/72) - ccoref - ETA: 29m 28s     [0;36mProgress:[0m [===>                                              ] 6% (5/72) - clt - ETA: 23m 27s     [0;36mProgress:[0m [====>                                             ] 8% (6/72) - cscore - ETA: 18m 42s     [0;36mProgress:[0m [====>                                             ] 9% (7/72) - dcmp - ETA: 16m 15s     [0;36mProgress:[0m [=====>                                            ] 11% (8/72) - fdbm - ETA: 13m 52s     [0;36mProgress:[0m [======>                                           ] 12% (9/72) - fdbs - ETA: 12m 36s     [0;36mProgress:[0m [======>                                           ] 13% (10/72) - fthm - ETA: 11m 22s     [0;36mProgress:[0m [=======>                                          ] 15% (11/72) - ftos - ETA: 10m 10s     [0;36mProgress:[0m [========>                                         ] 16% (12/72) - fwam - ETA: 9m 0s     [0;36mProgress:[0m [=========>                                        ] 18% (13/72) - fwas - ETA: 7m 52s     [0;36mProgress:[0m [=========>                                        ] 19% (14/72) - glc - ETA: 6m 46s     [0;36mProgress:[0m [==========>                                       ] 20% (15/72) - iopl - ETA: 6m 39s     [0;36mProgress:[0m [===========>                                      ] 22% (16/72) - ioplm - ETA: 6m 32s     [0;36mProgress:[0m [===========>                                      ] 23% (17/72) - iopx - ETA: 5m 30s     [0;36mProgress:[0m [============>                                     ] 25% (18/72) - ir - ETA: 5m 24s     [0;36mProgress:[0m [=============>                                    ] 26% (19/72) - lndm - ETA: 4m 25s     [0;36mProgress:[0m [=============>                                    ] 27% (20/72) - nvrisc - ETA: 4m 20s     [0;36mProgress:[0m [==============>                                   ] 29% (21/72) - pmuxm - ETA: 4m 15s     [0;36mProgress:[0m [===============>                                  ] 30% (22/72) - prtm - ETA: 4m 10s     [0;36mProgress:[0m [===============>                                  ] 31% (23/72) - psca - ETA: 3m 16s     [0;36mProgress:[0m [================>                                 ] 33% (24/72) - pscb - ETA: 3m 12s     [0;36mProgress:[0m [=================>                                ] 34% (25/72) - pscc - ETA: 3m 8s     [0;36mProgress:[0m [==================>                               ] 36% (26/72) - pscd - ETA: 3m 4s     [0;36mProgress:[0m [==================>                               ] 37% (27/72) - px - ETA: 3m 0s     [0;36mProgress:[0m [===================>                              ] 38% (28/72) - riba - ETA: 2m 56s     [0;36mProgress:[0m [====================>                             ] 40% (29/72) - ribs - ETA: 2m 9s     [0;36mProgress:[0m [====================>                             ] 41% (30/72) - sma - ETA: 2m 6s     [0;36mProgress:[0m [=====================>                            ] 43% (31/72) - yu - ETA: 2m 3s     [0;36mProgress:[0m [======================>                           ] 44% (32/72) - dqaa - ETA: 2m 0s     [0;36mProgress:[0m [======================>                           ] 45% (33/72) - dqaci - ETA: 1m 57s     [0;36mProgress:[0m [=======================>                          ] 47% (34/72) - dqaco - ETA: 1m 54s     [0;36mProgress:[0m [========================>                         ] 48% (35/72) - dqai - ETA: 1m 51s     [0;36mProgress:[0m [=========================>                        ] 50% (36/72) - dqamci - ETA: 1m 48s     [0;36mProgress:[0m [=========================>                        ] 51% (37/72) - dqamco - ETA: 1m 45s     [0;36mProgress:[0m [==========================>                       ] 52% (38/72) - dqamdi - ETA: 1m 42s     [0;36mProgress:[0m [===========================>                      ] 54% (39/72) - dqamdo - ETA: 1m 6s     [0;36mProgress:[0m [===========================>                      ] 55% (40/72) - dqap - ETA: 1m 4s     [0;36mProgress:[0m [============================>                     ] 56% (41/72) - dqavi - ETA: 1m 2s     [0;36mProgress:[0m [=============================>                    ] 58% (42/72) - dqavo - ETA: 1m 0s     [0;36mProgress:[0m [=============================>                    ] 59% (43/72) - dqax - ETA: 0m 58s     [0;36mProgress:[0m [==============================>                   ] 61% (44/72) - dql - ETA: 0m 56s     [0;36mProgress:[0m [===============================>                  ] 62% (45/72) - dqs - ETA: 0m 54s     [0;36mProgress:[0m [===============================>                  ] 63% (46/72) - eds - ETA: 0m 52s     [0;36mProgress:[0m [================================>                 ] 65% (47/72) - qcorer - ETA: 0m 50s     [0;36mProgress:[0m [=================================>                ] 66% (48/72) - tecorel - ETA: 0m 48s     [0;36mProgress:[0m [==================================>               ] 68% (49/72) - tecorer - ETA: 0m 46s     [0;36mProgress:[0m [==================================>               ] 69% (50/72) - tds - ETA: 0m 44s     [0;36mProgress:[0m [===================================>              ] 70% (51/72) - alm - ETA: 0m 42s     [0;36mProgress:[0m [====================================>             ] 72% (52/72) - bta - ETA: 0m 40s     [0;36mProgress:[0m [====================================>             ] 73% (53/72) - eri - ETA: 0m 38s     [0;36mProgress:[0m [=====================================>            ] 75% (54/72) - hib - ETA: 0m 36s     [0;36mProgress:[0m [======================================>           ] 76% (55/72) - top_yc_clock - ETA: 0m 34s     [0;36mProgress:[0m [======================================>           ] 77% (56/72) - top_yc_gpio - ETA: 0m 32s     [0;36mProgress:[0m [=======================================>          ] 79% (57/72) - yc_clock_macro - ETA: 0m 30s     [0;36mProgress:[0m [========================================>         ] 80% (58/72) - yc_fuse - ETA: 0m 28s     [0;36mProgress:[0m [========================================>         ] 81% (59/72) - yc_fuse_macro - ETA: 0m 26s     [0;36mProgress:[0m [=========================================>        ] 83% (60/72) - yu_mng - ETA: 0m 24s     [0;36mProgress:[0m [==================================================>] 100% (72/72) - All units completed - ETA: 0m 0s     
+[0;36mProgress:[0m [                                                 ] 0% (0/72) - hiopl     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplca     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcc     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fdb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fth     [0;36mProgress:[0m [                                                 ] 0% (0/72) - lnd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - pmux     [0;36mProgress:[0m [                                                 ] 0% (0/72) - prt     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccorea     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccoreb     [0;36mProgress:[0m [                                                 ] 1% (1/72) - ccorec - ETA: 6545m 1s     [0;36mProgress:[0m [=>                                                ] 2% (2/72) - ccored - ETA: 3227m 0s     [0;36mProgress:[0m [==>                                               ] 4% (3/72) - ccoree - ETA: 2120m 36s     [0;36mProgress:[0m [==>                                               ] 5% (4/72) - ccoref - ETA: 1567m 24s     [0;36mProgress:[0m [===>                                              ] 6% (5/72) - clt - ETA: 1235m 2s     [0;36mProgress:[0m [====>                                             ] 8% (6/72) - cscore - ETA: 1014m 12s     [0;36mProgress:[0m [====>                                             ] 9% (7/72) - dcmp - ETA: 855m 50s     [0;36mProgress:[0m [=====>                                            ] 11% (8/72) - fdbm - ETA: 737m 4s     [0;36mProgress:[0m [======>                                           ] 12% (9/72) - fdbs - ETA: 645m 45s     [0;36mProgress:[0m [======>                                           ] 13% (10/72) - fthm - ETA: 571m 26s     [0;36mProgress:[0m [=======>                                          ] 15% (11/72) - ftos - ETA: 511m 23s     [0;36mProgress:[0m [========>                                         ] 16% (12/72) - fwam - ETA: 461m 0s     [0;36mProgress:[0m [=========>                                        ] 18% (13/72) - fwas - ETA: 417m 55s     [0;36mProgress:[0m [=========>                                        ] 19% (14/72) - glc - ETA: 381m 50s     [0;36mProgress:[0m [==========>                                       ] 20% (15/72) - iopl - ETA: 350m 33s     [0;36mProgress:[0m [===========>                                      ] 22% (16/72) - ioplm - ETA: 322m 0s     [0;36mProgress:[0m [===========>                                      ] 23% (17/72) - iopx - ETA: 297m 55s     [0;36mProgress:[0m [============>                                     ] 25% (18/72) - ir - ETA: 276m 18s     [0;36mProgress:[0m [=============>                                    ] 26% (19/72) - lndm - ETA: 257m 3s     [0;36mProgress:[0m [=============>                                    ] 27% (20/72) - nvrisc - ETA: 239m 12s     [0;36mProgress:[0m [==============>                                   ] 29% (21/72) - pmuxm - ETA: 223m 33s     [0;36mProgress:[0m [===============>                                  ] 30% (22/72) - prtm - ETA: 209m 10s     [0;36mProgress:[0m [===============>                                  ] 31% (23/72) - psca - ETA: 196m 0s     [0;36mProgress:[0m [================>                                 ] 33% (24/72) - pscb - ETA: 184m 0s     [0;36mProgress:[0m [=================>                                ] 34% (25/72) - pscc - ETA: 173m 7s     [0;36mProgress:[0m [==================>                               ] 36% (26/72) - pscd - ETA: 162m 32s     [0;36mProgress:[0m [==================>                               ] 37% (27/72) - px - ETA: 153m 45s     [0;36mProgress:[0m [===================>                              ] 38% (28/72) - riba - ETA: 144m 28s     [0;36mProgress:[0m [====================>                             ] 40% (29/72) - ribs - ETA: 136m 10s     [0;36mProgress:[0m [====================>                             ] 41% (30/72) - sma - ETA: 128m 48s     [0;36mProgress:[0m [=====================>                            ] 43% (31/72) - yu - ETA: 121m 38s     [0;36mProgress:[0m [======================>                           ] 44% (32/72) - dqaa - ETA: 115m 20s     [0;36mProgress:[0m [======================>                           ] 45% (33/72) - dqaci - ETA: 108m 33s     [0;36mProgress:[0m [=======================>                          ] 47% (34/72) - dqaco - ETA: 102m 36s     [0;36mProgress:[0m [========================>                         ] 48% (35/72) - dqai - ETA: 97m 26s     [0;36mProgress:[0m [=========================>                        ] 50% (36/72) - dqamci - ETA: 91m 48s     [0;36mProgress:[0m [=========================>                        ] 51% (37/72) - dqamco - ETA: 86m 55s     [0;36mProgress:[0m [==========================>                       ] 52% (38/72) - dqamdi - ETA: 82m 10s     [0;36mProgress:[0m [===========================>                      ] 54% (39/72) - dqamdo - ETA: 78m 6s     [0;36mProgress:[0m [===========================>                      ] 55% (40/72) - dqap - ETA: 73m 36s     [0;36mProgress:[0m [============================>                     ] 56% (41/72) - dqavi - ETA: 69m 45s     [0;36mProgress:[0m [=============================>                    ] 58% (42/72) - dqavo - ETA: 65m 30s     [0;36mProgress:[0m [=============================>                    ] 59% (43/72) - dqax - ETA: 61m 52s     [0;36mProgress:[0m [==============================>                   ] 61% (44/72) - dql - ETA: 58m 20s     [0;36mProgress:[0m [===============================>                  ] 62% (45/72) - dqs - ETA: 55m 21s     [0;36mProgress:[0m [===============================>                  ] 63% (46/72) - eds - ETA: 52m 0s     [0;36mProgress:[0m [================================>                 ] 65% (47/72) - qcorer - ETA: 48m 45s     [0;36mProgress:[0m [=================================>                ] 66% (48/72) - tecorel - ETA: 46m 0s     [0;36mProgress:[0m [==================================>               ] 68% (49/72) - tecorer - ETA: 43m 19s     [0;36mProgress:[0m [==================================>               ] 69% (50/72) - tds - ETA: 40m 20s     [0;36mProgress:[0m [===================================>              ] 70% (51/72) - alm - ETA: 37m 48s     [0;36mProgress:[0m [====================================>             ] 72% (52/72) - bta - ETA: 35m 20s     [0;36mProgress:[0m [====================================>             ] 73% (53/72) - eri - ETA: 32m 56s     [0;36mProgress:[0m [=====================================>            ] 75% (54/72) - hib - ETA: 30m 36s     [0;36mProgress:[0m [======================================>           ] 76% (55/72) - top_yc_clock - ETA: 28m 20s     [0;36mProgress:[0m [======================================>           ] 77% (56/72) - top_yc_gpio - ETA: 26m 8s     [0;36mProgress:[0m [=======================================>          ] 79% (57/72) - yc_clock_macro - ETA: 24m 15s     [0;36mProgress:[0m [========================================>         ] 80% (58/72) - yc_fuse - ETA: 22m 10s     [0;36mProgress:[0m [========================================>         ] 81% (59/72) - yc_fuse_macro - ETA: 20m 9s     [0;36mProgress:[0m [=========================================>        ] 83% (60/72) - yu_mng - ETA: 18m 24s     [0;36mProgress:[0m [==================================================>] 100% (72/72) - All units completed - ETA: 0m 0s     
+[0;36mProgress:[0m [                                                 ] 0% (0/72) - hiopl     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplca     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcc     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fdb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fth     [0;36mProgress:[0m [                                                 ] 0% (0/72) - lnd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - pmux     [0;36mProgress:[0m [                                                 ] 0% (0/72) - prt     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccorea     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccoreb     [0;36mProgress:[0m [                                                 ] 1% (1/72) - ccorec - ETA: 6560m 24s     [0;36mProgress:[0m [=>                                                ] 2% (2/72) - ccored - ETA: 3234m 0s     [0;36mProgress:[0m [==>                                               ] 4% (3/72) - ccoree - ETA: 2125m 12s     [0;36mProgress:[0m [==>                                               ] 5% (4/72) - ccoref - ETA: 1570m 48s     [0;36mProgress:[0m [===>                                              ] 6% (5/72) - clt - ETA: 1237m 16s     [0;36mProgress:[0m [====>                                             ] 8% (6/72) - cscore - ETA: 1016m 24s     [0;36mProgress:[0m [====>                                             ] 9% (7/72) - dcmp - ETA: 858m 0s     [0;36mProgress:[0m [=====>                                            ] 11% (8/72) - fdbm - ETA: 739m 12s     [0;36mProgress:[0m [======>                                           ] 12% (9/72) - fdbs - ETA: 646m 48s     [0;36mProgress:[0m [======>                                           ] 13% (10/72) - fthm - ETA: 572m 28s     [0;36mProgress:[0m [=======>                                          ] 15% (11/72) - ftos - ETA: 512m 24s     [0;36mProgress:[0m [========>                                         ] 16% (12/72) - fwam - ETA: 462m 0s     [0;36mProgress:[0m [=========>                                        ] 18% (13/72) - fwas - ETA: 418m 54s     [0;36mProgress:[0m [=========>                                        ] 19% (14/72) - glc - ETA: 382m 48s     [0;36mProgress:[0m [==========>                                       ] 20% (15/72) - iopl - ETA: 351m 30s     [0;36mProgress:[0m [===========>                                      ] 22% (16/72) - ioplm - ETA: 322m 56s     [0;36mProgress:[0m [===========>                                      ] 23% (17/72) - iopx - ETA: 298m 50s     [0;36mProgress:[0m [============>                                     ] 25% (18/72) - ir - ETA: 277m 12s     [0;36mProgress:[0m [=============>                                    ] 26% (19/72) - lndm - ETA: 257m 56s     [0;36mProgress:[0m [=============>                                    ] 27% (20/72) - nvrisc - ETA: 240m 4s     [0;36mProgress:[0m [==============>                                   ] 29% (21/72) - pmuxm - ETA: 224m 24s     [0;36mProgress:[0m [===============>                                  ] 30% (22/72) - prtm - ETA: 210m 0s     [0;36mProgress:[0m [===============>                                  ] 31% (23/72) - psca - ETA: 196m 49s     [0;36mProgress:[0m [================>                                 ] 33% (24/72) - pscb - ETA: 184m 48s     [0;36mProgress:[0m [=================>                                ] 34% (25/72) - pscc - ETA: 173m 54s     [0;36mProgress:[0m [==================>                               ] 36% (26/72) - pscd - ETA: 163m 18s     [0;36mProgress:[0m [==================>                               ] 37% (27/72) - px - ETA: 153m 45s     [0;36mProgress:[0m [===================>                              ] 38% (28/72) - riba - ETA: 145m 12s     [0;36mProgress:[0m [====================>                             ] 40% (29/72) - ribs - ETA: 136m 53s     [0;36mProgress:[0m [====================>                             ] 41% (30/72) - sma - ETA: 129m 30s     [0;36mProgress:[0m [=====================>                            ] 43% (31/72) - yu - ETA: 122m 19s     [0;36mProgress:[0m [======================>                           ] 44% (32/72) - dqaa - ETA: 115m 20s     [0;36mProgress:[0m [======================>                           ] 45% (33/72) - dqaci - ETA: 109m 12s     [0;36mProgress:[0m [=======================>                          ] 47% (34/72) - dqaco - ETA: 103m 14s     [0;36mProgress:[0m [========================>                         ] 48% (35/72) - dqai - ETA: 97m 26s     [0;36mProgress:[0m [=========================>                        ] 50% (36/72) - dqamci - ETA: 92m 24s     [0;36mProgress:[0m [=========================>                        ] 51% (37/72) - dqamco - ETA: 87m 30s     [0;36mProgress:[0m [==========================>                       ] 52% (38/72) - dqamdi - ETA: 82m 44s     [0;36mProgress:[0m [===========================>                      ] 54% (39/72) - dqamdo - ETA: 78m 6s     [0;36mProgress:[0m [===========================>                      ] 55% (40/72) - dqap - ETA: 73m 36s     [0;36mProgress:[0m [============================>                     ] 56% (41/72) - dqavi - ETA: 69m 45s     [0;36mProgress:[0m [=============================>                    ] 58% (42/72) - dqavo - ETA: 66m 0s     [0;36mProgress:[0m [=============================>                    ] 59% (43/72) - dqax - ETA: 62m 21s     [0;36mProgress:[0m [==============================>                   ] 61% (44/72) - dql - ETA: 58m 48s     [0;36mProgress:[0m [===============================>                  ] 62% (45/72) - dqs - ETA: 55m 21s     [0;36mProgress:[0m [===============================>                  ] 63% (46/72) - eds - ETA: 52m 0s     [0;36mProgress:[0m [================================>                 ] 65% (47/72) - qcorer - ETA: 49m 10s     [0;36mProgress:[0m [=================================>                ] 66% (48/72) - tecorel - ETA: 46m 0s     [0;36mProgress:[0m [==================================>               ] 68% (49/72) - tecorer - ETA: 43m 19s     [0;36mProgress:[0m [==================================>               ] 69% (50/72) - tds - ETA: 40m 42s     [0;36mProgress:[0m [===================================>              ] 70% (51/72) - alm - ETA: 38m 9s     [0;36mProgress:[0m [====================================>             ] 72% (52/72) - bta - ETA: 35m 40s     [0;36mProgress:[0m [====================================>             ] 73% (53/72) - eri - ETA: 33m 15s     [0;36mProgress:[0m [=====================================>            ] 75% (54/72) - hib - ETA: 30m 54s     [0;36mProgress:[0m [======================================>           ] 76% (55/72) - top_yc_clock - ETA: 28m 37s     [0;36mProgress:[0m [======================================>           ] 77% (56/72) - top_yc_gpio - ETA: 26m 24s     [0;36mProgress:[0m [=======================================>          ] 79% (57/72) - yc_clock_macro - ETA: 24m 15s     [0;36mProgress:[0m [========================================>         ] 80% (58/72) - yc_fuse - ETA: 22m 24s     [0;36mProgress:[0m [========================================>         ] 81% (59/72) - yc_fuse_macro - ETA: 20m 22s     [0;36mProgress:[0m [=========================================>        ] 83% (60/72) - yu_mng - ETA: 18m 24s     [0;36mProgress:[0m [==================================================>] 100% (72/72) - All units completed - ETA: 0m 0s     
+[0;36mProgress:[0m [                                                 ] 0% (0/72) - hiopl     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplca     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcc     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ioplcd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fdb     [0;36mProgress:[0m [                                                 ] 0% (0/72) - fth     [0;36mProgress:[0m [                                                 ] 0% (0/72) - lnd     [0;36mProgress:[0m [                                                 ] 0% (0/72) - pmux     [0;36mProgress:[0m [                                                 ] 0% (0/72) - prt     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccorea     [0;36mProgress:[0m [                                                 ] 0% (0/72) - ccoreb     [0;36mProgress:[0m [                                                 ] 1% (1/72) - ccorec - ETA: 6604m 11s     [0;36mProgress:[0m [=>                                                ] 2% (2/72) - ccored - ETA: 3255m 0s     [0;36mProgress:[0m [==>                                               ] 4% (3/72) - ccoree - ETA: 2139m 0s     [0;36mProgress:[0m [==>                                               ] 5% (4/72) - ccoref - ETA: 1581m 0s     [0;36mProgress:[0m [===>                                              ] 6% (5/72) - clt - ETA: 1246m 12s     [0;36mProgress:[0m [====>                                             ] 8% (6/72) - cscore - ETA: 1023m 0s     [0;36mProgress:[0m [====>                                             ] 9% (7/72) - dcmp - ETA: 863m 25s     [0;36mProgress:[0m [=====>                                            ] 11% (8/72) - fdbm - ETA: 744m 32s     [0;36mProgress:[0m [======>                                           ] 12% (9/72) - fdbs - ETA: 651m 0s     [0;36mProgress:[0m [======>                                           ] 13% (10/72) - fthm - ETA: 576m 36s     [0;36mProgress:[0m [=======>                                          ] 15% (11/72) - ftos - ETA: 515m 27s     [0;36mProgress:[0m [========>                                         ] 16% (12/72) - fwam - ETA: 465m 0s     [0;36mProgress:[0m [=========>                                        ] 18% (13/72) - fwas - ETA: 421m 51s     [0;36mProgress:[0m [=========>                                        ] 19% (14/72) - glc - ETA: 385m 42s     [0;36mProgress:[0m [==========>                                       ] 20% (15/72) - iopl - ETA: 353m 24s     [0;36mProgress:[0m [===========>                                      ] 22% (16/72) - ioplm - ETA: 325m 44s     [0;36mProgress:[0m [===========>                                      ] 23% (17/72) - iopx - ETA: 300m 40s     [0;36mProgress:[0m [============>                                     ] 25% (18/72) - ir - ETA: 279m 0s     [0;36mProgress:[0m [=============>                                    ] 26% (19/72) - lndm - ETA: 259m 42s     [0;36mProgress:[0m [=============>                                    ] 27% (20/72) - nvrisc - ETA: 241m 48s     [0;36mProgress:[0m [==============>                                   ] 29% (21/72) - pmuxm - ETA: 226m 6s     [0;36mProgress:[0m [===============>                                  ] 30% (22/72) - prtm - ETA: 211m 40s     [0;36mProgress:[0m [===============>                                  ] 31% (23/72) - psca - ETA: 197m 38s     [0;36mProgress:[0m [================>                                 ] 33% (24/72) - pscb - ETA: 185m 36s     [0;36mProgress:[0m [=================>                                ] 34% (25/72) - pscc - ETA: 174m 41s     [0;36mProgress:[0m [==================>                               ] 36% (26/72) - pscd - ETA: 164m 4s     [0;36mProgress:[0m [==================>                               ] 37% (27/72) - px - ETA: 155m 15s     [0;36mProgress:[0m [===================>                              ] 38% (28/72) - riba - ETA: 145m 56s     [0;36mProgress:[0m [====================>                             ] 40% (29/72) - ribs - ETA: 137m 36s     [0;36mProgress:[0m [====================>                             ] 41% (30/72) - sma - ETA: 130m 12s     [0;36mProgress:[0m [=====================>                            ] 43% (31/72) - yu - ETA: 123m 0s     [0;36mProgress:[0m [======================>                           ] 44% (32/72) - dqaa - ETA: 116m 0s     [0;36mProgress:[0m [======================>                           ] 45% (33/72) - dqaci - ETA: 109m 51s     [0;36mProgress:[0m [=======================>                          ] 47% (34/72) - dqaco - ETA: 103m 52s     [0;36mProgress:[0m [========================>                         ] 48% (35/72) - dqai - ETA: 98m 3s     [0;36mProgress:[0m [=========================>                        ] 50% (36/72) - dqamci - ETA: 93m 0s     [0;36mProgress:[0m [=========================>                        ] 51% (37/72) - dqamco - ETA: 88m 5s     [0;36mProgress:[0m [==========================>                       ] 52% (38/72) - dqamdi - ETA: 83m 18s     [0;36mProgress:[0m [===========================>                      ] 54% (39/72) - dqamdo - ETA: 78m 39s     [0;36mProgress:[0m [===========================>                      ] 55% (40/72) - dqap - ETA: 74m 8s     [0;36mProgress:[0m [============================>                     ] 56% (41/72) - dqavi - ETA: 70m 16s     [0;36mProgress:[0m [=============================>                    ] 58% (42/72) - dqavo - ETA: 66m 30s     [0;36mProgress:[0m [=============================>                    ] 59% (43/72) - dqax - ETA: 62m 50s     [0;36mProgress:[0m [==============================>                   ] 61% (44/72) - dql - ETA: 59m 16s     [0;36mProgress:[0m [===============================>                  ] 62% (45/72) - dqs - ETA: 55m 48s     [0;36mProgress:[0m [===============================>                  ] 63% (46/72) - eds - ETA: 52m 26s     [0;36mProgress:[0m [================================>                 ] 65% (47/72) - qcorer - ETA: 49m 35s     [0;36mProgress:[0m [=================================>                ] 66% (48/72) - tecorel - ETA: 46m 24s     [0;36mProgress:[0m [==================================>               ] 68% (49/72) - tecorer - ETA: 43m 42s     [0;36mProgress:[0m [==================================>               ] 69% (50/72) - tds - ETA: 40m 42s     [0;36mProgress:[0m [===================================>              ] 70% (51/72) - alm - ETA: 38m 9s     [0;36mProgress:[0m [====================================>             ] 72% (52/72) - bta - ETA: 35m 40s     [0;36mProgress:[0m [====================================>             ] 73% (53/72) - eri - ETA: 33m 15s     [0;36mProgress:[0m [=====================================>            ] 75% (54/72) - hib - ETA: 30m 54s     [0;36mProgress:[0m [======================================>           ] 76% (55/72) - top_yc_clock - ETA: 28m 37s     [0;36mProgress:[0m [======================================>           ] 77% (56/72) - top_yc_gpio - ETA: 26m 24s     [0;36mProgress:[0m [=======================================>          ] 79% (57/72) - yc_clock_macro - ETA: 24m 30s     [0;36mProgress:[0m [========================================>         ] 80% (58/72) - yc_fuse - ETA: 22m 24s     [0;36mProgress:[0m [========================================>         ] 81% (59/72) - yc_fuse_macro - ETA: 20m 22s     [0;36mProgress:[0m [=========================================>        ] 83% (60/72) - yu_mng - ETA: 18m 36s     [0;36mProgress:[0m [==================================================>] 100% (72/72) - All units completed - ETA: 0m 0s     
+
+HTML Dashboard: agur_multi_regression_dashboard_20251103_090003.html
+
+================================================================================
+[WARN] Daily Regression Completed with Errors (exit code: 1)
+================================================================================
+
+Results Location:
+  Directory: /home/avice/scripts/avice_wa_review/agur_release_tracking/daily_reports/20251103
+
+Generated Files:
+  HTML Dashboards: 647
+  Log Files: 0
+
+Disk Usage: 1.4G
+
+Dashboard Files:
+  - agur_multi_regression_dashboard_20251103_090003.html
+  - clt_avice_runtime_report_20251103_090038.html
+  - clt_avice_formal_verification_20251103_090038.html
+  - clt_avice_MASTER_dashboard_20251103.html
+  - pmux_avice_runtime_report_20251103_090038.html
+  - pmux_avice_formal_verification_20251103_090039.html
+  - pmux_avice_MASTER_dashboard_20251103.html
+  - ccorec_avice_runtime_report_20251103_090040.html
+  - ccorec_avice_MASTER_dashboard_20251103.html
+  - ccorec_avice_formal_verification_20251103_090040.html
+  - dcmp_avice_runtime_report_20251103_090041.html
+  - dcmp_avice_formal_verification_20251103_090041.html
+  - dcmp_avice_MASTER_dashboard_20251103.html
+  - prt_avice_MASTER_dashboard_20251103.html
+  - prt_avice_runtime_report_20251103_090040.html
+  - prt_avice_formal_verification_20251103_090042.html
+  - cscore_avice_runtime_report_20251103_090042.html
+  - cscore_avice_formal_verification_20251103_090042.html
+  - cscore_avice_MASTER_dashboard_20251103.html
+  - fdb_avice_runtime_report_20251103_090041.html
+  - fdb_avice_formal_verification_20251103_090042.html
+  - fdb_avice_MASTER_dashboard_20251103.html
+  - ccorea_avice_runtime_report_20251103_090042.html
+  - ccorea_avice_MASTER_dashboard_20251103.html
+  - ccorea_avice_formal_verification_20251103_090042.html
+  - ccoree_avice_runtime_report_20251103_090042.html
+  - ccoree_avice_formal_verification_20251103_090043.html
+  - ccoree_avice_MASTER_dashboard_20251103.html
+  - fth_avice_MASTER_dashboard_20251103.html
+  - fth_avice_formal_verification_20251103_090043.html
+  - fth_avice_runtime_report_20251103_090042.html
+  - lnd_avice_formal_verification_20251103_090043.html
+  - lnd_avice_MASTER_dashboard_20251103.html
+  - lnd_avice_runtime_report_20251103_090042.html
+  - fdbm_avice_runtime_report_20251103_090043.html
+  - fdbm_avice_formal_verification_20251103_090044.html
+  - fdbm_avice_MASTER_dashboard_20251103.html
+  - ccored_avice_runtime_report_20251103_090044.html
+  - ccored_avice_MASTER_dashboard_20251103.html
+  - ccored_avice_formal_verification_20251103_090045.html
+  - fthm_avice_runtime_report_20251103_090044.html
+  - fthm_avice_formal_verification_20251103_090045.html
+  - fthm_avice_MASTER_dashboard_20251103.html
+  - fwam_avice_MASTER_dashboard_20251103.html
+  - fwam_avice_runtime_report_20251103_090044.html
+  - fwam_avice_formal_verification_20251103_090045.html
+  - ccoref_avice_MASTER_dashboard_20251103.html
+  - ccoref_avice_formal_verification_20251103_090045.html
+  - ccoref_avice_runtime_report_20251103_090045.html
+  - fwas_avice_runtime_report_20251103_090045.html
+  - fwas_avice_formal_verification_20251103_090046.html
+  - fwas_avice_MASTER_dashboard_20251103.html
+  - fdbs_avice_runtime_report_20251103_090046.html
+  - fdbs_avice_formal_verification_20251103_090047.html
+  - fdbs_avice_MASTER_dashboard_20251103.html
+  - ftos_avice_runtime_report_20251103_090047.html
+  - ftos_avice_MASTER_dashboard_20251103.html
+  - ftos_avice_formal_verification_20251103_090047.html
+  - ccoreb_avice_MASTER_dashboard_20251103.html
+  - ccoreb_avice_runtime_report_20251103_090047.html
+  - ccoreb_avice_formal_verification_20251103_090047.html
+  - nvrisc_avice_runtime_report_20251103_090047.html
+  - nvrisc_avice_formal_verification_20251103_090048.html
+  - nvrisc_avice_MASTER_dashboard_20251103.html
+  - pmuxm_avice_runtime_report_20251103_090049.html
+  - pmuxm_avice_MASTER_dashboard_20251103.html
+  - pmuxm_avice_formal_verification_20251103_090049.html
+  - lndm_avice_runtime_report_20251103_090048.html
+  - lndm_avice_formal_verification_20251103_090049.html
+  - lndm_avice_MASTER_dashboard_20251103.html
+  - ribs_avice_runtime_report_20251103_090049.html
+  - ribs_avice_MASTER_dashboard_20251103.html
+  - ribs_avice_formal_verification_20251103_090049.html
+  - riba_avice_runtime_report_20251103_090049.html
+  - riba_avice_MASTER_dashboard_20251103.html
+  - riba_avice_formal_verification_20251103_090049.html
+  - pscc_avice_runtime_report_20251103_090049.html
+  - pscc_avice_MASTER_dashboard_20251103.html
+  - pscc_avice_formal_verification_20251103_090050.html
+  - pscb_avice_runtime_report_20251103_090050.html
+  - pscb_avice_MASTER_dashboard_20251103.html
+  - pscb_avice_formal_verification_20251103_090050.html
+  - ir_avice_runtime_report_20251103_090050.html
+  - ir_avice_MASTER_dashboard_20251103.html
+  - ir_avice_formal_verification_20251103_090051.html
+  - dqaa_avice_runtime_report_20251103_090050.html
+  - dqaa_avice_MASTER_dashboard_20251103.html
+  - dqaa_avice_formal_verification_20251103_090051.html
+  - px_avice_runtime_report_20251103_090050.html
+  - px_avice_MASTER_dashboard_20251103.html
+  - px_avice_formal_verification_20251103_090051.html
+  - prtm_avice_runtime_report_20251103_090051.html
+  - prtm_avice_MASTER_dashboard_20251103.html
+  - prtm_avice_formal_verification_20251103_090051.html
+  - psca_avice_runtime_report_20251103_090051.html
+  - psca_avice_formal_verification_20251103_090051.html
+  - psca_avice_MASTER_dashboard_20251103.html
+  - dqaci_avice_formal_verification_20251103_090052.html
+  - dqaci_avice_MASTER_dashboard_20251103.html
+  - dqaci_avice_runtime_report_20251103_090051.html
+  - dqaco_avice_runtime_report_20251103_090052.html
+  - dqaco_avice_MASTER_dashboard_20251103.html
+  - dqaco_avice_formal_verification_20251103_090053.html
+  - glc_avice_runtime_report_20251103_090051.html
+  - glc_avice_formal_verification_20251103_090053.html
+  - glc_avice_MASTER_dashboard_20251103.html
+  - dqap_avice_runtime_report_20251103_090053.html
+  - dqap_avice_formal_verification_20251103_090053.html
+  - dqap_avice_MASTER_dashboard_20251103.html
+  - dqamco_avice_runtime_report_20251103_090054.html
+  - dqamco_avice_MASTER_dashboard_20251103.html
+  - dqamco_avice_formal_verification_20251103_090054.html
+  - sma_avice_runtime_report_20251103_090053.html
+  - sma_avice_MASTER_dashboard_20251103.html
+  - sma_avice_formal_verification_20251103_090054.html
+  - dqax_avice_runtime_report_20251103_090054.html
+  - dqax_avice_MASTER_dashboard_20251103.html
+  - dqax_avice_formal_verification_20251103_090055.html
+  - pscd_avice_MASTER_dashboard_20251103.html
+  - pscd_avice_runtime_report_20251103_090054.html
+  - pscd_avice_formal_verification_20251103_090055.html
+  - dqamdi_avice_runtime_report_20251103_090053.html
+  - dqamdi_avice_MASTER_dashboard_20251103.html
+  - dqamdi_avice_formal_verification_20251103_090055.html
+  - dql_avice_runtime_report_20251103_090055.html
+  - dql_avice_MASTER_dashboard_20251103.html
+  - dql_avice_formal_verification_20251103_090055.html
+  - dqai_avice_MASTER_dashboard_20251103.html
+  - dqai_avice_runtime_report_20251103_090054.html
+  - dqai_avice_formal_verification_20251103_090055.html
+  - dqamdo_avice_runtime_report_20251103_090055.html
+  - dqamdo_avice_MASTER_dashboard_20251103.html
+  - dqamdo_avice_formal_verification_20251103_090057.html
+  - tecorer_avice_MASTER_dashboard_20251103.html
+  - tecorer_avice_runtime_report_20251103_090057.html
+  - tecorer_avice_formal_verification_20251103_090057.html
+  - dqs_avice_runtime_report_20251103_090056.html
+  - dqs_avice_MASTER_dashboard_20251103.html
+  - dqs_avice_formal_verification_20251103_090057.html
+  - tecorel_avice_MASTER_dashboard_20251103.html
+  - tecorel_avice_runtime_report_20251103_090057.html
+  - tecorel_avice_formal_verification_20251103_090057.html
+  - qcorer_avice_runtime_report_20251103_090057.html
+  - qcorer_avice_MASTER_dashboard_20251103.html
+  - qcorer_avice_formal_verification_20251103_090057.html
+  - dqavi_avice_runtime_report_20251103_090055.html
+  - dqavi_avice_MASTER_dashboard_20251103.html
+  - dqavi_avice_formal_verification_20251103_090057.html
+  - tds_avice_runtime_report_20251103_090057.html
+  - tds_avice_formal_verification_20251103_090058.html
+  - tds_avice_MASTER_dashboard_20251103.html
+  - eds_avice_runtime_report_20251103_090058.html
+  - eds_avice_formal_verification_20251103_090058.html
+  - eds_avice_MASTER_dashboard_20251103.html
+  - top_yc_gpio_avice_runtime_report_20251103_090058.html
+  - top_yc_gpio_avice_MASTER_dashboard_20251103.html
+  - top_yc_gpio_avice_formal_verification_20251103_090058.html
+  - alm_avice_runtime_report_20251103_090058.html
+  - alm_avice_MASTER_dashboard_20251103.html
+  - alm_avice_formal_verification_20251103_090058.html
+  - yc_clock_macro_avice_formal_verification_20251103_090058.html
+  - yc_clock_macro_avice_MASTER_dashboard_20251103.html
+  - yc_clock_macro_avice_runtime_report_20251103_090058.html
+  - bta_avice_runtime_report_20251103_090059.html
+  - bta_avice_MASTER_dashboard_20251103.html
+  - bta_avice_formal_verification_20251103_090059.html
+  - yc_fuse_avice_runtime_report_20251103_090059.html
+  - yc_fuse_avice_MASTER_dashboard_20251103.html
+  - yc_fuse_avice_formal_verification_20251103_090059.html
+  - hib_avice_runtime_report_20251103_090059.html
+  - hib_avice_MASTER_dashboard_20251103.html
+  - hib_avice_formal_verification_20251103_090100.html
+  - yu_mng_avice_runtime_report_20251103_090059.html
+  - yu_mng_avice_MASTER_dashboard_20251103.html
+  - yu_mng_avice_formal_verification_20251103_090100.html
+  - dqamci_avice_formal_verification_20251103_090100.html
+  - dqamci_avice_MASTER_dashboard_20251103.html
+  - dqamci_avice_runtime_report_20251103_090057.html
+  - eri_avice_runtime_report_20251103_090100.html
+  - eri_avice_MASTER_dashboard_20251103.html
+  - eri_avice_formal_verification_20251103_090101.html
+  - dqavo_avice_runtime_report_20251103_090058.html
+  - dqavo_avice_MASTER_dashboard_20251103.html
+  - dqavo_avice_formal_verification_20251103_090101.html
+  - clt_avice_runtime_report_20251103_090103.html
+  - clt_avice_PT_timing_summary_20251103_090105.html
+  - ccorea_avice_runtime_report_20251103_090105.html
+  - ccorea_avice_PT_timing_summary_20251103_090107.html
+  - ccorec_avice_runtime_report_20251103_090105.html
+  - ccorec_avice_PT_timing_summary_20251103_090109.html
+  - ccoreb_avice_runtime_report_20251103_090107.html
+  - ccoreb_avice_PT_timing_summary_20251103_090109.html
+  - ccoree_avice_runtime_report_20251103_090106.html
+  - ccoree_avice_PT_timing_summary_20251103_090111.html
+  - prt_avice_runtime_report_20251103_090105.html
+  - prt_avice_PT_timing_summary_20251103_090111.html
+  - ccoref_avice_runtime_report_20251103_090107.html
+  - ccoref_avice_PT_timing_summary_20251103_090111.html
+  - fdbm_avice_runtime_report_20251103_090111.html
+  - cscore_avice_runtime_report_20251103_090105.html
+  - fdb_avice_PT_timing_summary_20251103_090112.html
+  - fdb_avice_runtime_report_20251103_090106.html
+  - cscore_avice_PT_timing_summary_20251103_090112.html
+  - pmux_avice_runtime_report_20251103_090103.html
+  - pmux_avice_PT_timing_summary_20251103_090112.html
+  - dcmp_avice_runtime_report_20251103_090107.html
+  - dcmp_avice_PT_timing_summary_20251103_090112.html
+  - fthm_avice_runtime_report_20251103_090112.html
+  - fth_avice_PT_timing_summary_20251103_090113.html
+  - fth_avice_runtime_report_20251103_090106.html
+  - fdbm_avice_PT_timing_summary_20251103_090114.html
+  - ccored_avice_runtime_report_20251103_090107.html
+  - ccored_avice_PT_timing_summary_20251103_090114.html
+  - fdbs_avice_runtime_report_20251103_090112.html
+  - fdbs_avice_PT_timing_summary_20251103_090114.html
+  - ftos_avice_PT_timing_summary_20251103_090114.html
+  - ftos_avice_runtime_report_20251103_090113.html
+  - fwam_avice_runtime_report_20251103_090113.html
+  - fwam_avice_PT_timing_summary_20251103_090116.html
+  - pscc_avice_runtime_report_20251103_090116.html
+  - pscb_avice_runtime_report_20251103_090117.html
+  - pmuxm_avice_runtime_report_20251103_090114.html
+  - pmuxm_avice_PT_timing_summary_20251103_090117.html
+  - psca_avice_runtime_report_20251103_090117.html
+  - fwas_avice_runtime_report_20251103_090114.html
+  - fwas_avice_PT_timing_summary_20251103_090119.html
+  - ir_avice_runtime_report_20251103_090117.html
+  - ir_avice_PT_timing_summary_20251103_090121.html
+  - lnd_avice_PT_timing_summary_20251103_090122.html
+  - lndm_avice_runtime_report_20251103_090118.html
+  - lnd_avice_runtime_report_20251103_090106.html
+  - fthm_avice_PT_timing_summary_20251103_090122.html
+  - dqaa_avice_runtime_report_20251103_090121.html
+  - dqaa_avice_PT_timing_summary_20251103_090123.html
+  - dqaci_avice_runtime_report_20251103_090123.html
+  - dqaci_avice_PT_timing_summary_20251103_090126.html
+  - px_avice_PT_timing_summary_20251103_090126.html
+  - px_avice_runtime_report_20251103_090119.html
+  - riba_avice_runtime_report_20251103_090119.html
+  - riba_avice_PT_timing_summary_20251103_090127.html
+  - ribs_avice_runtime_report_20251103_090118.html
+  - ribs_avice_PT_timing_summary_20251103_090127.html
+  - nvrisc_avice_runtime_report_20251103_090115.html
+  - nvrisc_avice_PT_timing_summary_20251103_090131.html
+  - dqap_avice_runtime_report_20251103_090129.html
+  - dqap_avice_PT_timing_summary_20251103_090132.html
+  - dqamdo_avice_runtime_report_20251103_090130.html
+  - dqamdo_avice_PT_timing_summary_20251103_090132.html
+  - glc_avice_runtime_report_20251103_090119.html
+  - glc_avice_PT_timing_summary_20251103_090133.html
+  - dqamco_avice_runtime_report_20251103_090128.html
+  - dqamco_avice_PT_timing_summary_20251103_090133.html
+  - dqamdi_avice_runtime_report_20251103_090128.html
+  - dqamdi_avice_PT_timing_summary_20251103_090134.html
+  - prtm_avice_runtime_report_20251103_090117.html
+  - dqax_avice_runtime_report_20251103_090134.html
+  - prtm_avice_PT_timing_summary_20251103_090135.html
+  - dqax_avice_PT_timing_summary_20251103_090136.html
+  - dqavi_avice_runtime_report_20251103_090134.html
+  - dqavi_avice_PT_timing_summary_20251103_090136.html
+  - eds_avice_runtime_report_20251103_090137.html
+  - dql_avice_runtime_report_20251103_090135.html
+  - dql_avice_PT_timing_summary_20251103_090137.html
+  - dqamci_avice_runtime_report_20251103_090131.html
+  - dqamci_avice_PT_timing_summary_20251103_090138.html
+  - qcorer_avice_runtime_report_20251103_090138.html
+  - dqai_avice_runtime_report_20251103_090126.html
+  - dqai_avice_PT_timing_summary_20251103_090138.html
+  - lndm_avice_PT_timing_summary_20251103_090139.html
+  - sma_avice_runtime_report_20251103_090123.html
+  - sma_avice_PT_timing_summary_20251103_090139.html
+  - bta_avice_runtime_report_20251103_090139.html
+  - alm_avice_runtime_report_20251103_090140.html
+  - dqs_avice_PT_timing_summary_20251103_090140.html
+  - dqs_avice_runtime_report_20251103_090136.html
+  - top_yc_gpio_avice_runtime_report_20251103_090140.html
+  - top_yc_gpio_avice_PT_timing_summary_20251103_090140.html
+  - yc_clock_macro_avice_runtime_report_20251103_090140.html
+  - yc_clock_macro_avice_PT_timing_summary_20251103_090141.html
+  - hib_avice_runtime_report_20251103_090141.html
+  - tecorel_avice_runtime_report_20251103_090138.html
+  - tecorel_avice_PT_timing_summary_20251103_090141.html
+  - tecorer_avice_runtime_report_20251103_090138.html
+  - tecorer_avice_PT_timing_summary_20251103_090142.html
+  - yc_fuse_avice_PT_timing_summary_20251103_090142.html
+  - yc_fuse_avice_runtime_report_20251103_090140.html
+  - dqaco_avice_runtime_report_20251103_090125.html
+  - dqaco_avice_PT_timing_summary_20251103_090143.html
+  - pscd_avice_runtime_report_20251103_090128.html
+  - pscd_avice_PT_timing_summary_20251103_090145.html
+  - tds_avice_PT_timing_summary_20251103_090146.html
+  - tds_avice_runtime_report_20251103_090138.html
+  - dqavo_avice_runtime_report_20251103_090139.html
+  - dqavo_avice_PT_timing_summary_20251103_090147.html
+  - yu_mng_avice_runtime_report_20251103_090142.html
+  - yu_mng_avice_PT_timing_summary_20251103_090148.html
+  - eri_avice_runtime_report_20251103_090140.html
+  - eri_avice_PT_timing_summary_20251103_090149.html
+  - clt_avice_runtime_report_20251103_090151.html
+  - clt_avice_pv_report_20251103_090151.html
+  - pmux_avice_runtime_report_20251103_090152.html
+  - pmux_avice_pv_report_20251103_090152.html
+  - ccorec_avice_runtime_report_20251103_090152.html
+  - ccorec_avice_pv_report_20251103_090153.html
+  - prt_avice_runtime_report_20251103_090153.html
+  - prt_avice_pv_report_20251103_090153.html
+  - dcmp_avice_runtime_report_20251103_090153.html
+  - dcmp_avice_pv_report_20251103_090153.html
+  - fdb_avice_runtime_report_20251103_090154.html
+  - fdb_avice_pv_report_20251103_090154.html
+  - ccorea_avice_runtime_report_20251103_090154.html
+  - ccorea_avice_pv_report_20251103_090154.html
+  - cscore_avice_runtime_report_20251103_090153.html
+  - cscore_avice_pv_report_20251103_090154.html
+  - lnd_avice_runtime_report_20251103_090154.html
+  - lnd_avice_pv_report_20251103_090154.html
+  - fth_avice_runtime_report_20251103_090154.html
+  - fth_avice_pv_report_20251103_090154.html
+  - ccoree_avice_runtime_report_20251103_090154.html
+  - ccoree_avice_pv_report_20251103_090155.html
+  - fdbm_avice_runtime_report_20251103_090155.html
+  - fdbm_avice_pv_report_20251103_090155.html
+  - ccored_avice_runtime_report_20251103_090155.html
+  - ccored_avice_pv_report_20251103_090155.html
+  - ccoref_avice_runtime_report_20251103_090155.html
+  - ccoref_avice_pv_report_20251103_090155.html
+  - fwam_avice_runtime_report_20251103_090155.html
+  - fwam_avice_pv_report_20251103_090155.html
+  - ftos_avice_runtime_report_20251103_090156.html
+  - ftos_avice_pv_report_20251103_090156.html
+  - ccoreb_avice_runtime_report_20251103_090155.html
+  - ccoreb_avice_pv_report_20251103_090156.html
+  - pmuxm_avice_runtime_report_20251103_090156.html
+  - pmuxm_avice_pv_report_20251103_090156.html
+  - fthm_avice_runtime_report_20251103_090157.html
+  - fthm_avice_pv_report_20251103_090157.html
+  - fdbs_avice_runtime_report_20251103_090157.html
+  - fdbs_avice_pv_report_20251103_090157.html
+  - pscc_avice_runtime_report_20251103_090157.html
+  - pscc_avice_pv_report_20251103_090157.html
+  - nvrisc_avice_pv_report_20251103_090158.html
+  - nvrisc_avice_runtime_report_20251103_090157.html
+  - fwas_avice_runtime_report_20251103_090157.html
+  - fwas_avice_pv_report_20251103_090158.html
+  - pscb_avice_runtime_report_20251103_090158.html
+  - pscb_avice_pv_report_20251103_090158.html
+  - prtm_avice_runtime_report_20251103_090158.html
+  - prtm_avice_pv_report_20251103_090158.html
+  - psca_avice_runtime_report_20251103_090159.html
+  - psca_avice_pv_report_20251103_090159.html
+  - ribs_avice_runtime_report_20251103_090159.html
+  - ribs_avice_pv_report_20251103_090159.html
+  - dqaa_avice_pv_report_20251103_090159.html
+  - dqaa_avice_runtime_report_20251103_090159.html
+  - riba_avice_pv_report_20251103_090159.html
+  - riba_avice_runtime_report_20251103_090159.html
+  - dqaci_avice_runtime_report_20251103_090159.html
+  - dqaci_avice_pv_report_20251103_090159.html
+  - px_avice_runtime_report_20251103_090159.html
+  - px_avice_pv_report_20251103_090159.html
+  - lndm_avice_pv_report_20251103_090159.html
+  - lndm_avice_runtime_report_20251103_090159.html
+  - dqaco_avice_runtime_report_20251103_090200.html
+  - dqaco_avice_pv_report_20251103_090200.html
+  - dqax_avice_runtime_report_20251103_090201.html
+  - dqax_avice_pv_report_20251103_090201.html
+  - dqavi_avice_pv_report_20251103_090201.html
+  - dqavi_avice_runtime_report_20251103_090201.html
+  - ir_avice_runtime_report_20251103_090159.html
+  - ir_avice_pv_report_20251103_090201.html
+  - dqamdi_avice_runtime_report_20251103_090201.html
+  - dqamdi_avice_pv_report_20251103_090201.html
+  - dqamco_avice_runtime_report_20251103_090201.html
+  - dqamco_avice_pv_report_20251103_090201.html
+  - dqap_avice_runtime_report_20251103_090201.html
+  - dqap_avice_pv_report_20251103_090201.html
+  - sma_avice_runtime_report_20251103_090202.html
+  - sma_avice_pv_report_20251103_090202.html
+  - dqamdo_avice_pv_report_20251103_090202.html
+  - dqamdo_avice_runtime_report_20251103_090202.html
+  - tecorer_avice_pv_report_20251103_090203.html
+  - tecorer_avice_runtime_report_20251103_090203.html
+  - tds_avice_runtime_report_20251103_090203.html
+  - tds_avice_pv_report_20251103_090203.html
+  - dqs_avice_runtime_report_20251103_090204.html
+  - dqs_avice_pv_report_20251103_090204.html
+  - tecorel_avice_pv_report_20251103_090204.html
+  - tecorel_avice_runtime_report_20251103_090204.html
+  - qcorer_avice_runtime_report_20251103_090204.html
+  - qcorer_avice_pv_report_20251103_090204.html
+  - pscd_avice_pv_report_20251103_090204.html
+  - pscd_avice_runtime_report_20251103_090204.html
+  - dqavo_avice_runtime_report_20251103_090204.html
+  - dqavo_avice_pv_report_20251103_090204.html
+  - eds_avice_runtime_report_20251103_090204.html
+  - eds_avice_pv_report_20251103_090205.html
+  - glc_avice_runtime_report_20251103_090205.html
+  - glc_avice_pv_report_20251103_090205.html
+  - alm_avice_pv_report_20251103_090205.html
+  - alm_avice_runtime_report_20251103_090205.html
+  - top_yc_gpio_avice_pv_report_20251103_090205.html
+  - top_yc_gpio_avice_runtime_report_20251103_090205.html
+  - yc_fuse_avice_pv_report_20251103_090205.html
+  - yc_fuse_avice_runtime_report_20251103_090205.html
+  - dql_avice_runtime_report_20251103_090205.html
+  - dql_avice_pv_report_20251103_090206.html
+  - dqai_avice_runtime_report_20251103_090206.html
+  - dqai_avice_pv_report_20251103_090206.html
+  - eri_avice_runtime_report_20251103_090206.html
+  - eri_avice_pv_report_20251103_090206.html
+  - bta_avice_runtime_report_20251103_090206.html
+  - bta_avice_pv_report_20251103_090206.html
+  - hib_avice_runtime_report_20251103_090206.html
+  - hib_avice_pv_report_20251103_090206.html
+  - dqamci_avice_runtime_report_20251103_090208.html
+  - dqamci_avice_pv_report_20251103_090208.html
+  - yu_mng_avice_runtime_report_20251103_090206.html
+  - yu_mng_avice_pv_report_20251103_090208.html
+  - avice_clock_analysis_ccoree_unknown_20251103_103217.html
+  - avice_clock_analysis_ccored_unknown_20251103_103217.html
+  - avice_clock_analysis_fdb_ipo1000_20251103_103217.html
+  - avice_clock_analysis_ccoref_unknown_20251103_103217.html
+  - avice_clock_analysis_pmux_ipo1000_20251103_103217.html
+  - avice_clock_analysis_ccorec_ipo1400_20251103_103217.html
+  - avice_clock_analysis_prt_ipo1000_20251103_103217.html
+  - avice_clock_analysis_lnd_ipo1000_20251103_103217.html
+  - avice_clock_analysis_fth_ipo1000_20251103_103217.html
+  - avice_clock_analysis_ccorea_ipo1000_20251103_103218.html
+  - avice_clock_analysis_ccoreb_ipo1000_20251103_103218.html
+  - avice_clock_analysis_cscore_unknown_20251103_103218.html
+  - avice_clock_analysis_fdbm_ipo1000_20251103_103218.html
+  - avice_clock_analysis_glc_unknown_20251103_103218.html
+  - avice_clock_analysis_clt_ipo1000_20251103_103218.html
+  - avice_clock_analysis_fdbs_ipo1000_20251103_103218.html
+  - avice_clock_analysis_fwam_ipo1000_20251103_103219.html
+  - avice_clock_analysis_pmuxm_ipo1000_20251103_103219.html
+  - avice_clock_analysis_nvrisc_ipo1000_20251103_103219.html
+  - avice_clock_analysis_lndm_ipo1000_20251103_103219.html
+  - avice_clock_analysis_prtm_ipo1000_20251103_103219.html
+  - avice_clock_analysis_ribs_unknown_20251103_103221.html
+  - avice_clock_analysis_dcmp_unknown_20251103_103221.html
+  - avice_clock_analysis_fwas_unknown_20251103_103221.html
+  - ccorea_avice_block_release_20251103_103229.html
+  - avice_clock_analysis_pscd_ipo1000_20251103_103221.html
+  - avice_clock_analysis_fthm_ipo1000_20251103_103221.html
+  - avice_clock_analysis_ir_ipo1000_20251103_103221.html
+  - avice_clock_analysis_ftos_ipo1000_20251103_103221.html
+  - avice_clock_analysis_riba_ipo1000_20251103_103221.html
+  - avice_clock_analysis_px_ipo1000_20251103_103221.html
+  - avice_clock_analysis_sma_ipo1000_20251103_103222.html
+  - avice_clock_analysis_pscc_ipo1000_20251103_103222.html
+  - avice_clock_analysis_pscb_ipo1000_20251103_103222.html
+  - avice_clock_analysis_dqamco_unknown_20251103_103223.html
+  - avice_clock_analysis_dqavi_unknown_20251103_103223.html
+  - avice_clock_analysis_dqamdo_unknown_20251103_103223.html
+  - avice_clock_analysis_dqamdi_ipo3800_20251103_103223.html
+  - avice_clock_analysis_dqaci_unknown_20251103_103223.html
+  - avice_clock_analysis_dqaa_unknown_20251103_103223.html
+  - avice_clock_analysis_dqaco_unknown_20251103_103223.html
+  - avice_clock_analysis_dqax_unknown_20251103_103224.html
+  - avice_clock_analysis_dqs_unknown_20251103_103224.html
+  - avice_clock_analysis_dql_unknown_20251103_103224.html
+  - avice_clock_analysis_tecorel_ipo1000_20251103_103224.html
+  - avice_clock_analysis_dqamci_ipo1000_20251103_103224.html
+  - avice_clock_analysis_dqai_ipo1000_20251103_103224.html
+  - avice_clock_analysis_dqavo_ipo1000_20251103_103224.html
+  - avice_clock_analysis_dqap_ipo1000_20251103_103224.html
+  - avice_clock_analysis_top_yc_gpio_ipo1000_20251103_103226.html
+  - avice_clock_analysis_yc_clock_macro_ipo1000_20251103_103226.html
+  - avice_clock_analysis_tds_ipo1000_20251103_103226.html
+  - avice_clock_analysis_eds_ipo1000_20251103_103226.html
+  - avice_clock_analysis_qcorer_ipo1000_20251103_103226.html
+  - avice_clock_analysis_tecorer_ipo1000_20251103_103226.html
+  - avice_clock_analysis_eri_ipo1000_20251103_103226.html
+  - avice_clock_analysis_yu_mng_ipo1000_20251103_103226.html
+  - cscore_avice_block_release_20251103_103230.html
+  - ccoreb_avice_block_release_20251103_103230.html
+  - ccored_avice_block_release_20251103_103231.html
+  - fth_avice_block_release_20251103_103231.html
+  - clt_avice_block_release_20251103_103232.html
+  - pmux_avice_block_release_20251103_103232.html
+  - fdbs_avice_block_release_20251103_103233.html
+  - ccoref_avice_block_release_20251103_103233.html
+  - ccorec_avice_block_release_20251103_103233.html
+  - ccoree_avice_block_release_20251103_103234.html
+  - dcmp_avice_block_release_20251103_103234.html
+  - fdbm_avice_block_release_20251103_103235.html
+  - ftos_avice_block_release_20251103_103235.html
+  - lnd_avice_block_release_20251103_103235.html
+  - glc_avice_block_release_20251103_103236.html
+  - fwas_avice_block_release_20251103_103236.html
+  - prt_avice_block_release_20251103_103237.html
+  - pscb_avice_block_release_20251103_103237.html
+  - fthm_avice_block_release_20251103_103238.html
+  - fwam_avice_block_release_20251103_103239.html
+  - psca_avice_block_release_20251103_103239.html
+  - pscc_avice_block_release_20251103_103239.html
+  - pmuxm_avice_block_release_20251103_103239.html
+  - ribs_avice_block_release_20251103_103239.html
+  - fdb_avice_block_release_20251103_103241.html
+  - dqaa_avice_block_release_20251103_103241.html
+  - dqaci_avice_block_release_20251103_103241.html
+  - riba_avice_block_release_20251103_103241.html
+  - ir_avice_block_release_20251103_103241.html
+  - dqap_avice_block_release_20251103_103244.html
+  - dqamco_avice_block_release_20251103_103245.html
+  - dqamdo_avice_block_release_20251103_103245.html
+  - px_avice_block_release_20251103_103245.html
+  - dqavi_avice_block_release_20251103_103246.html
+  - dql_avice_block_release_20251103_103247.html
+  - dqax_avice_block_release_20251103_103247.html
+  - eds_avice_block_release_20251103_103248.html
+  - qcorer_avice_block_release_20251103_103248.html
+  - dqaco_avice_block_release_20251103_103249.html
+  - dqs_avice_block_release_20251103_103249.html
+  - nvrisc_avice_block_release_20251103_103249.html
+  - prtm_avice_block_release_20251103_103250.html
+  - bta_avice_block_release_20251103_103251.html
+  - alm_avice_block_release_20251103_103252.html
+  - tecorel_avice_block_release_20251103_103252.html
+  - sma_avice_block_release_20251103_103253.html
+  - lndm_avice_block_release_20251103_103253.html
+  - hib_avice_block_release_20251103_103253.html
+  - yu_mng_avice_block_release_20251103_103254.html
+  - tecorer_avice_block_release_20251103_103255.html
+  - top_yc_gpio_avice_block_release_20251103_103256.html
+  - tds_avice_block_release_20251103_103256.html
+  - dqai_avice_block_release_20251103_103256.html
+  - pscd_avice_block_release_20251103_103256.html
+  - eri_avice_block_release_20251103_103258.html
+  - yc_fuse_avice_block_release_20251103_103259.html
+  - yc_clock_macro_avice_block_release_20251103_103300.html
+  - dqamdi_avice_block_release_20251103_103301.html
+  - dqamci_avice_block_release_20251103_103303.html
+  - dqavo_avice_block_release_20251103_103303.html
+  - clt_avice_runtime_report_20251103_103307.html
+  - clt_avice_gl_check_report_20251103_103307.html
+  - pmux_avice_runtime_report_20251103_103307.html
+  - pmux_avice_gl_check_report_20251103_103307.html
+  - fth_avice_runtime_report_20251103_103307.html
+  - fth_avice_gl_check_report_20251103_103307.html
+  - prt_avice_gl_check_report_20251103_103307.html
+  - prt_avice_runtime_report_20251103_103307.html
+  - ccorea_avice_runtime_report_20251103_103309.html
+  - ccorea_avice_gl_check_report_20251103_103309.html
+  - fdb_avice_gl_check_report_20251103_103309.html
+  - fdb_avice_runtime_report_20251103_103309.html
+  - lnd_avice_runtime_report_20251103_103309.html
+  - lnd_avice_gl_check_report_20251103_103309.html
+  - dcmp_avice_runtime_report_20251103_103309.html
+  - dcmp_avice_gl_check_report_20251103_103309.html
+  - ccorec_avice_runtime_report_20251103_103309.html
+  - ccorec_avice_gl_check_report_20251103_103310.html
+  - fdbm_avice_runtime_report_20251103_103310.html
+  - fdbm_avice_gl_check_report_20251103_103310.html
+  - ccoreb_avice_runtime_report_20251103_103310.html
+  - ccoreb_avice_gl_check_report_20251103_103310.html
+  - fthm_avice_runtime_report_20251103_103311.html
+  - fthm_avice_gl_check_report_20251103_103311.html
+  - cscore_avice_gl_check_report_20251103_103311.html
+  - cscore_avice_runtime_report_20251103_103311.html
+  - fdbs_avice_runtime_report_20251103_103311.html
+  - fdbs_avice_gl_check_report_20251103_103311.html
+  - ccored_avice_runtime_report_20251103_103311.html
+  - ccored_avice_gl_check_report_20251103_103311.html
+  - ccoref_avice_runtime_report_20251103_103311.html
+  - ccoref_avice_gl_check_report_20251103_103311.html
+  - fwam_avice_runtime_report_20251103_103311.html
+  - fwam_avice_gl_check_report_20251103_103311.html
+  - ftos_avice_runtime_report_20251103_103311.html
+  - ftos_avice_gl_check_report_20251103_103311.html
+  - ccoree_avice_runtime_report_20251103_103311.html
+  - ccoree_avice_gl_check_report_20251103_103311.html
+  - fwas_avice_runtime_report_20251103_103312.html
+  - fwas_avice_gl_check_report_20251103_103312.html
+  - pmuxm_avice_runtime_report_20251103_103312.html
+  - pmuxm_avice_gl_check_report_20251103_103312.html
+  - riba_avice_runtime_report_20251103_103313.html
+  - riba_avice_gl_check_report_20251103_103314.html
+  - nvrisc_avice_runtime_report_20251103_103314.html
+  - nvrisc_avice_gl_check_report_20251103_103314.html
+  - pscc_avice_runtime_report_20251103_103314.html
+  - pscb_avice_runtime_report_20251103_103315.html
+  - ribs_avice_runtime_report_20251103_103315.html
+  - ribs_avice_gl_check_report_20251103_103315.html
+  - ir_avice_runtime_report_20251103_103315.html
+  - ir_avice_gl_check_report_20251103_103315.html
+  - dqaa_avice_runtime_report_20251103_103316.html
+  - dqaa_avice_gl_check_report_20251103_103316.html
+  - px_avice_gl_check_report_20251103_103316.html
+  - px_avice_runtime_report_20251103_103316.html
+  - prtm_avice_gl_check_report_20251103_103316.html
+  - prtm_avice_runtime_report_20251103_103316.html
+  - dqaci_avice_runtime_report_20251103_103316.html
+  - dqaci_avice_gl_check_report_20251103_103316.html
+  - dqaco_avice_runtime_report_20251103_103317.html
+  - dqaco_avice_gl_check_report_20251103_103317.html
+  - psca_avice_runtime_report_20251103_103317.html
+  - dqap_avice_runtime_report_20251103_103318.html
+  - dqai_avice_runtime_report_20251103_103319.html
+  - dqai_avice_gl_check_report_20251103_103319.html
+  - lndm_avice_runtime_report_20251103_103320.html
+  - lndm_avice_gl_check_report_20251103_103320.html
+  - glc_avice_runtime_report_20251103_103320.html
+  - glc_avice_gl_check_report_20251103_103320.html
+  - dqax_avice_gl_check_report_20251103_103320.html
+  - dqax_avice_runtime_report_20251103_103320.html
+  - dqamdi_avice_runtime_report_20251103_103320.html
+  - dqamdi_avice_gl_check_report_20251103_103320.html
+  - sma_avice_gl_check_report_20251103_103320.html
+  - sma_avice_runtime_report_20251103_103320.html
+  - dql_avice_runtime_report_20251103_103320.html
+  - dqamco_avice_runtime_report_20251103_103321.html
+  - dqamco_avice_gl_check_report_20251103_103321.html
+  - pscd_avice_gl_check_report_20251103_103321.html
+  - pscd_avice_runtime_report_20251103_103321.html
+  - dqavi_avice_runtime_report_20251103_103321.html
+  - dqavi_avice_gl_check_report_20251103_103321.html
+  - dqamdo_avice_runtime_report_20251103_103321.html
+  - dqamdo_avice_gl_check_report_20251103_103321.html
+  - tecorel_avice_runtime_report_20251103_103322.html
+  - tecorel_avice_gl_check_report_20251103_103322.html
+  - tecorer_avice_gl_check_report_20251103_103322.html
+  - tecorer_avice_runtime_report_20251103_103322.html
+  - dqamci_avice_runtime_report_20251103_103322.html
+  - dqamci_avice_gl_check_report_20251103_103322.html
+  - tds_avice_gl_check_report_20251103_103322.html
+  - tds_avice_runtime_report_20251103_103322.html
+  - qcorer_avice_runtime_report_20251103_103322.html
+  - eds_avice_runtime_report_20251103_103323.html
+  - alm_avice_runtime_report_20251103_103323.html
+  - dqs_avice_runtime_report_20251103_103323.html
+  - dqs_avice_gl_check_report_20251103_103323.html
+  - top_yc_gpio_avice_runtime_report_20251103_103324.html
+  - top_yc_gpio_avice_gl_check_report_20251103_103324.html
+  - dqavo_avice_runtime_report_20251103_103324.html
+  - dqavo_avice_gl_check_report_20251103_103324.html
+  - yc_clock_macro_avice_runtime_report_20251103_103324.html
+  - yc_clock_macro_avice_gl_check_report_20251103_103324.html
+  - yc_fuse_avice_runtime_report_20251103_103324.html
+  - yc_fuse_avice_gl_check_report_20251103_103324.html
+  - bta_avice_runtime_report_20251103_103325.html
+  - hib_avice_runtime_report_20251103_103325.html
+  - yu_mng_avice_runtime_report_20251103_103325.html
+  - yu_mng_avice_gl_check_report_20251103_103326.html
+  - eri_avice_gl_check_report_20251103_103326.html
+  - eri_avice_runtime_report_20251103_103325.html
+
+================================================================================
+Execution Time: 2025-11-03 10:33:39
+================================================================================

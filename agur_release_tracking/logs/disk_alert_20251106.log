@@ -1,0 +1,29 @@
+================================================================================
+AGUR Disk Usage Monitor - 2025-11-06 07:00:04
+================================================================================
+Checking 73 units...
+
+[CRITICAL] ccorea          (HPORT     ) - 94% used | Owner: arcohen
+[CRITICAL] ccoreb          (HPORT     ) - 94% used | Owner: arcohen
+[CRITICAL] qcorel          (QNS       ) - 91% used | Owner: ronil
+[CRITICAL] qcorer          (QNS       ) - 91% used | Owner: ronil
+[CRITICAL] bta             (TCB       ) - 96% used | Owner: vliberchuk
+
+Grouping by owner...
+  arcohen: 2 unit(s)
+  ronil: 2 unit(s)
+  vliberchuk: 1 unit(s)
+
+Sending emails...
+[EMAIL] Sent to arcohen@nvidia.com (2 unit(s))
+[EMAIL] Sent to ronil@nvidia.com (2 unit(s))
+[EMAIL] Sent to vliberchuk@nvidia.com (1 unit(s))
+
+================================================================================
+SUMMARY:
+  Total units checked: 73
+  Critical units (>=90%): 5
+  Unique owners: 3
+  Emails sent: 3 successful, 0 failed
+  Execution time: 30.5 seconds
+================================================================================

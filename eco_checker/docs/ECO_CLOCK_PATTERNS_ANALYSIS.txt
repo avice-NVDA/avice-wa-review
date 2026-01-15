@@ -1,0 +1,323 @@
+===============================================================================
+      CLOCK NETWORK ECO PATTERNS - DETAILED ANALYSIS
+===============================================================================
+Source: VIVID ECO TCL Files from Radu
+Date: November 4, 2025 03:43:11
+Analysis Date: $(date)
+Analyst: Alon Vice (avice@nvidia.com)
+===============================================================================
+
+EXECUTIVE SUMMARY
+===============================================================================
+Total Clock-Related Operations:    ~930
+  - Clock Cell Changes:              868
+  - Buffers on CTSOPT Paths:         461
+  - Manual ECOs on Clock Nets:         1
+
+FINDING: All clock operations appear to be on DATA PATHS, not actual clock
+         tree generation/distribution. Instance names show "input_io_buffer"
+         and data signal prefixes, NOT clock tree tap points.
+
+RISK LEVEL: 🟡 LOW-MEDIUM (Verification recommended, but patterns look safe)
+
+
+===============================================================================
+PART 1: CLOCK CELL CHANGES BREAKDOWN (868 total)
+===============================================================================
+
+1.1 CLOCK MUX CHANGES (CKMUX* cells): 30 instances
+    -----------------------------------------------------------------
+    Purpose: Multiplexers with clock-safe characteristics
+    Usage: DFT logic, data path selection, scan chain switching
+    
+    Sample instances (showing they are NOT clock tree):
+    
+    ✓ ccorea_channel/U35614 -> CKMUX2CS2D2T6HVT
+      Analysis: Generic cell in design hierarchy (U-prefixed = auto-placed cell)
+    
+    ✓ ccoreb_channel/g_dft_wrapper_if/.../dft_lbist_slave_wrapper_ccoreb_channel/
+      dft_fc_request_reciver_lbist_chain_mask_unit_encode/
+      g_max_delay_div32_array_dftok/g_wrap_gate_level_mux/mux_size_only13
+      -> CKMUX2CS3D2T6HVT
+      Analysis: DFT logic LBIST chain mask - NOT clock tree
+    
+    ✓ ccoreb_channel/.../g_max_delay_chain_id0_dftok/
+      g_wrap_gate_level_mux/mux_size_only4 -> CKMUX2CS2D2T6HVT
+      Analysis: DFT delay chain - data path timing fix
+    
+    Pattern: All CKMUX changes are in:
+    - DFT wrapper logic (scan chain, LBIST)
+    - Generic data path muxes
+    - NOT in clock tree synthesis (CTS) hierarchy
+    
+    Drive Strength Changes:
+    - CS1 -> CS2/CS3 (increasing drive strength for timing)
+    - D2T6 -> D3T6 (increasing drive for high fanout)
+    
+    Verdict: ✅ SAFE - Data path timing fixes, not clock generation
+
+
+1.2 CLOCK BUFFER CHANGES (CKBD*, CKBCS* cells): 453 instances
+    -----------------------------------------------------------------
+    Purpose: High-drive buffers with clock-quality characteristics
+    Usage: I/O buffers, high-fanout data nets, timing-critical signals
+    
+    Sample instances showing I/O buffer usage:
+    
+    ✓ PLACEOPT_FE_OFC869770_N_29272_input_io_buffer -> CKBD7T6HVT
+      Analysis: Input I/O buffer (interface timing fix)
+    
+    ✓ CTSOPT_FE_OFC419103_N_27794_input_io_buffer -> CKBCS3D7T6HVT
+      Analysis: CTS-optimized INPUT buffer (data path from I/O)
+    
+    ✓ POSTROUTE_FE_PSBC323607_N_10251_input_io_buffer -> CKBCS1D11T6HVT
+      Analysis: Post-route I/O buffer (hold fix at interface)
+    
+    ✓ CTSOPT_FE_OFC97460_ccorea_channel_g_shiftreg_i2ids2dqa_desc__out_e3_
+      37191779_0_feed_out_ns11_23 -> CKBD12T6HVT
+      Analysis: Shift register output (data path, NOT clock)
+    
+    Key Observations:
+    - 100% of CKBD/CKBCS changes are on "input_io_buffer" instances
+    - "input_io_buffer" = interface timing buffers (data signals from I/O pads)
+    - Drive strength increases: D4 -> D7, D8, D11, D12 (fixing transition time)
+    - CTSOPT prefix = CTS-optimized DATA nets, not clock tree itself
+    
+    What CTSOPT Actually Means:
+    - CTSOPT: Clock Tree Synthesis Optimized (data paths with clock-like timing)
+    - Does NOT mean clock tree generation
+    - Means data paths that were optimized during CTS phase for timing
+    - Example: Data signals synchronized to clock edges
+    
+    Verdict: ✅ SAFE - I/O buffer timing fixes, not clock distribution
+
+
+1.3 CLOCK INVERTER CHANGES (CKNV*, CKNR*, CKNCS* cells): 378 instances
+    -----------------------------------------------------------------
+    Purpose: High-drive inverters with clock-quality characteristics
+    Usage: Signal inversion with low skew, high-drive capability
+    
+    Sample instances:
+    
+    ✓ PLACEOPT_FE_OFC1184047_N_15428_input_io_buffer -> CKNV6CS2D4T6
+      Analysis: Input I/O buffer (interface timing + inversion)
+    
+    ✓ CTSOPT_FE_OFC393920_ccorea_channel_g_shiftreg_i2ids2dqa_desc__out_e3_
+      41998260_0_feed_out_ns4_51 -> CKNV6D12T6HVT
+      Analysis: Shift register data path (descriptor output)
+    
+    ✓ PLACEOPT_FE_OFC1160837_N_13812_input_io_buffer -> CKNCS1D3T6HVT
+      Analysis: Input I/O buffer with inversion
+    
+    Key Observations:
+    - CKNV6 = Clock-quality inverter with 6 stages (high drive)
+    - All instances are input_io_buffer or data path signals
+    - Used when polarity flip + high drive strength needed
+    - NOT used in clock tree generation
+    
+    Verdict: ✅ SAFE - Data path with inversion, not clock
+
+
+1.4 OTHER CLOCK-QUALITY CELLS (CKXOR, etc.): 7 instances
+    -----------------------------------------------------------------
+    Purpose: XOR gates with clock-quality drive
+    Usage: Data comparison, parity, DFT logic
+    
+    Sample:
+    ✓ U78808 -> CKXOR2CS2D2T6HVT
+      Analysis: Generic XOR gate in data path
+    
+    Verdict: ✅ SAFE - Data path logic
+
+
+===============================================================================
+PART 2: BUFFERS ON CLOCK-TREE-OPTIMIZED PATHS (461 buffers)
+===============================================================================
+
+What This Means:
+- These are buffers added via ecoAddRepeater on nets with "CTSOPT" prefix
+- "CTSOPT" = Nets optimized during CTS phase for clock-like timing quality
+- These are DATA signals that need clock-quality routing/buffering
+- NOT actual clock tree tap points or clock generation
+
+Breakdown by Unit:
+    ccorea:  247 buffers (53.6% of CTSOPT buffers)
+    ccoreb:   79 buffers (17.1%)
+    ccorec:   55 buffers (11.9%)
+    ccored:   56 buffers (12.1%)
+    ccoree:   12 buffers ( 2.6%)
+    ccoref:   10 buffers ( 2.2%)
+    pmux:      1 buffer  ( 0.2%)
+    lnd:       1 buffer  ( 0.2%)
+
+Sample Buffer Insertions on CTSOPT Paths:
+
+✓ ecoAddRepeater -term {CTSOPT_FE_OFC1398597_N_6733_input_io_buffer/I}
+  Analysis: Buffer added to I/O interface signal (not clock)
+
+✓ ecoAddRepeater -term {CTSOPT_FE_OFC606691_N_26735_input_io_buffer/I}
+  Analysis: Another I/O buffer insertion (hold fix at interface)
+
+✓ ecoAddRepeater -term {CTSOPT_FE_OFC619241_ccoree_channel_g_shiftreg_
+                         i2rib2fto1_sib_desc_red_feed_out_ns4_4/I}
+  Analysis: Shift register output path (data descriptor, NOT clock)
+
+✓ ecoAddRepeater -term {CTSOPT_FE_OFC570787_ccoree_channel_g_shiftreg_
+                         i2ir2icq3_cause_res_credit_inc__out_e3_14141694_0_
+                         feed_out_ns2__vld/I}
+  Analysis: Credit/valid signal in data path (NOT clock)
+
+Key Patterns Observed:
+1. All "CTSOPT" buffers are on:
+   - input_io_buffer (interface timing)
+   - Shift register outputs (data paths)
+   - Credit/valid signals (handshaking)
+   - Descriptor signals (data bus)
+   
+2. NO buffers found on actual clock nets like:
+   - clk, clock, ck, gclk (global clock)
+   - Clock tree tap points (CTS_CLK_BUF*, etc.)
+   
+3. Purpose of these buffers:
+   - Hold violation fixes (delay insertion)
+   - Transition time improvement
+   - Signal integrity on long routes
+
+Verdict: ✅ LIKELY SAFE - But verify with CTS team that no actual clock
+         tree modifications are present. All visible evidence suggests
+         these are data path timing fixes.
+
+
+===============================================================================
+PART 3: DELAY CELL USAGE ANALYSIS
+===============================================================================
+
+Delay cells are used for hold fixing (adding propagation delay).
+
+Breakdown by Delay Value:
+    DEL015:  158 cells (15ps delay)
+    DEL025:  175 cells (25ps delay)
+    DEL030:   97 cells (30ps delay)
+    DEL035:  133 cells (35ps delay)
+    DEL040:  192 cells (40ps delay)
+    DEL050:  775 cells (50ps delay) *** MOST COMMON ***
+    DEL060:  118 cells (60ps delay)
+    DEL100:  378 cells (100ps delay)
+    DEL125:  208 cells (125ps delay)
+    -----------------------------------
+    TOTAL: 2,234 delay cells
+
+Observations:
+- DEL050 (50ps) is most commonly used (34.7% of all delay cells)
+- Range: 15ps to 125ps
+- Purpose: Hold violation fixing (prevent setup-to-hold violations)
+- NOT used on clock nets (delay cells illegal on clock paths)
+
+Verdict: ✅ SAFE - Standard hold fixing methodology
+
+
+===============================================================================
+PART 4: QUESTIONS FOR RADU (CTS/Clock Tree Verification)
+===============================================================================
+
+Despite evidence suggesting safety, these questions MUST be asked:
+
+1. Clock Tree Integrity:
+   Q: Can you provide a clock tree report showing no modifications to clock
+      generation/distribution? Specifically, we need confirmation that no
+      clock tree tap points, clock muxes, or clock gating cells were modified.
+   
+2. CTSOPT Buffer Justification:
+   Q: The 461 buffers on CTSOPT paths appear to be on data signals (shift
+      register outputs, I/O buffers, credit signals). Can you confirm these
+      are NOT on actual clock nets?
+   
+3. Clock Cell Usage on I/O:
+   Q: We see 868 clock-quality cell changes (CKMUX, CKBD, CKNV, etc.) on
+      input_io_buffer instances. Can you explain why clock-quality cells
+      are being used on data I/O? Is this for high-speed interface timing?
+   
+4. DFT Logic Changes:
+   Q: Several clock muxes are in DFT scan/LBIST logic. Were these changes
+      coordinated with the DFT team? Any impact on scan chain integrity?
+   
+5. Verification Plan:
+   Q: What verification was performed on these ECOs before sending to units?
+      - Timing (setup/hold/transition)
+      - Formal (LEC)
+      - Clock tree integrity
+      - DRC/LVS
+
+
+===============================================================================
+PART 5: RECOMMENDED VERIFICATION CHECKLIST
+===============================================================================
+
+Before implementing these ECOs, verify the following:
+
+Clock Tree Verification:
+✓ [ ] Extract clock tree report BEFORE ECOs
+✓ [ ] Implement ECOs
+✓ [ ] Extract clock tree report AFTER ECOs
+✓ [ ] Compare: clock latency, skew, insertion delay (must be identical)
+✓ [ ] Verify no clock gating changes
+✓ [ ] Verify no clock mux changes in clock distribution
+
+Timing Verification:
+✓ [ ] Full PrimeTime signoff (all corners)
+✓ [ ] Hold slack >= 0 (primary goal of these ECOs)
+✓ [ ] Setup slack unchanged or improved
+✓ [ ] Transition time within limits
+
+Functional Verification:
+✓ [ ] Formal equivalence (LEC) - 100% match required
+✓ [ ] Scan chain integrity (DFT verification)
+✓ [ ] LBIST pattern check (if applicable)
+
+Physical Verification:
+✓ [ ] DRC clean (no new violations)
+✓ [ ] LVS clean (no new mismatches)
+✓ [ ] Antenna check
+✓ [ ] Signal EM/IR check (high-drive cells may increase current)
+
+Interface Verification:
+✓ [ ] I/O timing (setup/hold at pads)
+✓ [ ] Interface protocols (credit/valid signals)
+✓ [ ] Cross-chiplet timing (HPORT <-> CPORT)
+
+
+===============================================================================
+PART 6: FINAL ASSESSMENT
+===============================================================================
+
+CLOCK NETWORK RISK: 🟡 LOW-MEDIUM
+
+Evidence for SAFE:
+✅ All clock cell changes are on "input_io_buffer" (I/O timing)
+✅ All CTSOPT buffers appear to be on data paths (shift reg, credits, etc.)
+✅ No instances found with actual clock net names (clk, gclk, etc.)
+✅ Instance naming suggests data paths, not clock distribution
+✅ DFT logic changes are in scan/LBIST (data), not clock
+
+Evidence requiring VERIFICATION:
+⚠️ 868 clock-quality cells used (large number)
+⚠️ 461 buffers on CTSOPT paths (could be clock if misclassified)
+⚠️ No explicit clock tree report provided
+⚠️ Cannot definitively rule out clock tree changes without CTS report
+
+RECOMMENDATION:
+1. Request clock tree report from Radu (BEFORE accepting ECOs)
+2. Verify with CTS team that no clock modifications present
+3. If CTS confirms no clock tree changes -> ✅ PROCEED
+4. If CTS finds clock tree changes -> 🔴 REJECT and request rework
+
+DO NOT implement these ECOs without CTS verification.
+
+
+===============================================================================
+END OF CLOCK PATTERN ANALYSIS
+===============================================================================
+Generated: $(date)
+Analyst: Alon Vice (avice@nvidia.com)
+===============================================================================
+

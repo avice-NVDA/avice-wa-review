@@ -1,0 +1,504 @@
+# Review for: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000
+# Generated: 2025-10-23 14:15:57
+# Command: /home/avice/scripts/avice_wa_review_launcher.csh /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000
+# Return code: 0
+
+STDOUT:
+[36mValidating workarea structure...[0m
+[33m[WARN] WORKAREA VALIDATION WARNINGS:[0m
+  [33mWARNING:[0m Missing pnr_flow/nv_flow/ directory
+[32m[OK] Workarea validation passed - Syn-only workarea detected[0m
+[36m     Additional stages detected: fast_dc, RTL[0m
+
+[36m    +===============================================================+
+    |                                                               |
+    |                    [1mAVICE WORKAREA REVIEW[0m[36m                      |
+    |                                                               |
+    |              [32mAdvanced Verification & Integration[0m[36m              |
+    |                    [32mCircuit Engineering[0m[36m                        |
+    |                                                               |
+    +===============================================================+[0m
+
+
+----------------------------------- [32m[1] Setup[0m -----------------------------------
+
+[36mDisk Utilization:[0m
+  Filesystem: tlv02-cdot14-scr01-lif10b:/vol/scratch43/scratch.siddharthasa_vlsi
+  Mount Point: /home/scratch.siddharthasa_vlsi
+  Size: 9.8T | Used: 8.9T | Available: 930G
+  [31mUsage: 91% [WARN][0m
+  [31m[WARN] Disk usage is high! Consider cleaning up old files.[0m
+  [31m[CRITICAL] Disk almost full! This may cause flow failures.[0m
+UNIT: dqaci
+TAG: dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap
+IPO: [33munknown[0m (from .prc file)
+  [31m[ERROR] No IPO directories found[0m
+  [36mEnvironment Information:[0m
+    BEFLOW_REV=1.0/2025_ww13_01_rev13
+    BEFLOW_CONFIG_REV=2025_ww36_08
+    TECH_DATA_T6_REV=rev_flow_2025_ww01_01
+
+----------------------------------- [32m[2] Runtime[0m -----------------------------------
+
+[36mFast DC detected - analyzing both fast_dc and full dc runs[0m
+  Note: PnR start times adjusted to setup step (full PnR run after fast_dc)
+NV Gate ECO Status: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/nv_gate_eco/eco_dqaci.prc.status
+
+[36mRuntime Summary Table:[0m
+  Category     Stage                       Runtime     Start       End        
+  ------------ --------------------------- ----------- ----------- -----------
+  Construction Fast DC                     0.41 hours  09/10 14:56 09/10 15:20
+  Construction Full DC                     13.13 hours 09/14 11:53 09/15 01:01
+  ECO          Auto PT Fix                 0.89 hours  10/18 16:35 10/18 17:28
+  ECO          NV Gate ECO                 12.12 hours 10/21 14:07 10/22 02:14
+  Signoff      Formal (rtl_vs_pnr_fm)      1.71 hours  10/21 20:55 10/21 22:37
+  Signoff      Star                        1.33 hours  10/21 20:56 10/21 22:16
+  Signoff      Formal (rtl_vs_pnr_bbox_fm) 2.53 hours  10/21 20:56 10/21 23:28
+  Signoff      GL Check                    0.53 hours  10/21 20:56 10/21 21:28
+  Signoff      PV                          3.09 hours  10/21 20:58 10/22 00:08
+  Signoff      Auto PT                     3.80 hours  10/21 22:57 10/22 02:45
+
+  [36mRuntime HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mdqaci_avice_runtime_report_20251023_141549.html[0m &
+
+----------------------------------- [32m[3] Synthesis (DC)[0m -----------------------------------
+Design Definition: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/unit_scripts/des_def.tcl
+DC Log: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/syn_flow/dc/log/dc.log
+QoR Report (Quality of Results): /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/syn_flow/dc/reports/dqaci_rtl2gate.qor.rpt
+  [36mQoR Analysis:[0m
+    [32mKey QoR Metrics:[0m
+      Design Area: 133247.9522 um2 (0.133 mm2) | Die (X,Y): 891.48 um x 766.08 um
+      Leaf Cell Count: 1149642
+      Combinational Cells: 870339
+      Sequential Cells: 279303
+      Total Nets: 1163417
+      Critical Path Slack: -0.0027
+      Total Negative Slack: -0.0069
+      Violating Paths: 8.0000
+      Macro Count: 1
+    [36mScenario Summary:[0m
+    Scenario                                           WNS        TNS        Violating Paths
+    -------------------------------------------------- ---------- ---------- ---------------
+    func.std_tt_0c_0p6v.setup.typical                  0.0918     8.6023     1090           
+    func.std_tt_0c_0p6v.setup.typical (Hold)           0.0708     244.7988   11607          
+    [36mTiming Path Groups:[0m CLKGATE, FEEDTHROUGH, REGIN, REGOUT, i1_clk, i2_clk, m1_clk, default
+BeFlow Configuration: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/syn_flow/dc/beflow_config.yaml
+  [36mBeFlow Configuration Analysis:[0m
+    [32mKey Configuration Variables:[0m
+      Library Snapshot: 20250819
+      NV Process: tsmc5_t6
+      Tracks Number: t6
+      Project: agur
+      Default Scenario: func.std_tt_0c_0p6v.setup.typical
+      StdCell Library Path: /home/nbu_be_agur/ip/lib_snap/20250819/syn
+      Memories Path: /home/nbu_be_agur/ip/arrays/13897726_02032025_RAM_SYNLIB/arrays_release
+      VT Types: svt, hvt, lvt
+      Agur Unit BE IP: nvidia_pads_tsmc5_cust_mixvt, nvidia_analog_tsmc5_cust_mixvt, adw_n5_v2f_thermal_sensor, nvidia_stdcell_tsmc5_t6_sup
+Report: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/syn_flow/dc/reports/be4rtl/internal_high_width_logical_cones.rpt
+Report: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/syn_flow/dc/reports/debug/dqaci.rtl2gate.removed_cgates.rep
+Report: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/syn_flow/dc/reports/dqaci_rtl2gate.qor.rpt
+Report: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/syn_flow/dc/reports/debug/dqaci.rtl2gate.removed_registers.rep
+Clock gates removed: 0
+Removed registers: 1424
+[32mNo don't use cells[0m
+[36mGenerating Unified DC HTML Report...[0m
+  [32m[OK] Unified DC HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mdqaci_avice_DC_comprehensive_20251023_141549.html[0m &
+
+----------------------------------- [32m[4] PnR Analysis[0m -----------------------------------
+  [33m[WARN] IPO directory 'unknown' from .prc file not found[0m
+    [33mNote: Users sometimes delete IPO directories to save disk space[0m
+PnR Configuration: File not found
+PnR Runset: File not found
+PnR BeFlow Configuration (unknown): File not found
+  [33mPnR Data: No data files found for any stage or temperature corner[0m
+    [33mTried stages: postroute, route, cts, place, plan[0m
+    [33mTried corners: 0c_0p6v, 125c_0p6v, 25c_0p6v, 85c_0p6v[0m
+    [33mThis could be due to:[0m
+      - Flow still running (data files not yet generated)
+      - Flow failed at this stage
+      - Different temperature corner used
+      - File permissions issue
+  [33mPnR Timing Setup: No timing setup reports found for any stage[0m
+    [33mTried stages: postroute, route, cts, place, plan[0m
+    [33mThis could be due to:[0m
+      - Flow still running (timing reports not yet generated)
+      - Flow failed at this stage
+      - Different file naming convention
+      - File permissions issue
+
+[36mGenerating Unified PnR HTML Report...[0m
+  [32m[OK] Unified PnR HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mdqaci_avice_PnR_comprehensive_unknown_20251023_141549.html[0m &
+
+----------------------------------- [32m[5] Clock Analysis[0m -----------------------------------
+PT Clock Analysis: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/auto_pt/work_21.10.25_23:02/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/dqaci_func.std_tt_0c_0p6v.setup.typical.clock_latency
+
+[33mPT Clock Latency Analysis:[0m
+  Clock      Min (ns)   Max (ns)  
+  ---------- ---------- ----------
+  i1_clk     0.274      0.544     
+  i2_clk     0.025      0.526     
+  m1_clk     0.328      0.428     
+
+  All values in nanoseconds (ns)
+  [31mNote: Max latency values > 550ps (0.55ns) are highlighted in red[0m
+
+  [36mCombined Clock Latency Summary (Max per clock):[0m
+  Clock Detail: i1_clk|544.0|0.0
+  Clock Detail: i2_clk|526.0|0.0
+  Clock Detail: m1_clk|428.0|0.0
+
+  [32m[OK] Clock HTML Report Generated[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mavice_clock_analysis_dqaci_unknown_20251023_141549.html[0m &
+
+----------------------------------- [32m[6] Formal Verification[0m -----------------------------------
+[36mRTL Tag: [0mdqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap
+
+[36mMultibit Mapping Files Check:[0m
+  Auto-detected IPO(s): ipo1000
+  Checking 6 files across 3 locations per IPO...
+  Files: 1) multibitMapping.gz  2) multibitMapping_for_gen_mbff_scandef.gz
+
+  IPO          Location           File Status          Result    
+  ------------ ------------------ -------------------- ----------
+  ipo1000      PnR Flow           [MISS] [MISS]        [31mMISSING[0m
+  ipo1000      Export Innovus     [OK] [OK]            [32mOK[0m
+  ipo1000      NV Gate ECO        [OK] [OK]            [32mOK[0m
+
+  [31m[FAIL] 1/3 location checks failed[0m
+  [33m-> Formal verification may encounter non-equivalence points[0m
+  [33m-> Files are generated in PnR and copied to export_innovus and nv_gate_eco[0m
+Formal Log: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/formal_flow/rtl_vs_pnr_fm/log/rtl_vs_pnr_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 1.71 hours
+  Start: 10/21 20:55
+  End:   10/21 22:37
+Formal Log: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/formal_flow/rtl_vs_pnr_bbox_fm/log/rtl_vs_pnr_bbox_fm.log
+  Status: [32mSUCCEEDED[0m
+  Runtime: 2.53 hours
+  Start: 10/21 20:56
+  End:   10/21 23:28
+
+  [36mFormal Verification HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mdqaci_avice_formal_verification_20251023_141549.html[0m &
+
+----------------------------------- [32m[7] Parasitic Extraction (Star)[0m -----------------------------------
+
+[36mStar Extraction Runs:[0m
+  Total Runs: 7
+
+  Run    Timestamp    Shorts  
+  ------ ------------ --------
+  1      09/21 08:57  [32m0       [0m
+  2      09/22 05:03  [31m1       [0m
+  3      10/06 05:50  [31m1       [0m
+  4      10/18 09:02  [32m0       [0m
+  5      10/19 13:27  [32m0       [0m
+  6      10/21 04:31  [32m0       [0m
+  7      10/21 20:55  [31m1       [0m (latest)
+
+[36mLatest Run Details:[0m
+  Timestamp: 10/21 20:55
+  Shorts: [31m1[0m
+
+[36mSPEF Files (All Corners):[0m
+  Total SPEF files: 6
+  [32m[OK] All required SPEF files present[0m
+  Location: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/export/nv_star/dqaci/ipo1000/IOs/netlists
+
+  Corner                        Size
+  ------------------------- --------
+  cworst_CCworst_T0           5.12 GB
+  rcbest_CCbest_T0            5.11 GB
+  rcworst_CCworst_T125        5.12 GB
+  typical_T0                  5.11 GB
+  typical_T105                5.11 GB
+  typical_T125                5.11 GB
+SPEF Info (Typical Corner): /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/export/nv_star/dqaci/ipo1000/IOs/netlists/dqaci.ipo1000.typical_T0.spef_info
+
+[36mStar Extraction Configuration:[0m
+  Date: Tue Oct 21 21:02:34 2025
+  Opens: 0
+  Shorts: 2
+  Project RDL: /home/nbu_be_agur/backend/release/current/flp/agurBump_a01_top.oas
+  GDS Layer Map: /home/vlsi_pr/tech/tsmc5/3xs1xt1ya1yb11y3z_T6_DIP/synopsys/star/star_gds_layer.20220907.map
+  Mapping File: /home/vlsi_pr/tech/tsmc5/3xs1xt1ya1yb11y3z_T6_DIP/synopsys/star/nxtgrd.20220208.mapping
+Star Detailed Shorts Report: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/export/nv_star/dqaci/ipo1000/REPs/dqaci.ipo1000.dqaci_ipo1000.star_extraction_shorts.rpt
+  [33mNote: This report is from Run #7 (10/21 20:55) (latest run)[0m
+Short between net FE_OFN193957_dqa2dql_i14_pop_data1_desc__out_86112058_0_feed_dqaci_channel_dqaci_channel2dqaci_freq_adapter_21 and net dqa2dql_i12_pop_data0_desc__out_86112058_0_feed_dqaci_channel_dqaci_channel2dqaci_freq_adapter[26] Layer = TM11 BBox=(408.3560,343.5770),(408.3560,343.6150)
+Short between net FE_OFN193957_dqa2dql_i14_pop_data1_desc__out_86112058_0_feed_dqaci_channel_dqaci_channel2dqaci_freq_adapter_21 and net dqa2dql_i12_pop_data0_desc__out_86112058_0_feed_dqaci_channel_dqaci_channel2dqaci_freq_adapter[26] Layer = TM11 BBox=(408.3400,343.5770),(408.3560,343.6150)
+
+
+[36m  Star Extraction HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mdqaci_avice_star_extraction_20251023_141549.html[0m &
+
+----------------------------------- [32m[8] Signoff Timing (PT)[0m -----------------------------------
+HTML Report: [35m/home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/auto_pt/work_21.10.25_23:02.html[0m
+HTML Report: [35m/home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/auto_pt/work_21.10.25_07:05.html[0m
+HTML Report: [35m/home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/auto_pt/work_19.10.25_15:03.html[0m
+HTML Report: [35m/home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/auto_pt/work_18.10.25_11:48.html[0m
+All Violators: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/auto_pt/work_21.10.25_23:02/func.std_tt_0c_0p6v.setup.typical/reports/timing_reports/dqaci_func.std_tt_0c_0p6v.setup.typical.all_violators.gz
+PT Log: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/auto_pt/log/auto_pt.log
+[31mErrors found (1 total):[0m
+  Error: Library Compiler executable path is not set. (PT-063)
+
+  [36mPT Timing Summary (Dual-Scenario):[0m
+    Open with: /home/utils/firefox-118.0.1/firefox [35mdqaci_avice_PT_timing_summary_20251023_141554.html[0m &
+
+  [36mWork Areas Summary:[0m
+    Total Work Areas: 4
+    Latest: work_21.10.25_23:02
+
+  [36mLatest Setup Scenario (func.std_tt_0c_0p6v.setup.typical):[0m
+    Internal Timing (all groups except FEEDTHROUGH/REGIN/REGOUT):
+      WNS: [31m -0.013[0m ns
+      TNS: [31m    -0.01[0m ns
+      NVP:     1 paths
+    Worst Internal Group: clock_gating_default
+
+  [36mLatest Hold Scenario (func.std_ffg_0c_0p825v.hold.typical):[0m
+    Internal Timing (all groups except FEEDTHROUGH/REGIN/REGOUT):
+      WNS: [31m -0.001[0m ns
+      TNS: [31m    -0.00[0m ns
+      NVP:     4 paths
+    Worst Internal Group: i1_clk
+
+  [36mDSR Skew Trend:[0m
+    [36mSetup Scenario:[0m
+      work_21.10.25_23:02: [32m  1.06[0m ps
+      work_21.10.25_07:05: [31m 20.82[0m ps
+      work_19.10.25_15:03: [32m  4.00[0m ps
+      work_18.10.25_11:48: [31m 26.40[0m ps
+      Trend: [32m25.34 ps improved[0m (newest vs oldest)
+    [36mHold Scenario:[0m
+      work_21.10.25_23:02: [32m  5.66[0m ps
+      work_21.10.25_07:05: [33m 18.58[0m ps
+      work_19.10.25_15:03: [33m 10.23[0m ps
+      work_18.10.25_11:48: [33m 11.10[0m ps
+      Trend: [32m5.44 ps improved[0m (newest vs oldest)
+
+----------------------------------- [32m[9] Physical Verification (PV)[0m -----------------------------------
+[36mPV Flow Timeline:[0m
+  Started:  2025/10/21 08:58:48PM
+  Finished: 2025/10/22 12:08:14AM
+  Duration: 3h 9m 26s
+
+LVS Errors: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/pv_flow/drc_dir/dqaci/lvs_icv_ipo1000/dqaci_ipo1000_fill.LVS_ERRORS
+  [31mStatus: FAIL[0m
+  Failed Equivalence Points: 1
+  First Priority Errors: 1
+  Successful Equivalence Points: 2443
+
+  [33mUnmatched Items:[0m
+    Schematic Nets: 2
+    Layout Nets: 1
+    [31mTotal Unmatched Items: 3[0m
+
+  [32mMatched Items:[0m
+    Instances: 4,159,271
+    Nets:      2,949,779
+    Ports:     23,900
+DRC Errors: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/pv_flow/drc_dir/dqaci/drc_icv_ipo1000/dqaci_ipo1000_fill.LAYOUT_ERRORS
+  [31mStatus: ERRORS - DRC violations found[0m
+  [31mTotal DRC violations: 10[0m
+  [36mViolation breakdown:[0m
+    Rule                 Count    Description                                                 
+    -------------------- -------- ------------------------------------------------------------
+    M7.S.16.1            4        (TM2) Space to Myb line-end [edge length = 0.076 um betwe...
+    M7.S.1               2        (TM2) Space >= 0.0380 external1 ............................
+    M7.S.6               1        (TM2) Corner projected space of Myb [-0.076 um < PRL <= 0...
+    M7.S.6.1             1        (TM2) Corner projected space in NMINP direction [-0.038 u...
+    TSMC.Vx.R.1.1        1        (V1-V5) Max Single Stacked Vx =4 net_select:net_select .....
+    TSMC.Vx.R.1.2        1        (V2-V6) Max Single Stacked Vx =4 net_select:net_select .....
+Antenna Errors: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/pv_flow/drc_dir/dqaci/drc_icv_antenna_ipo1000/dqaci_ipo1000_fill.LAYOUT_ERRORS
+  [32mStatus: LAYOUT ERRORS RESULTS: CLEAN[0m
+  [32mNo antenna violations found[0m
+
+[36mPV Flow Analysis:[0m
+PV Flow Status: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/pv_flow/nv_flow/pv_dqaci.prc.status
+  [36mdqaci/local_flow:[0m
+    [32mCompleted: 8 steps[0m (Total runtime: 3h 5m 0s)
+    [36mKey step runtimes:[0m
+      temp_run_lvs: 22m 34s
+      temp_run_drc: 1h 38m 31s
+      temp_run_ant: 40m 49s
+
+  [36mdqaci/release_flow:[0m
+    [32mCompleted: 1 steps[0m (Total runtime: 7s)
+    [33mUnlaunched: 7 steps[0m
+
+PV Flow Configuration: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/pv_flow/nv_flow/pv_dqaci.prc
+  [36mConfiguration Summary:[0m
+    IPO Number: 1000
+    Tool: edi
+    [36mLocal Flow Sequence:[0m setup -> temp_release_mldf -> temp_stream_in_out -> temp_run_lvs -> temp_run_drc -> temp_run_ant
+    [36mRelease Flow Sequence:[0m setup -> release_mldf -> drc_options -> streamin -> drc_lvs -> ant
+
+  [36mPhysical Verification HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mdqaci_avice_pv_report_20251023_141554.html[0m &
+
+----------------------------------- [32m[10] GL Checks[0m -----------------------------------
+
+  [36mGL Check Run History:[0m
+    Total Runs: 3
+    First Run: 2025/10/18 09:03:15
+    Latest Run: 2025/10/21 20:56:25
+
+  [36mGL Check Error Summary:[0m
+    Total Errors: 790
+    [32mWaived: 790[0m
+    [32mNon-Waived: 0 (PASS)[0m
+
+  [36mGL Check Results by Checker:[0m
+  Checker [Code](Name)                     Waived     Non-Waived   Total     
+  ---------------------------------------- ---------- ------------ ----------
+  [152](testSpeedConnectivity)             370        [32m0[0m             370       
+  [21](excludeDrivesInclude)               357        [32m0[0m             357       
+  [107](nonScannableFlops)                 38         [32m0[0m             38        
+  [51](clockgateEnableNotConst)            12         [32m0[0m             12        
+  [44](captureDuringExternal)              7          [32m0[0m             7         
+  [531](dftAtpgIso)                        2          [32m0[0m             2         
+  [280](multipleRootClockgatePerClkInput)  1          [32m0[0m             1         
+  [19](dontUseCells)                       1          [32m0[0m             1         
+  [270](clkOfSequentials)                  1          [32m0[0m             1         
+  [271](clkOfSequentials)                  1          [32m0[0m             1         
+
+  Waived Errors File: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/gl-check/gl-check.all.waived
+  Non-Waived Errors File: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/gl-check/gl-check.all.err
+    [36mParsing checker rules from gl-check.log...[0m
+    [32m[OK] Found 56 checker rules (56 executed, 8 skipped)[0m
+
+  Open with: /home/utils/firefox-118.0.1/firefox [35mdqaci_avice_gl_check_report_20251023_141554.html[0m &
+
+----------------------------------- [32m[11] ECO Analysis[0m -----------------------------------
+[31m3 ECO loops were done[0m
+ECO File: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/auto_pt/work_18.10.25_11:48/pt_eco_out_18.10.25_16:40_final.tcl
+  Total ECO commands: 1143
+  Command breakdown:
+    set_cell_location: 547
+    size_cell: 506
+    insert_buffer: 50
+    add_buffer_on_route: 40
+    [36mUsing dont_use check: GL-Check results (dont_use_cell_patterns.tcl)[0m
+  [32m[OK] No dont_use cells found in ECO[0m
+    [36mChecking instNotAllowedOnClocks: 6780 clock instances, 61 allowed patterns[0m
+  [32m[OK] No instNotAllowedOnClocks violations found[0m
+    [36mChecking for clock cells on data paths (area optimization info)...[0m
+  [32m[INFO] No clock cells used on data paths[0m
+ECO File: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/auto_pt/work_19.10.25_15:03/pt_eco_out_18.10.25_16:40_final.tcl
+  Total ECO commands: 1
+  Command breakdown:
+    size_cell: 1
+    [36mUsing dont_use check: GL-Check results (dont_use_cell_patterns.tcl)[0m
+  [32m[OK] No dont_use cells found in ECO[0m
+    [36mChecking instNotAllowedOnClocks: 6780 clock instances, 61 allowed patterns[0m
+  [32m[OK] No instNotAllowedOnClocks violations found[0m
+    [36mChecking for clock cells on data paths (area optimization info)...[0m
+  [32m[INFO] No clock cells used on data paths[0m
+ECO File: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/auto_pt/work_21.10.25_07:05/pt_eco_out_18.10.25_16:40_final.tcl
+  Total ECO commands: 1
+  Command breakdown:
+    size_cell: 1
+    [36mUsing dont_use check: GL-Check results (dont_use_cell_patterns.tcl)[0m
+  [32m[OK] No dont_use cells found in ECO[0m
+    [36mChecking instNotAllowedOnClocks: 6780 clock instances, 61 allowed patterns[0m
+  [32m[OK] No instNotAllowedOnClocks violations found[0m
+    [36mChecking for clock cells on data paths (area optimization info)...[0m
+  [32m[INFO] No clock cells used on data paths[0m
+NV Gate ECO directory found - see NV Gate ECO section for details
+
+----------------------------------- [32m[12] NV Gate ECO[0m -----------------------------------
+NV Gate ECO Summary: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/nv_gate_eco/dqaci/ipo1000/sum.eco_change
+NV Gate ECO Setup Timing: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/nv_gate_eco/dqaci/ipo1000/REPs/SUMMARY/dqaci.ipo1000.eco.timing.setup.rpt.gz
+  [36mTiming Histogram Tables (ECO):[0m
+  Table 2 - Sub-Category Breakdown (Lines 109-123):
+  |            |                  |      |       |    |                                histogram                                 
+           |            |                  |      |       |    |..........................................................................
+     type  |  category  |   sub_category   | wns  |  tns  |fep |-0.010 -0.020 -0.030 -0.040 -0.050 -0.060 -0.070 -0.080 -0.090 -0.100 -Inf
+   ========|============|==================|======|=======|====|==========================================================================
+           |            |port_to_clock_gate|-0.095|-22.673| 329|                          8     14     36    109    123     36      3     
+           |input       |port_to_flop      |-0.074| -9.325| 650|   379     86     67     63     32     14      6      3                   
+           |............|..................|......|.......|....|..........................................................................
+   external|output      |flop_to_port      |-0.053|-16.620|1364|   744    385    139     76     19      1                                 
+   ........|............|..................|......|.......|....|..........................................................................
+           |reg_to_reg  |flop_to_flop      |-0.048| -0.810|  74|    50     11      6      5      2                                        
+           |............|..................|......|.......|....|..........................................................................
+   internal|reg_to_cgate|flop_to_clock_gate|-0.037| -0.160|  11|     5      4      1      1                                               
+   =======================================================================================================================================
+   ===========================================================================================================================================================================
+NV Gate ECO Hold Timing: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/nv_gate_eco/dqaci/ipo1000/REPs/SUMMARY/dqaci.ipo1000.eco.timing.hold.rpt.gz
+ECO Cell Movement: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/nv_gate_eco/dqaci/ipo1000/REPs/dqaci.ipo1000.eco_summary_cell_movement.rpt.gz
+  number_of_cells_moved: 0
+  ratio_of_cells_moved: 0.0000
+                       ErrorType      ErrorCount      DirectMove       OtherMove           Total DirectMovePerError
+ECO DRC Summary: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/nv_gate_eco/dqaci/ipo1000/REPs/dqaci.ipo1000.eco_summary_drc_data.rpt.gz
+ECO Open Nets Check: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/nv_gate_eco/dqaci/ipo1000/REPs/dqaci.ipo1000.eco_summary_open_nets.rpt.gz
+  [32mNo open nets found (PASS)[0m
+  number_of_open_nets_left: 0
+ECO Wire Length Change: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/nv_gate_eco/dqaci/ipo1000/REPs/dqaci.ipo1000.eco_summary_wire_length_change.rpt.gz
+  ## BEGIN: wire_change Summary (detail report: REPs/dqaci.ipo1000.eco_summary_wire_length_change.rpt)
+  ## db_path: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/nv_gate_eco/dqaci/ipo1000/DBs/dqaci_ipo1000_eco.enc.dat
+  ## database_id: 230f7d22d2a513e5e16971227e7ae106
+  ## report_time_stamp: Tue Oct 21 21:49:39 IDT 2025 ----------------------------------------------------------------------------------------------------
+  total_net_count: 1732497
+NV Gate ECO Traces: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/nv_gate_eco/dqaci/ipo1000/reports/dqaci_ipo1000_report_dqaci_ipo1000_eco.traces.rpt
+NV Gate ECO Traces: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/nv_gate_eco.back/dqaci/ipo1000/reports/dqaci_ipo1000_report_dqaci_ipo1000_eco.traces.rpt
+NV Gate ECO Worst Paths: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/nv_gate_eco/dqaci/ipo1000/reports/dqaci_ipo1000_report_dqaci_ipo1000_eco.worst_paths
+NV Gate ECO Worst Paths: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/signoff_flow/nv_gate_eco.back/dqaci/ipo1000/reports/dqaci_ipo1000_report_dqaci_ipo1000_eco.worst_paths
+
+----------------------------------- [32m[13] Block Release[0m -----------------------------------
+Block Release Log: /home/scratch.siddharthasa_vlsi/agur/1NL/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000/export/block_release/log/block_release.log
+  [36mRelease to:[0m /home/agur_backend_blockRelease/block/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000__2025_10_22_4_43_58
+
+  [36mBlock Release Attempts: 1[0m
+  ================================================================================
+
+  [36mAttempt #1:[0m 2025-10-22 04 43 05 | User: siddharthasa
+    Status: [32mSUCCESS[0m
+    Command: /home/nbu_be_tools/umake/1.0/2025_ww27_02/umake_main/umake.py -s block_release --step_flags -s -f -p
+    Flags: sta_release, force, pnr_release
+    [32mCustom Links: SEP_10[0m
+
+  [36mRelease Attempts from Workarea[0m
+  [36m---------------------------------------------[0m
+  Total Attempts: 1
+  Successful: 1
+  Failed: 0
+  Custom Links: SEP_10
+  Custom Link Detail: SEP_10|2025-10-22
+  Latest Success: 2025-10-22
+
+
+  [36mCustom/Pre-defined Links Detected (from workarea logs):[0m
+    - [32mSEP_10[0m (2025-10-22)
+
+  [36mAll Custom Links in Central Release Area:[0m
+  [36mLocation: /home/agur_backend_blockRelease/block/dqaci[0m
+    Link Name                      Date         User            Target                                                                           Status
+    ------------------------------ ------------ --------------- -------------------------------------------------------------------------------- --------------------
+    [32mQNS_ww34_Trial_dqaco_dqaci    [0m 2025-08-20   alexandrue      /home/agur_backend_blockRelease/block/dqaci/dqaci_250609_new_pin_placement__2025_8_19_17_46_16 [36mManual[0m
+    [32mAUG_07_FP                     [0m 2025-08-26   mbetzer         /home/agur_backend_blockRelease/block/dqaci/dqaci_250609_new_pin_placement__2025_8_26_21_44_33 [36mManual[0m
+    [32mSEP_10                        [0m 2025-10-22   siddharthasa    /home/agur_backend_blockRelease/block/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000__2025_10_22_4_43_58 
+    [32mQNS_ww43_v1_partial_VIVID     [0m 2025-10-22   alexandrue      /home/agur_backend_blockRelease/block/dqaci/dqaci_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000__2025_10_22_4_43_58 [36mManual[0m
+
+    [36mTotal custom links found: 4[0m
+
+  [36mManually Created Custom Links (no release log):[0m
+  Manual Custom Link Detail: AUG_07_FP|2025-08-26
+  Manual Custom Link Detail: QNS_ww34_Trial_dqaco_dqaci|2025-08-20
+  Manual Custom Link Detail: QNS_ww43_v1_partial_VIVID|2025-10-22
+
+  [36mBlock Release HTML Report:[0m
+  Open with: /home/utils/firefox-118.0.1/firefox [35mdqaci_avice_block_release_20251023_141557.html[0m &
+
+[36mGenerating Master Dashboard...[0m
+[32m[OK] Master Dashboard generated: dqaci_avice_MASTER_dashboard_20251023.html[0m
+[36m     Open with recommended browser:[0m
+     /home/utils/firefox-118.0.1/firefox [35mdqaci_avice_MASTER_dashboard_20251023.html[0m &
+
+[32mReview completed successfully![0m
+[36mOrganized 11 HTML file(s) into html/ folder[0m
+
+
+STDERR:

@@ -1,0 +1,42 @@
+# Review for: /home/scratch.abarman_vlsi/agur/1NL/DQS/1NL_run1_SO/dqs_rbv_2025_08_28_agur_condb_int3_2025_08_27_0_snap_r1_so
+# Generated: 2025-11-20 12:48:15
+# Command: /home/scratch.avice_vlsi/cursor/avice_wa_review/avice_wa_review_launcher.csh /home/scratch.abarman_vlsi/agur/1NL/DQS/1NL_run1_SO/dqs_rbv_2025_08_28_agur_condb_int3_2025_08_27_0_snap_r1_so -s pnr
+# Return code: 0
+
+STDOUT:
+[36mValidating workarea structure...[0m
+[33m[WARN] WORKAREA VALIDATION WARNINGS:[0m
+  [33mWARNING:[0m ECO/Signoff workarea detected (PnR results imported from external source)
+[32m[OK] Workarea validation passed - ECO/Signoff workarea (imported PnR) detected[0m
+[36m     Additional stages detected: fast_dc, RTL[0m
+Running selected sections: pnr
+
+----------------------------------- [32m[4] PnR Analysis[0m -----------------------------------
+  [36m[WARN] IPO directory 'unknown' from .prc file not found[0m
+    [33mNote: Users sometimes delete IPO directories to save disk space[0m
+
+[36m[INFO] ECO/Signoff workarea detected - PnR results imported from external source[0m
+
+[36mImported PnR Data (export/export_innovus/):[0m
+  [32mIPO: ipo1004[0m
+  [32m[OK] Physical Design (DEF):[0m     1.2 GB       (dqs.ipo1004.def.gz)
+  [32m[OK] Layout (GDS/OAS):[0m          1.8 GB       (dqs_ipo1004_fill.oas)
+  [32m[OK] Netlist (LVS):[0m            53.3 MB      (dqs.ipo1004.lvs.gv.gz)
+  [32m[OK] Netlist (no-power):[0m       43.9 MB      (dqs.ipo1004.nopower.gv.gz)
+  [32m[OK] LEF:[0m                      4.3 MB       (dqs.ipo1004.lef)
+  [32m[OK] Multibit Mapping:[0m         Present
+
+[36mSignoff/ECO Activities (signoff_flow/):[0m
+  [32m[OK] PrimeTime Signoff:[0m                          auto_pt/ (present)
+  [32m[OK] NV Gate ECO:[0m                                nv_gate_eco/ (present)
+  [32m[OK] Gate-Level Checks:[0m                          gl-check/ (present)
+  [32m[OK] Gate-Level Checks (ECO):[0m                    gl-check_eco/ (present)
+  [32m[OK] Formal Verification (ECO vs PnR):[0m           eco_vs_pnr_fm/ (present)
+  [32m[OK] ECO Netlist Generation:[0m                     gen_eco_netlist_innovus/ (present)
+
+[33mNote:[0m PnR flow configuration files (prc, runset, beflow_config) not present
+      This is [32mexpected[0m for ECO/Signoff workflow - workarea uses imported PnR results
+      from external source and focuses on signoff/ECO activities.
+
+
+STDERR:
