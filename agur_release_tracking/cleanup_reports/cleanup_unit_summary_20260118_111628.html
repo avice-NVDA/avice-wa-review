@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>AGUR Release Cleanup - Unit Summary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }
+        .header p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th {
+            background-color: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 13px;
+            color: #495057;
+        }
+        td {
+            font-size: 13px;
+            color: #212529;
+        }
+        .alert {
+            background-color: #fff3cd;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .alert strong {
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗂️ AGUR Release Cleanup - Unit Summary</h1>
+            <p>Generated: 2026-01-18 11:16:28 | Threshold: 90 days</p>
+        </div>
+        
+        <div class="content">
+            <div class="alert">
+                <strong>⚠️ Critical Disk Usage:</strong> AGUR Release Area is at 90% capacity (108T/120T).
+                This report shows units with old releases that can be cleaned up to free disk space.
+            </div>
+            
+            <h2 style="color: #0d47a1; margin-top: 30px;">Unit Summary by Owner</h2>
+            <p style="color: #666; font-size: 14px;">
+                Each row represents a unit and its release owner. Units with multiple historical owners 
+                are shown as separate rows.
+            </p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Unit</th>
+                        <th>Release Area Owner</th>
+                        <th style="text-align: center;"># Old Releases</th>
+                        <th style="min-width: 300px;">Old Release Areas</th>
+                        <th>Symlinks to Remove (User)</th>
+                        <th style="text-align: right;">Total Size</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">fdb</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">dkolesnikov</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">2</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 11px; max-width: 400px;"><span style="font-family: monospace; font-size: 11px;">fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__floorplanChange_run1__2025_10_16_17_30_9</span><br/><span style="font-family: monospace; font-size: 11px;">fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__floorplanChange_run1__2025_10_9_10_51_41</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px;">FNL_4PV <span style='color: #666;'>(ekantorovich)</span><br/>SEP_28_FP <span style='color: #666;'>(dkolesnikov)</span><br/>SEP_28_FP_eco_01 <span style='color: #666;'>(dkolesnikov)</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">164.4GB</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">fth</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">lmustafa</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">1</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 11px; max-width: 400px;"><span style="font-family: monospace; font-size: 11px;">fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner_ref_run__2025_10_17_10_54_41</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px;">FNL_4PV <span style='color: #666;'>(ekantorovich)</span><br/>SEP_28_FP_eco_01 <span style='color: #666;'>(lmustafa)</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">71.1GB</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">fth</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">miancu</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">8</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 11px; max-width: 400px;"><span style="font-family: monospace; font-size: 11px;">fth_rbv_2025_03_13_condb_int1_11_3_BE_TNL_snap_ncfg_0512__2025_5_27_10_52_46</span><br/><span style="font-family: monospace; font-size: 11px;">fth_rbv_2025_06_09_condb_int2_23_5r1_SFNL_snap_npp_tlv__2025_8_25_10_24_9</span><br/><span style="font-family: monospace; font-size: 11px;">fth_rbv_2025_06_09_condb_int2_23_5r1_SFNL_snap_npp_tlv__2025_9_18_12_14_29</span><br/><span style="color: #666; font-style: italic;">...and 5 more</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px;">AUG07_cport_eco_01 <span style='color: #666;'>(miancu)</span><br/>SEP_10 <span style='color: #666;'>(miancu)</span><br/>SEP_10_cport_eco_01 <span style='color: #666;'>(miancu)</span><br/>SEP_28_FP <span style='color: #666;'>(miancu)</span><br/>TLV_trail_release <span style='color: #666;'>(miancu)</span><br/>prev_SEP_10 <span style='color: #666;'>(miancu)</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">562.4GB</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">fth</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">yavital</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">1</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 11px; max-width: 400px;"><span style="font-family: monospace; font-size: 11px;">FthTrial__2025_9_16_21_52_31</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px;">ECO_RUN_TIME_test <span style='color: #666;'>(yavital)</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">62.6GB</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">lnd</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">shlomoc</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">4</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 11px; max-width: 400px;"><span style="font-family: monospace; font-size: 11px;">lnd_latest_ref__2025_4_14_13_54_2</span><br/><span style="font-family: monospace; font-size: 11px;">run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065__2025_10_17_8_26_5</span><br/><span style="font-family: monospace; font-size: 11px;">run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065__2025_10_18_22_8_18</span><br/><span style="color: #666; font-style: italic;">...and 1 more</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px;">FNL_4PV <span style='color: #666;'>(ekantorovich)</span><br/>SEP_28_FP <span style='color: #666;'>(shlomoc)</span><br/>SEP_28_FP_eco_01 <span style='color: #666;'>(shlomoc)</span><br/>prev_SEP_28_FP_eco_01 <span style='color: #666;'>(shlomoc)</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">252.9GB</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">pmux</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">brachas</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">8</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 11px; max-width: 400px;"><span style="font-family: monospace; font-size: 11px;">agur_pmux_rbv_2025_03_25_condb_int1_11_3_BE_TNL_snap_pmux_PnR__2025_5_27_10_20_19</span><br/><span style="font-family: monospace; font-size: 11px;">pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_beta0929_v3__2025_10_6_13_0_31</span><br/><span style="font-family: monospace; font-size: 11px;">pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_16_12_49_23</span><br/><span style="color: #666; font-style: italic;">...and 5 more</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px;">FNL_4PV <span style='color: #666;'>(ekantorovich)</span><br/>SEP_10 <span style='color: #666;'>(brachas)</span><br/>SEP_10_cport_eco_01 <span style='color: #666;'>(brachas)</span><br/>SEP_28_FP <span style='color: #666;'>(brachas)</span><br/>SEP_28_FP_eco_01 <span style='color: #666;'>(brachas)</span><br/>prev_SEP_28_FP <span style='color: #666;'>(brachas)</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">410.6GB</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">prt</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">hshahady</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">7</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 11px; max-width: 400px;"><span style="font-family: monospace; font-size: 11px;">prt_agur_rbv_2025_03_18_TNL__2025_7_1_16_41_57</span><br/><span style="font-family: monospace; font-size: 11px;">prt_agur_rbv_2025_03_18_TNL__2025_7_5_18_42_24</span><br/><span style="font-family: monospace; font-size: 11px;">prt_agur_rbv_2025_03_18_TNL__2025_7_6_16_46_14</span><br/><span style="color: #666; font-style: italic;">...and 4 more</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px;"><span style="color: #999;">None</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">619.7MB</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">prt</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">ykatzav</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">8</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 11px; max-width: 400px;"><span style="font-family: monospace; font-size: 11px;">agur_prt_rbv_2025_06_10_condb_int2_23_5r1_BE_SFNL_snap_run_2__2025_9_17_9_48_32</span><br/><span style="font-family: monospace; font-size: 11px;">prt_agur_rbv_2025_03_18_TNL__2025_6_30_20_26_46</span><br/><span style="font-family: monospace; font-size: 11px;">prt_agur_rbv_2025_04_14_test_5__2025_6_4_10_34_57</span><br/><span style="color: #666; font-style: italic;">...and 5 more</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px;">AUG07_cport_eco_01 <span style='color: #666;'>(ykatzav)</span><br/>FNL_4PV <span style='color: #666;'>(ekantorovich)</span><br/>SEP_10 <span style='color: #666;'>(ykatzav)</span><br/>SEP_10_cport_eco_01 <span style='color: #666;'>(ykatzav)</span><br/>SEP_10_eco_01 <span style='color: #666;'>(ykatzav)</span><br/>SEP_28_FP <span style='color: #666;'>(ykatzav)</span><br/>SEP_28_FP_eco_01 <span style='color: #666;'>(ykatzav)</span></td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">435.8GB</td>
+        </tr>
+                    
+        <tr style="background-color: #f8f9fa; font-weight: bold;">
+            <td colspan="3" style="padding: 12px; border-top: 2px solid #0d47a1; text-align: right;">TOTAL:</td>
+            <td style="padding: 12px; border-top: 2px solid #0d47a1; text-align: center;">39 releases</td>
+            <td style="padding: 12px; border-top: 2px solid #0d47a1;"></td>
+            <td style="padding: 12px; border-top: 2px solid #0d47a1; text-align: right; color: #dc3545;">1.9TB</td>
+        </tr>
+                    
+        <tr style="background-color: #d4edda;">
+            <td colspan="6" style="padding: 15px; border-top: 2px solid #28a745;">
+                <strong style="color: #155724;">Impact if all releases are removed:</strong><br/>
+                <span style="color: #155724;">
+                    Current: <strong>90%</strong> (108TB/120TB) → 
+                    After cleanup: <strong>88.4%</strong> (~106.1TB/120TB) | 
+                    <strong style="color: #dc3545;">1.9TB freed</strong>
+                </span>
+            </td>
+        </tr>
+                </tbody>
+            </table>
+            
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin-top: 20px;">
+                <h3 style="color: #0d47a1; margin-top: 0;">📋 Notes</h3>
+                <ul style="color: #666; font-size: 13px; line-height: 1.8;">
+                    <li><strong>Old Releases:</strong> Releases older than 90 days</li>
+                    <li><strong>Symlinks:</strong> Must be removed before deleting releases (coordinate with link owners)</li>
+                    <li><strong>Size:</strong> Disk space that can be freed by removing these releases</li>
+                    <li><strong>Multiple Owners:</strong> Units may appear multiple times if ownership changed over time</li>
+                </ul>
+            </div>
+            
+            <p style="color: #999; font-size: 12px; text-align: center; margin-top: 30px;">
+                For detailed per-release information, see cleanup_report CSV file.<br/>
+                For deletion commands, check emails sent to release owners.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

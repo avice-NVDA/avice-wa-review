@@ -1,0 +1,71 @@
+AGUR RELEASE CLEANUP UTILITY - QUICK START
+===========================================
+
+OVERVIEW
+--------
+Identifies old releases (>90 days) in AGUR block release area to free disk space.
+Current status: 90% full (108T/120T) - CRITICAL
+
+SCRIPT LOCATION
+---------------
+/home/scratch.avice_vlsi/cursor/avice_wa_review/agur_release_tracking/agur_release_cleanup.py
+
+QUICK COMMANDS
+--------------
+# 1. Test dry-run (see what would be found)
+./agur_release_cleanup.py --dry-run
+
+# 2. Test mode (send emails to you only)
+./agur_release_cleanup.py --test-mode
+
+# 3. Production run (generate reports + send emails)
+./agur_release_cleanup.py
+
+# 4. Reports only (review before sending emails)
+./agur_release_cleanup.py --report-only
+
+# 5. Then send emails after reviewing reports
+./agur_release_cleanup.py --email-only
+
+KEY FEATURES
+------------
+✓ Scans 73 units across 7 chiplets
+✓ Detects symlinks and identifies owners (ls -l)
+✓ Multi-user coordination (fullchip STA/PV/PI cases)
+✓ Parallel disk space calculation
+✓ CSV + Markdown reports
+✓ Group emails (TO: owner, CC: symlink owners + chiplet manager + avice)
+✓ SAFE: Never deletes anything (analysis only)
+
+CHIPLET MANAGERS
+----------------
+CPORT, HPORT, HIOPL → avice@nvidia.com
+NDQ, TOP_YC         → arot@nvidia.com
+QNS, TCB            → ohamama@nvidia.com
+Project Manager     → oberkovitz@nvidia.com
+
+NOTE: avice@nvidia.com is ALWAYS CC'd on all emails
+
+OUTPUT
+------
+Reports: cleanup_reports/cleanup_report_YYYYMMDD_HHMMSS.csv
+         cleanup_reports/cleanup_summary_YYYYMMDD_HHMMSS.md
+Logs:    logs/release_cleanup_YYYYMMDD.log
+
+DOCUMENTATION
+-------------
+Full guide: README_RELEASE_CLEANUP.md
+Help:       ./agur_release_cleanup.py --help
+
+NEXT STEPS
+----------
+1. Run: ./agur_release_cleanup.py --dry-run
+2. Review output and verify expected results
+3. Run: ./agur_release_cleanup.py --test-mode
+4. Check test email formatting
+5. Run: ./agur_release_cleanup.py (production)
+6. Unit owners receive emails with cleanup instructions
+7. Monitor disk usage after cleanup actions
+
+Author: Alon Vice (avice@nvidia.com)
+Date: January 18, 2026

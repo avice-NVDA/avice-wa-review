@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>AGUR Release Cleanup Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .dashboard-container {
+            max-width: 95%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        .header .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            overflow-x: auto;
+        }
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        .tab:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+        .tab.active {
+            background: white;
+            color: #0d47a1;
+            border-bottom: 3px solid #0d47a1;
+        }
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.3s;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .stat-card.green {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        .stat-card.orange {
+            background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+        }
+        .stat-card.blue {
+            background: linear-gradient(135deg, #2196F3 0%, #21CBF3 100%);
+        }
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .chart-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #495057;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #dee2e6;
+        }
+        td {
+            padding: 10px;
+            font-size: 13px;
+            color: #212529;
+            border-bottom: 1px solid #f1f3f5;
+            vertical-align: top;
+        }
+        tr:hover {
+            background: #f8f9fa;
+        }
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .alert strong {
+            color: #856404;
+            font-size: 16px;
+        }
+        .chiplet-section {
+            margin: 15px 0;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .chiplet-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+            user-select: none;
+        }
+        .chiplet-header:hover {
+            background: #e9ecef;
+        }
+        .chiplet-content {
+            padding: 20px;
+            background: white;
+        }
+        .chiplet-content.collapsed {
+            display: none;
+        }
+        .toggle-icon {
+            display: inline-block;
+            margin-right: 10px;
+            transition: transform 0.3s;
+            font-size: 12px;
+        }
+        .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+        .approval-panel {
+            background: #fff;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .approval-stats {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .approval-stats span {
+            color: #666;
+        }
+        .approval-stats strong {
+            color: #212529;
+            font-size: 20px;
+        }
+        .approval-actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .status-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        .approval-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .emailed-release {
+            background-color: #d4edda !important;
+            border-left: 4px solid #28a745 !important;
+        }
+        .emailed-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: #28a745;
+            color: white;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .emailed-badge-test {
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: #fd7e14;
+            color: white;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .section-title {
+            font-size: 24px;
+            color: #212529;
+            margin: 30px 0 20px 0;
+            font-weight: 600;
+            border-bottom: 3px solid #0d47a1;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>🗂️ AGUR Release Cleanup Dashboard</h1>
+            <div class="subtitle">Generated: 2026-01-18 18:41:50 | Age Threshold: 90 days</div>
+        </div>
+        
+        <div class="approval-panel">
+            <div class="approval-stats">
+                <span>Total Releases: <strong id="total-releases">0</strong></span>
+                <span>Approved: <strong id="approved-count" style="color: #28a745;">0</strong></span>
+                <span>Emailed: <strong id="emailed-count" style="color: #17a2b8;">0</strong></span>
+                <span>Pending: <strong id="pending-count" style="color: #ffc107;">0</strong></span>
+            </div>
+            <div class="approval-actions">
+                <button id="select-all-btn" class="btn btn-secondary">Select All Visible</button>
+                <button id="clear-all-btn" class="btn btn-secondary">Clear All Selections</button>
+                <button id="send-emails-btn" class="btn btn-primary" disabled>Send Emails for Approved Releases</button>
+            </div>
+            <div id="status-message" class="status-message"></div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('summary')">📊 Summary</button>
+            <button class="tab" onclick="switchTab('chiplet')">🔧 By Chiplet</button>
+            <button class="tab" onclick="switchTab('unit')">📦 By Unit</button>
+            <button class="tab" onclick="switchTab('owner')">👤 By Owner</button>
+        </div>
+        
+        <!-- SUMMARY TAB -->
+        <div id="tab-summary" class="tab-content active">
+            <div class="alert">
+                <strong>⚠️ Critical Disk Usage Alert</strong><br/>
+                AGUR Release Area: 90% capacity (108T/120T used). Immediate action required to prevent workflow disruption.
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card orange">
+                    <div class="stat-label">Old Releases</div>
+                    <div class="stat-value">39</div>
+                </div>
+                <div class="stat-card blue">
+                    <div class="stat-label">Reclaimable Space</div>
+                    <div class="stat-value">1.9TB</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Current Utilization</div>
+                    <div class="stat-value">90%</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-label">After Cleanup</div>
+                    <div class="stat-value">88.4%</div>
+                </div>
+            </div>
+            
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-title">Release Age Distribution</div>
+                    <canvas id="ageChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">Size by Chiplet</div>
+                    <canvas id="chipletChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="section-title">Top 10 Space Consumers</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Unit</th>
+                        <th>Owner</th>
+                        <th>Chiplet</th>
+                        <th style="text-align: center;"># Releases</th>
+                        <th style="text-align: right;">Total Size</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="font-weight: bold;">fth</td>
+                        <td>miancu</td>
+                        <td>CPORT</td>
+                        <td style="text-align: center;">8</td>
+                        <td style="text-align: right; font-weight: bold; color: #dc3545;">562.4GB</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">prt</td>
+                        <td>ykatzav</td>
+                        <td>CPORT</td>
+                        <td style="text-align: center;">8</td>
+                        <td style="text-align: right; font-weight: bold; color: #dc3545;">435.8GB</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">pmux</td>
+                        <td>brachas</td>
+                        <td>CPORT</td>
+                        <td style="text-align: center;">8</td>
+                        <td style="text-align: right; font-weight: bold; color: #dc3545;">410.6GB</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">lnd</td>
+                        <td>shlomoc</td>
+                        <td>CPORT</td>
+                        <td style="text-align: center;">4</td>
+                        <td style="text-align: right; font-weight: bold; color: #dc3545;">252.9GB</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">fdb</td>
+                        <td>dkolesnikov</td>
+                        <td>CPORT</td>
+                        <td style="text-align: center;">2</td>
+                        <td style="text-align: right; font-weight: bold; color: #dc3545;">164.4GB</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">fth</td>
+                        <td>lmustafa</td>
+                        <td>CPORT</td>
+                        <td style="text-align: center;">1</td>
+                        <td style="text-align: right; font-weight: bold; color: #dc3545;">71.1GB</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">fth</td>
+                        <td>yavital</td>
+                        <td>CPORT</td>
+                        <td style="text-align: center;">1</td>
+                        <td style="text-align: right; font-weight: bold; color: #dc3545;">62.6GB</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold;">prt</td>
+                        <td>hshahady</td>
+                        <td>CPORT</td>
+                        <td style="text-align: center;">7</td>
+                        <td style="text-align: right; font-weight: bold; color: #dc3545;">619.7MB</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div style="margin-top: 30px; padding: 20px; background: #e7f3ff; border-radius: 8px; border-left: 4px solid #2196F3;">
+                <h3 style="color: #1976D2; margin-bottom: 10px;">📈 Coordination Statistics</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 8px 0; font-size: 14px;">✅ <strong>No Symlinks:</strong> 16 releases (safe to delete)</li>
+                    <li style="padding: 8px 0; font-size: 14px;">🔗 <strong>Self-Owned Symlinks:</strong> 9 releases (remove symlinks first)</li>
+                    <li style="padding: 8px 0; font-size: 14px;">⚠️ <strong>Coordination Needed:</strong> 14 releases (multi-user action required)</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- BY CHIPLET TAB -->
+        <div id="tab-chiplet" class="tab-content">
+            <h2 class="section-title">Releases Grouped by Chiplet</h2>
+            <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+                Click on a chiplet to expand/collapse details. Each section shows units and their space consumption.
+            </p>
+            
+        <div class="chiplet-section">
+            <div class="chiplet-header" onclick="toggleChiplet('CPORT')">
+                <span class="toggle-icon" id="icon-CPORT">▼</span>
+                <strong>CPORT</strong>
+                <span style="margin-left: 20px; color: #666;">
+                    39 releases | 1.9TB
+                </span>
+            </div>
+            <div class="chiplet-content" id="content-CPORT">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background-color: #f8f9fa;">
+                            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Unit</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Owners</th>
+                            <th style="padding: 10px; text-align: center; border-bottom: 2px solid #dee2e6;"># Releases</th>
+                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid #dee2e6;">Total Size</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">fdb</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">dkolesnikov</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">2</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">164.4GB</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">fth</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">lmustafa, miancu, yavital</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">10</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">696.1GB</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">lnd</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">shlomoc</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">4</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">252.9GB</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">pmux</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">brachas</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">8</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">410.6GB</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">prt</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">hshahady, ykatzav</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">15</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">436.4GB</td>
+            </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </div>
+        
+        <!-- BY UNIT TAB -->
+        <div id="tab-unit" class="tab-content">
+            <h2 class="section-title">Detailed Unit Summary by Chiplet</h2>
+            <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+                Click on a chiplet to expand/collapse details. Each section shows units with their owners, release areas, and symlinks.
+            </p>
+            
+            <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #2196F3;">
+                <strong style="color: #1976D2;">📊 Overall Summary:</strong>
+                <span style="color: #1976D2; margin-left: 20px;">
+                    <strong>39</strong> releases | 
+                    <strong style="color: #dc3545;">1.9TB</strong> reclaimable
+                </span>
+                <br/>
+                <span style="color: #1976D2;">
+                    Impact: Current 90% (108TB/120TB) → 
+                    After cleanup: <strong>88.4%</strong> (~106.1TB/120TB)
+                </span>
+            </div>
+            
+            
+        <div class="chiplet-section">
+            <div class="chiplet-header" onclick="toggleChiplet('unit-CPORT')">
+                <span class="toggle-icon" id="icon-unit-CPORT">▼</span>
+                <strong>CPORT</strong>
+                <span style="margin-left: 20px; color: #666;">
+                    39 releases | 1.9TB
+                </span>
+            </div>
+            <div class="chiplet-content" id="content-unit-CPORT">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background-color: #f8f9fa;">
+                            <th style="padding: 10px; text-align: center; border-bottom: 2px solid #dee2e6; width: 50px;">Approve</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Unit</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Owner</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Release Directory</th>
+                            <th style="padding: 10px; text-align: center; border-bottom: 2px solid #dee2e6;">Age</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Symlinks (User)</th>
+                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid #dee2e6;">Size</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+            <tr data-release-id="fdb_20251009_105141_dkolesnikov" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="fdb_20251009_105141_dkolesnikov" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">fdb</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">dkolesnikov</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__floorplanChange_run1__2025_10_9_10_51_41</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">101d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">SEP_28_FP <span style='color: #666;'>(dkolesnikov)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">83G</td>
+            </tr>
+            <tr data-release-id="fdb_20251016_173009_dkolesnikov" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="fdb_20251016_173009_dkolesnikov" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">fdb</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">dkolesnikov</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__floorplanChange_run1__2025_10_16_17_30_9</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">94d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">SEP_28_FP_eco_01 <span style='color: #666;'>(dkolesnikov)</span><br/>FNL_4PV <span style='color: #666;'>(ekantorovich)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">83G</td>
+            </tr>
+            <tr data-release-id="fth_20250527_105246_miancu" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="fth_20250527_105246_miancu" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">fth</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">miancu</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">fth_rbv_2025_03_13_condb_int1_11_3_BE_TNL_snap_ncfg_0512__2025_5_27_10_52_46</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">236d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;"><span style="color: #999;">None</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">70G</td>
+            </tr>
+            <tr data-release-id="fth_20250805_110416_miancu" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="fth_20250805_110416_miancu" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">fth</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">miancu</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">fth_rbv_2025_06_09_condb_int2_23_5r1_SFNL_snap_tlv_trial__2025_8_5_11_4_16</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">166d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">TLV_trail_release <span style='color: #666;'>(miancu)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">70G</td>
+            </tr>
+            <tr data-release-id="fth_20250825_102409_miancu" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="fth_20250825_102409_miancu" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">fth</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">miancu</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">fth_rbv_2025_06_09_condb_int2_23_5r1_SFNL_snap_npp_tlv__2025_8_25_10_24_9</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">146d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;"><span style="color: #999;">None</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">70G</td>
+            </tr>
+            <tr data-release-id="fth_20250916_215231_yavital" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="fth_20250916_215231_yavital" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">fth</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">yavital</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">FthTrial__2025_9_16_21_52_31</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">123d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">ECO_RUN_TIME_test <span style='color: #666;'>(yavital)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">63G</td>
+            </tr>
+            <tr data-release-id="fth_20250918_121429_miancu" data-chiplet="CPORT" class="emailed-release">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="fth_20250918_121429_miancu" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">fth<span class="emailed-badge-test">✓ TEST EMAIL</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">miancu</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">fth_rbv_2025_06_09_condb_int2_23_5r1_SFNL_snap_npp_tlv__2025_9_18_12_14_29</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">122d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">AUG07_cport_eco_01 <span style='color: #666;'>(miancu)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">70G</td>
+            </tr>
+            <tr data-release-id="fth_20250920_105828_miancu" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="fth_20250920_105828_miancu" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">fth</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">miancu</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp__2025_9_20_10_58_28</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">120d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">prev_SEP_10 <span style='color: #666;'>(miancu)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">72G</td>
+            </tr>
+            <tr data-release-id="fth_20250930_103236_miancu" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="fth_20250930_103236_miancu" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">fth</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">miancu</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp__2025_9_30_10_32_36</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">110d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">SEP_10_cport_eco_01 <span style='color: #666;'>(miancu)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">72G</td>
+            </tr>
+            <tr data-release-id="fth_20250930_121648_miancu" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="fth_20250930_121648_miancu" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">fth</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">miancu</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_1st_side__2025_9_30_12_16_48</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">110d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">SEP_10 <span style='color: #666;'>(miancu)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">72G</td>
+            </tr>
+            <tr data-release-id="fth_20251008_151017_miancu" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="fth_20251008_151017_miancu" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">fth</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">miancu</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner__2025_10_8_15_10_17</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">102d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">SEP_28_FP <span style='color: #666;'>(miancu)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">72G</td>
+            </tr>
+            <tr data-release-id="fth_20251017_105441_lmustafa" data-chiplet="CPORT" class="emailed-release">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="fth_20251017_105441_lmustafa" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">fth<span class="emailed-badge-test">✓ TEST EMAIL</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">lmustafa</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner_ref_run__2025_10_17_10_54_41</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">93d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">SEP_28_FP_eco_01 <span style='color: #666;'>(lmustafa)</span><br/>FNL_4PV <span style='color: #666;'>(ekantorovich)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">72G</td>
+            </tr>
+            <tr data-release-id="lnd_20250414_135402_shlomoc" data-chiplet="CPORT" class="emailed-release">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="lnd_20250414_135402_shlomoc" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">lnd<span class="emailed-badge-test">✓ TEST EMAIL</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">shlomoc</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">lnd_latest_ref__2025_4_14_13_54_2</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">279d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;"><span style="color: #999;">None</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">22G</td>
+            </tr>
+            <tr data-release-id="lnd_20251008_090034_shlomoc" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="lnd_20251008_090034_shlomoc" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">lnd</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">shlomoc</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065__2025_10_8_9_0_34</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">102d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">SEP_28_FP <span style='color: #666;'>(shlomoc)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">82G</td>
+            </tr>
+            <tr data-release-id="lnd_20251017_082605_shlomoc" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="lnd_20251017_082605_shlomoc" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">lnd</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">shlomoc</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065__2025_10_17_8_26_5</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">93d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">prev_SEP_28_FP_eco_01 <span style='color: #666;'>(shlomoc)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">70G</td>
+            </tr>
+            <tr data-release-id="lnd_20251018_220818_shlomoc" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="lnd_20251018_220818_shlomoc" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">lnd</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">shlomoc</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065__2025_10_18_22_8_18</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">91d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">SEP_28_FP_eco_01 <span style='color: #666;'>(shlomoc)</span><br/>FNL_4PV <span style='color: #666;'>(ekantorovich)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">82G</td>
+            </tr>
+            <tr data-release-id="pmux_20250527_102019_brachas" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="pmux_20250527_102019_brachas" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">pmux</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">brachas</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">agur_pmux_rbv_2025_03_25_condb_int1_11_3_BE_TNL_snap_pmux_PnR__2025_5_27_10_20_19</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">236d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;"><span style="color: #999;">None</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">56G</td>
+            </tr>
+            <tr data-release-id="pmux_20250917_104255_brachas" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="pmux_20250917_104255_brachas" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">pmux</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">brachas</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_9_17_10_42_55</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">123d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;"><span style="color: #999;">None</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">685M</td>
+            </tr>
+            <tr data-release-id="pmux_20250917_155631_brachas" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="pmux_20250917_155631_brachas" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">pmux</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">brachas</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_9_17_15_56_31</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">123d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">SEP_10 <span style='color: #666;'>(brachas)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">62G</td>
+            </tr>
+            <tr data-release-id="pmux_20250930_134914_brachas" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="pmux_20250930_134914_brachas" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">pmux</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">brachas</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_9_30_13_49_14</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">110d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">SEP_10_cport_eco_01 <span style='color: #666;'>(brachas)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">57G</td>
+            </tr>
+            <tr data-release-id="pmux_20251006_130031_brachas" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="pmux_20251006_130031_brachas" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">pmux</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">brachas</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_beta0929_v3__2025_10_6_13_0_31</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">104d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;"><span style="color: #999;">None</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">57G</td>
+            </tr>
+            <tr data-release-id="pmux_20251007_190847_brachas" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="pmux_20251007_190847_brachas" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">pmux</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">brachas</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_7_19_8_47</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">102d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;"><span style="color: #999;">None</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">57G</td>
+            </tr>
+            <tr data-release-id="pmux_20251009_170455_brachas" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="pmux_20251009_170455_brachas" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">pmux</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">brachas</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_9_17_4_55</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">101d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">SEP_28_FP <span style='color: #666;'>(brachas)</span><br/>prev_SEP_28_FP <span style='color: #666;'>(brachas)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">62G</td>
+            </tr>
+            <tr data-release-id="pmux_20251016_124923_brachas" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="pmux_20251016_124923_brachas" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">pmux</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">brachas</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_16_12_49_23</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">94d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">SEP_28_FP_eco_01 <span style='color: #666;'>(brachas)</span><br/>FNL_4PV <span style='color: #666;'>(ekantorovich)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">62G</td>
+            </tr>
+            <tr data-release-id="prt_20250604_103457_ykatzav" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="prt_20250604_103457_ykatzav" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">prt</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">ykatzav</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">prt_agur_rbv_2025_04_14_test_5__2025_6_4_10_34_57</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">228d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;"><span style="color: #999;">None</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">64G</td>
+            </tr>
+            <tr data-release-id="prt_20250630_202646_ykatzav" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="prt_20250630_202646_ykatzav" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">prt</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">ykatzav</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">prt_agur_rbv_2025_03_18_TNL__2025_6_30_20_26_46</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">201d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;"><span style="color: #999;">None</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">112K</td>
+            </tr>
+            <tr data-release-id="prt_20250701_164157_hshahady" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="prt_20250701_164157_hshahady" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">prt</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">hshahady</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">prt_agur_rbv_2025_03_18_TNL__2025_7_1_16_41_57</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">201d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;"><span style="color: #999;">None</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">116K</td>
+            </tr>
+            <tr data-release-id="prt_20250705_184224_hshahady" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="prt_20250705_184224_hshahady" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">prt</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">hshahady</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">prt_agur_rbv_2025_03_18_TNL__2025_7_5_18_42_24</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">196d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;"><span style="color: #999;">None</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">116K</td>
+            </tr>
+            <tr data-release-id="prt_20250706_164614_hshahady" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="prt_20250706_164614_hshahady" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">prt</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">hshahady</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">prt_agur_rbv_2025_03_18_TNL__2025_7_6_16_46_14</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">196d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;"><span style="color: #999;">None</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">116K</td>
+            </tr>
+            <tr data-release-id="prt_20250706_171520_hshahady" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="prt_20250706_171520_hshahady" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">prt</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">hshahady</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">prt_agur_rbv_2025_03_18_TNL__2025_7_6_17_15_20</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">196d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;"><span style="color: #999;">None</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">116K</td>
+            </tr>
+            <tr data-release-id="prt_20250706_172523_hshahady" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="prt_20250706_172523_hshahady" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">prt</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">hshahady</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">prt_agur_rbv_2025_03_18_TNL__2025_7_6_17_25_23</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">196d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;"><span style="color: #999;">None</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">116K</td>
+            </tr>
+            <tr data-release-id="prt_20250706_174908_hshahady" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="prt_20250706_174908_hshahady" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">prt</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">hshahady</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">prt_agur_rbv_2025_03_18_TNL__2025_7_6_17_49_8</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">196d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;"><span style="color: #999;">None</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">116K</td>
+            </tr>
+            <tr data-release-id="prt_20250706_180507_hshahady" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="prt_20250706_180507_hshahady" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">prt</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">hshahady</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">prt_agur_rbv_2025_03_18_TNL__2025_7_6_18_5_7</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">196d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;"><span style="color: #999;">None</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">622M</td>
+            </tr>
+            <tr data-release-id="prt_20250916_183237_ykatzav" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="prt_20250916_183237_ykatzav" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">prt</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">ykatzav</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap__2025_9_16_18_32_37</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">124d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">SEP_10 <span style='color: #666;'>(ykatzav)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">67G</td>
+            </tr>
+            <tr data-release-id="prt_20250917_094832_ykatzav" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="prt_20250917_094832_ykatzav" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">prt</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">ykatzav</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">agur_prt_rbv_2025_06_10_condb_int2_23_5r1_BE_SFNL_snap_run_2__2025_9_17_9_48_32</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">123d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">AUG07_cport_eco_01 <span style='color: #666;'>(ykatzav)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">59G</td>
+            </tr>
+            <tr data-release-id="prt_20250930_150057_ykatzav" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="prt_20250930_150057_ykatzav" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">prt</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">ykatzav</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap__2025_9_30_15_0_57</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">110d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">SEP_10_eco_01 <span style='color: #666;'>(ykatzav)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">59G</td>
+            </tr>
+            <tr data-release-id="prt_20250930_152927_ykatzav" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="prt_20250930_152927_ykatzav" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">prt</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">ykatzav</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap__2025_9_30_15_29_27</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">110d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">SEP_10_cport_eco_01 <span style='color: #666;'>(ykatzav)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">59G</td>
+            </tr>
+            <tr data-release-id="prt_20251008_101433_ykatzav" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="prt_20251008_101433_ykatzav" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">prt</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">ykatzav</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap__2025_10_8_10_14_33</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">102d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">SEP_28_FP <span style='color: #666;'>(ykatzav)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">67G</td>
+            </tr>
+            <tr data-release-id="prt_20251016_093611_ykatzav" data-chiplet="CPORT">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">
+                    <input type="checkbox" class="approval-checkbox" data-release-id="prt_20251016_093611_ykatzav" />
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">prt</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">ykatzav</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-family: monospace; font-size: 11px; max-width: 400px; word-break: break-all;">prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap__2025_10_16_9_36_11</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">94d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 250px; word-break: break-all;">SEP_28_FP_eco_01 <span style='color: #666;'>(ykatzav)</span><br/>FNL_4PV <span style='color: #666;'>(ekantorovich)</span></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">67G</td>
+            </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </div>
+        
+        <!-- BY OWNER TAB -->
+        <div id="tab-owner" class="tab-content">
+            <h2 class="section-title">Owner-Centric View</h2>
+            <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+                Aggregated view showing each owner's total impact across all units and chiplets.
+            </p>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Owner Email</th>
+                        <th style="width: 20%;">Chiplets</th>
+                        <th style="width: 35%;">Units</th>
+                        <th style="width: 10%; text-align: center;"># Releases</th>
+                        <th style="width: 10%; text-align: right;">Total Size</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">brachas</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">CPORT</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">pmux</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">8</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">410.6GB</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">dkolesnikov</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">CPORT</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">fdb</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">2</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">164.4GB</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">hshahady</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">CPORT</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">prt</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">7</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">619.7MB</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">lmustafa</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">CPORT</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">fth</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">1</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">71.1GB</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">miancu</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">CPORT</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">fth</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">8</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">562.4GB</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">shlomoc</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">CPORT</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">lnd</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">4</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">252.9GB</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">yavital</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">CPORT</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">fth</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">1</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">62.6GB</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold;">ykatzav</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">CPORT</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">prt</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center;">8</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">435.8GB</td>
+        </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        // API base URL
+        const API_BASE = 'http://localhost:5000/api';
+        
+        // Load approval state on page load
+        async function loadApprovalState() {
+            try {
+                const response = await fetch(`${API_BASE}/releases`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update checkboxes based on loaded state
+                    data.releases.forEach(release => {
+                        const checkbox = document.querySelector(`input[data-release-id="${release.id}"]`);
+                        if (checkbox) {
+                            checkbox.checked = release.approved;
+                        }
+                    });
+                    
+                    // Update stats
+                    await updateApprovalStats();
+                }
+            } catch (error) {
+                console.error('Error loading approval state:', error);
+                showStatus('Error connecting to server. Make sure you ran with --interactive flag.', 'error');
+            }
+        }
+        
+        // Toggle approval for a release
+        async function toggleApproval(releaseId, approved) {
+            try {
+                const response = await fetch(`${API_BASE}/approve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ release_id: releaseId, approved: approved })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    await updateApprovalStats();
+                }
+            } catch (error) {
+                console.error('Error toggling approval:', error);
+                showStatus('Error updating approval status', 'error');
+            }
+        }
+        
+        // Apply green highlighting to specific releases dynamically
+        function applyEmailedStyling(releaseIds, isTestMode) {
+            releaseIds.forEach(releaseId => {
+                // Find the table row
+                const row = document.querySelector(`tr[data-release-id="${releaseId}"]`);
+                if (!row) return;
+                
+                // Add green background class
+                row.classList.add('emailed-release');
+                
+                // Find the unit name cell (second td)
+                const unitCell = row.querySelectorAll('td')[1];
+                if (!unitCell) return;
+                
+                // Check if badge already exists
+                if (unitCell.querySelector('.emailed-badge, .emailed-badge-test')) {
+                    return;  // Already has badge
+                }
+                
+                // Create and insert badge
+                const badge = document.createElement('span');
+                if (isTestMode) {
+                    badge.className = 'emailed-badge-test';
+                    badge.textContent = '✓ TEST EMAIL';
+                } else {
+                    badge.className = 'emailed-badge';
+                    badge.textContent = '✓ EMAILED';
+                }
+                unitCell.appendChild(badge);
+            });
+        }
+        
+        // Update approval statistics
+        async function updateApprovalStats() {
+            try {
+                const response = await fetch(`${API_BASE}/status`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Count only releases that are visible in the current dashboard (not filtered out)
+                    const allCheckboxes = Array.from(document.querySelectorAll('.approval-checkbox'));
+                    const visibleReleaseIds = new Set(allCheckboxes.map(cb => cb.dataset.releaseId));
+                    
+                    // Load approval state to check which visible releases are approved
+                    const stateResponse = await fetch(`${API_BASE}/releases`);
+                    const stateData = await stateResponse.json();
+                    
+                    let visibleApprovedCount = 0;
+                    let visibleEmailedCount = 0;
+                    
+                    if (stateData.success) {
+                        stateData.releases.forEach(release => {
+                            if (visibleReleaseIds.has(release.id)) {
+                                if (release.approved) visibleApprovedCount++;
+                                if (release.emailed) visibleEmailedCount++;
+                            }
+                        });
+                    }
+                    
+                    const totalVisible = allCheckboxes.length;
+                    const pendingVisible = totalVisible - visibleApprovedCount;
+                    
+                    // Update counters with visible release counts
+                    document.getElementById('total-releases').textContent = totalVisible;
+                    document.getElementById('approved-count').textContent = visibleApprovedCount;
+                    document.getElementById('emailed-count').textContent = visibleEmailedCount;
+                    document.getElementById('pending-count').textContent = pendingVisible;
+                    
+                    // Enable/disable send button based on visible approved releases
+                    const sendBtn = document.getElementById('send-emails-btn');
+                    sendBtn.disabled = visibleApprovedCount === 0;
+                }
+            } catch (error) {
+                console.error('Error updating stats:', error);
+            }
+        }
+        
+        // Send emails for approved releases
+        async function sendApprovedEmails() {
+            if (!confirm('Send emails for all approved releases? This action cannot be undone.')) {
+                return;
+            }
+            
+            showStatus('Sending emails...', 'success');
+            document.getElementById('send-emails-btn').disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE}/send_emails`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const testModeMsg = data.test_mode ? ' (TEST MODE - emails sent to avice@nvidia.com only)' : '';
+                    let message = `Success! Emails sent for ${data.newly_emailed} release(s)${testModeMsg}`;
+                    
+                    if (data.already_emailed > 0) {
+                        message += `\n(${data.already_emailed} releases were already emailed previously)`;
+                    }
+                    
+                    // Apply green highlighting immediately
+                    if (data.newly_emailed_ids && data.newly_emailed_ids.length > 0) {
+                        applyEmailedStyling(data.newly_emailed_ids, data.test_mode);
+                    }
+                    
+                    showStatus(message, 'success');
+                    await updateApprovalStats();  // Update the emailed count
+                } else {
+                    showStatus(`Error: ${data.error}`, 'error');
+                    document.getElementById('send-emails-btn').disabled = false;
+                }
+            } catch (error) {
+                console.error('Error sending emails:', error);
+                showStatus('Error sending emails: ' + error.message, 'error');
+                document.getElementById('send-emails-btn').disabled = false;
+            }
+        }
+        
+        // Select all visible releases in current tab
+        async function selectAllVisible() {
+            const activeTab = document.querySelector('.tab-content.active');
+            if (!activeTab) {
+                return;
+            }
+            
+            const checkboxes = Array.from(activeTab.querySelectorAll('.approval-checkbox'));
+            const unchecked = checkboxes.filter(cb => !cb.checked);
+            
+            if (unchecked.length === 0) {
+                showStatus('All visible releases are already approved', 'success');
+                return;
+            }
+            
+            // Disable buttons during operation
+            document.getElementById('select-all-btn').disabled = true;
+            document.getElementById('clear-all-btn').disabled = true;
+            showStatus(`Approving ${unchecked.length} releases...`, 'success');
+            
+            let successCount = 0;
+            let failCount = 0;
+            
+            // Process checkboxes sequentially to avoid overwhelming the server
+            for (const cb of unchecked) {
+                cb.checked = true;
+                try {
+                    await toggleApproval(cb.dataset.releaseId, true);
+                    successCount++;
+                    
+                    // Small delay to avoid overwhelming the server
+                    if (successCount % 10 === 0) {
+                        showStatus(`Progress: ${successCount}/${unchecked.length} approved...`, 'success');
+                    }
+                } catch (error) {
+                    console.error('Error approving release:', cb.dataset.releaseId, error);
+                    failCount++;
+                    cb.checked = false;  // Uncheck if failed
+                }
+            }
+            
+            // Re-enable buttons
+            document.getElementById('select-all-btn').disabled = false;
+            document.getElementById('clear-all-btn').disabled = false;
+            
+            if (failCount === 0) {
+                showStatus(`Success! Approved ${successCount} releases`, 'success');
+            } else {
+                showStatus(`Approved ${successCount}, Failed ${failCount}. Please try again for failed items.`, 'error');
+            }
+        }
+        
+        // Clear all selections
+        async function clearAllSelections() {
+            if (!confirm('Clear all approval selections?')) {
+                return;
+            }
+            
+            const checkboxes = Array.from(document.querySelectorAll('.approval-checkbox'));
+            const checked = checkboxes.filter(cb => cb.checked);
+            
+            if (checked.length === 0) {
+                showStatus('No releases are currently approved', 'success');
+                return;
+            }
+            
+            // Disable buttons during operation
+            document.getElementById('select-all-btn').disabled = true;
+            document.getElementById('clear-all-btn').disabled = true;
+            showStatus(`Clearing ${checked.length} approvals...`, 'success');
+            
+            let successCount = 0;
+            let failCount = 0;
+            
+            // Process checkboxes sequentially
+            for (const cb of checked) {
+                cb.checked = false;
+                try {
+                    await toggleApproval(cb.dataset.releaseId, false);
+                    successCount++;
+                    
+                    // Update progress
+                    if (successCount % 10 === 0) {
+                        showStatus(`Progress: ${successCount}/${checked.length} cleared...`, 'success');
+                    }
+                } catch (error) {
+                    console.error('Error clearing approval:', cb.dataset.releaseId, error);
+                    failCount++;
+                    cb.checked = true;  // Recheck if failed
+                }
+            }
+            
+            // Re-enable buttons
+            document.getElementById('select-all-btn').disabled = false;
+            document.getElementById('clear-all-btn').disabled = false;
+            
+            if (failCount === 0) {
+                showStatus(`Success! Cleared ${successCount} approvals`, 'success');
+            } else {
+                showStatus(`Cleared ${successCount}, Failed ${failCount}. Please try again for failed items.`, 'error');
+            }
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${type}`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load approval state
+            await loadApprovalState();
+            
+            // Add event listeners to checkboxes
+            document.querySelectorAll('.approval-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    toggleApproval(e.target.dataset.releaseId, e.target.checked);
+                });
+            });
+            
+            // Add event listeners to buttons
+            document.getElementById('select-all-btn').addEventListener('click', selectAllVisible);
+            document.getElementById('clear-all-btn').addEventListener('click', clearAllSelections);
+            document.getElementById('send-emails-btn').addEventListener('click', sendApprovedEmails);
+        });
+        
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        // Chiplet expand/collapse
+        function toggleChiplet(chipletName) {
+            const content = document.getElementById('content-' + chipletName);
+            const icon = document.getElementById('icon-' + chipletName);
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                icon.classList.remove('collapsed');
+                icon.textContent = '▼';
+            } else {
+                content.classList.add('collapsed');
+                icon.classList.add('collapsed');
+                icon.textContent = '▶';
+            }
+        }
+        
+        // Chart.js visualizations
+        const ageCtx = document.getElementById('ageChart').getContext('2d');
+        new Chart(ageCtx, {
+            type: 'bar',
+            data: {
+                labels: ["0-30d", "30-60d", "60-90d", "90-180d", "180+d"],
+                datasets: [{
+                    label: 'Number of Releases',
+                    data: [0, 0, 0, 27, 12],
+                    backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0 }
+                    }
+                }
+            }
+        });
+        
+        const chipletCtx = document.getElementById('chipletChart').getContext('2d');
+        new Chart(chipletCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ["CPORT"],
+                datasets: [{
+                    label: 'Size (GB)',
+                    data: [1960.449149293825],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 206, 86, 0.8)',
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(153, 102, 255, 0.8)',
+                        'rgba(255, 159, 64, 0.8)',
+                        'rgba(199, 199, 199, 0.8)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

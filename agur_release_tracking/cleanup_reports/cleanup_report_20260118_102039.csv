@@ -1,0 +1,12 @@
+Unit,Chiplet,Release Directory,Age (days),Size,Owner,Release Timestamp,Has Symlinks,Symlink Names,Symlink Owners,Requires Coordination,Recommendation
+prt,CPORT,prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap__2025_9_16_18_32_37,123,67G,ykatzav,2025-09-16 18:32:37,Yes,SEP_10,ykatzav,No,Remove symlinks first
+prt,CPORT,prt_agur_rbv_2025_04_14_test_5__2025_6_4_10_34_57,227,64G,ykatzav,2025-06-04 10:34:57,No,None,None,No,Safe to delete
+prt,CPORT,agur_prt_rbv_2025_06_10_condb_int2_23_5r1_BE_SFNL_snap_run_2__2025_9_17_9_48_32,123,59G,ykatzav,2025-09-17 09:48:32,Yes,AUG07_cport_eco_01,ykatzav,No,Remove symlinks first
+prt,CPORT,prt_agur_rbv_2025_03_18_TNL__2025_7_6_18_5_7,195,622M,hshahady,2025-07-06 18:05:07,No,None,None,No,Safe to delete
+prt,CPORT,prt_agur_rbv_2025_03_18_TNL__2025_7_6_17_49_8,195,116K,hshahady,2025-07-06 17:49:08,No,None,None,No,Safe to delete
+prt,CPORT,prt_agur_rbv_2025_03_18_TNL__2025_7_6_16_46_14,195,116K,hshahady,2025-07-06 16:46:14,No,None,None,No,Safe to delete
+prt,CPORT,prt_agur_rbv_2025_03_18_TNL__2025_7_6_17_15_20,195,116K,hshahady,2025-07-06 17:15:20,No,None,None,No,Safe to delete
+prt,CPORT,prt_agur_rbv_2025_03_18_TNL__2025_7_6_17_25_23,195,116K,hshahady,2025-07-06 17:25:23,No,None,None,No,Safe to delete
+prt,CPORT,prt_agur_rbv_2025_03_18_TNL__2025_7_5_18_42_24,196,116K,hshahady,2025-07-05 18:42:24,No,None,None,No,Safe to delete
+prt,CPORT,prt_agur_rbv_2025_03_18_TNL__2025_7_1_16_41_57,200,116K,hshahady,2025-07-01 16:41:57,No,None,None,No,Safe to delete
+prt,CPORT,prt_agur_rbv_2025_03_18_TNL__2025_6_30_20_26_46,201,112K,ykatzav,2025-06-30 20:26:46,No,None,None,No,Safe to delete

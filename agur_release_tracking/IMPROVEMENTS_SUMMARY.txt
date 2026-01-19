@@ -1,0 +1,80 @@
+AGUR RELEASE CLEANUP UTILITY - IMPROVEMENTS SUMMARY
+===================================================
+
+✅ ALL REQUESTED FEATURES IMPLEMENTED
+
+1. COPY-PASTE UNIX COMMANDS IN EMAILS
+   - Full paths (no placeholders)
+   - Step-by-step per release
+   - Color-coded for clarity:
+     * Yellow: Symlink removal commands
+     * Blue: Verification commands  
+     * Pink: Deletion commands
+   - Example:
+     rm /home/agur_backend_blockRelease/block/prt/FC_ww46a_last_sta_rel
+     find /home/agur_backend_blockRelease/block/prt/ -type l -exec ls -l {} \; | grep "..."
+     rm -rf /home/agur_backend_blockRelease/block/prt/release_dir_name
+
+2. SEPARATE UNIT SUMMARY REPORT (HTML)
+   - Beautiful HTML table (easy to read)
+   - Split by unit owner (fth with 2 owners = 2 rows)
+   - Columns:
+     * Unit
+     * Release Area Owner
+     * Number of Old Releases
+     * Symlinks to Remove (Name:Owner)
+     * Total Size
+   - Includes TOTALS row
+   - Includes IMPACT row showing:
+     * Current: 90% (108TB/120TB)
+     * After cleanup: XX% (new utilization)
+     * Total space freed
+
+3. FILE OUTPUTS
+   cleanup_reports/
+   ├── cleanup_report_YYYYMMDD_HHMMSS.csv          (detailed release list)
+   ├── cleanup_unit_summary_YYYYMMDD_HHMMSS.html   (unit summary - NEW!)
+   └── cleanup_summary_YYYYMMDD_HHMMSS.md          (executive summary)
+
+CPORT TEST RESULTS (5 units: fdb, fth, lnd, pmux, prt)
+========================================================
+Total old releases: 39
+Total reclaimable: 1.9TB
+With coordination: 14 releases (symlinks by other users)
+Emails sent: 8 (one per unit owner)
+
+UNIT BREAKDOWN:
+- fdb (dkolesnikov): 2 releases, 164.4GB
+- fth (miancu): 8 releases, 562.4GB
+- fth (lmustafa): 2 releases, 133.7GB  ← Split by owner!
+- lnd (shlomoc): 4 releases, 252.9GB
+- pmux (brachas): 8 releases, 410.6GB
+- prt (ykatzav): 8 releases, 435.8GB
+- prt (hshahady): 7 releases, 619.7MB  ← Split by owner!
+
+IMPACT:
+Current: 90% (108TB/120TB)
+After cleanup: ~88.5% (~106.1TB/120TB)
+Freed: 1.9TB
+
+HOW TO USE
+==========
+# Test mode (emails to you only)
+./agur_release_cleanup.py --test-mode --units fdb,fth,lnd,pmux,prt
+
+# Production mode (all units, real emails)
+./agur_release_cleanup.py
+
+# Open HTML report
+firefox cleanup_reports/cleanup_unit_summary_YYYYMMDD_HHMMSS.html
+
+NEXT STEPS
+==========
+1. Review HTML report (open in browser)
+2. Check test emails for command format
+3. When satisfied, run production mode on all 73 units
+4. Unit owners follow copy-paste commands
+5. Monitor disk usage improvement
+
+Created: 2026-01-18
+Author: Alon Vice (avice@nvidia.com)

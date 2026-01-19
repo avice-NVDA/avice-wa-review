@@ -1,0 +1,1664 @@
+#!/home/utils/Python/builds/3.11.9-20250715/bin/python3
+#===============================================================================
+#      +===+ +--+ +--+ +=+ +===+ +===+
+#      |   | |  | |  | | | |     |    
+#      |===| |  +-+  | | | |     |=== 
+#      |   |  |     |  | | |     |    
+#      |   |   +---+   +=+ +===+ +===+                                 
+#            ~ Alon Vice Tools ~
+# Copyright (c) 2026 Alon Vice (avice)
+# All rights reserved.
+# This script is the intellectual property of Alon Vice.
+# For permissions and licensing, contact: avice@nvidia.com
+#===============================================================================
+"""
+AGUR Block Release Area Cleanup Utility
+
+Purpose:
+    Analyzes the AGUR block release area (/home/agur_backend_blockRelease/) to identify
+    old releases (>3 months by default) and provides cleanup recommendations to unit owners.
+    Handles multi-user coordination when symlinks are created by fullchip STA/PV/PI users.
+
+Features:
+    - Scans all 73 AGUR units across 7 chiplets
+    - Identifies releases older than configurable threshold (default: 90 days)
+    - Detects symlinks and their owners via file ownership
+    - Calculates reclaimable disk space using parallel du commands
+    - Generates detailed CSV and Markdown reports
+    - Sends coordination emails to release owners, symlink owners, and chiplet managers
+    - Never deletes anything - ANALYSIS ONLY (dry-run by design)
+
+Safety:
+    - Read-only utility - never deletes files or modifies symlinks
+    - Detects symlink dependencies for coordination
+    - Provides safe deletion commands with verification steps
+    - Requires manual user action for all deletions
+
+Usage:
+    python3 agur_release_cleanup.py                    # Full analysis with reports and emails
+    python3 agur_release_cleanup.py --dry-run          # Analysis only, no emails
+    python3 agur_release_cleanup.py --report-only      # Generate reports, no emails
+    python3 agur_release_cleanup.py --email-only       # Send emails, no report files
+    python3 agur_release_cleanup.py --age-threshold 60 # Custom age threshold (days)
+    python3 agur_release_cleanup.py --units prt,fdb    # Specific units only
+    python3 agur_release_cleanup.py --test-mode        # Send all emails to avice@nvidia.com
+
+Arguments:
+    --age-threshold DAYS    Age threshold in days (default: 90)
+    --dry-run              Analysis only, no emails or reports
+    --report-only          Generate report files only, no emails
+    --email-only           Send emails only, skip report generation
+    --units U1,U2          Check only specific units (comma-separated)
+    --parallel N           Number of parallel du processes (default: 10)
+    --output-dir DIR       Output directory for reports (default: ./cleanup_reports)
+    --test-mode            Send all emails to avice@nvidia.com only
+    --quiet                Minimal output (summary only)
+    --help                 Show this help message
+
+Output:
+    - Terminal: Summary of findings and recommendations
+    - CSV Report: cleanup_reports/cleanup_report_YYYYMMDD_HHMMSS.csv
+    - Markdown Report: cleanup_reports/cleanup_summary_YYYYMMDD_HHMMSS.md
+    - Emails: To unit owners with CC to symlink owners and chiplet managers
+    - Log file: logs/release_cleanup_YYYYMMDD.log
+
+Examples:
+    # Full analysis
+    python3 agur_release_cleanup.py
+    
+    # Test mode (emails to avice only)
+    python3 agur_release_cleanup.py --test-mode
+    
+    # Custom threshold (60 days)
+    python3 agur_release_cleanup.py --age-threshold 60
+    
+    # Specific units only
+    python3 agur_release_cleanup.py --units prt,fdb,pmux
+    
+    # Generate reports only
+    python3 agur_release_cleanup.py --report-only
+
+Author: Alon Vice (avice@nvidia.com)
+Date: January 18, 2026
+"""
+
+import os
+import sys
+import re
+import csv
+import base64
+import smtplib
+import subprocess
+import argparse
+from datetime import datetime, timedelta
+from pathlib import Path
+from dataclasses import dataclass, field
+from typing import List, Dict, Set, Optional, Tuple
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import logging
+
+# Chiplet to units mapping
+CHIPLET_UNITS = {
+    'HIOPL': ['ioplca', 'ioplcb', 'ioplcc', 'ioplcd'],
+    'CPORT': ['fdb', 'fth', 'lnd', 'pmux', 'prt'],
+    'HPORT': ['ccorea', 'ccoreb', 'ccorec', 'ccored', 'ccoree', 'ccoref'],
+    'NDQ': ['clr', 'clt', 'cscore', 'dcmp', 'fdbm', 'fdbs', 'fthm', 'ftos', 'fwam', 'fwas', 
+            'glc', 'iopl', 'ioplm', 'iopx', 'ir', 'lndm', 'nvrisc', 'pmuxm', 'prtm', 
+            'psca', 'pscb', 'pscc', 'pscd', 'px', 'riba', 'ribs', 'sma', 'yu'],
+    'QNS': ['dqaa', 'dqaci', 'dqaco', 'dqai', 'dqamci', 'dqamco', 'dqamdi', 'dqamdo', 
+            'dqap', 'dqavi', 'dqavo', 'dqax', 'dql', 'dqs', 'eds', 'qcorel', 'qcorer', 
+            'tecorel', 'tecorer', 'tds'],
+    'TCB': ['alm', 'bta', 'eri', 'hib'],
+    'TOP_YC': ['top_yc_clock', 'top_yc_gpio', 'yc_clock_macro', 'yc_fuse', 'yc_fuse_macro', 'yu_mng']
+}
+
+# Constants
+RELEASE_BASE_PATH = '/home/agur_backend_blockRelease/block/'
+UNITS_TABLE_FILE = 'AGUR_UNITS_TABLE.csv'
+DEFAULT_AGE_THRESHOLD = 90  # days
+DEFAULT_PARALLEL_PROCESSES = 10
+LOGO_PATH = '../assets/images/avice_logo_small.png'
+
+# Chiplet managers mapping
+CHIPLET_MANAGERS = {
+    'HIOPL': 'avice@nvidia.com',
+    'CPORT': 'avice@nvidia.com',
+    'HPORT': 'avice@nvidia.com',
+    'NDQ': 'arot@nvidia.com',
+    'TOP_YC': 'arot@nvidia.com',
+    'QNS': 'ohamama@nvidia.com',
+    'TCB': 'ohamama@nvidia.com'
+}
+PROJECT_MANAGER = 'oberkovitz@nvidia.com'
+ALWAYS_CC = 'avice@nvidia.com'  # Always CC on all emails
+
+# Data structures
+@dataclass
+class SymlinkInfo:
+    """Information about a symlink pointing to a release"""
+    symlink_name: str
+    symlink_owner: str  # Username from ls -l
+    symlink_path: str
+    target_release: str
+    
+@dataclass
+class ReleaseInfo:
+    """Information about a single release directory"""
+    unit: str
+    chiplet: str
+    release_dir: str
+    full_path: str
+    age_days: int
+    size_bytes: int
+    size_human: str
+    owner: str
+    release_timestamp: datetime
+    has_symlinks: bool
+    symlink_infos: List[SymlinkInfo] = field(default_factory=list)
+    is_protected: bool = False  # True if pointed to by any symlink
+    requires_coordination: bool = False  # True if symlinks created by other users
+    log_file_path: str = ''
+
+@dataclass
+class OwnerRecommendation:
+    """Cleanup recommendations for a specific owner"""
+    owner_email: str
+    releases: List[ReleaseInfo]
+    total_size_bytes: int
+    total_size_human: str
+    unit_count: int
+    release_count: int
+    chiplet_manager: str
+    all_symlink_owners: Set[str] = field(default_factory=set)
+
+# Global state
+logger = None
+
+def setup_logging(quiet: bool = False) -> logging.Logger:
+    """Setup logging configuration"""
+    log_dir = Path('logs')
+    log_dir.mkdir(exist_ok=True)
+    
+    log_file = log_dir / f"release_cleanup_{datetime.now().strftime('%Y%m%d')}.log"
+    
+    logger = logging.getLogger('agur_release_cleanup')
+    logger.setLevel(logging.DEBUG)
+    
+    # File handler
+    fh = logging.FileHandler(log_file)
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logger.addHandler(fh)
+    
+    # Console handler
+    if not quiet:
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.INFO)
+        ch.setFormatter(logging.Formatter('%(message)s'))
+        logger.addHandler(ch)
+    
+    return logger
+
+def parse_arguments():
+    """Parse command-line arguments"""
+    parser = argparse.ArgumentParser(
+        description='AGUR Block Release Area Cleanup Utility',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__
+    )
+    
+    parser.add_argument('--age-threshold', type=int, default=DEFAULT_AGE_THRESHOLD,
+                        help=f'Age threshold in days (default: {DEFAULT_AGE_THRESHOLD})')
+    parser.add_argument('--dry-run', action='store_true',
+                        help='Analysis only, no emails or reports')
+    parser.add_argument('--report-only', action='store_true',
+                        help='Generate reports only, no emails')
+    parser.add_argument('--email-only', action='store_true',
+                        help='Send emails only, no reports')
+    parser.add_argument('--units', type=str,
+                        help='Comma-separated list of units to check')
+    parser.add_argument('-c', '--chiplet', type=str,
+                        help='Chiplet name(s) - comma-separated, case-insensitive (CPORT, HPORT, HIOPL, NDQ, QNS, TCB, TOP_YC, ALL)')
+    parser.add_argument('--parallel', type=int, default=DEFAULT_PARALLEL_PROCESSES,
+                        help=f'Number of parallel du processes (default: {DEFAULT_PARALLEL_PROCESSES})')
+    parser.add_argument('--output-dir', type=str, default='cleanup_reports',
+                        help='Output directory for reports (default: cleanup_reports)')
+    parser.add_argument('--test-mode', action='store_true',
+                        help='Send all emails to avice@nvidia.com only')
+    parser.add_argument('--quiet', action='store_true',
+                        help='Minimal output (summary only)')
+    
+    return parser.parse_args()
+
+def load_units_table() -> Dict[str, Dict]:
+    """Load unit information from AGUR_UNITS_TABLE.csv"""
+    units = {}
+    
+    if not os.path.exists(UNITS_TABLE_FILE):
+        logger.error(f"Units table not found: {UNITS_TABLE_FILE}")
+        sys.exit(1)
+    
+    with open(UNITS_TABLE_FILE, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            units[row['UNIT']] = {
+                'chiplet': row['CHIPLET'],
+                'owner': row['RELEASE_USER']
+            }
+    
+    logger.info(f"Loaded {len(units)} units from {UNITS_TABLE_FILE}")
+    return units
+
+def parse_release_timestamp(release_dir: str) -> Optional[datetime]:
+    """
+    Parse timestamp from release directory name.
+    
+    Formats:
+    - {unit}_rbv_*__YYYY_M_D_H_M_S
+    - nbu_signoff_*_YYYY_M_D_H_M_S
+    """
+    # Try to extract timestamp from end of directory name
+    # Format: __YYYY_M_D_H_M_S or _YYYY_M_D_H_M_S
+    patterns = [
+        r'__(\d{4})_(\d{1,2})_(\d{1,2})_(\d{1,2})_(\d{1,2})_(\d{1,2})$',
+        r'_(\d{4})_(\d{1,2})_(\d{1,2})_(\d{1,2})_(\d{1,2})_(\d{1,2})$'
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, release_dir)
+        if match:
+            year, month, day, hour, minute, second = map(int, match.groups())
+            try:
+                return datetime(year, month, day, hour, minute, second)
+            except ValueError:
+                continue
+    
+    return None
+
+def is_release_directory(path: Path) -> bool:
+    """Check if a directory looks like a release directory"""
+    name = path.name
+    
+    # Must be a directory
+    if not path.is_dir():
+        return False
+    
+    # Skip symlinks
+    if path.is_symlink():
+        return False
+    
+    # Must contain logs/block_release.log or match naming pattern
+    has_log = (path / 'logs' / 'block_release.log').exists()
+    
+    # Match typical release patterns
+    matches_pattern = bool(re.match(r'^.*_rbv_.*__\d{4}_\d{1,2}_\d{1,2}_\d{1,2}_\d{1,2}_\d{1,2}$', name) or
+                           re.match(r'^nbu_signoff_.*_\d{4}_\d{1,2}_\d{1,2}_\d{1,2}_\d{1,2}_\d{1,2}$', name))
+    
+    return has_log or matches_pattern
+
+def scan_unit_releases(unit: str, unit_info: Dict, age_threshold_days: int) -> List[ReleaseInfo]:
+    """
+    Scan a single unit directory for old releases.
+    
+    Args:
+        unit: Unit name
+        unit_info: Dict with 'chiplet' and 'owner' keys
+        age_threshold_days: Age threshold in days
+        
+    Returns:
+        List of ReleaseInfo objects for old releases
+    """
+    unit_path = Path(RELEASE_BASE_PATH) / unit
+    
+    if not unit_path.exists():
+        logger.warning(f"Unit directory not found: {unit_path}")
+        return []
+    
+    old_releases = []
+    threshold_date = datetime.now() - timedelta(days=age_threshold_days)
+    
+    logger.debug(f"Scanning {unit} ({unit_info['chiplet']})...")
+    
+    try:
+        for item in unit_path.iterdir():
+            if not is_release_directory(item):
+                continue
+            
+            # Parse timestamp
+            release_timestamp = parse_release_timestamp(item.name)
+            if not release_timestamp:
+                logger.debug(f"  Skipping {item.name} - couldn't parse timestamp")
+                continue
+            
+            # Check age
+            age_days = (datetime.now() - release_timestamp).days
+            if age_days < age_threshold_days:
+                logger.debug(f"  Skipping {item.name} - only {age_days} days old")
+                continue
+            
+            # Create ReleaseInfo (size and symlinks will be filled later)
+            release_info = ReleaseInfo(
+                unit=unit,
+                chiplet=unit_info['chiplet'],
+                release_dir=item.name,
+                full_path=str(item),
+                age_days=age_days,
+                size_bytes=0,
+                size_human='',
+                owner=unit_info['owner'],
+                release_timestamp=release_timestamp,
+                has_symlinks=False,
+                log_file_path=str(item / 'logs' / 'block_release.log')
+            )
+            
+            old_releases.append(release_info)
+            logger.debug(f"  Found old release: {item.name} ({age_days} days old)")
+    
+    except PermissionError as e:
+        logger.error(f"Permission denied accessing {unit_path}: {e}")
+    except Exception as e:
+        logger.error(f"Error scanning {unit_path}: {e}")
+    
+    return old_releases
+
+def get_symlink_owner(symlink_path: Path) -> str:
+    """
+    Get the owner of a symlink using ls -l.
+    
+    Args:
+        symlink_path: Path to the symlink
+        
+    Returns:
+        Username of the symlink owner
+    """
+    try:
+        result = subprocess.run(
+            ['ls', '-l', str(symlink_path)],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        
+        if result.returncode == 0:
+            # ls -l output: lrwxrwxrwx 1 username group ... -> target
+            parts = result.stdout.split()
+            if len(parts) >= 3:
+                return parts[2]  # Third field is the owner
+        
+    except Exception as e:
+        logger.debug(f"Error getting symlink owner for {symlink_path}: {e}")
+    
+    return 'unknown'
+
+def analyze_unit_symlinks(unit: str) -> Dict[str, List[SymlinkInfo]]:
+    """
+    Analyze all symlinks in a unit directory and map them to their targets.
+    
+    Args:
+        unit: Unit name
+        
+    Returns:
+        Dict mapping release_path -> List[SymlinkInfo]
+    """
+    unit_path = Path(RELEASE_BASE_PATH) / unit
+    
+    if not unit_path.exists():
+        return {}
+    
+    symlink_map = {}
+    
+    try:
+        # Find all symlinks in the unit directory
+        for item in unit_path.iterdir():
+            if not item.is_symlink():
+                continue
+            
+            try:
+                # Resolve the symlink target
+                target = item.resolve()
+                
+                # Get symlink owner
+                owner = get_symlink_owner(item)
+                
+                # Create SymlinkInfo
+                symlink_info = SymlinkInfo(
+                    symlink_name=item.name,
+                    symlink_owner=owner,
+                    symlink_path=str(item),
+                    target_release=target.name if target.exists() else 'broken'
+                )
+                
+                # Map to target path
+                target_str = str(target)
+                if target_str not in symlink_map:
+                    symlink_map[target_str] = []
+                symlink_map[target_str].append(symlink_info)
+                
+                logger.debug(f"  Symlink: {item.name} -> {target.name} (owner: {owner})")
+                
+            except Exception as e:
+                logger.debug(f"  Error resolving symlink {item}: {e}")
+    
+    except PermissionError as e:
+        logger.error(f"Permission denied accessing symlinks in {unit_path}: {e}")
+    except Exception as e:
+        logger.error(f"Error analyzing symlinks in {unit_path}: {e}")
+    
+    return symlink_map
+
+def calculate_directory_size(path: str) -> Tuple[int, str]:
+    """
+    Calculate directory size using du command.
+    
+    Args:
+        path: Directory path
+        
+    Returns:
+        Tuple of (size_bytes, human_readable_size)
+    """
+    try:
+        # Use du -sb for bytes, du -sh for human readable
+        result_bytes = subprocess.run(
+            ['du', '-sb', path],
+            capture_output=True,
+            text=True,
+            timeout=300  # 5 minute timeout per directory
+        )
+        
+        result_human = subprocess.run(
+            ['du', '-sh', path],
+            capture_output=True,
+            text=True,
+            timeout=300
+        )
+        
+        size_bytes = 0
+        size_human = '0'
+        
+        if result_bytes.returncode == 0:
+            parts = result_bytes.stdout.split()
+            if parts:
+                size_bytes = int(parts[0])
+        
+        if result_human.returncode == 0:
+            parts = result_human.stdout.split()
+            if parts:
+                size_human = parts[0]
+        
+        return size_bytes, size_human
+        
+    except subprocess.TimeoutExpired:
+        logger.warning(f"Timeout calculating size for {path}")
+        return 0, 'timeout'
+    except Exception as e:
+        logger.debug(f"Error calculating size for {path}: {e}")
+        return 0, 'error'
+
+def calculate_sizes_parallel(releases: List[ReleaseInfo], max_workers: int = 10) -> List[ReleaseInfo]:
+    """
+    Calculate disk usage for all releases using parallel du commands.
+    
+    Args:
+        releases: List of ReleaseInfo objects
+        max_workers: Number of parallel processes
+        
+    Returns:
+        Updated list with size information
+    """
+    logger.info(f"\nCalculating disk usage (parallel={max_workers})...")
+    
+    total_bytes = 0
+    completed = 0
+    
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all tasks
+        future_to_release = {
+            executor.submit(calculate_directory_size, release.full_path): release
+            for release in releases
+        }
+        
+        # Process results as they complete
+        for future in as_completed(future_to_release):
+            release = future_to_release[future]
+            try:
+                size_bytes, size_human = future.result()
+                release.size_bytes = size_bytes
+                release.size_human = size_human
+                total_bytes += size_bytes
+                completed += 1
+                
+                if completed % 10 == 0:
+                    logger.info(f"  Progress: {completed}/{len(releases)} releases calculated")
+                
+                logger.debug(f"  {release.release_dir}: {size_human}")
+                
+            except Exception as e:
+                logger.error(f"Error processing {release.release_dir}: {e}")
+                release.size_bytes = 0
+                release.size_human = 'error'
+    
+    # Convert total to human readable
+    total_human = format_bytes(total_bytes)
+    logger.info(f"  Total reclaimable space: {total_human}")
+    
+    return releases
+
+def extract_owner_from_log(log_file_path: str) -> Optional[str]:
+    """
+    Extract owner from block_release.log file.
+    
+    Looks for line like: "-I- [timestamp] USER: username"
+    
+    Args:
+        log_file_path: Path to block_release.log
+        
+    Returns:
+        Username or None if not found
+    """
+    if not os.path.exists(log_file_path):
+        return None
+    
+    try:
+        with open(log_file_path, 'r', errors='ignore') as f:
+            for line in f:
+                if 'USER:' in line:
+                    # Format: -I- [timestamp] USER: username
+                    match = re.search(r'USER:\s+(\w+)', line)
+                    if match:
+                        return match.group(1)
+                    break  # USER line is usually near the top
+    except Exception as e:
+        logger.debug(f"Error reading log file {log_file_path}: {e}")
+    
+    return None
+
+def enrich_releases_with_log_data(releases: List[ReleaseInfo]) -> List[ReleaseInfo]:
+    """
+    Extract additional owner information from block_release.log files.
+    
+    Updates release.owner if found in log (more accurate than CSV)
+    
+    Args:
+        releases: List of ReleaseInfo objects
+        
+    Returns:
+        Updated list with owner information from logs
+    """
+    logger.info("\nExtracting owner information from logs...")
+    
+    updated_count = 0
+    for release in releases:
+        log_owner = extract_owner_from_log(release.log_file_path)
+        if log_owner and log_owner != release.owner:
+            logger.debug(f"  {release.release_dir}: Updated owner {release.owner} -> {log_owner}")
+            release.owner = log_owner
+            updated_count += 1
+    
+    if updated_count > 0:
+        logger.info(f"  Updated {updated_count} release owners from log files")
+    
+    return releases
+
+def generate_csv_report(releases: List[ReleaseInfo], output_file: Path):
+    """Generate detailed CSV report of all old releases"""
+    logger.info(f"  Writing CSV report: {output_file}")
+    
+    with open(output_file, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            'Unit', 'Chiplet', 'Release Directory', 'Age (days)', 'Size', 
+            'Owner', 'Release Timestamp', 'Has Symlinks', 'Symlink Names', 
+            'Symlink Owners', 'Requires Coordination', 'Recommendation'
+        ])
+        
+        for release in sorted(releases, key=lambda r: r.size_bytes, reverse=True):
+            symlink_names = ','.join(s.symlink_name for s in release.symlink_infos) if release.symlink_infos else 'None'
+            symlink_owners = ','.join(set(s.symlink_owner for s in release.symlink_infos)) if release.symlink_infos else 'None'
+            
+            if release.requires_coordination:
+                recommendation = 'Coordinate with symlink owners first'
+            elif release.has_symlinks:
+                recommendation = 'Remove symlinks first'
+            else:
+                recommendation = 'Safe to delete'
+            
+            writer.writerow([
+                release.unit,
+                release.chiplet,
+                release.release_dir,
+                release.age_days,
+                release.size_human,
+                release.owner,
+                release.release_timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                'Yes' if release.has_symlinks else 'No',
+                symlink_names,
+                symlink_owners,
+                'Yes' if release.requires_coordination else 'No',
+                recommendation
+            ])
+
+def generate_dashboard_report(releases: List[ReleaseInfo], output_file: Path):
+    """Generate interactive multi-tab dashboard HTML report"""
+    logger.info(f"  Writing Dashboard report: {output_file}")
+    
+    # Calculate all metrics
+    age_dist = calculate_age_distribution(releases)
+    chiplet_breakdown = calculate_chiplet_breakdown(releases)
+    coord_stats = calculate_coordination_stats(releases)
+    top_consumers = get_top_consumers(releases, 10)
+    chiplet_groups = group_by_chiplet_detailed(releases)
+    owner_groups = group_by_owner_detailed(releases)
+    
+    # Calculate totals
+    total_releases = len(releases)
+    total_size_bytes = sum(r.size_bytes for r in releases)
+    total_size_human = format_bytes(total_size_bytes)
+    
+    # Calculate disk utilization
+    current_used_tb = 108
+    total_capacity_tb = 120
+    freed_tb = total_size_bytes / (1024**4)
+    new_used_tb = current_used_tb - freed_tb
+    new_utilization = (new_used_tb / total_capacity_tb) * 100
+    current_utilization = 90
+    
+    # Build per-unit-per-owner summary
+    unit_owner_summary = {}
+    for release in releases:
+        key = (release.unit, release.owner)
+        if key not in unit_owner_summary:
+            unit_owner_summary[key] = {
+                'unit': release.unit,
+                'owner': release.owner,
+                'count': 0,
+                'size_bytes': 0,
+                'symlinks': {},  # symlink_name: symlink_owner
+                'release_dirs': []  # List of release directory names
+            }
+        unit_owner_summary[key]['count'] += 1
+        unit_owner_summary[key]['size_bytes'] += release.size_bytes
+        unit_owner_summary[key]['release_dirs'].append(release.release_dir)
+        
+        # Collect unique symlinks with their owners
+        for sym in release.symlink_infos:
+            unit_owner_summary[key]['symlinks'][sym.symlink_name] = sym.symlink_owner
+    
+    # Calculate totals
+    total_releases = len(releases)
+    total_size_bytes = sum(r.size_bytes for r in releases)
+    total_size_human = format_bytes(total_size_bytes)
+    
+    # Calculate disk utilization (120TB total capacity, currently 108TB used = 90%)
+    current_used_tb = 108
+    total_capacity_tb = 120
+    freed_tb = total_size_bytes / (1024**4)  # Convert bytes to TB
+    new_used_tb = current_used_tb - freed_tb
+    new_utilization = (new_used_tb / total_capacity_tb) * 100
+    current_utilization = 90
+    
+    # Build HTML table rows
+    table_rows = ''
+    for (unit, owner), info in sorted(unit_owner_summary.items()):
+        # Format symlinks
+        symlinks_list = []
+        for name, sym_owner in sorted(info['symlinks'].items()):
+            symlinks_list.append(f"{name} <span style='color: #666;'>({sym_owner})</span>")
+        symlinks_html = '<br/>'.join(symlinks_list) if symlinks_list else '<span style="color: #999;">None</span>'
+        
+        # Format release directories (show ALL, not just top 3)
+        release_dirs_display = []
+        for rel_dir in sorted(info['release_dirs']):
+            release_dirs_display.append(f'<span style="font-family: monospace; font-size: 11px;">{rel_dir}</span>')
+        
+        release_dirs_html = '<br/>'.join(release_dirs_display)
+        
+        table_rows += f'''
+        <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-weight: bold; white-space: nowrap;">{unit}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; white-space: nowrap;">{owner}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center; white-space: nowrap;">{info['count']}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 11px; max-width: 600px; word-break: break-all;">{release_dirs_html}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; max-width: 400px; word-break: break-all;">{symlinks_html}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold; white-space: nowrap;">{format_bytes(info['size_bytes'])}</td>
+        </tr>'''
+    
+    # Build totals row
+    totals_row = f'''
+        <tr style="background-color: #f8f9fa; font-weight: bold;">
+            <td colspan="3" style="padding: 12px; border-top: 2px solid #0d47a1; text-align: right;">TOTAL:</td>
+            <td style="padding: 12px; border-top: 2px solid #0d47a1; text-align: center;">{total_releases} releases</td>
+            <td style="padding: 12px; border-top: 2px solid #0d47a1;"></td>
+            <td style="padding: 12px; border-top: 2px solid #0d47a1; text-align: right; color: #dc3545;">{total_size_human}</td>
+        </tr>'''
+    
+    # Build impact row
+    impact_row = f'''
+        <tr style="background-color: #d4edda;">
+            <td colspan="6" style="padding: 15px; border-top: 2px solid #28a745;">
+                <strong style="color: #155724;">Impact if all releases are removed:</strong><br/>
+                <span style="color: #155724;">
+                    Current: <strong>{current_utilization}%</strong> ({current_used_tb}TB/{total_capacity_tb}TB) → 
+                    After cleanup: <strong>{new_utilization:.1f}%</strong> (~{new_used_tb:.1f}TB/{total_capacity_tb}TB) | 
+                    <strong style="color: #dc3545;">{total_size_human} freed</strong>
+                </span>
+            </td>
+        </tr>'''
+    
+    # Build complete HTML
+    html_content = f'''<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>AGUR Release Cleanup - Unit Summary</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }}
+        .container {{
+            max-width: 95%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+        }}
+        .header h1 {{
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }}
+        .header p {{
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }}
+        .content {{
+            padding: 20px;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            table-layout: auto;
+        }}
+        th {{
+            background-color: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 13px;
+            color: #495057;
+            white-space: nowrap;
+        }}
+        td {{
+            font-size: 13px;
+            color: #212529;
+            vertical-align: top;
+            word-wrap: break-word;
+        }}
+        .alert {{
+            background-color: #fff3cd;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }}
+        .alert strong {{
+            color: #856404;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗂️ AGUR Release Cleanup - Unit Summary</h1>
+            <p>Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Threshold: 90 days</p>
+        </div>
+        
+        <div class="content">
+            <div class="alert">
+                <strong>⚠️ Critical Disk Usage:</strong> AGUR Release Area is at 90% capacity (108T/120T).
+                This report shows units with old releases that can be cleaned up to free disk space.
+            </div>
+            
+            <h2 style="color: #0d47a1; margin-top: 30px;">Unit Summary by Owner</h2>
+            <p style="color: #666; font-size: 14px;">
+                Each row represents a unit and its release owner. Units with multiple historical owners 
+                are shown as separate rows.
+            </p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 3%;">Unit</th>
+                        <th style="width: 8%;">Release Area Owner</th>
+                        <th style="width: 4%; text-align: center;"># Old Releases</th>
+                        <th style="width: 50%;">Old Release Areas</th>
+                        <th style="width: 25%;">Symlinks to Remove (User)</th>
+                        <th style="width: 8%; text-align: right;">Total Size</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {table_rows}
+                    {totals_row}
+                    {impact_row}
+                </tbody>
+            </table>
+            
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin-top: 20px;">
+                <h3 style="color: #0d47a1; margin-top: 0;">📋 Notes</h3>
+                <ul style="color: #666; font-size: 13px; line-height: 1.8;">
+                    <li><strong>Old Releases:</strong> Releases older than 90 days</li>
+                    <li><strong>Symlinks:</strong> Must be removed before deleting releases (coordinate with link owners)</li>
+                    <li><strong>Size:</strong> Disk space that can be freed by removing these releases</li>
+                    <li><strong>Multiple Owners:</strong> Units may appear multiple times if ownership changed over time</li>
+                </ul>
+            </div>
+            
+            <p style="color: #999; font-size: 12px; text-align: center; margin-top: 30px;">
+                For detailed per-release information, see cleanup_report CSV file.<br/>
+                For deletion commands, check emails sent to release owners.
+            </p>
+        </div>
+    </div>
+</body>
+</html>'''
+    
+    with open(output_file, 'w') as f:
+        f.write(html_content)
+
+def generate_markdown_summary(owner_recommendations: Dict[str, OwnerRecommendation], 
+                              releases: List[ReleaseInfo], 
+                              output_file: Path,
+                              age_threshold: int):
+    """Generate markdown summary report"""
+    logger.info(f"  Writing Markdown summary: {output_file}")
+    
+    total_size = sum(r.size_bytes for r in releases)
+    total_releases = len(releases)
+    coordination_needed = sum(1 for r in releases if r.requires_coordination)
+    protected_releases = sum(1 for r in releases if r.has_symlinks)
+    
+    # Group by chiplet
+    chiplet_stats = {}
+    for release in releases:
+        if release.chiplet not in chiplet_stats:
+            chiplet_stats[release.chiplet] = {'count': 0, 'size': 0}
+        chiplet_stats[release.chiplet]['count'] += 1
+        chiplet_stats[release.chiplet]['size'] += release.size_bytes
+    
+    with open(output_file, 'w') as f:
+        f.write(f"# AGUR Release Area Cleanup Report\n\n")
+        f.write(f"**Generated**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  \n")
+        f.write(f"**Age Threshold**: {age_threshold} days  \n")
+        f.write(f"**Disk Usage**: 90% (108T/120T) - **CRITICAL**\n\n")
+        
+        f.write(f"## Overview\n\n")
+        f.write(f"- **Total Old Releases**: {total_releases}\n")
+        f.write(f"- **Total Reclaimable Space**: {format_bytes(total_size)}\n")
+        f.write(f"- **Protected by Symlinks**: {protected_releases} releases\n")
+        f.write(f"- **Require Coordination**: {coordination_needed} releases\n")
+        f.write(f"- **Unique Owners**: {len(owner_recommendations)}\n\n")
+        
+        f.write(f"## Impact\n\n")
+        current_usage = 90
+        freed_percent = (total_size / (120 * 1024**4)) * 100  # 120TB total
+        new_usage = current_usage - freed_percent
+        f.write(f"If all old releases are removed:\n")
+        f.write(f"- Current usage: **{current_usage}%** (CRITICAL)\n")
+        f.write(f"- After cleanup: **~{new_usage:.1f}%** (estimated)\n")
+        f.write(f"- Space freed: **{format_bytes(total_size)}** (~{freed_percent:.1f}% of total)\n\n")
+        
+        f.write(f"## By Chiplet\n\n")
+        f.write(f"| Chiplet | Releases | Reclaimable Space | Manager |\n")
+        f.write(f"|---------|----------|-------------------|----------|\n")
+        for chiplet in sorted(chiplet_stats.keys()):
+            stats = chiplet_stats[chiplet]
+            manager = CHIPLET_MANAGERS.get(chiplet, 'N/A')
+            f.write(f"| {chiplet} | {stats['count']} | {format_bytes(stats['size'])} | {manager} |\n")
+        f.write(f"\n")
+        
+        f.write(f"## By Owner\n\n")
+        f.write(f"| Owner | Releases | Units | Reclaimable Space | Coordination |\n")
+        f.write(f"|-------|----------|-------|-------------------|---------------|\n")
+        
+        sorted_owners = sorted(owner_recommendations.items(), 
+                              key=lambda x: x[1].total_size_bytes, 
+                              reverse=True)
+        
+        for owner_email, rec in sorted_owners:
+            coord = 'Required' if any(r.requires_coordination for r in rec.releases) else 'No'
+            f.write(f"| {owner_email} | {rec.release_count} | {rec.unit_count} | {rec.total_size_human} | {coord} |\n")
+        f.write(f"\n")
+        
+        f.write(f"## Top 10 Largest Releases\n\n")
+        f.write(f"| Unit | Release Directory | Age | Size | Owner | Has Symlinks |\n")
+        f.write(f"|------|-------------------|-----|------|-------|---------------|\n")
+        
+        top_releases = sorted(releases, key=lambda r: r.size_bytes, reverse=True)[:10]
+        for release in top_releases:
+            symlinks = 'Yes' if release.has_symlinks else 'No'
+            f.write(f"| {release.unit} | {release.release_dir[:50]}... | {release.age_days}d | {release.size_human} | {release.owner} | {symlinks} |\n")
+        f.write(f"\n")
+        
+        f.write(f"## Next Steps\n\n")
+        f.write(f"1. **Review Reports**: Check the detailed CSV report for all releases\n")
+        f.write(f"2. **Owner Notifications**: Emails have been sent to all unit owners\n")
+        f.write(f"3. **Coordination**: {coordination_needed} releases require multi-user coordination\n")
+        f.write(f"4. **Cleanup**: Owners must manually execute deletion commands\n")
+        f.write(f"5. **Verification**: Monitor disk usage after cleanup actions\n\n")
+        
+        f.write(f"## Safety Notes\n\n")
+        f.write(f"- This utility is **analysis-only** - it never deletes anything\n")
+        f.write(f"- All deletions must be performed manually by unit owners\n")
+        f.write(f"- Symlink coordination is critical to avoid broken links\n")
+        f.write(f"- Always verify symlinks before deleting releases\n")
+
+def load_logo_base64() -> str:
+    """Load logo and encode as base64 for email embedding"""
+    try:
+        if os.path.exists(LOGO_PATH):
+            with open(LOGO_PATH, 'rb') as f:
+                logo_data = base64.b64encode(f.read()).decode('utf-8')
+                if len(logo_data) < 500000:  # Only if less than 500KB encoded
+                    return logo_data
+    except Exception as e:
+        logger.debug(f"Could not load logo: {e}")
+    return ''
+
+def build_email_html(recommendation: OwnerRecommendation, test_mode: bool = False) -> str:
+    """
+    Build HTML email for cleanup recommendations.
+    
+    Args:
+        recommendation: OwnerRecommendation object
+        test_mode: If True, add test mode banner
+        
+    Returns:
+        HTML string for email body
+    """
+    logo_data = load_logo_base64()
+    
+    # Build logo cell
+    logo_cell = ''
+    if logo_data:
+        logo_cell = f'''
+                        <td style="width: 100px; text-align: center; vertical-align: middle; border-right: 2px solid rgba(255,255,255,0.3); padding: 0 10px;">
+                            <img src="data:image/png;base64,{logo_data}" alt="" width="80" height="80" style="display: block; margin: 0 auto; border-radius: 6px;">
+                        </td>'''
+    
+    # Count coordination requirements
+    coord_count = sum(1 for r in recommendation.releases if r.requires_coordination)
+    
+    # Build header
+    if coord_count > 0:
+        title_text = "Release Cleanup - Coordination Required"
+        desc_text = f"⚠️ {coord_count} release(s) require coordination with other users before cleanup"
+        header_color = "#ff9800"  # Orange for coordination
+    else:
+        title_text = "Release Cleanup Recommended"
+        desc_text = "AGUR Release Area at 90% - Action Required"
+        header_color = "#dc3545"  # Red for critical
+    
+    test_banner = ''
+    if test_mode:
+        test_banner = '''
+        <div style="background-color: #ff9800; color: white; padding: 10px; text-align: center; font-weight: bold;">
+            [TEST MODE] This email would normally be sent to the release owner
+        </div>'''
+    
+    # Build release table
+    release_rows = ''
+    for release in sorted(recommendation.releases, key=lambda r: r.size_bytes, reverse=True):
+        # Determine row styling based on coordination needs
+        if release.requires_coordination:
+            row_color = '#fff3cd'  # Light yellow for coordination
+            status_icon = '⚠️'
+            action_text = 'Coordinate First'
+        elif release.has_symlinks:
+            row_color = '#d1ecf1'  # Light blue for symlinks
+            status_icon = '🔗'
+            action_text = 'Has Symlinks'
+        else:
+            row_color = '#d4edda'  # Light green for safe
+            status_icon = '✓'
+            action_text = 'Safe to Delete'
+        
+        # Build symlink info if present
+        symlink_cell = 'None'
+        if release.symlink_infos:
+            symlink_list = []
+            for sym in release.symlink_infos:
+                owner_badge = f" ({sym.symlink_owner})" if sym.symlink_owner != release.owner else ""
+                symlink_list.append(f"{sym.symlink_name}{owner_badge}")
+            symlink_cell = '<br/>'.join(symlink_list)
+        
+        release_rows += f'''
+            <tr style="background-color: {row_color};">
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 13px;">{status_icon} {release.unit}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 12px; font-family: monospace; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{release.release_dir}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center; font-size: 13px;">{release.age_days}d</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold; font-size: 13px;">{release.size_human}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; font-size: 11px;">{symlink_cell}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #dee2e6; text-align: center; font-size: 12px; font-weight: bold;">{action_text}</td>
+            </tr>'''
+    
+    # Build coordination section if needed
+    coordination_section = ''
+    if coord_count > 0:
+        coord_releases = [r for r in recommendation.releases if r.requires_coordination]
+        coordination_section = '''
+        <div style="background-color: #fff3cd; border-left: 4px solid #ff9800; padding: 15px; margin: 20px 0;">
+            <h3 style="color: #856404; margin-top: 0;">⚠️ Coordination Required</h3>
+            <p style="color: #856404; margin: 10px 0;">
+                The following releases have symlinks created by other users. You must coordinate
+                with these users to remove their symlinks before deleting the releases.
+            </p>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <tr style="background-color: #ffc107;">
+                    <th style="padding: 8px; text-align: left; font-size: 12px;">Release</th>
+                    <th style="padding: 8px; text-align: left; font-size: 12px;">Symlink</th>
+                    <th style="padding: 8px; text-align: left; font-size: 12px;">Created By</th>
+                    <th style="padding: 8px; text-align: left; font-size: 12px;">Action Required</th>
+                </tr>'''
+        
+        for release in coord_releases:
+            for symlink_info in release.symlink_infos:
+                if symlink_info.symlink_owner != release.owner:
+                    coordination_section += f'''
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-size: 11px;">{release.unit}/{release.release_dir[:30]}...</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-size: 11px; font-family: monospace;">{symlink_info.symlink_name}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-size: 11px;"><strong>{symlink_info.symlink_owner}@nvidia.com</strong></td>
+                    <td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-size: 11px;">Must remove symlink</td>
+                </tr>'''
+        
+        coordination_section += '''
+            </table>
+            <p style="color: #856404; margin: 10px 0; font-weight: bold;">
+                Process: 1) Symlink owners remove their links, 2) Then you can safely delete the release
+            </p>
+        </div>'''
+    
+    # Build deletion commands section with explicit copy-paste commands per release
+    commands_list = ''
+    for i, release in enumerate(sorted(recommendation.releases, key=lambda r: r.unit), 1):
+        # Build symlink removal commands if needed
+        symlink_commands = ''
+        if release.symlink_infos:
+            symlink_commands = '<p style="margin: 5px 0 10px 0; color: #856404;"><strong>Step 1: Remove symlinks first</strong></p>\n'
+            for sym in release.symlink_infos:
+                symlink_commands += f'<pre style="background: #263238; color: #ffc107; padding: 8px; border-radius: 4px; margin: 3px 0; font-size: 10px;">rm {sym.symlink_path}</pre>\n'
+            symlink_commands += '<p style="margin: 5px 0 10px 0; color: #666;"><em>Note: Coordinate with symlink owners before removing their links</em></p>\n'
+        
+        # Verification command
+        verify_cmd = f'find /home/agur_backend_blockRelease/block/{release.unit}/ -type l -exec ls -l {{}} \\; | grep "{release.release_dir}"'
+        
+        # Deletion command
+        delete_cmd = f'rm -rf /home/agur_backend_blockRelease/block/{release.unit}/{release.release_dir}'
+        
+        commands_list += f'''
+        <div style="background-color: #f8f9fa; border-left: 3px solid #0d47a1; padding: 12px; margin: 10px 0;">
+            <p style="margin: 0 0 8px 0; font-weight: bold; color: #0d47a1;">Release {i}: {release.unit} - {release.size_human}</p>
+            <p style="margin: 5px 0; font-size: 11px; color: #666; font-family: monospace;">{release.release_dir}</p>
+            
+            {symlink_commands}
+            
+            <p style="margin: 10px 0 5px 0;"><strong>{"Step 2: " if release.symlink_infos else "Step 1: "}Verify no symlinks remain</strong></p>
+            <pre style="background: #263238; color: #4fc3f7; padding: 8px; border-radius: 4px; margin: 3px 0; font-size: 10px;">{verify_cmd}</pre>
+            <p style="margin: 5px 0; font-size: 11px; color: #666;"><em>If output is empty, safe to proceed</em></p>
+            
+            <p style="margin: 10px 0 5px 0;"><strong>{"Step 3: " if release.symlink_infos else "Step 2: "}Delete the release</strong></p>
+            <pre style="background: #263238; color: #f48fb1; padding: 8px; border-radius: 4px; margin: 3px 0; font-size: 10px;">{delete_cmd}</pre>
+        </div>'''
+    
+    commands_section = f'''
+    <div style="margin: 20px 0;">
+        <h3 style="color: #0d47a1;">🔧 Copy-Paste Commands</h3>
+        <p style="color: #666; font-size: 13px;">Below are the exact commands for each release. Copy and paste directly into your Unix shell.</p>
+        {commands_list}
+        <div style="background-color: #fff3cd; border-left: 4px solid #ff9800; padding: 12px; margin: 15px 0;">
+            <p style="margin: 0; color: #856404; font-size: 12px;">
+                <strong>⚠️ Safety Reminders:</strong><br/>
+                • Always verify no symlinks remain before deletion<br/>
+                • Coordinate with other users if symlinks are present<br/>
+                • Commands are permanent - there is no undo<br/>
+                • Double-check unit name and release directory before executing
+            </p>
+        </div>
+    </div>'''
+    
+    # Build full HTML
+    html = f'''<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;">
+    {test_banner}
+    <div style="max-width: 1000px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;">
+        
+        <!-- Header -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: {header_color};">
+            <tr>{logo_cell}
+                <td style="padding: 15px 20px; vertical-align: middle;">
+                    <span style="color: white; font-size: 22px; font-weight: bold; display: block;">{title_text}</span>
+                    <span style="color: white; font-size: 18px;">{desc_text}</span>
+                </td>
+                <td style="width: 300px; text-align: right; vertical-align: middle; padding: 10px 15px;">
+                    <table cellpadding="0" cellspacing="0" border="0" align="right">
+                        <tr>
+                            <td style="background-color: #fff; border: 3px solid #fff; border-radius: 6px; padding: 10px 20px; text-align: center;">
+                                <span style="color: {header_color}; font-size: 32px; font-weight: bold; display: block; line-height: 1;">{recommendation.release_count}</span>
+                                <span style="color: #666; font-size: 11px; display: block; margin-top: 3px;">OLD RELEASES</span>
+                            </td>
+                            <td style="width: 10px;"></td>
+                            <td style="background-color: #fff; border: 3px solid #fff; border-radius: 6px; padding: 10px 20px; text-align: center;">
+                                <span style="color: {header_color}; font-size: 32px; font-weight: bold; display: block; line-height: 1;">{recommendation.total_size_human}</span>
+                                <span style="color: #666; font-size: 11px; display: block; margin-top: 3px;">RECLAIMABLE</span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        
+        <!-- Content -->
+        <div style="padding: 20px;">
+            <p style="font-size: 15px; color: #333; margin: 0 0 20px 0;">
+                Hello <strong>{recommendation.owner_email.split('@')[0]}</strong>,
+            </p>
+            <p style="font-size: 14px; color: #666; line-height: 1.6;">
+                The AGUR Release Area is at <strong>90% capacity</strong> (108T/120T used), blocking designer workflows.
+                You have <strong>{recommendation.release_count} old release(s)</strong> across <strong>{recommendation.unit_count} unit(s)</strong>
+                that are older than 90 days and can be removed to free <strong>{recommendation.total_size_human}</strong> of disk space.
+            </p>
+            
+            {coordination_section}
+            
+            <h3 style="color: #0d47a1;">Your Old Releases</h3>
+            <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                <tr style="background-color: #f8f9fa;">
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6; font-size: 12px;">Unit</th>
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6; font-size: 12px;">Release Directory</th>
+                    <th style="padding: 10px; text-align: center; border-bottom: 2px solid #dee2e6; font-size: 12px;">Age</th>
+                    <th style="padding: 10px; text-align: right; border-bottom: 2px solid #dee2e6; font-size: 12px;">Size</th>
+                    <th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6; font-size: 12px;">Symlinks</th>
+                    <th style="padding: 10px; text-align: center; border-bottom: 2px solid #dee2e6; font-size: 12px;">Status</th>
+                </tr>
+                {release_rows}
+            </table>
+            
+            {commands_section}
+            
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 20px 0;">
+                <h4 style="color: #0d47a1; margin-top: 0;">📊 Summary</h4>
+                <ul style="color: #666; font-size: 13px; line-height: 1.8;">
+                    <li><strong>{recommendation.release_count}</strong> old releases found</li>
+                    <li><strong>{recommendation.total_size_human}</strong> can be freed</li>
+                    <li><strong>{coord_count}</strong> require coordination with other users</li>
+                    <li><strong>{sum(1 for r in recommendation.releases if not r.has_symlinks)}</strong> safe to delete immediately</li>
+                </ul>
+            </div>
+            
+            <p style="font-size: 13px; color: #666; margin: 20px 0;">
+                <strong>Need help?</strong> Contact {ALWAYS_CC} or your chiplet manager {recommendation.chiplet_manager}.
+            </p>
+        </div>
+    </div>
+</body>
+</html>'''
+    
+    return html
+
+def send_cleanup_email(recommendation: OwnerRecommendation, test_mode: bool = False) -> bool:
+    """
+    Send cleanup recommendation email to owner with CC to symlink owners and manager.
+    
+    Args:
+        recommendation: OwnerRecommendation object
+        test_mode: If True, send to avice@nvidia.com only
+        
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        msg = MIMEMultipart('alternative')
+        
+        # Build recipient lists
+        if test_mode:
+            to_address = ALWAYS_CC
+            cc_list = []
+            msg['Subject'] = f'[TEST] [AGUR] Release Cleanup - {recommendation.total_size_human} Can Be Freed'
+        else:
+            to_address = recommendation.owner_email
+            cc_list = [ALWAYS_CC, recommendation.chiplet_manager]
+            
+            # Add symlink owners to CC if coordination required
+            cc_list.extend(recommendation.all_symlink_owners)
+            
+            # Remove duplicates and sort
+            cc_list = sorted(set(cc_list))
+            
+            msg['Subject'] = f'[AGUR] Release Cleanup Required - {recommendation.total_size_human} Can Be Freed'
+        
+        msg['From'] = ALWAYS_CC
+        msg['To'] = to_address
+        if cc_list:
+            msg['Cc'] = ', '.join(cc_list)
+        
+        # Build HTML body
+        html_body = build_email_html(recommendation, test_mode)
+        msg.attach(MIMEText(html_body, 'html'))
+        
+        # Send email
+        all_recipients = [to_address] + cc_list
+        with smtplib.SMTP('localhost') as smtp:
+            smtp.send_message(msg, to_addrs=all_recipients)
+        
+        if test_mode:
+            logger.info(f"  [TEST] Sent to {to_address} (originally for {recommendation.owner_email})")
+        else:
+            logger.info(f"  Sent to {to_address} (CC: {len(cc_list)} recipients)")
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"  Failed to send email to {recommendation.owner_email}: {e}")
+        return False
+
+def send_cleanup_emails(owner_recommendations: Dict[str, OwnerRecommendation], test_mode: bool = False):
+    """Send cleanup emails to all owners"""
+    logger.info("\nSending cleanup recommendation emails...")
+    
+    sent_count = 0
+    failed_count = 0
+    
+    for owner_email, recommendation in owner_recommendations.items():
+        if send_cleanup_email(recommendation, test_mode):
+            sent_count += 1
+        else:
+            failed_count += 1
+    
+    logger.info(f"  Emails sent: {sent_count}, Failed: {failed_count}")
+
+def generate_reports(owner_recommendations: Dict[str, OwnerRecommendation], 
+                     releases: List[ReleaseInfo],
+                     output_dir: str,
+                     age_threshold: int):
+    """Generate all reports"""
+    logger.info("\nGenerating reports...")
+    
+    # Create output directory
+    output_path = Path(output_dir)
+    output_path.mkdir(exist_ok=True, parents=True)
+    
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    
+    # Generate detailed CSV report
+    csv_file = output_path / f"cleanup_report_{timestamp}.csv"
+    generate_csv_report(releases, csv_file)
+    
+    # Generate unit summary CSV report
+    unit_summary_file = output_path / f"cleanup_unit_summary_{timestamp}.html"
+    generate_unit_summary_report(releases, unit_summary_file)
+    
+    # Generate Markdown summary
+    md_file = output_path / f"cleanup_summary_{timestamp}.md"
+    generate_markdown_summary(owner_recommendations, releases, md_file, age_threshold)
+    
+    logger.info(f"  Reports written to {output_path}/")
+
+def group_releases_by_owner(releases: List[ReleaseInfo]) -> Dict[str, OwnerRecommendation]:
+    """
+    Group releases by owner and create recommendations.
+    
+    Args:
+        releases: List of ReleaseInfo objects
+        
+    Returns:
+        Dict mapping owner_email -> OwnerRecommendation
+    """
+    logger.info("\nGrouping releases by owner...")
+    
+    owner_map = {}
+    
+    for release in releases:
+        owner_email = f"{release.owner}@nvidia.com"
+        
+        if owner_email not in owner_map:
+            # Get chiplet manager
+            chiplet_manager = CHIPLET_MANAGERS.get(release.chiplet, ALWAYS_CC)
+            
+            owner_map[owner_email] = OwnerRecommendation(
+                owner_email=owner_email,
+                releases=[],
+                total_size_bytes=0,
+                total_size_human='',
+                unit_count=0,
+                release_count=0,
+                chiplet_manager=chiplet_manager,
+                all_symlink_owners=set()
+            )
+        
+        recommendation = owner_map[owner_email]
+        recommendation.releases.append(release)
+        recommendation.total_size_bytes += release.size_bytes
+        recommendation.release_count += 1
+        
+        # Collect symlink owners for coordination
+        for symlink_info in release.symlink_infos:
+            if symlink_info.symlink_owner != release.owner:
+                recommendation.all_symlink_owners.add(f"{symlink_info.symlink_owner}@nvidia.com")
+    
+    # Calculate unique units and format sizes
+    for owner_email, recommendation in owner_map.items():
+        unique_units = set(r.unit for r in recommendation.releases)
+        recommendation.unit_count = len(unique_units)
+        recommendation.total_size_human = format_bytes(recommendation.total_size_bytes)
+        
+        logger.info(f"  {owner_email}: {recommendation.release_count} releases, " +
+                   f"{recommendation.unit_count} units, {recommendation.total_size_human}")
+    
+    return owner_map
+
+def format_bytes(bytes_val: int) -> str:
+    """Format bytes to human readable string"""
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if bytes_val < 1024.0:
+            return f"{bytes_val:.1f}{unit}"
+        bytes_val /= 1024.0
+    return f"{bytes_val:.1f}PB"
+
+def calculate_age_distribution(releases: List[ReleaseInfo]) -> Dict:
+    """Calculate age distribution buckets"""
+    buckets = {
+        '0-30d': 0,
+        '30-60d': 0,
+        '60-90d': 0,
+        '90-180d': 0,
+        '180+d': 0
+    }
+    
+    for release in releases:
+        age = release.age_days
+        if age <= 30:
+            buckets['0-30d'] += 1
+        elif age <= 60:
+            buckets['30-60d'] += 1
+        elif age <= 90:
+            buckets['60-90d'] += 1
+        elif age <= 180:
+            buckets['90-180d'] += 1
+        else:
+            buckets['180+d'] += 1
+    
+    return buckets
+
+def calculate_chiplet_breakdown(releases: List[ReleaseInfo]) -> Dict:
+    """Calculate size breakdown by chiplet"""
+    chiplet_data = {}
+    
+    for release in releases:
+        if release.chiplet not in chiplet_data:
+            chiplet_data[release.chiplet] = {
+                'size_bytes': 0,
+                'count': 0
+            }
+        chiplet_data[release.chiplet]['size_bytes'] += release.size_bytes
+        chiplet_data[release.chiplet]['count'] += 1
+    
+    return chiplet_data
+
+def calculate_coordination_stats(releases: List[ReleaseInfo]) -> Dict:
+    """Calculate coordination statistics"""
+    stats = {
+        'no_symlinks': 0,
+        'self_symlinks': 0,
+        'coordination_needed': 0
+    }
+    
+    for release in releases:
+        if not release.has_symlinks:
+            stats['no_symlinks'] += 1
+        elif release.requires_coordination:
+            stats['coordination_needed'] += 1
+        else:
+            stats['self_symlinks'] += 1
+    
+    return stats
+
+def get_top_consumers(releases: List[ReleaseInfo], limit: int = 10) -> List:
+    """Get top N space consumers"""
+    # Group by unit and owner
+    consumer_map = {}
+    
+    for release in releases:
+        key = (release.unit, release.owner)
+        if key not in consumer_map:
+            consumer_map[key] = {
+                'unit': release.unit,
+                'owner': release.owner,
+                'chiplet': release.chiplet,
+                'count': 0,
+                'size_bytes': 0
+            }
+        consumer_map[key]['count'] += 1
+        consumer_map[key]['size_bytes'] += release.size_bytes
+    
+    # Sort by size and return top N
+    sorted_consumers = sorted(consumer_map.values(), key=lambda x: x['size_bytes'], reverse=True)
+    return sorted_consumers[:limit]
+
+def group_by_chiplet_detailed(releases: List[ReleaseInfo]) -> Dict:
+    """Group releases by chiplet with detailed breakdown"""
+    chiplet_groups = {}
+    
+    for release in releases:
+        if release.chiplet not in chiplet_groups:
+            chiplet_groups[release.chiplet] = []
+        chiplet_groups[release.chiplet].append(release)
+    
+    return chiplet_groups
+
+def group_by_owner_detailed(releases: List[ReleaseInfo]) -> Dict:
+    """Group releases by owner across all chiplets"""
+    owner_groups = {}
+    
+    for release in releases:
+        owner = release.owner
+        if owner not in owner_groups:
+            owner_groups[owner] = {
+                'releases': [],
+                'units': set(),
+                'chiplets': set(),
+                'total_size': 0
+            }
+        
+        owner_groups[owner]['releases'].append(release)
+        owner_groups[owner]['units'].add(release.unit)
+        owner_groups[owner]['chiplets'].add(release.chiplet)
+        owner_groups[owner]['total_size'] += release.size_bytes
+    
+    return owner_groups
+
+def enrich_releases_with_symlinks(releases: List[ReleaseInfo]) -> List[ReleaseInfo]:
+    """
+    Analyze symlinks and enrich release info with symlink data.
+    
+    Args:
+        releases: List of ReleaseInfo objects
+        
+    Returns:
+        Updated list with symlink information
+    """
+    logger.info("\nAnalyzing symlinks...")
+    
+    # Group releases by unit
+    units = {}
+    for release in releases:
+        if release.unit not in units:
+            units[release.unit] = []
+        units[release.unit].append(release)
+    
+    # Analyze symlinks per unit
+    for unit in units:
+        logger.debug(f"Analyzing symlinks in {unit}...")
+        symlink_map = analyze_unit_symlinks(unit)
+        
+        # Enrich releases with symlink info
+        for release in units[unit]:
+            if release.full_path in symlink_map:
+                symlinks = symlink_map[release.full_path]
+                release.has_symlinks = True
+                release.symlink_infos = symlinks
+                release.is_protected = True
+                
+                # Check if coordination is required (symlinks created by other users)
+                release_owner = release.owner
+                for symlink in symlinks:
+                    if symlink.symlink_owner != release_owner and symlink.symlink_owner != 'unknown':
+                        release.requires_coordination = True
+                        break
+                
+                logger.debug(f"  {release.release_dir}: {len(symlinks)} symlink(s), " +
+                           f"coordination={'required' if release.requires_coordination else 'not needed'}")
+    
+    # Count results
+    protected_count = sum(1 for r in releases if r.is_protected)
+    coordination_count = sum(1 for r in releases if r.requires_coordination)
+    
+    logger.info(f"  Protected by symlinks: {protected_count}/{len(releases)}")
+    logger.info(f"  Require coordination: {coordination_count}/{len(releases)}")
+    
+    return releases
+
+def scan_all_releases(units: Dict[str, Dict], age_threshold_days: int, 
+                      specific_units: Optional[List[str]] = None) -> List[ReleaseInfo]:
+    """
+    Scan all units for old releases.
+    
+    Args:
+        units: Dict of unit info from AGUR_UNITS_TABLE.csv
+        age_threshold_days: Age threshold in days
+        specific_units: Optional list of specific units to scan
+        
+    Returns:
+        List of all old ReleaseInfo objects
+    """
+    all_releases = []
+    
+    units_to_scan = specific_units if specific_units else list(units.keys())
+    
+    logger.info(f"\nScanning {len(units_to_scan)} units for releases older than {age_threshold_days} days...")
+    
+    for unit in units_to_scan:
+        if unit not in units:
+            logger.warning(f"Unit {unit} not found in units table, skipping")
+            continue
+        
+        unit_releases = scan_unit_releases(unit, units[unit], age_threshold_days)
+        all_releases.extend(unit_releases)
+    
+    logger.info(f"Found {len(all_releases)} old releases across {len(units_to_scan)} units")
+    
+    return all_releases
+
+def main():
+    """Main entry point"""
+    global logger
+    
+    args = parse_arguments()
+    logger = setup_logging(args.quiet)
+    
+    logger.info("=" * 80)
+    logger.info(f"AGUR Release Cleanup Utility - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info("=" * 80)
+    
+    if args.test_mode:
+        logger.info("[TEST MODE] All emails will be sent to avice@nvidia.com only!")
+    if args.dry_run:
+        logger.info("[DRY-RUN MODE] No emails or reports will be generated")
+    
+    logger.info(f"Age threshold: {args.age_threshold} days")
+    logger.info(f"Parallel processes: {args.parallel}")
+    
+    # Load units table
+    units = load_units_table()
+    
+    # Parse specific units if provided
+    specific_units = None
+    scanned_chiplets = []
+    if args.chiplet:
+        chiplet_input = args.chiplet.upper().strip()
+        
+        # Handle "ALL" special case
+        if chiplet_input == 'ALL':
+            scanned_chiplets = list(CHIPLET_UNITS.keys())
+            specific_units = []
+            for chiplet in scanned_chiplets:
+                specific_units.extend(CHIPLET_UNITS[chiplet])
+            logger.info(f"Scanning ALL chiplets ({len(scanned_chiplets)} chiplets, {len(specific_units)} units)")
+        else:
+            # Parse comma-separated chiplets
+            chiplet_names = [c.strip() for c in chiplet_input.split(',')]
+            specific_units = []
+            for chiplet in chiplet_names:
+                if chiplet not in CHIPLET_UNITS:
+                    logger.error(f"Unknown chiplet: {chiplet}. Valid chiplets: {', '.join(CHIPLET_UNITS.keys())}")
+                    sys.exit(1)
+                scanned_chiplets.append(chiplet)
+                specific_units.extend(CHIPLET_UNITS[chiplet])
+            
+            if len(scanned_chiplets) == 1:
+                logger.info(f"Scanning chiplet {scanned_chiplets[0]}: {', '.join(CHIPLET_UNITS[scanned_chiplets[0]])}")
+            else:
+                logger.info(f"Scanning {len(scanned_chiplets)} chiplets: {', '.join(scanned_chiplets)} ({len(specific_units)} total units)")
+    elif args.units:
+        specific_units = [u.strip() for u in args.units.split(',')]
+        logger.info(f"Scanning specific units: {', '.join(specific_units)}")
+    
+    # Scan for old releases
+    old_releases = scan_all_releases(units, args.age_threshold, specific_units)
+    
+    if not old_releases:
+        logger.info("\n✓ No old releases found!")
+        return
+    
+    logger.info(f"\nFound {len(old_releases)} releases to analyze...")
+    
+    # Analyze symlinks
+    old_releases = enrich_releases_with_symlinks(old_releases)
+    
+    # Extract owner info from logs
+    old_releases = enrich_releases_with_log_data(old_releases)
+    
+    # Calculate disk usage
+    old_releases = calculate_sizes_parallel(old_releases, args.parallel)
+    
+    # Group by owner
+    owner_recommendations = group_releases_by_owner(old_releases)
+    
+    # Generate reports (unless dry-run or email-only)
+    if not args.dry_run and not args.email_only:
+        generate_reports(owner_recommendations, old_releases, args.output_dir, args.age_threshold)
+    
+    # Send emails (unless dry-run or report-only)
+    if not args.dry_run and not args.report_only:
+        send_cleanup_emails(owner_recommendations, args.test_mode)
+    
+    logger.info("\n" + "=" * 80)
+    logger.info("Analysis complete!")
+    logger.info("=" * 80)
+
+if __name__ == '__main__':
+    main()

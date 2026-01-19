@@ -1,0 +1,106 @@
+AGUR RELEASE CLEANUP UTILITY - FINAL FEATURES
+==============================================
+
+✅ ALL FEATURES IMPLEMENTED
+
+1. CHIPLET FLAG (--chiplet / -c)
+   Instead of typing all unit names, use chiplet name:
+   
+   OLD WAY:
+   ./agur_release_cleanup.py --units fdb,fth,lnd,pmux,prt
+   
+   NEW WAY:
+   ./agur_release_cleanup.py --chiplet CPORT
+   or
+   ./agur_release_cleanup.py -c CPORT
+   
+   Available chiplets:
+   - CPORT (5 units: fdb, fth, lnd, pmux, prt)
+   - HPORT (6 units: ccorea, ccoreb, ccorec, ccored, ccoree, ccoref)
+   - HIOPL (4 units: ioplca, ioplcb, ioplcc, ioplcd)
+   - NDQ (28 units: clr, clt, cscore, dcmp, fdbm, fdbs, fthm, ftos, etc.)
+   - QNS (20 units: dqaa, dqaci, dqaco, dqai, dqamci, dqamco, etc.)
+   - TCB (4 units: alm, bta, eri, hib)
+   - TOP_YC (6 units: top_yc_clock, top_yc_gpio, yc_clock_macro, etc.)
+
+2. HTML UNIT SUMMARY TABLE - NEW COLUMNS
+   File: cleanup_unit_summary_YYYYMMDD_HHMMSS.html
+   
+   Columns:
+   ├─ Unit
+   ├─ Release Area Owner
+   ├─ # Old Releases
+   ├─ Old Release Areas ⭐ NEW!
+   │  └─ Shows first 3 release directory names
+   │  └─ "...and X more" if more than 3
+   ├─ Symlinks to Remove (User)
+   └─ Total Size
+   
+   Plus:
+   - TOTALS row (aggregate all releases and sizes)
+   - IMPACT row (current 90% → after cleanup XX%)
+
+3. SPLIT BY OWNER
+   Units with multiple historical owners show as separate rows:
+   
+   Example:
+   fth (miancu):   8 releases, 562.4GB
+   fth (lmustafa): 2 releases, 133.7GB
+   
+   Each owner sees only THEIR releases in the table.
+
+4. COPY-PASTE COMMANDS IN EMAILS
+   Full Unix commands with absolute paths:
+   - rm /home/agur_backend_blockRelease/block/prt/symlink_name
+   - find /home/agur_backend_blockRelease/block/prt/ -type l ...
+   - rm -rf /home/agur_backend_blockRelease/block/prt/release_dir
+
+USAGE EXAMPLES
+==============
+
+# Test single chiplet
+./agur_release_cleanup.py --test-mode -c CPORT
+
+# Production - single chiplet
+./agur_release_cleanup.py -c NDQ
+
+# Production - all units
+./agur_release_cleanup.py
+
+# Dry-run - see what would be found
+./agur_release_cleanup.py --dry-run -c QNS
+
+# Custom threshold
+./agur_release_cleanup.py -c HPORT --age-threshold 120
+
+# Specific units (still works)
+./agur_release_cleanup.py --units prt,fdb
+
+CHIPLET HIERARCHY
+=================
+AGUR Project (73 units across 7 chiplets)
+├── HIOPL (4 units)   → avice@nvidia.com
+├── CPORT (5 units)   → avice@nvidia.com
+├── HPORT (6 units)   → avice@nvidia.com
+├── NDQ (28 units)    → arot@nvidia.com
+├── QNS (20 units)    → ohamama@nvidia.com
+├── TCB (4 units)     → ohamama@nvidia.com
+└── TOP_YC (6 units)  → arot@nvidia.com
+
+Note: avice@nvidia.com is ALWAYS CC'd on all emails
+
+READY FOR PRODUCTION
+====================
+All features tested and working:
+✅ Chiplet flag (-c/--chiplet)
+✅ HTML table with release areas column
+✅ Split by owner (fth shows 2 rows)
+✅ Totals and impact calculations
+✅ Copy-paste Unix commands
+✅ Multi-user coordination handling
+✅ Email notifications
+
+Next: Run production scan on desired chiplets!
+
+Created: 2026-01-18
+Author: Alon Vice (avice@nvidia.com)

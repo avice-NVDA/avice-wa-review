@@ -1,0 +1,1511 @@
+{
+  "session_id": "20260118_155451",
+  "created_at": "2026-01-18T15:54:51.724577",
+  "last_updated": "2026-01-19T16:19:03.219609",
+  "approvals": {
+    "fdb_20251009_105141_dkolesnikov": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T20:32:59.418678"
+    },
+    "fdb_20251016_173009_dkolesnikov": {
+      "approved": true,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T16:19:03.219596"
+    },
+    "fth_20250527_105246_miancu": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.167715"
+    },
+    "fth_20250805_110416_miancu": {
+      "approved": true,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T14:00:43.649452"
+    },
+    "fth_20250930_121648_miancu": {
+      "approved": true,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T14:00:46.791280"
+    },
+    "fth_20251008_151017_miancu": {
+      "approved": true,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T14:00:47.459610"
+    },
+    "lnd_20250414_135402_shlomoc": {
+      "approved": true,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T19:37:07.529425"
+    },
+    "lnd_20251008_090034_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.355114"
+    },
+    "lnd_20251017_082605_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.363311"
+    },
+    "pmux_20250527_102019_brachas": {
+      "approved": true,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T19:05:18.755605"
+    },
+    "pmux_20250917_155631_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.446095"
+    },
+    "pmux_20250930_134914_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.454417"
+    },
+    "pmux_20251007_190847_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.468110"
+    },
+    "pmux_20251009_170455_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.474787"
+    },
+    "prt_20250705_184224_hshahady": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T14:59:48.412582"
+    },
+    "prt_20250706_164614_hshahady": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T14:59:48.453341"
+    },
+    "prt_20250706_171520_hshahady": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T14:59:48.464117"
+    },
+    "prt_20250706_172523_hshahady": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T14:59:48.475868"
+    },
+    "prt_20250706_180507_hshahady": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T14:59:48.548617"
+    },
+    "prt_20250706_174908_hshahady": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T14:59:48.488081"
+    },
+    "prt_20250917_094832_ykatzav": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.651959"
+    },
+    "prt_20250930_152927_ykatzav": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.664177"
+    },
+    "prt_20251008_101433_ykatzav": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.670103"
+    },
+    "prt_20251016_093611_ykatzav": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.675956"
+    },
+    "fth_20250825_102409_miancu": {
+      "approved": true,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T14:00:44.286671"
+    },
+    "fth_20250916_215231_yavital": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T16:17:46.926999"
+    },
+    "fth_20250918_121429_miancu": {
+      "approved": true,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T14:00:54.901590"
+    },
+    "fth_20250920_105828_miancu": {
+      "approved": true,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T14:00:45.393223"
+    },
+    "fth_20250930_103236_miancu": {
+      "approved": true,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T14:00:46.035656"
+    },
+    "fth_20251017_105441_lmustafa": {
+      "approved": true,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T16:19:00.521659"
+    },
+    "lnd_20251018_220818_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.370117"
+    },
+    "pmux_20250917_104255_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.385385"
+    },
+    "pmux_20251006_130031_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.460860"
+    },
+    "pmux_20251016_124923_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.482974"
+    },
+    "prt_20250604_103457_ykatzav": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.491008"
+    },
+    "prt_20250630_202646_ykatzav": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.553649"
+    },
+    "prt_20250701_164157_hshahady": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T14:59:48.401343"
+    },
+    "prt_20250916_183237_ykatzav": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.610605"
+    },
+    "prt_20250930_150057_ykatzav": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.658018"
+    },
+    "clr_20251019_160722_ayerushalmy": {
+      "approved": true,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:34:03.326489"
+    },
+    "clt_20250819_125657_aamsalem": {
+      "approved": true,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:34:03.898103"
+    },
+    "clr_20250828_183136_ayerushalmy": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.682718"
+    },
+    "clr_20250917_151323_ayerushalmy": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.688602"
+    },
+    "clr_20250921_111014_ayerushalmy": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.694182"
+    },
+    "clr_20250925_104817_ayerushalmy": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.701685"
+    },
+    "clr_20251003_165936_ayerushalmy": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.708818"
+    },
+    "clr_20251015_135430_ayerushalmy": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.746472"
+    },
+    "clr_20251016_151451_ayerushalmy": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.754695"
+    },
+    "clt_20250820_104346_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.777164"
+    },
+    "clt_20250827_093842_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.783999"
+    },
+    "clt_20250918_115925_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.792576"
+    },
+    "clt_20250921_101945_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.801874"
+    },
+    "clt_20250921_102450_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.848331"
+    },
+    "clt_20251003_150749_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.855227"
+    },
+    "clt_20251006_171132_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.862861"
+    },
+    "clt_20251015_100009_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.869546"
+    },
+    "clt_20251016_144031_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.876693"
+    },
+    "clt_20251019_123814_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.884131"
+    },
+    "cscore_20250307_181615_maximkr": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.890867"
+    },
+    "cscore_20250901_091736_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.898878"
+    },
+    "cscore_20250929_161001_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.905969"
+    },
+    "cscore_20251008_160540_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.952013"
+    },
+    "cscore_20251015_093817_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.958855"
+    },
+    "dcmp_20250609_183351_mshkolnik": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.966931"
+    },
+    "dcmp_20250828_135550_rmenasheof": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.973690"
+    },
+    "dcmp_20250928_154655_rmenasheof": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.979768"
+    },
+    "dcmp_20250928_155658_rmenasheof": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.986012"
+    },
+    "dcmp_20251005_151034_rmenasheof": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.992520"
+    },
+    "dcmp_20251008_135332_rmenasheof": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:47.999311"
+    },
+    "dcmp_20251015_113010_rmenasheof": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.005781"
+    },
+    "dcmp_20251020_152628_rmenasheof": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.013425"
+    },
+    "fdbm_20250919_084024_dkolesnikov": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.047103"
+    },
+    "fdbm_20251008_094243_dkolesnikov": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.054060"
+    },
+    "fdbm_20251015_083951_dkolesnikov": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.061252"
+    },
+    "fdbm_20251019_204535_dkolesnikov": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.068127"
+    },
+    "fdbs_20250611_114340_aspiegelglas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.074009"
+    },
+    "fdbs_20250921_142313_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.081611"
+    },
+    "fdbs_20251005_081447_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.088589"
+    },
+    "fdbs_20251007_225720_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.095075"
+    },
+    "fdbs_20251015_125427_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.102432"
+    },
+    "fdbs_20251016_114411_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.109133"
+    },
+    "fdbs_20251020_133054_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.149595"
+    },
+    "fthm_20250617_173902_miancu": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.157397"
+    },
+    "fthm_20250825_102550_miancu": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.164606"
+    },
+    "fthm_20250919_153130_miancu": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.171485"
+    },
+    "fthm_20250929_145953_miancu": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.177904"
+    },
+    "fthm_20251003_094015_miancu": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.184304"
+    },
+    "fthm_20251007_180745_miancu": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.190920"
+    },
+    "fthm_20251011_112951_miancu": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.197543"
+    },
+    "fthm_20251014_094310_miancu": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.203603"
+    },
+    "fthm_20251016_181316_ayerushalmy": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.209949"
+    },
+    "fthm_20251020_095841_ayerushalmy": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.247387"
+    },
+    "ftos_20250405_153845_gibell": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.256077"
+    },
+    "ftos_20250825_120042_thadad": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.263092"
+    },
+    "ftos_20250920_225642_thadad": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.269574"
+    },
+    "ftos_20251008_143109_thadad": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.275534"
+    },
+    "ftos_20251014_234928_thadad": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.282570"
+    },
+    "ftos_20251016_124916_thadad": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.288776"
+    },
+    "ftos_20251020_091900_thadad": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.295350"
+    },
+    "fwam_20250409_200235_arot": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.302690"
+    },
+    "fwam_20250831_214614_arot": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.309911"
+    },
+    "fwam_20250917_155103_zbirman": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.317284"
+    },
+    "fwam_20250921_111824_zbirman": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.349726"
+    },
+    "fwam_20251008_130532_zbirman": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.357240"
+    },
+    "fwam_20251015_110839_zbirman": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.365259"
+    },
+    "fwam_20251020_135958_zbirman": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.372439"
+    },
+    "fwas_20250612_162126_gweisberg": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.379015"
+    },
+    "fwas_20250917_120805_rmenasheof": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.385628"
+    },
+    "fwas_20250928_181542_rmenasheof": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.392846"
+    },
+    "fwas_20251005_114525_rmenasheof": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.400917"
+    },
+    "fwas_20251008_090650_rmenasheof": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.407611"
+    },
+    "fwas_20251015_144041_rmenasheof": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.450958"
+    },
+    "fwas_20251016_112509_rmenasheof": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.458430"
+    },
+    "fwas_20251016_113712_rmenasheof": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.465827"
+    },
+    "fwas_20251016_114031_rmenasheof": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.472091"
+    },
+    "fwas_20251020_120520_rmenasheof": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.477900"
+    },
+    "glc_20250612_112721_nweizman": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.483497"
+    },
+    "glc_20250830_205823_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.489165"
+    },
+    "glc_20250917_114754_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.495733"
+    },
+    "glc_20250921_153712_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.503172"
+    },
+    "glc_20250928_132619_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.510319"
+    },
+    "glc_20251008_022251_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.518136"
+    },
+    "glc_20251008_155713_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.551821"
+    },
+    "glc_20251015_092921_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.558196"
+    },
+    "glc_20251019_233213_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.566546"
+    },
+    "iopl_20241214_222049_yshlush": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.573293"
+    },
+    "iopl_20250727_103826_yshlush": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.580230"
+    },
+    "ioplm_20241114_110529_netaa": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.586601"
+    },
+    "ioplm_20241118_095154_netaa": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.593202"
+    },
+    "iopx_20241111_172554_vmoshkovich": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.600977"
+    },
+    "iopx_20250305_131045_vmoshkovich": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.607984"
+    },
+    "ir_20241127_183459_maximkr": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.647257"
+    },
+    "ir_20250901_210943_thadad": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.654870"
+    },
+    "ir_20250922_113343_thadad": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.662038"
+    },
+    "ir_20250928_182311_thadad": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.669556"
+    },
+    "ir_20250928_184420_thadad": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.676801"
+    },
+    "ir_20251008_142830_thadad": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.685084"
+    },
+    "ir_20251015_100933_thadad": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.691790"
+    },
+    "ir_20251017_165647_thadad": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.698974"
+    },
+    "ir_20251020_120009_thadad": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.705775"
+    },
+    "lndm_20250505_203651_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.750381"
+    },
+    "lndm_20250917_112130_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.757387"
+    },
+    "lndm_20250918_163604_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.765106"
+    },
+    "lndm_20251003_093834_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.771673"
+    },
+    "lndm_20251008_090716_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.777780"
+    },
+    "lndm_20251015_155051_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.784687"
+    },
+    "lndm_20251015_160535_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.790688"
+    },
+    "lndm_20251016_120926_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.797872"
+    },
+    "lndm_20251019_182126_ronil": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.805084"
+    },
+    "lndm_20251019_182417_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.811793"
+    },
+    "nvrisc_20250331_112445_ysapojnikov": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.852323"
+    },
+    "nvrisc_20250928_091112_ykatzav": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.859717"
+    },
+    "nvrisc_20251006_101907_ykatzav": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.870504"
+    },
+    "nvrisc_20251015_132831_ykatzav": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.877901"
+    },
+    "nvrisc_20251016_135215_ykatzav": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.886098"
+    },
+    "nvrisc_20251019_160310_ykatzav": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.893338"
+    },
+    "pmuxm_20250608_145935_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.900955"
+    },
+    "pmuxm_20250904_103134_tlevor": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.907841"
+    },
+    "pmuxm_20250916_112222_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.915593"
+    },
+    "pmuxm_20250917_151247_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.952093"
+    },
+    "pmuxm_20251005_082016_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.959320"
+    },
+    "pmuxm_20251006_100428_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.966367"
+    },
+    "pmuxm_20251006_111314_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.973445"
+    },
+    "pmuxm_20251015_115300_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.981565"
+    },
+    "pmuxm_20251016_120006_brachas": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.987960"
+    },
+    "prtm_20250506_075318_bdaher": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:48.994850"
+    },
+    "prtm_20250831_153456_lmustafa": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.001482"
+    },
+    "prtm_20250917_141144_lmustafa": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.008201"
+    },
+    "prtm_20250917_142748_lmustafa": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.049531"
+    },
+    "prtm_20251008_151814_lmustafa": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.056711"
+    },
+    "prtm_20251008_152103_lmustafa": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.063782"
+    },
+    "prtm_20251008_155210_lmustafa": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.071273"
+    },
+    "prtm_20251015_163241_lmustafa": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.078118"
+    },
+    "prtm_20251016_160121_lmustafa": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.085625"
+    },
+    "psca_20241127_165600_daltman": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.092667"
+    },
+    "psca_20250626_161540_nkahaz": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.100554"
+    },
+    "psca_20250921_212243_nkahaz": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.107908"
+    },
+    "psca_20251008_151831_nkahaz": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.117600"
+    },
+    "psca_20251012_084531_nkahaz": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.150817"
+    },
+    "psca_20251015_204853_nkahaz": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.157508"
+    },
+    "psca_20251020_132659_nkahaz": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.165316"
+    },
+    "pscb_20241023_122709_daltman": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.173090"
+    },
+    "pscb_20250626_161536_nkahaz": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.181783"
+    },
+    "pscb_20251008_093731_nkahaz": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.190806"
+    },
+    "pscb_20251011_102618_nkahaz": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.198757"
+    },
+    "pscb_20251014_193828_nkahaz": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.205605"
+    },
+    "pscb_20251020_132238_nkahaz": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.212711"
+    },
+    "pscb_20251020_132648_nkahaz": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.246807"
+    },
+    "pscc_20250910_154721_dtraitelovic": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.253849"
+    },
+    "pscc_20250917_145111_dtraitelovic": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.261090"
+    },
+    "pscc_20250921_152507_dtraitelovic": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.268939"
+    },
+    "pscc_20251008_144733_dtraitelovic": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.275123"
+    },
+    "pscc_20251016_114408_dtraitelovic": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.291038"
+    },
+    "pscc_20251019_113522_dtraitelovic": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.298212"
+    },
+    "pscd_20251008_133607_gibell": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.305464"
+    },
+    "pscd_20251008_134805_gibell": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.312975"
+    },
+    "pscd_20251008_152752_gibell": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.319793"
+    },
+    "pscd_20251011_071359_gibell": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.348488"
+    },
+    "pscd_20251015_113943_gibell": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.356152"
+    },
+    "pscd_20251016_115247_gibell": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.362701"
+    },
+    "pscd_20251016_115404_gibell": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.369274"
+    },
+    "pscd_20251019_171407_gibell": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.375461"
+    },
+    "pscd_20251019_173013_gibell": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.384250"
+    },
+    "px_20250615_093712_gweisberg": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.391853"
+    },
+    "px_20250820_100248_thadad": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.400397"
+    },
+    "px_20250921_091920_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.409291"
+    },
+    "px_20250921_101938_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.452959"
+    },
+    "px_20250921_102446_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.460896"
+    },
+    "px_20250921_132353_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.468795"
+    },
+    "px_20251003_143600_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.474722"
+    },
+    "px_20251006_142106_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.487695"
+    },
+    "px_20251015_100544_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.552308"
+    },
+    "px_20251015_100841_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.559847"
+    },
+    "px_20251019_141712_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.568267"
+    },
+    "px_20251020_105332_aamsalem": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.580926"
+    },
+    "ribs_20250901_002316_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.588202"
+    },
+    "ribs_20250917_115244_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.594849"
+    },
+    "ribs_20250921_153651_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.652023"
+    },
+    "ribs_20250922_112235_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.659193"
+    },
+    "ribs_20250928_131433_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.669573"
+    },
+    "ribs_20251008_090214_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.676626"
+    },
+    "ribs_20251008_155401_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.684524"
+    },
+    "ribs_20251015_092931_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.691631"
+    },
+    "ribs_20251019_233219_ynaim": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.750300"
+    },
+    "sma_20250402_214724_gibell": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.758631"
+    },
+    "sma_20250917_112215_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.766920"
+    },
+    "sma_20250918_164214_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.774818"
+    },
+    "sma_20251003_094048_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.783197"
+    },
+    "sma_20251003_095156_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.790259"
+    },
+    "sma_20251008_091302_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.798425"
+    },
+    "sma_20251015_155149_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.805384"
+    },
+    "sma_20251015_160539_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.849733"
+    },
+    "sma_20251016_121010_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.857833"
+    },
+    "sma_20251019_182417_shlomoc": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.866351"
+    },
+    "yu_20250525_092917_ashahock": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.874361"
+    },
+    "yu_20250813_140405_ashahock": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.883862"
+    },
+    "yu_20250917_113036_ashahock": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-18T16:33:49.891193"
+    },
+    "prt_20250604_103457_nhayun": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T16:17:43.743405"
+    },
+    "fth_20250527_105246_nhayun": {
+      "approved": true,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T16:19:02.132690"
+    },
+    "prt_20250630_202646_hshahady": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T14:59:48.388728"
+    },
+    "lnd_20250414_135402_nhayun": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T14:59:48.374297"
+    },
+    "pmux_20250527_102019_nhayun": {
+      "approved": false,
+      "approved_by": "browser_session",
+      "approved_at": "2026-01-19T16:17:46.157432"
+    }
+  },
+  "email_sent": true,
+  "email_sent_at": "2026-01-19T15:00:13.694373",
+  "emailed_releases": {
+    "fth_20251017_105441_lmustafa": {
+      "owner": "lmustafa",
+      "unit": "fth",
+      "email_history": [
+        {
+          "sent_at": "2026-01-18T17:57:56.674417",
+          "test_mode": true
+        }
+      ]
+    },
+    "lnd_20250414_135402_shlomoc": {
+      "owner": "shlomoc",
+      "unit": "lnd",
+      "email_history": [
+        {
+          "sent_at": "2026-01-18T17:57:56.674417",
+          "test_mode": true
+        },
+        {
+          "sent_at": "2026-01-18T19:37:11.315488",
+          "test_mode": true
+        }
+      ]
+    },
+    "fth_20250918_121429_miancu": {
+      "owner": "miancu",
+      "unit": "fth",
+      "email_history": [
+        {
+          "sent_at": "2026-01-18T18:26:29.845845",
+          "test_mode": true
+        },
+        {
+          "sent_at": "2026-01-19T14:01:20.847627",
+          "test_mode": false
+        }
+      ]
+    },
+    "pmux_20250527_102019_brachas": {
+      "owner": "brachas",
+      "unit": "pmux",
+      "email_history": [
+        {
+          "sent_at": "2026-01-18T18:42:11.884770",
+          "test_mode": true
+        },
+        {
+          "sent_at": "2026-01-18T19:18:15.948981",
+          "test_mode": true
+        },
+        {
+          "sent_at": "2026-01-18T19:37:11.315488",
+          "test_mode": true
+        }
+      ]
+    },
+    "fdb_20251016_173009_dkolesnikov": {
+      "owner": "dkolesnikov",
+      "unit": "fdb",
+      "email_history": [
+        {
+          "sent_at": "2026-01-18T19:07:07.202068",
+          "test_mode": true
+        },
+        {
+          "sent_at": "2026-01-18T19:18:15.948981",
+          "test_mode": true
+        },
+        {
+          "sent_at": "2026-01-18T19:37:11.315488",
+          "test_mode": true
+        }
+      ]
+    },
+    "fdb_20251009_105141_dkolesnikov": {
+      "owner": "dkolesnikov",
+      "unit": "fdb",
+      "email_history": [
+        {
+          "sent_at": "2026-01-18T19:07:07.202068",
+          "test_mode": true
+        },
+        {
+          "sent_at": "2026-01-18T19:18:15.948981",
+          "test_mode": true
+        },
+        {
+          "sent_at": "2026-01-18T19:37:11.315488",
+          "test_mode": true
+        }
+      ]
+    },
+    "prt_20250604_103457_nhayun": {
+      "owner": "nhayun",
+      "unit": "prt",
+      "email_history": [
+        {
+          "sent_at": "2026-01-18T20:33:05.568642",
+          "test_mode": true
+        },
+        {
+          "sent_at": "2026-01-19T12:23:40.307115",
+          "test_mode": true
+        },
+        {
+          "sent_at": "2026-01-19T15:00:13.694373",
+          "test_mode": false
+        }
+      ]
+    },
+    "fth_20250527_105246_nhayun": {
+      "owner": "nhayun",
+      "unit": "fth",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T12:23:40.307115",
+          "test_mode": true
+        }
+      ]
+    },
+    "fth_20250805_110416_miancu": {
+      "owner": "miancu",
+      "unit": "fth",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T14:01:20.847627",
+          "test_mode": false
+        }
+      ]
+    },
+    "fth_20250920_105828_miancu": {
+      "owner": "miancu",
+      "unit": "fth",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T14:01:20.847627",
+          "test_mode": false
+        }
+      ]
+    },
+    "fth_20251008_151017_miancu": {
+      "owner": "miancu",
+      "unit": "fth",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T14:01:20.847627",
+          "test_mode": false
+        }
+      ]
+    },
+    "fth_20250930_103236_miancu": {
+      "owner": "miancu",
+      "unit": "fth",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T14:01:20.847627",
+          "test_mode": false
+        }
+      ]
+    },
+    "fth_20250930_121648_miancu": {
+      "owner": "miancu",
+      "unit": "fth",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T14:01:20.847627",
+          "test_mode": false
+        }
+      ]
+    },
+    "fth_20250825_102409_miancu": {
+      "owner": "miancu",
+      "unit": "fth",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T14:01:20.847627",
+          "test_mode": false
+        }
+      ]
+    },
+    "lnd_20250414_135402_nhayun": {
+      "owner": "nhayun",
+      "unit": "lnd",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T14:59:32.623411",
+          "test_mode": false
+        }
+      ]
+    },
+    "prt_20250706_171520_hshahady": {
+      "owner": "hshahady",
+      "unit": "prt",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T14:59:32.623411",
+          "test_mode": false
+        }
+      ]
+    },
+    "prt_20250701_164157_hshahady": {
+      "owner": "hshahady",
+      "unit": "prt",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T14:59:32.623411",
+          "test_mode": false
+        }
+      ]
+    },
+    "prt_20250630_202646_hshahady": {
+      "owner": "hshahady",
+      "unit": "prt",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T14:59:32.623411",
+          "test_mode": false
+        }
+      ]
+    },
+    "prt_20250706_180507_hshahady": {
+      "owner": "hshahady",
+      "unit": "prt",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T14:59:32.623411",
+          "test_mode": false
+        }
+      ]
+    },
+    "prt_20250706_172523_hshahady": {
+      "owner": "hshahady",
+      "unit": "prt",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T14:59:32.623411",
+          "test_mode": false
+        }
+      ]
+    },
+    "prt_20250706_174908_hshahady": {
+      "owner": "hshahady",
+      "unit": "prt",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T14:59:32.623411",
+          "test_mode": false
+        }
+      ]
+    },
+    "prt_20250706_164614_hshahady": {
+      "owner": "hshahady",
+      "unit": "prt",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T14:59:32.623411",
+          "test_mode": false
+        }
+      ]
+    },
+    "prt_20250705_184224_hshahady": {
+      "owner": "hshahady",
+      "unit": "prt",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T14:59:32.623411",
+          "test_mode": false
+        }
+      ]
+    },
+    "pmux_20250527_102019_nhayun": {
+      "owner": "nhayun",
+      "unit": "pmux",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T15:00:13.694373",
+          "test_mode": false
+        }
+      ]
+    },
+    "fth_20250916_215231_yavital": {
+      "owner": "yavital",
+      "unit": "fth",
+      "email_history": [
+        {
+          "sent_at": "2026-01-19T15:00:13.694373",
+          "test_mode": false
+        }
+      ]
+    }
+  }
+}

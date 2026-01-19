@@ -5,7 +5,7 @@ This document tracks the latest block releases for all units across all chiplets
 
 **Total Units**: 73  
 **Total Chiplets**: 7  
-**Last Updated**: 2026-01-15 16:00:02
+**Last Updated**: 2026-01-19 06:00:03
 
 ### Chiplet Breakdown
 - **HIOPL**: 4 units (ioplca, ioplcb, ioplcc, ioplcd)
@@ -1484,12 +1484,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2026/01/13 14:54:37 |
+| **Release Timestamp** | 2026/01/17 22:10:11 |
 | **Release User** | ashahock |
 | **Workarea Name** | `yu_agur_rbv_2025_12_08_condb_int4_2025_12_04_1_PFNL_snap_ver3` |
 | **Source Workarea Path** | `/home/scratch.ashahock_vlsi/agur/yu/yu_agur_rbv_2025_12_08_condb_int4_2025_12_04_1_PFNL_snap_ver3` |
 | **RTL Tag** | `yu_agur_rbv_2025_12_08_condb_int4_2025_12_04_1_PFNL_snap` |
-| **Release Directory** | `yu_agur_rbv_2025_12_08_condb_int4_2025_12_04_1_PFNL_snap_ver3__2026_1_13_14_54_37` |
+| **Release Directory** | `yu_agur_rbv_2025_12_08_condb_int4_2025_12_04_1_PFNL_snap_ver3__2026_1_17_22_10_11` |
 
 **Release Flags:**
 
@@ -1510,8 +1510,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2026/01/08 13:26:28 |
-| **Release Directory** | `yu_agur_rbv_2025_12_08_condb_int4_2025_12_04_1_PFNL_snap_ver3__2026_1_8_13_26_28` |
+| **Release Timestamp** | 2026/01/13 14:54:37 |
+| **Release Directory** | `yu_agur_rbv_2025_12_08_condb_int4_2025_12_04_1_PFNL_snap_ver3__2026_1_13_14_54_37` |
 
 ---
 
@@ -1783,34 +1783,32 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2026/01/12 17:39:44 |
+| **Release Timestamp** | 2026/01/16 09:49:36 |
 | **Release User** | abarman |
 | **Workarea Name** | `nbu_signoff` |
-| **Source Workarea Path** | `/home/scratch.abarman_vlsi_2/agur/OFFICAL_APPROVED_PFNL/DQAMDO/run1/dqamdo_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_run1/pnr_flow/nv_flow/dqamdo/ipo1003_eco5/nbu_signoff` |
+| **Source Workarea Path** | `/home/scratch.abarman_vlsi_2/agur/OFFICAL_APPROVED_PFNL/DQAMDO/run1/dqamdo_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_run1/pnr_flow/nv_flow/dqamdo/ipo1003_eco8/nbu_signoff` |
 | **RTL Tag** | `dqamdo_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap` |
-| **Release Directory** | `nbu_signoff_dqamdo_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_run1_ipo3005_2026_1_12_17_39_44` |
+| **Release Directory** | `nbu_signoff_dqamdo_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_run1_ipo3008_2026_1_16_9_49_36` |
 
 **Release Flags:**
 
 | Flag | Status | Description |
 |------|--------|-------------|
 | **Sta** | True | Static Timing Analysis (SPEF, SDC, netlist) |
-| **Fcl** | False | Functional/Layout (DB, IOs, OASIS) |
+| **Fcl** | True | Functional/Layout (DB, IOs, OASIS) |
 | **Pnr** | True | Place & Route database |
 | **FE_DCT** | False | Front End DCT |
 | **DC** | False | Design Compiler synthesis |
 | **Full** | False | Full release (all files) |
 
-### Latest FCL Release (fcl_release) - Different from STA
-
-FCL release is in a different directory than STA.
+**Note:** FCL release points to same directory as STA release.
 
 ### Previous STA Release (prev_last_sta_rel)
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2026/01/07 13:52:21 |
-| **Release Directory** | `nbu_signoff_dqamdo_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_run1_ipo3003_2026_1_7_13_52_21` |
+| **Release Timestamp** | 2026/01/12 17:39:44 |
+| **Release Directory** | `nbu_signoff_dqamdo_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_run1_ipo3005_2026_1_12_17_39_44` |
 
 ---
 
@@ -1857,12 +1855,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2026/01/15 10:16:10 |
-| **Release User** | abarman |
+| **Release Timestamp** | 2026/01/16 00:14:45 |
+| **Release User** | tmazor |
 | **Workarea Name** | `nbu_signoff` |
-| **Source Workarea Path** | `/home/scratch.abarman_vlsi_2/agur/OFFICAL_APPROVED_PFNL/DQAVI/RUN2_OLD_LIBRARY/dqavi_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_PFNL_snap_oldlib_run2/pnr_flow/nv_flow/dqavi/ipo1001_eco9/nbu_signoff` |
+| **Source Workarea Path** | `/home/scratch.tmazor_vlsi/agur/dqavi_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_PFNL_snap/pnr_flow/nv_flow/dqavi/ipo4000/nbu_signoff` |
 | **RTL Tag** | `dqavi_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_PFNL_snap` |
-| **Release Directory** | `nbu_signoff_dqavi_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_PFNL_snap_oldlib_run2_ipo2009_2026_1_15_10_16_10` |
+| **Release Directory** | `nbu_signoff_dqavi_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_PFNL_snap_ipo4000_2026_1_16_0_14_45` |
 
 **Release Flags:**
 
@@ -1883,8 +1881,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2026/01/12 17:14:03 |
-| **Release Directory** | `nbu_signoff_dqavi_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_PFNL_snap_oldlib_run2_ipo2007_2026_1_12_17_14_3` |
+| **Release Timestamp** | 2026/01/15 10:16:10 |
+| **Release Directory** | `nbu_signoff_dqavi_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_PFNL_snap_oldlib_run2_ipo2009_2026_1_15_10_16_10` |
 
 ---
 
@@ -2267,32 +2265,34 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2026/01/14 09:00:37 |
+| **Release Timestamp** | 2026/01/18 09:39:41 |
 | **Release User** | tmazor |
 | **Workarea Name** | `nbu_signoff` |
-| **Source Workarea Path** | `/home/scratch.tmazor_vlsi/agur/alm_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_BE_PFNL_snap_fp3/pnr_flow/nv_flow/alm/ipo4047/nbu_signoff` |
+| **Source Workarea Path** | `/home/scratch.tmazor_vlsi/agur/alm_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_BE_PFNL_snap_fp3/pnr_flow/nv_flow/alm/ipo4050/nbu_signoff` |
 | **RTL Tag** | `alm_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_BE_PFNL_snap` |
-| **Release Directory** | `nbu_signoff_alm_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_BE_PFNL_snap_fp3_ipo4047_2026_1_14_9_0_36` |
+| **Release Directory** | `nbu_signoff_alm_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_BE_PFNL_snap_fp3_ipo4050_2026_1_18_9_39_41` |
 
 **Release Flags:**
 
 | Flag | Status | Description |
 |------|--------|-------------|
 | **Sta** | True | Static Timing Analysis (SPEF, SDC, netlist) |
-| **Fcl** | True | Functional/Layout (DB, IOs, OASIS) |
+| **Fcl** | False | Functional/Layout (DB, IOs, OASIS) |
 | **Pnr** | False | Place & Route database |
 | **FE_DCT** | False | Front End DCT |
 | **DC** | False | Design Compiler synthesis |
 | **Full** | False | Full release (all files) |
 
-**Note:** FCL release points to same directory as STA release.
+### Latest FCL Release (fcl_release) - Different from STA
+
+FCL release is in a different directory than STA.
 
 ### Previous STA Release (prev_last_sta_rel)
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2026/01/10 20:13:07 |
-| **Release Directory** | `nbu_signoff_alm_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_BE_PFNL_snap_fp3_ipo4044_2026_1_10_20_13_7` |
+| **Release Timestamp** | 2026/01/14 09:00:37 |
+| **Release Directory** | `nbu_signoff_alm_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_BE_PFNL_snap_fp3_ipo4047_2026_1_14_9_0_36` |
 
 ---
 
@@ -2302,12 +2302,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2026/01/14 08:28:07 |
+| **Release Timestamp** | 2026/01/18 09:26:42 |
 | **Release User** | vliberchuk |
 | **Workarea Name** | `nbu_signoff` |
-| **Source Workarea Path** | `/home/scratch.vliberchuk_vlsi_1/agur/1nl/bta/bta_2025_12_07_Dec08_PFNL/pnr_flow/nv_flow/bta/ipo1246_of1199_44_CHIPLET_U8075_nv/nbu_signoff` |
+| **Source Workarea Path** | `/home/scratch.vliberchuk_vlsi_1/agur/1nl/bta/bta_2025_12_07_Dec08_PFNL/pnr_flow/nv_flow/bta/ipo1261_of1199_44_PI_CLK_DATA_ALL_CHIPLET_U8075_nv/nbu_signoff` |
 | **RTL Tag** | `bta_rbv_2025_12_07_condb_int4_2025_12_04_1_PFNL_snap` |
-| **Release Directory** | `nbu_signoff_bta_2025_12_07_Dec08_PFNL_ipo1246_2026_1_14_8_28_7` |
+| **Release Directory** | `nbu_signoff_bta_2025_12_07_Dec08_PFNL_ipo1261_2026_1_18_9_26_42` |
 
 **Release Flags:**
 
@@ -2328,8 +2328,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2026/01/11 09:36:10 |
-| **Release Directory** | `nbu_signoff_bta_2025_12_07_Dec08_PFNL_ipo1245_2026_1_11_9_36_10` |
+| **Release Timestamp** | 2026/01/14 08:28:07 |
+| **Release Directory** | `nbu_signoff_bta_2025_12_07_Dec08_PFNL_ipo1246_2026_1_14_8_28_7` |
 
 ---
 
@@ -2339,12 +2339,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2026/01/14 08:53:48 |
+| **Release Timestamp** | 2026/01/17 17:09:20 |
 | **Release User** | hsajwan |
 | **Workarea Name** | `nbu_signoff` |
-| **Source Workarea Path** | `/home/scratch.hsajwan_vlsi/agur/PFNL_Final/eri/eri_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_pfnl_rerun/pnr_flow/nv_flow/eri/ipo4094_vivid3_eco9/nbu_signoff` |
+| **Source Workarea Path** | `/home/scratch.hsajwan_vlsi/agur/PFNL_Final/eri/eri_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_pfnl_rerun/pnr_flow/nv_flow/eri/ipo4104_vivid4_eco10/nbu_signoff` |
 | **RTL Tag** | `eri_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap` |
-| **Release Directory** | `nbu_signoff_eri_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_pfnl_rerun_ipo4094_2026_1_14_8_53_48` |
+| **Release Directory** | `nbu_signoff_eri_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_pfnl_rerun_ipo4104_2026_1_17_17_9_20` |
 
 **Release Flags:**
 
@@ -2365,8 +2365,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2026/01/12 11:50:13 |
-| **Release Directory** | `nbu_signoff_eri_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_pfnl_rerun_ipo4084_2026_1_12_11_50_13` |
+| **Release Timestamp** | 2026/01/14 08:53:48 |
+| **Release Directory** | `nbu_signoff_eri_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_pfnl_rerun_ipo4094_2026_1_14_8_53_48` |
 
 ---
 
@@ -2376,32 +2376,34 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2026/01/14 05:41:57 |
+| **Release Timestamp** | 2026/01/18 09:40:34 |
 | **Release User** | tmazor |
 | **Workarea Name** | `nbu_signoff` |
-| **Source Workarea Path** | `/home/scratch.tmazor_vlsi/agur/hib_rbv_2025_12_08_no_hbr_slcg_agur_condb_int4_2025_12_04_1_FPNL_snap/pnr_flow/nv_flow/hib/ipo4047/nbu_signoff` |
+| **Source Workarea Path** | `/home/scratch.tmazor_vlsi/agur/hib_rbv_2025_12_08_no_hbr_slcg_agur_condb_int4_2025_12_04_1_FPNL_snap/pnr_flow/nv_flow/hib/ipo4050/nbu_signoff` |
 | **RTL Tag** | `hib_rbv_2025_12_08_no_hbr_slcg_agur_condb_int4_2025_12_04_1_FPNL_snap` |
-| **Release Directory** | `nbu_signoff_hib_rbv_2025_12_08_no_hbr_slcg_agur_condb_int4_2025_12_04_1_FPNL_snap_ipo4047_2026_1_14_5_41_57` |
+| **Release Directory** | `nbu_signoff_hib_rbv_2025_12_08_no_hbr_slcg_agur_condb_int4_2025_12_04_1_FPNL_snap_ipo4050_2026_1_18_9_40_34` |
 
 **Release Flags:**
 
 | Flag | Status | Description |
 |------|--------|-------------|
 | **Sta** | True | Static Timing Analysis (SPEF, SDC, netlist) |
-| **Fcl** | True | Functional/Layout (DB, IOs, OASIS) |
+| **Fcl** | False | Functional/Layout (DB, IOs, OASIS) |
 | **Pnr** | False | Place & Route database |
 | **FE_DCT** | False | Front End DCT |
 | **DC** | False | Design Compiler synthesis |
 | **Full** | False | Full release (all files) |
 
-**Note:** FCL release points to same directory as STA release.
+### Latest FCL Release (fcl_release) - Different from STA
+
+FCL release is in a different directory than STA.
 
 ### Previous STA Release (prev_last_sta_rel)
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2026/01/10 20:20:59 |
-| **Release Directory** | `nbu_signoff_hib_rbv_2025_12_08_no_hbr_slcg_agur_condb_int4_2025_12_04_1_FPNL_snap_ipo4044_2026_1_10_20_20_59` |
+| **Release Timestamp** | 2026/01/14 05:41:57 |
+| **Release Directory** | `nbu_signoff_hib_rbv_2025_12_08_no_hbr_slcg_agur_condb_int4_2025_12_04_1_FPNL_snap_ipo4047_2026_1_14_5_41_57` |
 
 ---
 
@@ -2588,12 +2590,12 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2026/01/15 12:09:13 |
+| **Release Timestamp** | 2026/01/15 16:09:53 |
 | **Release User** | yavital |
 | **Workarea Name** | `nbu_signoff` |
 | **Source Workarea Path** | `/home/scratch.yavital_vlsi/agur/yu_mng/PFNL_exp_01/pnr_flow/nv_flow/yu_mng/ipo1003/nbu_signoff` |
 | **RTL Tag** | `yu_mng_agur_rbv_2025_12_07_condb_int4_2025_12_04_1_PFNL_snap` |
-| **Release Directory** | `nbu_signoff_PFNL_exp_01_ipo1003_2026_1_15_12_9_13` |
+| **Release Directory** | `nbu_signoff_PFNL_exp_01_ipo1003_2026_1_15_16_9_53` |
 
 **Release Flags:**
 
@@ -2614,8 +2616,8 @@ FCL release is in a different directory than STA.
 
 | Property | Value |
 |----------|-------|
-| **Release Timestamp** | 2026/01/13 09:56:42 |
-| **Release Directory** | `nbu_signoff_PFNL_exp_01_ipo1001_2026_1_13_9_56_42` |
+| **Release Timestamp** | 2026/01/15 12:09:13 |
+| **Release Directory** | `nbu_signoff_PFNL_exp_01_ipo1003_2026_1_15_12_9_13` |
 
 ---
 
@@ -2666,7 +2668,7 @@ FCL release is in a different directory than STA.
 | **px** | NDQ | 2026/01/13 15:34:48 | aamsalem | `/home/scratch.aamsalem_vlsi/agur/px/PFNL/run_15_12_new_flow_dont_use/px_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_15_12_new_flow/pnr_flow/nv_flow/px/ipo1126/nbu_signoff` |  STA FCL |
 | **ribs** | NDQ | 2026/01/13 10:18:36 | ynaim | `/home/scratch.ynaim_vlsi/agur/PFNL/ribs/ribs.ribs_rbv_2025_12_07_condb_int4_2025_12_04_1_PFNL_snap_DEC15` |  STA |
 | **sma** | NDQ | 2026/01/13 13:13:57 | zbirman | `/home/scratch.shlomoc_vlsi/agur/sma/run_08_12_2025_sma_rbv_2025_12_07_pfnl_d/pnr_flow/nv_flow/sma/ipo1008/nbu_signoff` |  STA |
-| **yu** | NDQ | 2026/01/13 14:54:37 | ashahock | `/home/scratch.ashahock_vlsi/agur/yu/yu_agur_rbv_2025_12_08_condb_int4_2025_12_04_1_PFNL_snap_ver3` |  STA PNR |
+| **yu** | NDQ | 2026/01/17 22:10:11 | ashahock | `/home/scratch.ashahock_vlsi/agur/yu/yu_agur_rbv_2025_12_08_condb_int4_2025_12_04_1_PFNL_snap_ver3` |  STA PNR |
 | **dqaa** | QNS | 2026/01/15 08:01:05 | hsajwan | `/home/scratch.siddharthasa_vlsi/agur/PFNL/dqaa/dqaa_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_POWER/pnr_flow/nv_flow/dqaa/ipo1010_vivid3_pa7/nbu_signoff` |  STA |
 | **dqaci** | QNS | 2026/01/15 07:07:01 | gnarla | `/home/scratch.siddharthasa_vlsi/agur/PFNL/dqaci/dqaci_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_dont_use/pnr_flow/nv_flow/dqaci/ipo3003_vivid_eco2/nbu_signoff` |  STA PNR |
 | **dqaco** | QNS | 2026/01/15 08:13:24 | gnarla | `/home/scratch.gnarla_vlsi_1/agur/PFNL_official/dqaco/dqaco_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_updated_flow_301225/pnr_flow/nv_flow/dqaco/ipo3006_vivid_eco2_PI_fixes/nbu_signoff` |  STA PNR |
@@ -2674,9 +2676,9 @@ FCL release is in a different directory than STA.
 | **dqamci** | QNS | 2026/01/15 08:03:42 | mlanzerer | `/home/scratch.mlanzerer_vlsi/dqamci_dir/dqamci_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap/pnr_flow/nv_flow/dqamci/ipo4002/nbu_signoff` |  STA |
 | **dqamco** | QNS | 2026/01/15 08:00:20 | hsajwan | `/home/scratch.siddharthasa_vlsi/agur/PFNL/dqamco/dqamco_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_POWER/pnr_flow/nv_flow/dqamco/ipo1010_vivid3_ref7/nbu_signoff` |  STA |
 | **dqamdi** | QNS | 2026/01/15 10:56:46 | seeman | `/home/scratch.seeman_vlsi_1/agur/pfnl/dqamdi/dqamdi_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snapnflow/pnr_flow/nv_flow/dqamdi/ipo5012_vivid_3_predrc/nbu_signoff` |  STA |
-| **dqamdo** | QNS | 2026/01/12 17:39:44 | abarman | `/home/scratch.abarman_vlsi_2/agur/OFFICAL_APPROVED_PFNL/DQAMDO/run1/dqamdo_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_run1/pnr_flow/nv_flow/dqamdo/ipo1003_eco5/nbu_signoff` |  STA PNR |
+| **dqamdo** | QNS | 2026/01/16 09:49:36 | abarman | `/home/scratch.abarman_vlsi_2/agur/OFFICAL_APPROVED_PFNL/DQAMDO/run1/dqamdo_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_run1/pnr_flow/nv_flow/dqamdo/ipo1003_eco8/nbu_signoff` |  STA FCL PNR |
 | **dqap** | QNS | 2026/01/15 09:34:36 | drazmizrahi | `/home/scratch.drazmizrahi_vlsi_1/dqap/pfnl_07_12/pnr_flow/nv_flow/dqap/ipo1070_on_1066_vivid_loop3/nbu_signoff` |  STA |
-| **dqavi** | QNS | 2026/01/15 10:16:10 | abarman | `/home/scratch.abarman_vlsi_2/agur/OFFICAL_APPROVED_PFNL/DQAVI/RUN2_OLD_LIBRARY/dqavi_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_PFNL_snap_oldlib_run2/pnr_flow/nv_flow/dqavi/ipo1001_eco9/nbu_signoff` |  STA |
+| **dqavi** | QNS | 2026/01/16 00:14:45 | tmazor | `/home/scratch.tmazor_vlsi/agur/dqavi_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_PFNL_snap/pnr_flow/nv_flow/dqavi/ipo4000/nbu_signoff` |  STA |
 | **dqavo** | QNS | 2026/01/15 09:33:45 | gnarla | `/home/scratch.gnarla_vlsi_1/agur/PFNL_official/dqavo/dqavo_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_PFNL_snap_power_aware/pnr_flow/nv_flow/dqavo/ipo3005_vivid_eco3_PI_fixes/nbu_signoff` |  STA PNR |
 | **dqax** | QNS | 2026/01/15 09:22:08 | hmendelovich | `/home/scratch.hmendelovich_vlsi_1/dqax/dqax_2025_12_09_DEC11_PFNL_TAG/pnr_flow/nv_flow/dqax/ipo1080/nbu_signoff` |  STA |
 | **dql** | QNS | 2026/01/15 09:59:45 | aazran | `/home/scratch.aazran_vlsi/dql/pfnl/071225_pfnl_v1/pnr_flow/nv_flow/dql/ipo1101/nbu_signoff` |  STA |
@@ -2687,21 +2689,21 @@ FCL release is in a different directory than STA.
 | **tecorel** | QNS | 2026/01/15 02:15:04 | gnarla | `/home/scratch.gnarla_vlsi_1/agur/PFNL_official/tecorel/tecorel_rbv_2025_12_07_condb_int4_2025_12_04_1_BE_PFNL_snap_new_flow/pnr_flow/nv_flow/tecorel/ipo3005_vivid_eco3/nbu_signoff` |  STA PNR |
 | **tecorer** | QNS | 2026/01/15 07:48:05 | hsajwan | `/home/scratch.hsajwan_vlsi/agur/PFNL_Final/tecorer/tecorer_rbv_2025_12_07_condb_int4_2025_12_04_1_BE_PFNL_snap_pfnl_rerun/pnr_flow/nv_flow/tecorer/ipo4061_vivid3_eco6/nbu_signoff` |  STA |
 | **tds** | QNS | 2026/01/15 07:47:47 | hsajwan | `/home/scratch.hsajwan_vlsi/agur/PFNL_Final/tds/tds_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_pfnl_rerun/pnr_flow/nv_flow/tds/ipo4083_vivid3_eco8/nbu_signoff` |  STA |
-| **alm** | TCB | 2026/01/14 09:00:37 | tmazor | `/home/scratch.tmazor_vlsi/agur/alm_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_BE_PFNL_snap_fp3/pnr_flow/nv_flow/alm/ipo4047/nbu_signoff` |  STA FCL |
-| **bta** | TCB | 2026/01/14 08:28:07 | vliberchuk | `/home/scratch.vliberchuk_vlsi_1/agur/1nl/bta/bta_2025_12_07_Dec08_PFNL/pnr_flow/nv_flow/bta/ipo1246_of1199_44_CHIPLET_U8075_nv/nbu_signoff` |  STA |
-| **eri** | TCB | 2026/01/14 08:53:48 | hsajwan | `/home/scratch.hsajwan_vlsi/agur/PFNL_Final/eri/eri_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_pfnl_rerun/pnr_flow/nv_flow/eri/ipo4094_vivid3_eco9/nbu_signoff` |  STA |
-| **hib** | TCB | 2026/01/14 05:41:57 | tmazor | `/home/scratch.tmazor_vlsi/agur/hib_rbv_2025_12_08_no_hbr_slcg_agur_condb_int4_2025_12_04_1_FPNL_snap/pnr_flow/nv_flow/hib/ipo4047/nbu_signoff` |  STA FCL |
+| **alm** | TCB | 2026/01/18 09:39:41 | tmazor | `/home/scratch.tmazor_vlsi/agur/alm_rbv_2025_12_09_agur_condb_int4_2025_12_04_1_BE_PFNL_snap_fp3/pnr_flow/nv_flow/alm/ipo4050/nbu_signoff` |  STA |
+| **bta** | TCB | 2026/01/18 09:26:42 | vliberchuk | `/home/scratch.vliberchuk_vlsi_1/agur/1nl/bta/bta_2025_12_07_Dec08_PFNL/pnr_flow/nv_flow/bta/ipo1261_of1199_44_PI_CLK_DATA_ALL_CHIPLET_U8075_nv/nbu_signoff` |  STA |
+| **eri** | TCB | 2026/01/17 17:09:20 | hsajwan | `/home/scratch.hsajwan_vlsi/agur/PFNL_Final/eri/eri_rbv_2025_12_07_agur_condb_int4_2025_12_04_1_PFNL_snap_pfnl_rerun/pnr_flow/nv_flow/eri/ipo4104_vivid4_eco10/nbu_signoff` |  STA |
+| **hib** | TCB | 2026/01/18 09:40:34 | tmazor | `/home/scratch.tmazor_vlsi/agur/hib_rbv_2025_12_08_no_hbr_slcg_agur_condb_int4_2025_12_04_1_FPNL_snap/pnr_flow/nv_flow/hib/ipo4050/nbu_signoff` |  STA |
 | **top_yc_clock** | TOP_YC | 2024/07/22 23:13:27 | abeinhorn | `/home/starling_backend_blockData/top_yc_clock/top_yc_clock_sunbird_rbv_2023_05_21_FNL` |  STA FCL PNR FULL |
 | **top_yc_gpio** | TOP_YC | 2026/01/12 10:09:56 | momar | `/home/scratch.momar_vlsi/agur/top_yc_gpio/top_yc_gpio_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap` |  STA PNR |
 | **yc_clock_macro** | TOP_YC | 2025/11/25 14:56:04 | momar | `/home/scratch.momar_vlsi/agur/yc_clock_macro/top_yc_clock_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap` |  STA FCL PNR FULL |
 | **yc_fuse** | TOP_YC | 2025/11/30 16:01:16 | lhaiby | `/home/scratch.lhaiby_vlsi/Agur/yc_fuse_agur_rbv_2025_08_11_condb_int3_2025_07_31_1_1NL_snap` |  STA PNR |
 | **yc_fuse_macro** | TOP_YC | 2026/01/15 15:39:55 | lhaiby | `/home/scratch.lhaiby_vlsi/Agur/yc_fuse_macro/yc_fuse_agur_rbv_2025_08_11_condb_int3_2025_07_31_1_1NL_snap_12_11_arkady` |  STA PNR |
-| **yu_mng** | TOP_YC | 2026/01/15 12:09:13 | yavital | `/home/scratch.yavital_vlsi/agur/yu_mng/PFNL_exp_01/pnr_flow/nv_flow/yu_mng/ipo1003/nbu_signoff` |  STA |
+| **yu_mng** | TOP_YC | 2026/01/15 16:09:53 | yavital | `/home/scratch.yavital_vlsi/agur/yu_mng/PFNL_exp_01/pnr_flow/nv_flow/yu_mng/ipo1003/nbu_signoff` |  STA |
 
 ---
 
 *Document Auto-Generated from Block Release Logs*  
-*Generation Date: 2026-01-15 16:01:03*  
+*Generation Date: 2026-01-19 06:00:24*  
 *Script: extract_agur_releases.sh*  
 *Base Path: /home/agur_backend_blockRelease/block/*
 

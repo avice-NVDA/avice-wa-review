@@ -1,0 +1,74 @@
+================================================================================
+AGUR Disk Usage Monitor - 2026-01-18 07:00:11
+================================================================================
+Checking shared infrastructure paths...
+  AGUR Release Area: /home/agur_backend_blockRelease/
+    [CRITICAL] 90% used (>=90% - daily alert)
+    [EMAIL] Daily alert sent to avice + all managers
+  PFNL Unit DB: /home/PFNL_Unit_DB/
+    [OK] 16% used (below 80%)
+
+Checking 72 units...
+
+[CRITICAL] lnd             (CPORT     ) - 91% used | Owner: shlomoc
+[CRITICAL] fwas            (NDQ       ) - 90% used | Owner: ronil
+[CRITICAL] lndm            (NDQ       ) - 91% used | Owner: shlomoc
+[CRITICAL] pscc            (NDQ       ) - 98% used | Owner: dtraitelovic
+[CRITICAL] yu              (NDQ       ) - 95% used | Owner: ashahock
+[CRITICAL] dqaa            (QNS       ) - 93% used | Owner: siddharthasa
+[CRITICAL] dqaci           (QNS       ) - 93% used | Owner: siddharthasa
+[CRITICAL] dqamco          (QNS       ) - 93% used | Owner: siddharthasa
+[CRITICAL] dqamdo          (QNS       ) - 94% used | Owner: abarman
+[CRITICAL] dqap            (QNS       ) - 97% used | Owner: drazmizrahi
+[CRITICAL] dqs             (QNS       ) - 94% used | Owner: abarman
+[CRITICAL] yu_mng          (TOP_YC    ) - 95% used | Owner: yavital
+
+Grouping by owner...
+  shlomoc: 2 unit(s)
+  ronil: 1 unit(s)
+  dtraitelovic: 1 unit(s)
+  ashahock: 1 unit(s)
+  siddharthasa: 3 unit(s)
+  abarman: 2 unit(s)
+  drazmizrahi: 1 unit(s)
+  yavital: 1 unit(s)
+
+Building disk summaries and scanning for old workareas...
+  Scanning /home/scratch.shlomoc_vlsi_1 for old workareas...
+    -> Found 3 old workarea(s): 868G, >500G, 452G
+  Scanning /home/scratch.ronil_vlsi_1 for old workareas...
+    -> No old workareas found (>30 days)
+  Scanning /home/scratch.dtraitelovic_vlsi_1 for old workareas...
+    -> Found 1 old workarea(s): 18G
+  Scanning /home/scratch.ashahock_vlsi for old workareas...
+    -> Found 1 old workarea(s): 18G
+  Scanning /home/scratch.siddharthasa_vlsi for old workareas...
+    -> Found 3 old workarea(s): 1.1T, 602G, 472G
+  Scanning /home/scratch.abarman_vlsi_2 for old workareas...
+    -> No old workareas found (>30 days)
+  Scanning /home/scratch.drazmizrahi_vlsi_1 for old workareas...
+    -> No old workareas found (>30 days)
+  Scanning /home/scratch.yavital_vlsi for old workareas...
+    -> No old workareas found (>30 days)
+
+Sending emails...
+[EMAIL] Sent to shlomoc@nvidia.com (2 unit(s))
+[EMAIL] Sent to ronil@nvidia.com (1 unit(s))
+[EMAIL] Sent to dtraitelovic@nvidia.com (1 unit(s))
+[EMAIL] Sent to ashahock@nvidia.com (1 unit(s))
+[EMAIL] Sent to siddharthasa@nvidia.com (3 unit(s))
+[EMAIL] Sent to abarman@nvidia.com (2 unit(s))
+[EMAIL] Sent to drazmizrahi@nvidia.com (1 unit(s))
+[EMAIL] Sent to yavital@nvidia.com (1 unit(s))
+
+================================================================================
+SUMMARY:
+  Shared Infrastructure:
+    AGUR Release Area: 90% [CRITICAL - DAILY ALERTS]
+    PFNL Unit DB: 16% [OK]
+  Total units checked: 72
+  Critical units (>=90%): 12
+  Unique owners: 8
+  Emails sent: 9 successful, 0 failed
+  Execution time: 322.5 seconds
+================================================================================

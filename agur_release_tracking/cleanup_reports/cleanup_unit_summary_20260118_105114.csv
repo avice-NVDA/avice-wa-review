@@ -1,0 +1,6 @@
+Unit,Release Area Owner,Number of Old Releases,Symlinks to Remove (Name:Owner),Total Size
+fdb,dkolesnikov,2,FNL_4PV:ekantorovich; SEP_28_FP:dkolesnikov; SEP_28_FP_eco_01:dkolesnikov,164.4GB
+fth,miancu,10,AUG07_cport_eco_01:miancu; ECO_RUN_TIME_test:yavital; FNL_4PV:ekantorovich; SEP_10:miancu; SEP_10_cport_eco_01:miancu; SEP_28_FP:miancu; SEP_28_FP_eco_01:lmustafa; TLV_trail_release:miancu; prev_SEP_10:miancu,696.1GB
+lnd,shlomoc,4,FNL_4PV:ekantorovich; SEP_28_FP:shlomoc; SEP_28_FP_eco_01:shlomoc; prev_SEP_28_FP_eco_01:shlomoc,252.9GB
+pmux,brachas,8,FNL_4PV:ekantorovich; SEP_10:brachas; SEP_10_cport_eco_01:brachas; SEP_28_FP:brachas; SEP_28_FP_eco_01:brachas; prev_SEP_28_FP:brachas,410.6GB
+prt,ykatzav,15,AUG07_cport_eco_01:ykatzav; FNL_4PV:ekantorovich; SEP_10:ykatzav; SEP_10_cport_eco_01:ykatzav; SEP_10_eco_01:ykatzav; SEP_28_FP:ykatzav; SEP_28_FP_eco_01:ykatzav,436.4GB

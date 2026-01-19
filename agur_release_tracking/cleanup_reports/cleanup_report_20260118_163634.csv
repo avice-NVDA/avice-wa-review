@@ -1,0 +1,238 @@
+Unit,Chiplet,Release Directory,Age (days),Size,Owner,Release Timestamp,Has Symlinks,Symlink Names,Symlink Owners,Requires Coordination,Recommendation
+cscore,NDQ,cscore_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap_flow_rev13_cts2__2025_9_1_9_17_36,139,143G,ynaim,2025-09-01 09:17:36,Yes,prev_release,ynaim,No,Remove symlinks first
+glc,NDQ,glc_rbv_2025_06_18_condb_int2_23_5r1_BE_SFNL_snap_flow_rev13__2025_8_30_20_58_23,140,119G,ynaim,2025-08-30 20:58:23,No,None,None,No,Safe to delete
+ir,NDQ,condb_int3_2025_08_27_0_1NL_snap_NF_th__2025_9_22_11_33_43,118,110G,thadad,2025-09-22 11:33:43,Yes,SEP_10,thadad,No,Remove symlinks first
+ir,NDQ,condb_int3_2025_08_27_0_1NL_gl__2025_10_15_10_9_33,95,110G,thadad,2025-10-15 10:09:33,Yes,OCT_10,thadad,No,Remove symlinks first
+ir,NDQ,condb_int3_2025_08_27_0_1NL_gl__2025_10_8_14_28_30,102,110G,thadad,2025-10-08 14:28:30,Yes,SEP_10_NDQ_V1_GLC,thadad,No,Remove symlinks first
+ir,NDQ,condb_int3_2025_08_27_0_1NL_gl__2025_10_20_12_0_9,90,110G,thadad,2025-10-20 12:00:09,Yes,OCT_10_V2,thadad,No,Remove symlinks first
+ir,NDQ,ir_rbv_2025_09_12_agur_icg_fanin_fix_th__2025_10_17_16_56_47,92,108G,thadad,2025-10-17 16:56:47,Yes,Test_IR_OCT10,tlevor,Yes,Coordinate with symlink owners first
+ir,NDQ,ir_rbv_2025_09_12_agur_icg_fanin_fix_th__2025_9_28_18_44_20,111,108G,thadad,2025-09-28 18:44:20,Yes,"SEP_10_V2,SEP_10_NDQ","tlevor,thadad",Yes,Coordinate with symlink owners first
+ir,NDQ,ir_rbv_2025_07_30_agur_TLV__2025_9_1_21_9_43,138,106G,thadad,2025-09-01 21:09:43,No,None,None,No,Safe to delete
+psca,NDQ,nbu_signoff_psca_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_ref_ipo1018_2025_9_21_21_22_43,118,100G,nkahaz,2025-09-21 21:22:43,Yes,prev_SEP_10,nkahaz,No,Remove symlinks first
+pscc,NDQ,nbu_signoff_pscc_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ipo1000_2025_9_21_15_25_7,119,97G,dtraitelovic,2025-09-21 15:25:07,Yes,prev_SEP_10,dtraitelovic,No,Remove symlinks first
+pscc,NDQ,nbu_signoff_pscc_rbv_2025_08_18_agur_condb_int3_2025_07_31_1_1NL_snap_ipo1000_2025_9_10_15_47_21,130,96G,dtraitelovic,2025-09-10 15:47:21,No,None,None,No,Safe to delete
+psca,NDQ,psca_rbv_2024_10_08_starling_ROM_update__2024_11_27_16_56_0,416,95G,daltman,2024-11-27 16:56:00,No,None,None,No,Safe to delete
+dcmp,NDQ,dcmp_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap__2025_8_28_13_55_50,143,94G,rmenasheof,2025-08-28 13:55:50,Yes,release,rmenasheof,Yes,Coordinate with symlink owners first
+pscc,NDQ,nbu_signoff_pscc_2025_09_02_1NL_snap_new_flow_flp_cdc_ipo1004_2025_10_19_11_35_22,91,94G,dtraitelovic,2025-10-19 11:35:22,Yes,OCT_10_V2,dtraitelovic,No,Remove symlinks first
+pscc,NDQ,nbu_signoff_pscc_2025_09_02_1NL_snap_new_flow_flp_cdc_ipo1000_2025_10_8_14_47_33,102,94G,dtraitelovic,2025-10-08 14:47:33,Yes,SEP_10,dtraitelovic,No,Remove symlinks first
+glc,NDQ,glc_rbv_2025_04_08_agur_with_demo_rl_predictor_wrapper_26_5__2025_6_12_11_27_21,220,92G,nweizman,2025-06-12 11:27:21,No,None,None,No,Safe to delete
+fdbs,NDQ,fdbs_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ctsfix2__2025_10_15_12_54_27,95,92G,brachas,2025-10-15 12:54:27,Yes,OCT_10,brachas,No,Remove symlinks first
+pscc,NDQ,nbu_signoff_pscc_2025_09_02_1NL_snap_new_flow_flp_cdc_ipo1003_2025_10_16_11_44_8,94,92G,dtraitelovic,2025-10-16 11:44:08,Yes,OCT_10,dtraitelovic,No,Remove symlinks first
+fdbs,NDQ,fdbs_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ctsfix2__2025_9_21_14_23_13,119,92G,brachas,2025-09-21 14:23:13,Yes,"SEP_10,SEP_10_NDQ","tlevor,brachas",Yes,Coordinate with symlink owners first
+fdbs,NDQ,fdbs_eco_imp_2025_10_19_17_25__2025_10_20_13_30_54,90,92G,brachas,2025-10-20 13:30:54,Yes,OCT_10_V2,brachas,No,Remove symlinks first
+glc,NDQ,glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_spr__2025_9_21_15_37_12,119,92G,ynaim,2025-09-21 15:37:12,Yes,SEP_10,ynaim,No,Remove symlinks first
+glc,NDQ,glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound__2025_10_8_15_57_13,102,92G,ynaim,2025-10-08 15:57:13,Yes,SEP_10_NDQ_V1_GLC,ynaim,No,Remove symlinks first
+glc,NDQ,glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound_vivid__2025_10_19_23_32_13,90,92G,ynaim,2025-10-19 23:32:13,Yes,OCT_10_V2,ynaim,No,Remove symlinks first
+glc,NDQ,glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound_vivid__2025_10_15_9_29_21,95,92G,ynaim,2025-10-15 09:29:21,Yes,OCT_10,ynaim,No,Remove symlinks first
+ftos,NDQ,nbu_signoff_condb_int3_2025_08_27_0_1NL_snap_th_ipo1000_2025_10_14_23_49_28,95,88G,thadad,2025-10-14 23:49:28,Yes,OCT_10,thadad,No,Remove symlinks first
+ftos,NDQ,nbu_signoff_condb_int3_2025_08_27_0_1NL_snap_th_ipo1000_2025_10_16_12_49_16,94,88G,thadad,2025-10-16 12:49:16,Yes,"prev_fcl_release,FNL_4PV,SEP_28_FP","ekantorovich,thadad",Yes,Coordinate with symlink owners first
+ftos,NDQ,ftos_rbv_2025_06_09_condb_Tlv_h__2025_8_25_12_0_42,146,88G,thadad,2025-08-25 12:00:42,Yes,prev_AUG_07_FP,thadad,No,Remove symlinks first
+cscore,NDQ,cscore.cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_eco_fix_vivid__2025_10_15_9_38_17,95,88G,ynaim,2025-10-15 09:38:17,Yes,OCT_10,ynaim,No,Remove symlinks first
+cscore,NDQ,cscore.cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap__2025_9_29_16_10_1,111,88G,ynaim,2025-09-29 16:10:01,Yes,SEP_10_V3,ynaim,No,Remove symlinks first
+cscore,NDQ,cscore.cscore_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_eco_fix__2025_10_8_16_5_40,102,88G,ynaim,2025-10-08 16:05:40,Yes,SEP_10_NDQ_V1_GLC,ynaim,No,Remove symlinks first
+fdbm,NDQ,fdbm_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run1__2025_10_8_9_42_43,102,86G,dkolesnikov,2025-10-08 09:42:43,Yes,SEP_10_NDQ_V1_GLC,dkolesnikov,No,Remove symlinks first
+fdbm,NDQ,fdbm_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run1__2025_9_19_8_40_24,121,86G,dkolesnikov,2025-09-19 08:40:24,Yes,"SEP_10,SEP_10_NDQ","tlevor,dkolesnikov",Yes,Coordinate with symlink owners first
+fdbm,NDQ,fdbm_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run1__2025_10_19_20_45_35,90,86G,dkolesnikov,2025-10-19 20:45:35,Yes,"OCT_10_V2,prev_SEP_28_FP",dkolesnikov,No,Remove symlinks first
+fdbm,NDQ,fdbm_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__run1__2025_10_15_8_39_51,95,86G,dkolesnikov,2025-10-15 08:39:51,Yes,OCT_10,dkolesnikov,No,Remove symlinks first
+pscb,NDQ,pscb_rbv_2024_10_08_starling_ROM_update__2024_10_23_12_27_9,452,86G,daltman,2024-10-23 12:27:09,No,None,None,No,Safe to delete
+dcmp,NDQ,dcmp_rbv_2025_03_18_snap_flp_4_ref_new_flow_release_26_5_25__2025_6_9_18_33_51,222,85G,mshkolnik,2025-06-09 18:33:51,No,None,None,No,Safe to delete
+nvrisc,NDQ,nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2__2025_10_6_10_19_7,104,84G,ykatzav,2025-10-06 10:19:07,Yes,SEP_10_NDQ_V1_GLC,ykatzav,No,Remove symlinks first
+nvrisc,NDQ,nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2__2025_10_15_13_28_31,95,84G,ykatzav,2025-10-15 13:28:31,Yes,OCT_10,ykatzav,No,Remove symlinks first
+ribs,NDQ,ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk__2025_10_8_15_54_1,102,83G,ynaim,2025-10-08 15:54:01,Yes,SEP_10_NDQ_V1_GLC,ynaim,No,Remove symlinks first
+ribs,NDQ,ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk_vivid__2025_10_19_23_32_19,90,83G,ynaim,2025-10-19 23:32:19,Yes,OCT_10_V2,ynaim,No,Remove symlinks first
+ribs,NDQ,ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk_vivid__2025_10_15_9_29_31,95,83G,ynaim,2025-10-15 09:29:31,Yes,OCT_10,ynaim,No,Remove symlinks first
+fdb,CPORT,fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__floorplanChange_run1__2025_10_9_10_51_41,101,83G,dkolesnikov,2025-10-09 10:51:41,Yes,SEP_28_FP,dkolesnikov,No,Remove symlinks first
+fdb,CPORT,fdb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap__floorplanChange_run1__2025_10_16_17_30_9,93,83G,dkolesnikov,2025-10-16 17:30:09,Yes,"SEP_28_FP_eco_01,FNL_4PV","ekantorovich,dkolesnikov",Yes,Coordinate with symlink owners first
+lnd,CPORT,run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065__2025_10_8_9_0_34,102,82G,shlomoc,2025-10-08 09:00:34,Yes,SEP_28_FP,shlomoc,Yes,Coordinate with symlink owners first
+lnd,CPORT,run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065__2025_10_18_22_8_18,91,82G,shlomoc,2025-10-18 22:08:18,Yes,"SEP_28_FP_eco_01,FNL_4PV","ekantorovich,shlomoc",Yes,Coordinate with symlink owners first
+fwas,NDQ,fwas_rbv_beta_flow_26.05.25__2025_6_12_16_21_26,220,81G,gweisberg,2025-06-12 16:21:26,No,None,None,No,Safe to delete
+fwas,NDQ,fwas_golden_ipo4_21_9_for_vivid__2025_10_8_9_6_50,102,80G,rmenasheof,2025-10-08 09:06:50,Yes,SEP_10_NDQ_V1_GLC,rmenasheof,Yes,Coordinate with symlink owners first
+fwas,NDQ,fwas_golden_ipo4_21_9_for_vivid__2025_9_28_18_15_42,111,80G,rmenasheof,2025-09-28 18:15:42,Yes,"SEP_10,SEP_10_NDQ","tlevor,rmenasheof",Yes,Coordinate with symlink owners first
+fwas,NDQ,fwas_golden_ipo4_21_9_for_vivid__2025_10_20_12_5_20,90,80G,rmenasheof,2025-10-20 12:05:20,Yes,OCT_10_V2,rmenasheof,Yes,Coordinate with symlink owners first
+fwas,NDQ,fwas_golden_ipo4_21_9_for_vivid__2025_10_15_14_40_41,95,80G,rmenasheof,2025-10-15 14:40:41,Yes,OCT_10,rmenasheof,Yes,Coordinate with symlink owners first
+fwas,NDQ,fwas_15_9_1nl_golden_ipo4__2025_10_5_11_45_25,105,79G,rmenasheof,2025-10-05 11:45:25,Yes,SEP_10_L,rmenasheof,Yes,Coordinate with symlink owners first
+fwas,NDQ,fwas_15_9_1nl_golden_ipo4__2025_10_16_11_25_9,94,79G,rmenasheof,2025-10-16 11:25:09,Yes,oct_10_L,rmenasheof,Yes,Coordinate with symlink owners first
+fwas,NDQ,fwas_15_9_1nl_golden_ipo4__2025_10_16_11_40_31,94,79G,rmenasheof,2025-10-16 11:40:31,Yes,"prev_fcl_release,SEP_28_FP,FNL_4PV","ekantorovich,ronil,rmenasheof",Yes,Coordinate with symlink owners first
+fwas,NDQ,fwas_15_9_1nl_golden_ipo4__2025_10_16_11_37_12,94,79G,rmenasheof,2025-10-16 11:37:12,Yes,prev_SEP_28_FP,rmenasheof,Yes,Coordinate with symlink owners first
+fwam,NDQ,run_15_09_2025_fwam_rbv_2025_09_07_4x6_clock_tree_Tzlil_Hook__2025_10_8_13_5_32,102,78G,zbirman,2025-10-08 13:05:32,Yes,SEP_10_NDQ_V1_GLC,zbirman,No,Remove symlinks first
+fwam,NDQ,run_15_09_2025_fwam_rbv_2025_09_07_4x6_clock_tree_Tzlil_Hook_for_vivid__2025_10_20_13_59_58,90,78G,zbirman,2025-10-20 13:59:58,Yes,OCT_10_V2,zbirman,No,Remove symlinks first
+fwam,NDQ,run_09_09_2025_fwam_rbv_2025_09_07__2025_9_21_11_18_24,119,78G,zbirman,2025-09-21 11:18:24,Yes,"SEP_10,SEP_10_NDQ","tlevor,zbirman",Yes,Coordinate with symlink owners first
+fwam,NDQ,run_15_09_2025_fwam_rbv_2025_09_07_4x6_clock_tree_Tzlil_Hook_for_vivid__2025_10_15_11_8_39,95,78G,zbirman,2025-10-15 11:08:39,Yes,OCT_10,zbirman,No,Remove symlinks first
+pscd,NDQ,pscd_rbv_2025_09_02_ver4_Sep25_gb__2025_10_19_17_30_13,90,77G,gibell,2025-10-19 17:30:13,Yes,"SEP_28_FP,FNL_4PV","ekantorovich,gibell",Yes,Coordinate with symlink owners first
+ribs,NDQ,ribs.ribs_be_agur_2025_08_05_flow_ww13_01_rev13__2025_9_1_0_23_16,139,77G,ynaim,2025-09-01 00:23:16,Yes,prev_release,ynaim,No,Remove symlinks first
+fdbs,NDQ,fdbs_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ctsfix2__2025_10_16_11_44_11,94,77G,brachas,2025-10-16 11:44:11,Yes,"SEP_28_FP,FNL_4PV","ekantorovich,brachas",Yes,Coordinate with symlink owners first
+px,NDQ,px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_cmp__2025_9_21_9_19_20,119,76G,aamsalem,2025-09-21 09:19:20,No,None,None,No,Safe to delete
+px,NDQ,px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_cmp__2025_9_21_10_24_46,119,76G,aamsalem,2025-09-21 10:24:46,Yes,prev_SEP_10,aamsalem,No,Remove symlinks first
+px,NDQ,px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_fix-gl-check__2025_10_6_14_21_6,104,75G,aamsalem,2025-10-06 14:21:06,Yes,SEP_10_NDQ_V1_GLC,aamsalem,No,Remove symlinks first
+px,NDQ,px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_old_util65__2025_10_3_14_36_0,107,75G,aamsalem,2025-10-03 14:36:00,No,None,None,No,Safe to delete
+px,NDQ,px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_old_util65__2025_9_21_13_23_53,119,75G,aamsalem,2025-09-21 13:23:53,Yes,"SEP_10,SEP_10_NDQ","tlevor,aamsalem",Yes,Coordinate with symlink owners first
+px,NDQ,px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_old_util65__2025_10_15_10_8_41,95,75G,aamsalem,2025-10-15 10:08:41,Yes,OCT_10,aamsalem,No,Remove symlinks first
+px,NDQ,px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_old_util65__2025_10_15_10_5_44,95,75G,aamsalem,2025-10-15 10:05:44,Yes,SEP_10_NDQ_V1,aamsalem,No,Remove symlinks first
+dcmp,NDQ,dcmp_21_9_script_driver_routing_blockage__2025_10_5_15_10_34,105,75G,rmenasheof,2025-10-05 15:10:34,Yes,SEP_10_L,rmenasheof,Yes,Coordinate with symlink owners first
+px,NDQ,px_rbv_2025_06_09_condb_TLV__2025_8_20_10_2_48,151,75G,thadad,2025-08-20 10:02:48,No,None,None,No,Safe to delete
+clr,NDQ,clr_rbv_2025_06_09_condb_int2_23_5r1_BE_SFNL_snap_tlv_2_DEL__2025_8_28_18_31_36,142,74G,ayerushalmy,2025-08-28 18:31:36,No,None,None,No,Safe to delete
+clr,NDQ,clr_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_V4_2__2025_10_3_16_59_36,106,74G,ayerushalmy,2025-10-03 16:59:36,No,None,None,No,Safe to delete
+clr,NDQ,clr_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_V4_2__2025_9_25_10_48_17,115,74G,ayerushalmy,2025-09-25 10:48:17,Yes,"SEP_10,SEP_10_NDQ,prev_OCT_10,SEP_10_NDQ_V1_GLC","tlevor,ayerushalmy",Yes,Coordinate with symlink owners first
+clr,NDQ,clr_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_V4__2025_9_21_11_10_14,119,74G,ayerushalmy,2025-09-21 11:10:14,Yes,prev_SEP_10,ayerushalmy,No,Remove symlinks first
+clr,NDQ,clr_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_V4_2_3__2025_10_16_15_14_51,94,74G,ayerushalmy,2025-10-16 15:14:51,Yes,"SEP_28_FP,FNL_4PV","ekantorovich,ayerushalmy",Yes,Coordinate with symlink owners first
+clr,NDQ,clr_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_V4_2_3__2025_10_15_13_54_30,95,74G,ayerushalmy,2025-10-15 13:54:30,Yes,OCT_10,ayerushalmy,No,Remove symlinks first
+clr,NDQ,clr_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_V4_2_3__2025_10_19_16_7_22,91,74G,ayerushalmy,2025-10-19 16:07:22,Yes,OCT_10_V2,ayerushalmy,No,Remove symlinks first
+lndm,NDQ,run_07_09_2025_lndm_rbv_2025_09_01_new_flow__2025_10_8_9_7_16,102,74G,shlomoc,2025-10-08 09:07:16,Yes,prev_SEP_10_NDQ_V1_GLC,shlomoc,Yes,Coordinate with symlink owners first
+lndm,NDQ,run_07_09_2025_lndm_rbv_2025_09_01_new_flow__2025_9_18_16_36_4,121,74G,shlomoc,2025-09-18 16:36:04,Yes,"SEP_10,SEP_10_NDQ","tlevor,shlomoc",Yes,Coordinate with symlink owners first
+lndm,NDQ,run_07_09_2025_lndm_rbv_2025_09_01_new_flow__2025_10_19_18_24_17,90,74G,shlomoc,2025-10-19 18:24:17,Yes,OCT_10_V2,shlomoc,Yes,Coordinate with symlink owners first
+lndm,NDQ,run_07_09_2025_lndm_rbv_2025_09_01_new_flow__2025_10_15_15_50_51,95,74G,shlomoc,2025-10-15 15:50:51,Yes,SEP_10_NDQ_V1_GLC,shlomoc,Yes,Coordinate with symlink owners first
+lndm,NDQ,run_07_09_2025_lndm_rbv_2025_09_01_new_flow__2025_10_15_16_5_35,95,74G,shlomoc,2025-10-15 16:05:35,Yes,OCT_10,shlomoc,Yes,Coordinate with symlink owners first
+sma,NDQ,run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix__2025_10_8_9_13_2,102,74G,shlomoc,2025-10-08 09:13:02,Yes,prev_SEP_10_NDQ_V1_GLC,shlomoc,Yes,Coordinate with symlink owners first
+sma,NDQ,run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix__2025_9_18_16_42_14,121,74G,shlomoc,2025-09-18 16:42:14,Yes,"prev_fe_dct_golden_release,SEP_10_NDQ,prev_SEP_10","tlevor,shlomoc",Yes,Coordinate with symlink owners first
+sma,NDQ,run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix__2025_10_19_18_24_17,90,74G,shlomoc,2025-10-19 18:24:17,Yes,OCT_10_V2,shlomoc,Yes,Coordinate with symlink owners first
+sma,NDQ,run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix__2025_10_15_15_51_49,95,74G,shlomoc,2025-10-15 15:51:49,Yes,SEP_10_NDQ_V1_GLC,shlomoc,Yes,Coordinate with symlink owners first
+sma,NDQ,run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix__2025_10_15_16_5_39,95,74G,shlomoc,2025-10-15 16:05:39,Yes,OCT_10,shlomoc,Yes,Coordinate with symlink owners first
+pscd,NDQ,pscd_rbv_2025_09_02_ver6_Sep25_gb__2025_10_15_11_39_43,95,73G,gibell,2025-10-15 11:39:43,Yes,prev_OCT_10,gibell,No,Remove symlinks first
+pscd,NDQ,pscd_rbv_2025_09_02_ver6_Sep25_gb__2025_10_11_7_13_59,99,73G,gibell,2025-10-11 07:13:59,No,None,None,No,Safe to delete
+fwam,NDQ,fwam_rbv_2025_06_18_tlv_newref__2025_8_31_21_46_14,139,73G,arot,2025-08-31 21:46:14,No,None,None,No,Safe to delete
+pscd,NDQ,pscd_rbv_2025_09_02_ver6_Sep25_gb__2025_10_8_15_27_52,102,73G,gibell,2025-10-08 15:27:52,No,None,None,No,Safe to delete
+pscd,NDQ,pscd_rbv_2025_09_02_ver4_Sep25_gb__2025_10_19_17_14_7,90,73G,gibell,2025-10-19 17:14:07,Yes,OCT_10_V2,gibell,No,Remove symlinks first
+pscd,NDQ,pscd_rbv_2025_09_02_ver4_Sep25_gb__2025_10_16_11_54_4,94,73G,gibell,2025-10-16 11:54:04,Yes,OCT_10,gibell,No,Remove symlinks first
+pscd,NDQ,pscd_rbv_2025_09_02_ver4_Sep25_gb__2025_10_16_11_52_47,94,73G,gibell,2025-10-16 11:52:47,No,None,None,No,Safe to delete
+pmuxm,NDQ,pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_9_16_11_22_22,124,72G,brachas,2025-09-16 11:22:22,Yes,"SEP_10,SEP_10_NDQ","tlevor,brachas",Yes,Coordinate with symlink owners first
+pmuxm,NDQ,pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_15_11_53_0,95,72G,brachas,2025-10-15 11:53:00,Yes,"prev_release,OCT_10","brachas,zbirman",Yes,Coordinate with symlink owners first
+fth,CPORT,fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_1st_side__2025_9_30_12_16_48,110,72G,miancu,2025-09-30 12:16:48,Yes,SEP_10,miancu,Yes,Coordinate with symlink owners first
+lndm,NDQ,lndm_latest_ref__2025_5_5_20_36_51,257,72G,shlomoc,2025-05-05 20:36:51,No,None,None,No,Safe to delete
+fth,CPORT,fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp__2025_9_20_10_58_28,120,72G,miancu,2025-09-20 10:58:28,Yes,prev_SEP_10,miancu,Yes,Coordinate with symlink owners first
+fth,CPORT,fth_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_3rd_flp__2025_9_30_10_32_36,110,72G,miancu,2025-09-30 10:32:36,Yes,SEP_10_cport_eco_01,miancu,Yes,Coordinate with symlink owners first
+fth,CPORT,fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner__2025_10_8_15_10_17,102,72G,miancu,2025-10-08 15:10:17,Yes,SEP_28_FP,miancu,Yes,Coordinate with symlink owners first
+fth,CPORT,fth_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_new_tplanner_ref_run__2025_10_17_10_54_41,93,72G,lmustafa,2025-10-17 10:54:41,Yes,"SEP_28_FP_eco_01,FNL_4PV","ekantorovich,lmustafa",Yes,Coordinate with symlink owners first
+psca,NDQ,psca_rbv_2025_06_10_agur_condb_int2_23_5r1_BE_SFNL_snap__2025_6_26_16_15_40,206,72G,nkahaz,2025-06-26 16:15:40,No,None,None,No,Safe to delete
+clt,NDQ,clt_rbv_2025_06_08_condb_23_5r1_BE_SFNL_snap_part4__2025_8_27_9_38_42,144,72G,aamsalem,2025-08-27 09:38:42,No,None,None,No,Safe to delete
+yu,NDQ,yu_agur_rbv_2025_03_17_condb_int1_11_3_BE_TNL_snap_ver7_new_flow__2025_5_25_9_29_17,238,72G,ashahock,2025-05-25 09:29:17,No,None,None,No,Safe to delete
+clt,NDQ,clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3__2025_10_6_17_11_32,103,72G,aamsalem,2025-10-06 17:11:32,Yes,SEP_10_NDQ_V1_GLC,aamsalem,No,Remove symlinks first
+clt,NDQ,clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3__2025_10_3_15_7_49,107,72G,aamsalem,2025-10-03 15:07:49,No,None,None,No,Safe to delete
+clt,NDQ,clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3__2025_9_18_11_59_25,122,72G,aamsalem,2025-09-18 11:59:25,No,None,None,No,Safe to delete
+clt,NDQ,clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3__2025_9_21_10_24_50,119,72G,aamsalem,2025-09-21 10:24:50,Yes,"SEP_10,SEP_10_NDQ,prev_SEP_10_NDQ_V1_GLC","tlevor,aamsalem",Yes,Coordinate with symlink owners first
+clt,NDQ,clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3__2025_10_15_10_0_9,95,72G,aamsalem,2025-10-15 10:00:09,Yes,OCT_10,aamsalem,No,Remove symlinks first
+clt,NDQ,clt_rbv_2025_06_08_condb_23_5r1_BE_SFNL_snap_part3__2025_8_19_12_56_57,152,72G,aamsalem,2025-08-19 12:56:57,No,None,None,No,Safe to delete
+clt,NDQ,clt_rbv_2025_06_08_condb_23_5r1_BE_SFNL_snap_part3__2025_8_20_10_43_46,151,72G,aamsalem,2025-08-20 10:43:46,Yes,prev_AUG_07_FP,aamsalem,No,Remove symlinks first
+nvrisc,NDQ,nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2__2025_9_28_9_11_12,112,71G,ykatzav,2025-09-28 09:11:12,Yes,"SEP_10_V2,SEP_10_NDQ",tlevor,Yes,Coordinate with symlink owners first
+nvrisc,NDQ,nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2__2025_10_19_16_3_10,91,71G,ykatzav,2025-10-19 16:03:10,Yes,OCT_10_V2,ykatzav,No,Remove symlinks first
+fdbs,NDQ,fdbs_rbv_2025_03_18_condb_int1_11_3_BE_TNL_snap_2605__2025_6_11_11_43_40,221,71G,aspiegelglas,2025-06-11 11:43:40,No,None,None,No,Safe to delete
+lnd,CPORT,run_29_09_2025_lnd_rbv_2025_09_26_trex_response_tag_065__2025_10_17_8_26_5,93,70G,shlomoc,2025-10-17 08:26:05,Yes,prev_SEP_28_FP_eco_01,shlomoc,Yes,Coordinate with symlink owners first
+prtm,NDQ,test_run__2025_5_6_7_53_18,257,70G,bdaher,2025-05-06 07:53:18,No,None,None,No,Safe to delete
+fth,CPORT,fth_rbv_2025_06_09_condb_int2_23_5r1_SFNL_snap_npp_tlv__2025_9_18_12_14_29,122,70G,miancu,2025-09-18 12:14:29,Yes,AUG07_cport_eco_01,miancu,Yes,Coordinate with symlink owners first
+fth,CPORT,fth_rbv_2025_06_09_condb_int2_23_5r1_SFNL_snap_npp_tlv__2025_8_25_10_24_9,146,70G,miancu,2025-08-25 10:24:09,No,None,None,No,Safe to delete
+fth,CPORT,fth_rbv_2025_06_09_condb_int2_23_5r1_SFNL_snap_tlv_trial__2025_8_5_11_4_16,166,70G,miancu,2025-08-05 11:04:16,Yes,TLV_trail_release,miancu,Yes,Coordinate with symlink owners first
+fth,CPORT,fth_rbv_2025_03_13_condb_int1_11_3_BE_TNL_snap_ncfg_0512__2025_5_27_10_52_46,236,70G,miancu,2025-05-27 10:52:46,No,None,None,No,Safe to delete
+yu,NDQ,yu_agur_rbv_2025_06_09_condb_int2_23_5r1_SFNL_snap_ver5__2025_8_13_14_4_5,158,70G,ashahock,2025-08-13 14:04:05,Yes,NDQ_ww36T_yu,tlevor,Yes,Coordinate with symlink owners first
+clt,NDQ,clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3__2025_10_16_14_40_31,94,69G,aamsalem,2025-10-16 14:40:31,Yes,"SEP_28_FP,FNL_4PV","ekantorovich,aamsalem",Yes,Coordinate with symlink owners first
+dcmp,NDQ,dcmp_manual_flp_21_9_for_vivid__2025_10_8_13_53_32,102,68G,rmenasheof,2025-10-08 13:53:32,Yes,SEP_10_NDQ_V1_GLC,rmenasheof,Yes,Coordinate with symlink owners first
+dcmp,NDQ,dcmp_manual_flp_21_9_for_vivid__2025_10_20_15_26_28,90,68G,rmenasheof,2025-10-20 15:26:28,Yes,OCT_10_V2,rmenasheof,Yes,Coordinate with symlink owners first
+dcmp,NDQ,dcmp_manual_flp_21_9_for_vivid__2025_10_15_11_30_10,95,68G,rmenasheof,2025-10-15 11:30:10,Yes,OCT_10,rmenasheof,Yes,Coordinate with symlink owners first
+dcmp,NDQ,dcmp_manual_flp_21_9_for_vivid__2025_9_28_15_46_55,112,68G,rmenasheof,2025-09-28 15:46:55,No,None,None,No,Safe to delete
+dcmp,NDQ,dcmp_manual_flp_21_9_for_vivid__2025_9_28_15_56_58,112,68G,rmenasheof,2025-09-28 15:56:58,No,None,None,No,Safe to delete
+fdbs,NDQ,fdbs_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ctsfix2__2025_10_5_8_14_47,105,68G,brachas,2025-10-05 08:14:47,No,None,None,No,Safe to delete
+fdbs,NDQ,fdbs_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ctsfix2__2025_10_7_22_57_20,102,68G,brachas,2025-10-07 22:57:20,Yes,SEP_10_NDQ_V1_GLC,brachas,No,Remove symlinks first
+prtm,NDQ,agur_prtm_rbv_2025_06_10_condb_int2_23_5r1_BE_SFNL_snap_secondtry__2025_8_31_15_34_56,140,67G,lmustafa,2025-08-31 15:34:56,No,None,None,No,Safe to delete
+prt,CPORT,prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap__2025_9_16_18_32_37,123,67G,ykatzav,2025-09-16 18:32:37,Yes,SEP_10,ykatzav,No,Remove symlinks first
+prt,CPORT,prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap__2025_10_8_10_14_33,102,67G,ykatzav,2025-10-08 10:14:33,Yes,SEP_28_FP,ykatzav,No,Remove symlinks first
+prt,CPORT,prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap__2025_10_16_9_36_11,94,67G,ykatzav,2025-10-16 09:36:11,Yes,"SEP_28_FP_eco_01,FNL_4PV","ekantorovich,ykatzav",Yes,Coordinate with symlink owners first
+fthm,NDQ,fthm_rbv_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_2nd_flp__2025_9_19_15_31_30,121,67G,miancu,2025-09-19 15:31:30,Yes,prev_SEP_10,miancu,Yes,Coordinate with symlink owners first
+fthm,NDQ,fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_1st_side__2025_10_3_9_40_15,107,67G,miancu,2025-10-03 09:40:15,No,None,None,No,Safe to delete
+fthm,NDQ,fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_1st_side__2025_10_7_18_7_45,102,67G,miancu,2025-10-07 18:07:45,Yes,"SEP_10,SEP_10_NDQ_V1_GLC","tlevor,miancu",Yes,Coordinate with symlink owners first
+fthm,NDQ,fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_V3__2025_10_20_9_58_41,90,67G,ayerushalmy,2025-10-20 09:58:41,Yes,OCT_10_V2,ayerushalmy,No,Remove symlinks first
+fthm,NDQ,fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_V3__2025_10_16_18_13_16,93,67G,ayerushalmy,2025-10-16 18:13:16,Yes,"SEP_28_FP,FNL_4PV","ekantorovich,ayerushalmy",Yes,Coordinate with symlink owners first
+fthm,NDQ,fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_1st_side__2025_9_29_14_59_53,111,67G,miancu,2025-09-29 14:59:53,Yes,"SEP_10_V2,SEP_10_NDQ","tlevor,miancu",Yes,Coordinate with symlink owners first
+fthm,NDQ,fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_1st_side__2025_10_14_9_43_10,96,67G,miancu,2025-10-14 09:43:10,Yes,OCT_10,miancu,Yes,Coordinate with symlink owners first
+fthm,NDQ,fthm_rbv_2025_09_22_condb_int3_2025_08_27_0_1NL_snap_1st_side__2025_10_11_11_29_51,99,67G,miancu,2025-10-11 11:29:51,Yes,prev_OCT_10,miancu,Yes,Coordinate with symlink owners first
+ioplm,NDQ,starling_ioplm_2024_10_30__2024_11_18_9_51_54,426,67G,netaa,2024-11-18 09:51:54,Yes,"fcl_release,FNL_4PV","ekantorovich,malkyb",Yes,Coordinate with symlink owners first
+fthm,NDQ,fthm_rbv_2025_06_09_condb_int2_23_5r1_SFNL_snap_npp_tlv__2025_8_25_10_25_50,146,65G,miancu,2025-08-25 10:25:50,No,None,None,No,Safe to delete
+pmuxm,NDQ,pmuxm_sunbird_rbv_2023_06_14_FNL_pmuxm_dc_cfg250512__2025_6_8_14_59_35,224,65G,brachas,2025-06-08 14:59:35,No,None,None,No,Safe to delete
+px,NDQ,px_rbv_beta_flow_26.05.25__2025_6_15_9_37_12,217,65G,gweisberg,2025-06-15 09:37:12,No,None,None,No,Safe to delete
+px,NDQ,px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_old_util65__2025_10_19_14_17_12,91,65G,aamsalem,2025-10-19 14:17:12,Yes,OCT_10_V2,aamsalem,No,Remove symlinks first
+lndm,NDQ,run_07_09_2025_lndm_rbv_2025_09_01_new_flow__2025_10_3_9_38_34,107,64G,shlomoc,2025-10-03 09:38:34,No,None,None,No,Safe to delete
+prt,CPORT,prt_agur_rbv_2025_04_14_test_5__2025_6_4_10_34_57,228,64G,ykatzav,2025-06-04 10:34:57,No,None,None,No,Safe to delete
+ftos,NDQ,nbu_signoff_condb_int3_2025_08_27_0_1NL_snap_th_ipo1000_2025_10_8_14_31_9,102,64G,thadad,2025-10-08 14:31:09,Yes,prev_SEP_10_NDQ_V1_GLC,thadad,No,Remove symlinks first
+ftos,NDQ,nbu_signoff_condb_int3_2025_08_27_0_1NL_snap_th_ipo1000_2025_10_20_9_19_0,90,64G,thadad,2025-10-20 09:19:00,Yes,OCT_10_V2,thadad,No,Remove symlinks first
+fth,CPORT,FthTrial__2025_9_16_21_52_31,123,63G,yavital,2025-09-16 21:52:31,Yes,ECO_RUN_TIME_test,yavital,Yes,Coordinate with symlink owners first
+ftos,NDQ,condb_int3_2025_08_27_0_1NL_snap_th__2025_9_20_22_56_42,119,63G,thadad,2025-09-20 22:56:42,Yes,"SEP_10,SEP_10_NDQ","tlevor,thadad",Yes,Coordinate with symlink owners first
+sma,NDQ,run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix__2025_10_3_9_51_56,107,63G,shlomoc,2025-10-03 09:51:56,No,None,None,No,Safe to delete
+sma,NDQ,run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix__2025_10_3_9_40_48,107,63G,shlomoc,2025-10-03 09:40:48,Yes,SEP_10,shlomoc,Yes,Coordinate with symlink owners first
+pscb,NDQ,pscb_rbv_2025_06_10_agur_condb_int2_23_5r1_BE_SFNL_snap__2025_6_26_16_15_36,206,63G,nkahaz,2025-06-26 16:15:36,No,None,None,No,Safe to delete
+pmuxm,NDQ,pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_16_12_0_6,94,63G,brachas,2025-10-16 12:00:06,Yes,"SEP_28_FP,FNL_4PV","ekantorovich,brachas",Yes,Coordinate with symlink owners first
+pmux,CPORT,pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_9_17_4_55,100,62G,brachas,2025-10-09 17:04:55,Yes,"SEP_28_FP,prev_SEP_28_FP",brachas,No,Remove symlinks first
+pmux,CPORT,pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_9_17_15_56_31,123,62G,brachas,2025-09-17 15:56:31,Yes,SEP_10,brachas,No,Remove symlinks first
+pmux,CPORT,pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_16_12_49_23,94,62G,brachas,2025-10-16 12:49:23,Yes,"SEP_28_FP_eco_01,FNL_4PV","ekantorovich,brachas",Yes,Coordinate with symlink owners first
+nvrisc,NDQ,nvrisc_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_run2__2025_10_16_13_52_15,94,62G,ykatzav,2025-10-16 13:52:15,Yes,"SEP_28_FP,FNL_4PV","ekantorovich,ykatzav",Yes,Coordinate with symlink owners first
+fthm,NDQ,fthm_rbv_2025_06_09_condb_int2_23_5r1_SFNL_snap_fcp__2025_6_17_17_39_2,214,62G,miancu,2025-06-17 17:39:02,No,None,None,No,Safe to delete
+sma,NDQ,run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix__2025_10_16_12_10_10,94,60G,shlomoc,2025-10-16 12:10:10,Yes,"SEP_28_FP,FNL_4PV","ekantorovich,shlomoc",Yes,Coordinate with symlink owners first
+px,NDQ,px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_old_util65__2025_10_20_10_53_32,90,60G,aamsalem,2025-10-20 10:53:32,Yes,"SEP_28_FP,FNL_4PV","ekantorovich,aamsalem",Yes,Coordinate with symlink owners first
+pmuxm,NDQ,pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_5_8_20_16,105,59G,brachas,2025-10-05 08:20:16,No,None,None,No,Safe to delete
+pmuxm,NDQ,pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_6_11_13_14,104,59G,brachas,2025-10-06 11:13:14,Yes,SEP_10_NDQ_V1_GLC,brachas,Yes,Coordinate with symlink owners first
+pmuxm,NDQ,pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_6_10_4_28,104,59G,brachas,2025-10-06 10:04:28,No,None,None,No,Safe to delete
+lndm,NDQ,run_07_09_2025_lndm_rbv_2025_09_01_new_flow__2025_10_16_12_9_26,94,59G,shlomoc,2025-10-16 12:09:26,Yes,"FNL_4PV,SEP_28_FP","ekantorovich,shlomoc",Yes,Coordinate with symlink owners first
+prt,CPORT,prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap__2025_9_30_15_29_27,110,59G,ykatzav,2025-09-30 15:29:27,Yes,SEP_10_cport_eco_01,ykatzav,No,Remove symlinks first
+prt,CPORT,prt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap__2025_9_30_15_0_57,110,59G,ykatzav,2025-09-30 15:00:57,Yes,SEP_10_eco_01,ykatzav,No,Remove symlinks first
+prt,CPORT,agur_prt_rbv_2025_06_10_condb_int2_23_5r1_BE_SFNL_snap_run_2__2025_9_17_9_48_32,123,59G,ykatzav,2025-09-17 09:48:32,Yes,AUG07_cport_eco_01,ykatzav,No,Remove symlinks first
+prtm,NDQ,prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry__2025_10_8_15_52_10,102,58G,lmustafa,2025-10-08 15:52:10,Yes,SEP_10_NDQ_V1_GLC,lmustafa,No,Remove symlinks first
+prtm,NDQ,prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry__2025_9_17_14_27_48,123,58G,lmustafa,2025-09-17 14:27:48,Yes,"SEP_10,SEP_10_NDQ","tlevor,lmustafa",Yes,Coordinate with symlink owners first
+prtm,NDQ,prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry__2025_10_15_16_32_41,95,58G,lmustafa,2025-10-15 16:32:41,Yes,OCT_10,lmustafa,No,Remove symlinks first
+pmux,CPORT,pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_beta0929_v3__2025_10_6_13_0_31,104,57G,brachas,2025-10-06 13:00:31,No,None,None,No,Safe to delete
+pmux,CPORT,pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_10_7_19_8_47,102,57G,brachas,2025-10-07 19:08:47,No,None,None,No,Safe to delete
+pmux,CPORT,pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_9_30_13_49_14,110,57G,brachas,2025-09-30 13:49:14,Yes,SEP_10_cport_eco_01,brachas,No,Remove symlinks first
+prtm,NDQ,prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry__2025_10_16_16_1_21,94,57G,lmustafa,2025-10-16 16:01:21,Yes,"SEP_28_FP,FNL_4PV","ekantorovich,lmustafa",Yes,Coordinate with symlink owners first
+pmux,CPORT,agur_pmux_rbv_2025_03_25_condb_int1_11_3_BE_TNL_snap_pmux_PnR__2025_5_27_10_20_19,236,56G,brachas,2025-05-27 10:20:19,No,None,None,No,Safe to delete
+iopx,NDQ,starling_iopx_2024_11_06__2025_3_5_13_10_45,319,55G,vmoshkovich,2025-03-05 13:10:45,Yes,"last_sta_rel,release,SEP_10,FC_ww52a_last_sta_rel,fcl_release,FC_ww1a_last_sta_rel,FC_ww2a_last_sta_rel,FC_ww3a_last_sta_rel","malkyb,nduanis,eriaboy,aregev",Yes,Coordinate with symlink owners first
+iopx,NDQ,starling_iopx_2024_11_06__2024_11_11_17_25_54,432,55G,vmoshkovich,2024-11-11 17:25:54,Yes,FNL_4PV,ekantorovich,Yes,Coordinate with symlink owners first
+clt,NDQ,clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3__2025_10_19_12_38_14,91,53G,aamsalem,2025-10-19 12:38:14,Yes,OCT_10_V2,aamsalem,No,Remove symlinks first
+ir,NDQ,ir_rbv_2024_10_09_starling_with_new_rom_new_tag__2024_11_27_18_34_59,416,51G,maximkr,2024-11-27 18:34:59,No,None,None,No,Safe to delete
+psca,NDQ,nbu_signoff_psca_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_ref_ipo1045_2025_10_15_20_48_53,94,51G,nkahaz,2025-10-15 20:48:53,Yes,OCT_10,nkahaz,No,Remove symlinks first
+psca,NDQ,nbu_signoff_psca_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_ref_ipo1044_2025_10_12_8_45_31,98,51G,nkahaz,2025-10-12 08:45:31,Yes,prev_OCT_10,nkahaz,No,Remove symlinks first
+psca,NDQ,nbu_signoff_psca_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_ref_ipo1042_2025_10_8_15_18_31,102,51G,nkahaz,2025-10-08 15:18:31,Yes,SEP_10,nkahaz,No,Remove symlinks first
+psca,NDQ,nbu_signoff_psca_rbv_2025_09_08_agur_condb_int3_2025_08_27_0_1NL_snap_ref_ipo1046_2025_10_20_13_26_59,90,50G,nkahaz,2025-10-20 13:26:59,Yes,OCT_10_V2,nkahaz,No,Remove symlinks first
+ir,NDQ,ir_rbv_2025_09_12_agur_icg_fanin_fix_th__2025_9_28_18_23_11,111,50G,thadad,2025-09-28 18:23:11,No,None,None,No,Safe to delete
+cscore,NDQ,cscore_rbv_2024_12_04_starling_LO_fe_silver_new_ip_new_tag__2025_3_7_18_16_15,316,38G,maximkr,2025-03-07 18:16:15,No,None,None,No,Safe to delete
+glc,NDQ,glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound__2025_10_8_2_22_51,102,38G,ynaim,2025-10-08 02:22:51,Yes,prev_SEP_10_NDQ_V1_GLC,ynaim,No,Remove symlinks first
+glc,NDQ,glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_bound__2025_9_28_13_26_19,112,38G,ynaim,2025-09-28 13:26:19,Yes,"SEP_10_V2,SEP_10_NDQ","tlevor,ynaim",Yes,Coordinate with symlink owners first
+ribs,NDQ,ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk__2025_9_28_13_14_33,112,32G,ynaim,2025-09-28 13:14:33,Yes,"SEP_10_V2,SEP_10_NDQ","tlevor,ynaim",Yes,Coordinate with symlink owners first
+ribs,NDQ,ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk__2025_10_8_9_2_14,102,32G,ynaim,2025-10-08 09:02:14,Yes,prev_SEP_10_NDQ_V1_GLC,ynaim,No,Remove symlinks first
+ribs,NDQ,ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk__2025_9_21_15_36_51,119,32G,ynaim,2025-09-21 15:36:51,No,None,None,No,Safe to delete
+ribs,NDQ,ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap_no_route_blk_post_release__2025_9_22_11_22_35,118,31G,ynaim,2025-09-22 11:22:35,Yes,SEP_10,ynaim,No,Remove symlinks first
+lnd,CPORT,lnd_latest_ref__2025_4_14_13_54_2,279,22G,shlomoc,2025-04-14 13:54:02,No,None,None,No,Safe to delete
+nvrisc,NDQ,nvrisc_rbv_2025_03_16_condb_int1_11_3_BE_TNL_snap__2025_3_31_11_24_45,293,21G,ysapojnikov,2025-03-31 11:24:45,No,None,None,No,Safe to delete
+pscd,NDQ,pscd_rbv_2025_09_02_ver6_Sep25_gb__2025_10_8_13_36_7,102,21G,gibell,2025-10-08 13:36:07,No,None,None,No,Safe to delete
+pscd,NDQ,pscd_rbv_2025_09_02_ver6_Sep25_gb__2025_10_8_13_48_5,102,21G,gibell,2025-10-08 13:48:05,Yes,SEP_10,tlevor,Yes,Coordinate with symlink owners first
+fwam,NDQ,fwam_rbv_2025_03_13_condb_int1_11_3_BE_TNL_snap_allscripts__2025_4_9_20_2_35,283,20G,arot,2025-04-09 20:02:35,No,None,None,No,Safe to delete
+ftos,NDQ,ftos_rbv_2025_03_17_condb_int1_11_4_BE_TNL_snap_Mar25_gb__2025_4_5_15_38_45,288,19G,gibell,2025-04-05 15:38:45,No,None,None,No,Safe to delete
+pscb,NDQ,nbu_signoff_pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref_ipo1046_2025_10_20_13_22_38,90,16G,nkahaz,2025-10-20 13:22:38,Yes,OCT_10_V2l,nkahaz,No,Remove symlinks first
+pscb,NDQ,nbu_signoff_pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref_ipo1046_2025_10_20_13_26_48,90,16G,nkahaz,2025-10-20 13:26:48,Yes,OCT_10_V2,nkahaz,No,Remove symlinks first
+pscb,NDQ,nbu_signoff_pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref_ipo1044_2025_10_14_19_38_28,95,16G,nkahaz,2025-10-14 19:38:28,Yes,OCT_10,nkahaz,No,Remove symlinks first
+pscb,NDQ,nbu_signoff_pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref_ipo1044_2025_10_11_10_26_18,99,16G,nkahaz,2025-10-11 10:26:18,Yes,prev_OCT_10,nkahaz,No,Remove symlinks first
+pscb,NDQ,nbu_signoff_pscb_rbv_2025_09_02_agur_condb_int3_2025_08_27_0_1NL_snap_ref_ipo1040_2025_10_8_9_37_31,102,16G,nkahaz,2025-10-08 09:37:31,Yes,SEP_10,tlevor,Yes,Coordinate with symlink owners first
+lndm,NDQ,run_07_09_2025_lndm_rbv_2025_09_01_new_flow__2025_10_19_18_21_26,90,15G,ronil,2025-10-19 18:21:26,No,None,None,No,Safe to delete
+sma,NDQ,sma_rbv_2025_03_16_int1_11_3_BE_TNL_snap_Mar25_new_gb__2025_4_2_21_47_24,290,15G,gibell,2025-04-02 21:47:24,No,None,None,No,Safe to delete
+pmuxm,NDQ,TestRel__2025_9_4_10_31_34,136,12G,tlevor,2025-09-04 10:31:34,No,None,None,No,Safe to delete
+ioplm,NDQ,starling_ioplm_2024_10_30__2024_11_14_11_5_29,430,11G,netaa,2024-11-14 11:05:29,Yes,"last_sta_rel,release,SEP_10,FC_ww52a_last_sta_rel,FC_ww1a_last_sta_rel,FC_ww2a_last_sta_rel,FC_ww3a_last_sta_rel","nduanis,eriaboy,aregev",Yes,Coordinate with symlink owners first
+iopl,NDQ,iopl_condb_int1_28_5__2024_12_14_22_20_49,399,6.7G,yshlush,2024-12-14 22:20:49,No,None,None,No,Safe to delete
+iopl,NDQ,iopl_condb_int1_52_2r1__2025_7_27_10_38_26,175,6.6G,yshlush,2025-07-27 10:38:26,Yes,"last_sta_rel,release,SEP_10,FC_ww52a_last_sta_rel,FC_ww1a_last_sta_rel,FC_ww2a_last_sta_rel,FNL_4PV,FC_ww3a_last_sta_rel","ekantorovich,nduanis,eriaboy,aregev",Yes,Coordinate with symlink owners first
+pscc,NDQ,pscc_2025_09_02_condb_int3_2025_08_27_0_1NL_snap_new_flow__2025_9_17_14_51_11,123,5.8G,dtraitelovic,2025-09-17 14:51:11,No,None,None,No,Safe to delete
+fwas,NDQ,fwas_10_9_1nl_new_flow_golden__2025_9_17_12_8_5,123,5.7G,rmenasheof,2025-09-17 12:08:05,Yes,prev_SEP_10,rmenasheof,Yes,Coordinate with symlink owners first
+fwam,NDQ,run_09_09_2025_fwam_rbv_2025_09_07__2025_9_17_15_51_3,123,5.6G,zbirman,2025-09-17 15:51:03,No,None,None,No,Safe to delete
+glc,NDQ,glc.glc_rbv_2025_09_07_agur_condb_int3_2025_08_27_0_1NL_snap_spr__2025_9_17_11_47_54,123,5.3G,ynaim,2025-09-17 11:47:54,No,None,None,No,Safe to delete
+yu,NDQ,yu_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_ver3_lib__2025_9_17_11_30_36,123,5.2G,ashahock,2025-09-17 11:30:36,Yes,prev_fe_dct_golden_release,ashahock,No,Remove symlinks first
+clt,NDQ,clt_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_part3__2025_9_21_10_19_45,119,3.8G,aamsalem,2025-09-21 10:19:45,Yes,prev_SEP_10,aamsalem,No,Remove symlinks first
+clr,NDQ,clr_rbv_2025_09_02_rbv_2025_08_27_agur_condb_int3_2025_08_27_0_1NL_snap_V3__2025_9_17_15_13_23,123,3.7G,ayerushalmy,2025-09-17 15:13:23,No,None,None,No,Safe to delete
+ribs,NDQ,ribs.ribs_rbv_2025_09_02_condb_int3_08_27_0_1NL_snap__2025_9_17_11_52_44,123,2.8G,ynaim,2025-09-17 11:52:44,No,None,None,No,Safe to delete
+pmuxm,NDQ,pmuxm_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_9_17_15_12_47,123,2.4G,brachas,2025-09-17 15:12:47,No,None,None,No,Safe to delete
+sma,NDQ,run_07_09_2025_sma_rbv_2025_09_04_new_flow_dsr_fix_interface_fix__2025_9_17_11_22_15,123,1.8G,shlomoc,2025-09-17 11:22:15,No,None,None,No,Safe to delete
+px,NDQ,px_rbv_2025_09_04_agur_condb_int3_2025_08_27_0_1NL_snap_cmp__2025_9_21_10_19_38,119,1.7G,aamsalem,2025-09-21 10:19:38,No,None,None,No,Safe to delete
+lndm,NDQ,run_07_09_2025_lndm_rbv_2025_09_01_new_flow__2025_9_17_11_21_30,123,1.5G,shlomoc,2025-09-17 11:21:30,No,None,None,No,Safe to delete
+prtm,NDQ,prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry__2025_9_17_14_11_44,123,1.3G,lmustafa,2025-09-17 14:11:44,Yes,prev_SEP_10,lmustafa,No,Remove symlinks first
+prtm,NDQ,prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry__2025_10_8_15_18_14,102,1.3G,lmustafa,2025-10-08 15:18:14,No,None,None,No,Safe to delete
+prtm,NDQ,prtm_rbv_2025_09_01_agur_condb_int3_2025_08_27_0_1NL_snap_r1_fifthtry__2025_10_8_15_21_3,102,1.3G,lmustafa,2025-10-08 15:21:03,Yes,prev_SEP_10_NDQ_V1_GLC,lmustafa,No,Remove symlinks first
+pmux,CPORT,pmux_rbv_2025_09_03_agur_condb_int3_2025_08_27_0_1NL_snap_sep10__2025_9_17_10_42_55,123,685M,brachas,2025-09-17 10:42:55,No,None,None,No,Safe to delete
+prt,CPORT,prt_agur_rbv_2025_03_18_TNL__2025_7_6_18_5_7,195,622M,hshahady,2025-07-06 18:05:07,No,None,None,No,Safe to delete
+prt,CPORT,prt_agur_rbv_2025_03_18_TNL__2025_7_6_17_49_8,195,116K,hshahady,2025-07-06 17:49:08,No,None,None,No,Safe to delete
+prt,CPORT,prt_agur_rbv_2025_03_18_TNL__2025_7_6_16_46_14,195,116K,hshahady,2025-07-06 16:46:14,No,None,None,No,Safe to delete
+prt,CPORT,prt_agur_rbv_2025_03_18_TNL__2025_7_6_17_15_20,195,116K,hshahady,2025-07-06 17:15:20,No,None,None,No,Safe to delete
+prt,CPORT,prt_agur_rbv_2025_03_18_TNL__2025_7_6_17_25_23,195,116K,hshahady,2025-07-06 17:25:23,No,None,None,No,Safe to delete
+prt,CPORT,prt_agur_rbv_2025_03_18_TNL__2025_7_5_18_42_24,196,116K,hshahady,2025-07-05 18:42:24,No,None,None,No,Safe to delete
+prt,CPORT,prt_agur_rbv_2025_03_18_TNL__2025_7_1_16_41_57,200,116K,hshahady,2025-07-01 16:41:57,No,None,None,No,Safe to delete
+prt,CPORT,prt_agur_rbv_2025_03_18_TNL__2025_6_30_20_26_46,201,112K,ykatzav,2025-06-30 20:26:46,No,None,None,No,Safe to delete
